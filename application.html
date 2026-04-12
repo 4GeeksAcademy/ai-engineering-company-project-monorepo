@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Aplicación | Brasaland</title>
+		<meta
+			name="description"
+			content="Formulario de aplicación de Brasaland para personas interesadas en colaborar como talento, proveedor, aliado o cliente estratégico."
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: {
+							sans: ["Outfit", "ui-sans-serif", "system-ui"]
+						}
+					}
+				}
+			};
+		</script>
+	</head>
+	<body class="min-h-screen bg-gradient-to-br from-amber-50 via-stone-100 to-orange-100 text-stone-900 antialiased">
+		<header class="border-b border-stone-300/70 bg-white/80 backdrop-blur">
+			<div class="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+				<a href="index.html" class="text-lg font-extrabold tracking-tight">Brasaland</a>
+				<nav aria-label="Navegación secundaria">
+					<a href="index.html" class="text-sm font-semibold text-stone-700 underline-offset-4 transition hover:underline">Volver a inicio</a>
+				</nav>
+			</div>
+		</header>
+
+		<main class="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+			<section class="rounded-3xl border border-stone-200 bg-white p-6 shadow-xl sm:p-8 lg:p-10" aria-labelledby="form-title">
+				<div class="max-w-3xl">
+					<p class="text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">Formulario de aplicación</p>
+					<h1 id="form-title" class="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">Cuéntanos cómo quieres conectar con Brasaland</h1>
+					<p class="mt-4 text-stone-600">
+						Recopilamos esta información para enrutar tu solicitud al equipo correcto: operaciones, compras, marketing,
+						talento, formación o tecnología.
+					</p>
+				</div>
+
+				<noscript>
+					<p class="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+						Este formulario requiere JavaScript para validar y enviar la aplicación.
+					</p>
+				</noscript>
+
+				<div id="form-alert" class="mt-6 hidden rounded-xl border p-4 text-sm" role="alert" aria-live="polite"></div>
+
+				<form id="application-form" class="mt-8 grid gap-6" novalidate>
+					<fieldset class="grid gap-5 rounded-2xl border border-stone-200 p-5 sm:grid-cols-2">
+						<legend class="px-2 text-sm font-semibold text-stone-700">Datos personales</legend>
+
+						<div>
+							<label for="firstName" class="mb-1 block text-sm font-semibold">Nombre</label>
+							<input
+								id="firstName"
+								name="firstName"
+								type="text"
+								autocomplete="given-name"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="firstName-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="lastName" class="mb-1 block text-sm font-semibold">Apellido</label>
+							<input
+								id="lastName"
+								name="lastName"
+								type="text"
+								autocomplete="family-name"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="lastName-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="email" class="mb-1 block text-sm font-semibold">Correo electrónico</label>
+							<input
+								id="email"
+								name="email"
+								type="email"
+								autocomplete="email"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="email-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="phone" class="mb-1 block text-sm font-semibold">Teléfono</label>
+							<input
+								id="phone"
+								name="phone"
+								type="tel"
+								inputmode="tel"
+								autocomplete="tel"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="phone-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="country" class="mb-1 block text-sm font-semibold">País de residencia</label>
+							<select
+								id="country"
+								name="country"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							>
+								<option value="">Selecciona una opción</option>
+								<option value="Colombia">Colombia</option>
+								<option value="Estados Unidos">Estados Unidos</option>
+								<option value="Otro">Otro</option>
+							</select>
+							<p id="country-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="city" class="mb-1 block text-sm font-semibold">Ciudad</label>
+							<input
+								id="city"
+								name="city"
+								type="text"
+								autocomplete="address-level2"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="city-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+					</fieldset>
+
+					<fieldset class="grid gap-5 rounded-2xl border border-stone-200 p-5 sm:grid-cols-2">
+						<legend class="px-2 text-sm font-semibold text-stone-700">Información de interés</legend>
+
+						<div>
+							<label for="relationshipType" class="mb-1 block text-sm font-semibold">¿Cómo quieres vincularte con Brasaland?</label>
+							<select
+								id="relationshipType"
+								name="relationshipType"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							>
+								<option value="">Selecciona una opción</option>
+								<option value="Talento / empleo">Talento / empleo</option>
+								<option value="Proveedor">Proveedor</option>
+								<option value="Alianza comercial">Alianza comercial</option>
+								<option value="Cliente o comunidad">Cliente o comunidad</option>
+							</select>
+							<p id="relationshipType-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="areaInterest" class="mb-1 block text-sm font-semibold">Área de interés</label>
+							<select
+								id="areaInterest"
+								name="areaInterest"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							>
+								<option value="">Selecciona una opción</option>
+								<option value="Operaciones de Restaurante">Operaciones de Restaurante</option>
+								<option value="Compras y Proveedores">Compras y Proveedores</option>
+								<option value="Marketing y Experiencia Digital">Marketing y Experiencia Digital</option>
+								<option value="Personas y Cultura">Personas y Cultura</option>
+								<option value="Formación y Estándares de Calidad">Formación y Estándares de Calidad</option>
+								<option value="Tecnología">Tecnología</option>
+								<option value="Dirección Ejecutiva">Dirección Ejecutiva</option>
+							</select>
+							<p id="areaInterest-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div class="sm:col-span-2" role="radiogroup" aria-labelledby="market-label">
+							<p id="market-label" class="mb-2 block text-sm font-semibold">Mercado de interés principal</p>
+							<div class="flex flex-wrap gap-4">
+								<label class="inline-flex items-center gap-2 text-sm font-medium">
+									<input type="radio" name="market" value="Colombia" class="h-4 w-4 border-stone-400 text-orange-600 focus:ring-orange-500" />
+									Colombia
+								</label>
+								<label class="inline-flex items-center gap-2 text-sm font-medium">
+									<input type="radio" name="market" value="Florida" class="h-4 w-4 border-stone-400 text-orange-600 focus:ring-orange-500" />
+									Florida
+								</label>
+								<label class="inline-flex items-center gap-2 text-sm font-medium">
+									<input type="radio" name="market" value="Ambos" class="h-4 w-4 border-stone-400 text-orange-600 focus:ring-orange-500" />
+									Ambos mercados
+								</label>
+							</div>
+							<p id="market-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="contactMethod" class="mb-1 block text-sm font-semibold">Canal preferido de contacto</label>
+							<select
+								id="contactMethod"
+								name="contactMethod"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							>
+								<option value="">Selecciona una opción</option>
+								<option value="Email">Email</option>
+								<option value="Teléfono">Teléfono</option>
+								<option value="WhatsApp">WhatsApp</option>
+							</select>
+							<p id="contactMethod-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div>
+							<label for="availabilityDate" class="mb-1 block text-sm font-semibold">Fecha disponible para primer contacto</label>
+							<input
+								id="availabilityDate"
+								name="availabilityDate"
+								type="date"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							/>
+							<p id="availabilityDate-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+
+						<div class="sm:col-span-2">
+							<label for="message" class="mb-1 block text-sm font-semibold">Describe brevemente tu propuesta o interés</label>
+							<textarea
+								id="message"
+								name="message"
+								rows="5"
+								maxlength="600"
+								required
+								class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+							></textarea>
+							<p class="mt-1 text-xs text-stone-500">Mínimo 30 caracteres. Máximo 600.</p>
+							<p id="message-error" class="mt-1 text-sm text-red-700" aria-live="polite"></p>
+						</div>
+					</fieldset>
+
+					<fieldset class="rounded-2xl border border-stone-200 p-5">
+						<legend class="px-2 text-sm font-semibold text-stone-700">Consentimientos</legend>
+						<div class="space-y-3">
+							<label class="flex items-start gap-3 text-sm">
+								<input id="privacyConsent" name="privacyConsent" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-stone-400 text-orange-600 focus:ring-orange-500" />
+								<span>Acepto el tratamiento de mis datos para gestionar esta aplicación.</span>
+							</label>
+							<p id="privacyConsent-error" class="text-sm text-red-700" aria-live="polite"></p>
+
+							<label class="flex items-start gap-3 text-sm">
+								<input id="followupConsent" name="followupConsent" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-stone-400 text-orange-600 focus:ring-orange-500" />
+								<span>Autorizo recibir comunicaciones de seguimiento por el canal indicado.</span>
+							</label>
+							<p id="followupConsent-error" class="text-sm text-red-700" aria-live="polite"></p>
+						</div>
+					</fieldset>
+
+					<div class="flex flex-wrap items-center gap-3">
+						<button
+							type="submit"
+							class="inline-flex [text-shadow:_2px_2px_0_#000] items-center rounded-full bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-orange-700"
+						>
+							Enviar aplicación
+						</button>
+						<p class="text-xs text-stone-600">Todos los campos son obligatorios.</p>
+					</div>
+				</form>
+			</section>
+		</main>
+
+		<script src="validation.js" defer></script>
+	</body>
+</html>
