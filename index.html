@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthCore Milestone 2 Manual Test Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-teal-100 text-slate-900">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <header class="mb-6 rounded-2xl border border-teal-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-600 text-lg font-bold text-white">HC</div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-teal-700">4Geeks HealthCore</p>
+            <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">Milestone 2 Manual Test Interface</h1>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section class="space-y-4">
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">Billing - Denial Tracking</h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button data-action="calculateDenialRate" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">calculateDenialRate</button>
+              <button data-action="denialRateByPayer" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">denialRateByPayer</button>
+              <button data-action="denialRateByLocation" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">denialRateByLocation</button>
+              <button data-action="flagHighDenialPayers" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">flagHighDenialPayers</button>
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">Clinical - No-Show Tracking</h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button data-action="calculateNoShowCost" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">calculateNoShowCost</button>
+              <button data-action="noShowRateByLocation" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">noShowRateByLocation</button>
+              <button data-action="flagHighNoShowLocations" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">flagHighNoShowLocations</button>
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">People - CME Compliance</h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button data-action="generateCMEReport" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700">generateCMEReport</button>
+              <button data-action="getCliniciansAtRisk" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">getCliniciansAtRisk</button>
+              <button data-action="getCliniciansWithExpiringLicences" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">getCliniciansWithExpiringLicences</button>
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">Collection & Search Operations</h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button data-action="filterClaimsDenied" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">filterClaims (denied only)</button>
+              <button data-action="filterClaimsBlueCross" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">filterClaims (BlueCross only)</button>
+              <button data-action="sortClaimsById" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">sortClaimsById (asc)</button>
+              <button data-action="sortAppointmentsByDate" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">sortAppointmentsByDate (desc)</button>
+              <button data-action="groupClaimsBy" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">groupClaimsBy (payerName)</button>
+              <button data-action="findClaimById" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">findClaimById (CLM-000003)</button>
+              <button data-action="binarySearchClaimById" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">binarySearchClaimById (CLM-000004)</button>
+              <button data-action="findClinicianById" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">findClinicianById (CLN-000002)</button>
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">Validations</h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button data-action="validateClaimValid" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">validateClaim (valid sample)</button>
+              <button data-action="validateClaimInvalid" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">validateClaim (invalid sample)</button>
+              <button data-action="validateClinicianValid" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">validateClinician (valid sample)</button>
+              <button data-action="validateClinicianInvalid" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">validateClinician (invalid sample)</button>
+            </div>
+          </article>
+
+          <div class="pt-2">
+            <button id="clear-output" class="w-full rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">Clear Output</button>
+          </div>
+        </section>
+
+        <section>
+          <article class="rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-xl">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-300">Output Console</h2>
+              <span id="output-title" class="truncate rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-cyan-200">Ready</span>
+            </div>
+            <pre id="output-panel" class="h-[72vh] overflow-auto rounded-lg border border-slate-700 bg-slate-950 p-4 text-sm leading-6 text-green-300">{
+  "message": "Select a function to run manual tests"
+}</pre>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      const sampleLocations = [
+        {
+          locationId: "us-tx-001",
+          name: "HealthCore Austin Central",
+          city: "Austin",
+          stateOrCountry: "TX",
+          country: "US",
+          phone: "(512) 340-8800",
+          averageConsultationFee: {
+            primary_care: 180,
+            chronic_disease: 220,
+            preventive: 150,
+            specialist: 320,
+            womens_health: 240,
+            paediatric: 175,
+            mental_health: 200,
+          },
+        },
+        {
+          locationId: "us-fl-001",
+          name: "HealthCore Miami",
+          city: "Miami",
+          stateOrCountry: "FL",
+          country: "US",
+          phone: "(305) 510-7700",
+          averageConsultationFee: {
+            primary_care: 195,
+            chronic_disease: 235,
+            preventive: 160,
+            specialist: 340,
+            womens_health: 255,
+            paediatric: 185,
+            mental_health: 215,
+          },
+        },
+        {
+          locationId: "us-ga-001",
+          name: "HealthCore Atlanta",
+          city: "Atlanta",
+          stateOrCountry: "GA",
+          country: "US",
+          phone: "(404) 330-9900",
+          averageConsultationFee: {
+            primary_care: 170,
+            chronic_disease: 210,
+            preventive: 145,
+            specialist: 310,
+            womens_health: 230,
+            paediatric: 165,
+            mental_health: 190,
+          },
+        },
+      ];
+
+      const sampleClaims = [
+        {
+          claimId: "CLM-000001",
+          patientId: "HC-A3F291",
+          locationId: "us-tx-001",
+          serviceType: "primary_care",
+          payerName: "BlueCross",
+          payerId: "BC001",
+          submissionDate: "2025-03-10",
+          claimAmount: 180,
+          status: "approved",
+          resubmitted: false,
+        },
+        {
+          claimId: "CLM-000002",
+          patientId: "HC-B7K442",
+          locationId: "us-fl-001",
+          serviceType: "specialist",
+          payerName: "Aetna",
+          payerId: "AET002",
+          submissionDate: "2025-03-11",
+          claimAmount: 340,
+          status: "denied",
+          denialReason: "missing_authorisation",
+          resubmitted: false,
+        },
+        {
+          claimId: "CLM-000003",
+          patientId: "HC-C2M881",
+          locationId: "us-ga-001",
+          serviceType: "chronic_disease",
+          payerName: "Medicare",
+          payerId: "MED003",
+          submissionDate: "2025-03-12",
+          claimAmount: 210,
+          status: "approved",
+          resubmitted: false,
+        },
+        {
+          claimId: "CLM-000004",
+          patientId: "HC-D9P553",
+          locationId: "us-tx-001",
+          serviceType: "preventive",
+          payerName: "BlueCross",
+          payerId: "BC001",
+          submissionDate: "2025-03-13",
+          claimAmount: 150,
+          status: "denied",
+          denialReason: "coding_error",
+          resubmitted: true,
+        },
+        {
+          claimId: "CLM-000005",
+          patientId: "HC-E4Q117",
+          locationId: "us-fl-001",
+          serviceType: "mental_health",
+          payerName: "Cigna",
+          payerId: "CIG004",
+          submissionDate: "2025-03-14",
+          claimAmount: 215,
+          status: "pending",
+          resubmitted: false,
+        },
+      ];
+
+      const sampleAppointments = [
+        {
+          appointmentId: "APT-000001",
+          patientId: "HC-A3F291",
+          locationId: "us-tx-001",
+          serviceType: "primary_care",
+          scheduledDate: "2025-03-10",
+          scheduledTime: "09:00",
+          status: "completed",
+          confirmedAt: "2025-03-09T14:00:00Z",
+        },
+        {
+          appointmentId: "APT-000002",
+          patientId: "HC-F6R228",
+          locationId: "us-fl-001",
+          serviceType: "specialist",
+          scheduledDate: "2025-03-11",
+          scheduledTime: "11:30",
+          status: "no_show",
+          noShowReason: "Patient did not call to cancel",
+        },
+        {
+          appointmentId: "APT-000003",
+          patientId: "HC-G1S774",
+          locationId: "us-tx-001",
+          serviceType: "chronic_disease",
+          scheduledDate: "2025-03-12",
+          scheduledTime: "14:00",
+          status: "no_show",
+          noShowReason: "Unreachable before appointment",
+        },
+        {
+          appointmentId: "APT-000004",
+          patientId: "HC-H8T390",
+          locationId: "us-ga-001",
+          serviceType: "preventive",
+          scheduledDate: "2025-03-13",
+          scheduledTime: "10:00",
+          status: "completed",
+          confirmedAt: "2025-03-12T09:30:00Z",
+        },
+        {
+          appointmentId: "APT-000005",
+          patientId: "HC-I5U661",
+          locationId: "us-fl-001",
+          serviceType: "mental_health",
+          scheduledDate: "2025-03-14",
+          scheduledTime: "16:00",
+          status: "no_show",
+          noShowReason: "Transportation issue reported",
+        },
+      ];
+
+      const sampleClinicians = [
+        {
+          clinicianId: "CLN-000001",
+          firstName: "Marcus",
+          lastName: "Reid",
+          role: "physician",
+          locationId: "us-tx-001",
+          licenceState: "TX",
+          licenceExpiryDate: "2026-06-30",
+          cmeHoursRequired: 40,
+          cmeHoursLogged: 28,
+          cmeYearStartDate: "2025-01-01",
+        },
+        {
+          clinicianId: "CLN-000002",
+          firstName: "Sandra",
+          lastName: "Flores",
+          role: "nurse_practitioner",
+          locationId: "us-fl-001",
+          licenceState: "FL",
+          licenceExpiryDate: "2025-05-15",
+          cmeHoursRequired: 30,
+          cmeHoursLogged: 6,
+          cmeYearStartDate: "2025-01-01",
+        },
+        {
+          clinicianId: "CLN-000003",
+          firstName: "David",
+          lastName: "Okafor",
+          role: "physician",
+          locationId: "us-ga-001",
+          licenceState: "GA",
+          licenceExpiryDate: "2027-01-01",
+          cmeHoursRequired: 40,
+          cmeHoursLogged: 40,
+          cmeYearStartDate: "2025-01-01",
+        },
+      ];
+
+      function filterClaims(claims, filters) {
+        return claims.filter(claim => {
+          if (filters.locationId !== undefined && claim.locationId !== filters.locationId) return false;
+          if (filters.status !== undefined && claim.status !== filters.status) return false;
+          if (filters.payerName !== undefined && claim.payerName !== filters.payerName) return false;
+          if (filters.serviceType !== undefined && claim.serviceType !== filters.serviceType) return false;
+          return true;
+        });
+      }
+
+      function filterAppointmentsByStatus(appointments, status) {
+        return appointments.filter(appointment => status.includes(appointment.status));
+      }
+
+      function sortClaimsById(claims, direction) {
+        return [...claims].sort((a, b) => {
+          if (direction === "asc") return a.claimId.localeCompare(b.claimId);
+          return b.claimId.localeCompare(a.claimId);
+        });
+      }
+
+      function sortAppointmentsByDate(appointments, direction) {
+        return [...appointments].sort((a, b) => {
+          const dateA = new Date(a.scheduledDate).getTime();
+          const dateB = new Date(b.scheduledDate).getTime();
+          if (direction === "asc") return dateA - dateB;
+          return dateB - dateA;
+        });
+      }
+
+      function groupClaimsBy(claims, key) {
+        return claims.reduce((groups, claim) => {
+          const groupKey = claim[key];
+          if (!groups[groupKey]) groups[groupKey] = [];
+          groups[groupKey].push(claim);
+          return groups;
+        }, {});
+      }
+
+      function findClaimById(claims, claimId) {
+        for (const claim of claims) {
+          if (claim.claimId === claimId) return claim;
+        }
+        return null;
+      }
+
+      function findClinicianById(clinicians, clinicianId) {
+        for (const clinician of clinicians) {
+          if (clinician.clinicianId === clinicianId) return clinician;
+        }
+        return null;
+      }
+
+      function binarySearchClaimById(sortedClaims, targetId) {
+        let left = 0;
+        let right = sortedClaims.length - 1;
+
+        while (left <= right) {
+          const middle = Math.floor((left + right) / 2);
+          const comparison = sortedClaims[middle].claimId.localeCompare(targetId);
+
+          if (comparison === 0) return middle;
+          if (comparison < 0) left = middle + 1;
+          else right = middle - 1;
+        }
+        return -1;
+      }
+
+      function roundToTwoDecimals(value) {
+        return Math.round(value * 100) / 100;
+      }
+
+      function roundToOneDecimal(value) {
+        return Math.round(value * 10) / 10;
+      }
+
+      function daysBetween(startDate, endDate) {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        const msPerDay = 1000 * 60 * 60 * 24;
+        return Math.round((end - start) / msPerDay);
+      }
+
+      function calculateDenialRate(claims) {
+        if (claims.length === 0) {
+          throw new Error("Cannot calculate denial rate on an empty claims array");
+        }
+        const deniedCount = claims.filter(claim => claim.status === "denied").length;
+        return roundToTwoDecimals((deniedCount / claims.length) * 100);
+      }
+
+      function denialRateByPayer(claims) {
+        const groups = {};
+        for (const claim of claims) {
+          if (!groups[claim.payerName]) groups[claim.payerName] = [];
+          groups[claim.payerName].push(claim);
+        }
+
+        const rates = {};
+        for (const payer in groups) {
+          rates[payer] = calculateDenialRate(groups[payer]);
+        }
+        return rates;
+      }
+
+      function denialRateByLocation(claims) {
+        const groups = {};
+        for (const claim of claims) {
+          if (!groups[claim.locationId]) groups[claim.locationId] = [];
+          groups[claim.locationId].push(claim);
+        }
+
+        const rates = {};
+        for (const location in groups) {
+          rates[location] = calculateDenialRate(groups[location]);
+        }
+        return rates;
+      }
+
+      function flagHighDenialPayers(claims, threshold = 8) {
+        const rates = denialRateByPayer(claims);
+        return Object.keys(rates).filter(payer => rates[payer] > threshold);
+      }
+
+      function calculateNoShowCost(appointments, location, weekEndingDate) {
+        const endDate = new Date(weekEndingDate);
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - 6);
+
+        const noShowsInWindow = appointments.filter(appointment => {
+          if (appointment.locationId !== location.locationId) return false;
+          if (appointment.status !== "no_show") return false;
+          const scheduled = new Date(appointment.scheduledDate);
+          return scheduled >= startDate && scheduled <= endDate;
+        });
+
+        if (noShowsInWindow.length === 0) return 0;
+
+        const total = noShowsInWindow.reduce((sum, appointment) => {
+          return sum + location.averageConsultationFee[appointment.serviceType];
+        }, 0);
+
+        return roundToTwoDecimals(total);
+      }
+
+      function noShowRateByLocation(appointments) {
+        const groups = {};
+        for (const appointment of appointments) {
+          if (!groups[appointment.locationId]) groups[appointment.locationId] = [];
+          groups[appointment.locationId].push(appointment);
+        }
+
+        const rates = {};
+        for (const locationId in groups) {
+          const locationAppointments = groups[locationId];
+          const noShows = locationAppointments.filter(a => a.status === "no_show").length;
+          rates[locationId] = roundToTwoDecimals((noShows / locationAppointments.length) * 100);
+        }
+        return rates;
+      }
+
+      function flagHighNoShowLocations(appointments, threshold = 20) {
+        const rates = noShowRateByLocation(appointments);
+        return Object.keys(rates).filter(locationId => rates[locationId] > threshold);
+      }
+
+      function determineCMEStatus(clinician, asOfDate) {
+        const cycleStart = new Date(clinician.cmeYearStartDate);
+        const cycleEnd = new Date(cycleStart);
+        cycleEnd.setFullYear(cycleEnd.getFullYear() + 1);
+        const asOf = new Date(asOfDate);
+
+        const daysRemainingInCycle = daysBetween(asOfDate, cycleEnd.toISOString().split("T")[0]);
+
+        if (clinician.cmeHoursLogged >= clinician.cmeHoursRequired) {
+          return { status: "complete", daysRemainingInCycle };
+        }
+
+        if (asOf >= cycleEnd) {
+          return { status: "overdue", daysRemainingInCycle };
+        }
+
+        const totalCycleDays = daysBetween(
+          clinician.cmeYearStartDate,
+          cycleEnd.toISOString().split("T")[0]
+        );
+        const daysElapsed = daysBetween(clinician.cmeYearStartDate, asOfDate);
+        const expectedPercentComplete = (daysElapsed / totalCycleDays) * 100;
+        const actualPercentComplete =
+          clinician.cmeHoursRequired === 0
+            ? 100
+            : (clinician.cmeHoursLogged / clinician.cmeHoursRequired) * 100;
+
+        if (expectedPercentComplete - actualPercentComplete > 15) {
+          return { status: "at_risk", daysRemainingInCycle };
+        }
+
+        return { status: "on_track", daysRemainingInCycle };
+      }
+
+      function generateCMEReport(clinicians, asOfDate) {
+        return clinicians.map(clinician => {
+          const { status, daysRemainingInCycle } = determineCMEStatus(clinician, asOfDate);
+          const hoursRemaining = Math.max(0, clinician.cmeHoursRequired - clinician.cmeHoursLogged);
+          const percentComplete =
+            clinician.cmeHoursRequired === 0
+              ? 100
+              : roundToOneDecimal((clinician.cmeHoursLogged / clinician.cmeHoursRequired) * 100);
+          const licenceDaysRemaining = daysBetween(asOfDate, clinician.licenceExpiryDate);
+
+          return {
+            clinicianId: clinician.clinicianId,
+            fullName: `${clinician.firstName} ${clinician.lastName}`,
+            role: clinician.role,
+            locationId: clinician.locationId,
+            hoursRequired: clinician.cmeHoursRequired,
+            hoursLogged: clinician.cmeHoursLogged,
+            hoursRemaining,
+            percentComplete,
+            daysRemainingInCycle,
+            complianceStatus: status,
+            licenceExpiryDate: clinician.licenceExpiryDate,
+            licenceDaysRemaining,
+          };
+        });
+      }
+
+      function getCliniciansAtRisk(clinicians, asOfDate) {
+        const reports = generateCMEReport(clinicians, asOfDate);
+        const atRiskIds = new Set(
+          reports
+            .filter(r => r.complianceStatus === "at_risk" || r.complianceStatus === "overdue")
+            .map(r => r.clinicianId)
+        );
+        return clinicians.filter(c => atRiskIds.has(c.clinicianId));
+      }
+
+      function getCliniciansWithExpiringLicences(clinicians, asOfDate, daysThreshold) {
+        return clinicians.filter(clinician => {
+          const daysUntilExpiry = daysBetween(asOfDate, clinician.licenceExpiryDate);
+          return daysUntilExpiry <= daysThreshold;
+        });
+      }
+
+      const PATIENT_ID_REGEX = /^HC-[A-Z0-9]{6}$/;
+
+      function validateClaim(claim, knownLocationIds) {
+        const errors = [];
+
+        if (claim.claimAmount <= 0) {
+          errors.push("claimAmount must be greater than 0");
+        }
+
+        const submissionDate = new Date(claim.submissionDate);
+        const today = new Date();
+        if (submissionDate > today) {
+          errors.push("submissionDate must not be a future date");
+        }
+
+        if (!knownLocationIds.includes(claim.locationId)) {
+          errors.push(`locationId '${claim.locationId}' is not a known clinic ID`);
+        }
+
+        if (claim.status === "denied" && !claim.denialReason) {
+          errors.push("denialReason must be present when status is 'denied'");
+        }
+
+        if (!PATIENT_ID_REGEX.test(claim.patientId)) {
+          errors.push("patientId must match format HC-XXXXXX (6 alphanumeric characters)");
+        }
+
+        return { valid: errors.length === 0, errors };
+      }
+
+      function validateClinician(clinician) {
+        const errors = [];
+        const validRoles = ["physician", "nurse_practitioner", "nurse", "medical_assistant"];
+
+        if (clinician.cmeHoursRequired < 0) {
+          errors.push("cmeHoursRequired must be >= 0");
+        }
+
+        if (clinician.cmeHoursLogged < 0) {
+          errors.push("cmeHoursLogged must be >= 0");
+        }
+
+        const expiryDate = new Date(clinician.licenceExpiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (expiryDate < today) {
+          errors.push("licenceExpiryDate is in the past — licence expired");
+        }
+
+        if (!validRoles.includes(clinician.role)) {
+          errors.push(`role must be one of: ${validRoles.join(", ")}`);
+        }
+
+        return { valid: errors.length === 0, errors };
+      }
+
+      function isDenialRateAboveThreshold(rate, threshold = 8) {
+        return rate > threshold;
+      }
+
+      function isNoShowRateAboveThreshold(rate, threshold = 20) {
+        return rate > threshold;
+      }
+
+      const outputPanel = document.getElementById("output-panel");
+      const outputTitle = document.getElementById("output-title");
+
+      const knownLocationIds = sampleLocations.map(location => location.locationId);
+      const austinLocation = sampleLocations.find(location => location.locationId === "us-tx-001");
+      const asOfDate = "2025-07-01";
+      const weekEndingDate = "2025-03-14";
+
+      const invalidClaim = {
+        claimId: "CLM-999999",
+        patientId: "INVALID",
+        locationId: "us-xx-999",
+        serviceType: "primary_care",
+        payerName: "BlueCross",
+        payerId: "BC001",
+        submissionDate: "2030-01-01",
+        claimAmount: -50,
+        status: "denied",
+        resubmitted: false,
+      };
+
+      const invalidClinician = {
+        clinicianId: "CLN-999999",
+        firstName: "Test",
+        lastName: "User",
+        role: "surgeon",
+        locationId: "us-tx-001",
+        licenceState: "TX",
+        licenceExpiryDate: "2020-01-01",
+        cmeHoursRequired: -5,
+        cmeHoursLogged: -1,
+        cmeYearStartDate: "2025-01-01",
+      };
+
+      const actions = {
+        calculateDenialRate: {
+          label: "calculateDenialRate(sampleClaims)",
+          run: () => calculateDenialRate(sampleClaims),
+        },
+        denialRateByPayer: {
+          label: "denialRateByPayer(sampleClaims)",
+          run: () => denialRateByPayer(sampleClaims),
+        },
+        denialRateByLocation: {
+          label: "denialRateByLocation(sampleClaims)",
+          run: () => denialRateByLocation(sampleClaims),
+        },
+        flagHighDenialPayers: {
+          label: "flagHighDenialPayers(sampleClaims)",
+          run: () => flagHighDenialPayers(sampleClaims),
+        },
+        calculateNoShowCost: {
+          label: "calculateNoShowCost(sampleAppointments, Austin, 2025-03-14)",
+          run: () => {
+            if (!austinLocation) throw new Error("Austin location not found in sampleLocations");
+            return calculateNoShowCost(sampleAppointments, austinLocation, weekEndingDate);
+          },
+        },
+        noShowRateByLocation: {
+          label: "noShowRateByLocation(sampleAppointments)",
+          run: () => noShowRateByLocation(sampleAppointments),
+        },
+        flagHighNoShowLocations: {
+          label: "flagHighNoShowLocations(sampleAppointments)",
+          run: () => flagHighNoShowLocations(sampleAppointments),
+        },
+        generateCMEReport: {
+          label: "generateCMEReport(sampleClinicians, 2025-07-01)",
+          run: () => generateCMEReport(sampleClinicians, asOfDate),
+        },
+        getCliniciansAtRisk: {
+          label: "getCliniciansAtRisk(sampleClinicians, 2025-07-01)",
+          run: () => getCliniciansAtRisk(sampleClinicians, asOfDate),
+        },
+        getCliniciansWithExpiringLicences: {
+          label: "getCliniciansWithExpiringLicences(sampleClinicians, 2025-07-01, 90)",
+          run: () => getCliniciansWithExpiringLicences(sampleClinicians, asOfDate, 90),
+        },
+        filterClaimsDenied: {
+          label: "filterClaims(sampleClaims, { status: 'denied' })",
+          run: () => filterClaims(sampleClaims, { status: "denied" }),
+        },
+        filterClaimsBlueCross: {
+          label: "filterClaims(sampleClaims, { payerName: 'BlueCross' })",
+          run: () => filterClaims(sampleClaims, { payerName: "BlueCross" }),
+        },
+        sortClaimsById: {
+          label: "sortClaimsById(sampleClaims, 'asc')",
+          run: () => sortClaimsById(sampleClaims, "asc"),
+        },
+        sortAppointmentsByDate: {
+          label: "sortAppointmentsByDate(sampleAppointments, 'desc')",
+          run: () => sortAppointmentsByDate(sampleAppointments, "desc"),
+        },
+        groupClaimsBy: {
+          label: "groupClaimsBy(sampleClaims, 'payerName')",
+          run: () => groupClaimsBy(sampleClaims, "payerName"),
+        },
+        findClaimById: {
+          label: "findClaimById(sampleClaims, 'CLM-000003')",
+          run: () => findClaimById(sampleClaims, "CLM-000003"),
+        },
+        binarySearchClaimById: {
+          label: "binarySearchClaimById(sortClaimsById(sampleClaims, 'asc'), 'CLM-000004')",
+          run: () => {
+            const sortedClaims = sortClaimsById(sampleClaims, "asc");
+            return binarySearchClaimById(sortedClaims, "CLM-000004");
+          },
+        },
+        findClinicianById: {
+          label: "findClinicianById(sampleClinicians, 'CLN-000002')",
+          run: () => findClinicianById(sampleClinicians, "CLN-000002"),
+        },
+        validateClaimValid: {
+          label: "validateClaim(validSampleClaim, knownLocationIds)",
+          run: () => validateClaim(sampleClaims[0], knownLocationIds),
+        },
+        validateClaimInvalid: {
+          label: "validateClaim(invalidClaim, knownLocationIds)",
+          run: () => validateClaim(invalidClaim, knownLocationIds),
+        },
+        validateClinicianValid: {
+          label: "validateClinician(validSampleClinician)",
+          run: () => validateClinician(sampleClinicians[0]),
+        },
+        validateClinicianInvalid: {
+          label: "validateClinician(invalidClinician)",
+          run: () => validateClinician(invalidClinician),
+        },
+      };
+
+      function toPrettyJson(value) {
+        if (value === undefined) return "undefined";
+        if (typeof value === "string") return JSON.stringify(value, null, 2);
+        return JSON.stringify(value, null, 2);
+      }
+
+      function showOutput(title, value, isError = false) {
+        outputTitle.textContent = title;
+        outputTitle.className = `truncate rounded-md border px-2 py-1 text-xs ${
+          isError
+            ? "border-rose-500 bg-rose-950 text-rose-200"
+            : "border-slate-600 bg-slate-800 text-cyan-200"
+        }`;
+        outputPanel.textContent = toPrettyJson(value);
+      }
+
+      document.querySelectorAll("button[data-action]").forEach(button => {
+        button.addEventListener("click", () => {
+          const actionName = button.getAttribute("data-action");
+          const action = actionName ? actions[actionName] : null;
+          if (!action) return;
+
+          try {
+            const result = action.run();
+            showOutput(action.label, result);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            showOutput(action.label, { error: message }, true);
+          }
+        });
+      });
+
+      document.getElementById("clear-output").addEventListener("click", () => {
+        outputTitle.textContent = "Ready";
+        outputTitle.className = "truncate rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-cyan-200";
+        outputPanel.textContent = JSON.stringify(
+          { message: "Output cleared. Select another function to run." },
+          null,
+          2
+        );
+      });
+
+      window.HealthCoreTestFunctions = {
+        filterClaims,
+        filterAppointmentsByStatus,
+        sortClaimsById,
+        sortAppointmentsByDate,
+        groupClaimsBy,
+        findClaimById,
+        findClinicianById,
+        binarySearchClaimById,
+        calculateDenialRate,
+        denialRateByPayer,
+        denialRateByLocation,
+        flagHighDenialPayers,
+        calculateNoShowCost,
+        noShowRateByLocation,
+        flagHighNoShowLocations,
+        generateCMEReport,
+        getCliniciansAtRisk,
+        getCliniciansWithExpiringLicences,
+        validateClaim,
+        validateClinician,
+        isDenialRateAboveThreshold,
+        isNoShowRateAboveThreshold,
+      };
+    </script>
+  </body>
+</html>
