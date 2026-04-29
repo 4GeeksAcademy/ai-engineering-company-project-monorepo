@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasaland — El sabor de Sudamérica con alma ibérica</title>
+    <meta name="description" content="Brasaland: carnes a la brasa argentinas, arroces artesanales y entrantes ibéricos en Sevilla. Reserva tu mesa ahora.">
+    <link rel="canonical" href="https://brasaland.com/">
+    <meta property="og:title" content="Brasaland — Carnes, Arroces y Sabor Ibérico">
+    <meta property="og:description" content="El sabor de Sudamérica con alma ibérica. Reserva en Sevilla.">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "Brasaland",
+        "description": "Restaurante de carnes sudamericanas y cocina ibérica en Sevilla.",
+        "url": "https://brasaland.com",
+        "telephone": "+34-123-456-789",
+        "servesCuisine": ["Argentine", "South American", "Spanish"],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Calle Las Ánimas 4",
+            "addressLocality": "Sevilla",
+            "addressRegion": "Andalucía",
+            "postalCode": "41808",
+            "addressCountry": "ES"
+        }
+    }
+    </script>
+
+    <style>
+        :root {
+            --brasa: #C8380A;
+            --brasa-dark: #8B2200;
+            --brasa-light: #E85A20;
+            --naranja: #F0701A;
+            --dorado: #D4943A;
+            --dorado-light: #F0C060;
+            --madera: #5C3317;
+            --madera-light: #8B5A2B;
+            --crema: #FDF6EC;
+            --crema-dark: #F5E8D0;
+            --carbon: #1A1008;
+            --humo: #2E1F0F;
+            --texto: #3D2010;
+            --texto-suave: #7A5535;
+
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'DM Sans', system-ui, sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--crema);
+            color: var(--texto);
+            overflow-x: hidden;
+        }
+
+        /* ── SKIP LINK ── */
+        .skip-link {
+            position: absolute; top: -100px; left: 16px;
+            background: var(--brasa); color: #fff;
+            padding: 8px 16px; border-radius: 8px;
+            font-weight: 500; z-index: 1000;
+            transition: top .2s;
+        }
+        .skip-link:focus { top: 16px; }
+
+        /* ── NAV ── */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--carbon);
+            border-bottom: 2px solid var(--brasa);
+            box-shadow: 0 4px 30px rgba(0,0,0,.5);
+        }
+
+        nav {
+            max-width: 1200px; margin: 0 auto;
+            padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 68px;
+        }
+
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.7rem; font-weight: 900;
+            color: var(--dorado-light);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        .nav-logo span { color: var(--brasa-light); }
+
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a {
+            color: rgba(255,255,255,.75);
+            text-decoration: none; font-size: .9rem;
+            font-weight: 400; letter-spacing: .3px;
+            transition: color .2s;
+        }
+        .nav-links a:hover { color: var(--dorado-light); }
+
+        .btn-reserva {
+            background: var(--brasa);
+            color: #fff !important;
+            padding: 9px 22px;
+            border-radius: 6px;
+            font-weight: 500 !important;
+            font-size: .88rem !important;
+            transition: background .2s, transform .15s !important;
+            border: none; cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-reserva:hover {
+            background: var(--brasa-light) !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-mobile-btn {
+            display: none; background: none; border: none;
+            color: #fff; cursor: pointer; padding: 4px;
+        }
+
+        /* ── HERO ── */
+        #hero {
+            min-height: 92vh;
+            background: var(--carbon);
+            position: relative;
+            display: flex; align-items: center;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 60% 40%, rgba(200,56,10,.22) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 20% 70%, rgba(212,148,58,.12) 0%, transparent 60%),
+                linear-gradient(160deg, #1A1008 0%, #2E1F0F 50%, #1A0800 100%);
+        }
+
+        /* animated ember particles */
+        .embers {
+            position: absolute; inset: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .ember {
+            position: absolute;
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: var(--dorado-light);
+            box-shadow: 0 0 6px var(--naranja);
+            animation: float-up var(--dur, 6s) var(--delay, 0s) infinite ease-in;
+            opacity: 0;
+        }
+        @keyframes float-up {
+            0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+            10%  { opacity: .9; }
+            80%  { opacity: .4; }
+            100% { transform: translateY(-90vh) translateX(var(--drift, 30px)) scale(.3); opacity: 0; }
+        }
+
+        .hero-inner {
+            position: relative; z-index: 2;
+            max-width: 1200px; margin: 0 auto;
+            padding: 60px 24px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 60px; align-items: center;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background: rgba(200,56,10,.25);
+            border: 1px solid rgba(200,56,10,.6);
+            color: var(--dorado-light);
+            font-size: .8rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            padding: 6px 16px; border-radius: 999px;
+            margin-bottom: 24px;
+            animation: fadeSlideIn .8s .2s both;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.8rem, 5vw, 4.5rem);
+            font-weight: 900; line-height: 1.07;
+            color: #fff;
+            margin-bottom: 24px;
+            animation: fadeSlideIn .8s .4s both;
+        }
+        .hero-title em {
+            font-style: italic;
+            color: var(--dorado-light);
+        }
+
+        .hero-sub {
+            font-size: 1.05rem; line-height: 1.7;
+            color: rgba(255,255,255,.65);
+            margin-bottom: 40px;
+            animation: fadeSlideIn .8s .55s both;
+        }
+
+        .hero-ctas {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            animation: fadeSlideIn .8s .7s both;
+        }
+
+        .btn-primary {
+            background: var(--brasa);
+            color: #fff; border: none;
+            padding: 14px 32px;
+            font-family: var(--font-body);
+            font-size: 1rem; font-weight: 500;
+            border-radius: 8px; cursor: pointer;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: background .2s, transform .15s, box-shadow .2s;
+            box-shadow: 0 4px 20px rgba(200,56,10,.4);
+        }
+        .btn-primary:hover {
+            background: var(--brasa-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(200,56,10,.55);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: rgba(255,255,255,.85);
+            border: 1.5px solid rgba(255,255,255,.3);
+            padding: 14px 28px;
+            font-family: var(--font-body);
+            font-size: 1rem; font-weight: 400;
+            border-radius: 8px; cursor: pointer;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: border-color .2s, color .2s, transform .15s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--dorado-light);
+            color: var(--dorado-light);
+            transform: translateY(-2px);
+        }
+
+        .hero-visual {
+            display: flex; flex-direction: column; gap: 16px;
+            animation: fadeSlideIn .8s .5s both;
+        }
+
+        .hero-card {
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(12px);
+            display: flex; align-items: center; gap: 20px;
+            transition: transform .3s, background .3s;
+        }
+        .hero-card:hover {
+            transform: translateX(-6px);
+            background: rgba(255,255,255,.08);
+        }
+        .hero-card-icon {
+            font-size: 2.2rem; flex-shrink: 0;
+            filter: drop-shadow(0 0 12px rgba(200,56,10,.6));
+        }
+        .hero-card-info { flex: 1; }
+        .hero-card-name {
+            font-family: var(--font-display);
+            font-size: 1.05rem; font-weight: 700;
+            color: #fff; margin-bottom: 4px;
+        }
+        .hero-card-price {
+            color: var(--dorado-light);
+            font-weight: 500; font-size: .95rem;
+        }
+        .hero-card-weight {
+            color: rgba(255,255,255,.45);
+            font-size: .8rem;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            background: var(--brasa-dark);
+            border-top: 1px solid rgba(255,255,255,.1);
+            border-bottom: 1px solid rgba(0,0,0,.2);
+        }
+        .stats-inner {
+            max-width: 1200px; margin: 0 auto;
+            padding: 20px 24px;
+            display: flex; justify-content: space-around;
+            flex-wrap: wrap; gap: 20px;
+        }
+        .stat {
+            text-align: center; color: #fff;
+        }
+        .stat-num {
+            font-family: var(--font-display);
+            font-size: 2rem; font-weight: 900;
+            color: var(--dorado-light);
+            display: block;
+        }
+        .stat-label {
+            font-size: .8rem; opacity: .7;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ── SECTION BASES ── */
+        section { padding: 80px 24px; }
+        .section-inner { max-width: 1200px; margin: 0 auto; }
+
+        .section-header { text-align: center; margin-bottom: 56px; }
+        .section-tag {
+            display: inline-block;
+            color: var(--brasa);
+            font-size: .78rem; font-weight: 500;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900; color: var(--carbon);
+            margin-bottom: 14px; line-height: 1.1;
+        }
+        .section-sub {
+            font-size: 1rem; color: var(--texto-suave);
+            max-width: 560px; margin: 0 auto; line-height: 1.7;
+        }
+
+        /* ── CARTA / MENÚ ── */
+        #carta { background: var(--crema); }
+
+        .category-tabs {
+            display: flex; gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+
+        .tab-btn {
+            background: #fff;
+            border: 2px solid var(--crema-dark);
+            color: var(--texto-suave);
+            padding: 10px 22px;
+            border-radius: 999px;
+            font-family: var(--font-body);
+            font-size: .9rem; font-weight: 500;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all .25s;
+        }
+        .tab-btn:hover, .tab-btn.active {
+            background: var(--brasa);
+            border-color: var(--brasa);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(200,56,10,.35);
+        }
+        .tab-icon { font-size: 1.1rem; }
+
+        .category-section { display: none; }
+        .category-section.active { display: block; }
+
+        .category-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .category-header h3 {
+            font-family: var(--font-display);
+            font-size: 1.8rem; font-weight: 700;
+            color: var(--carbon);
+            margin-bottom: 8px;
+        }
+        .category-header p {
+            color: var(--texto-suave);
+            font-size: .95rem; max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* dish grid */
+        .platos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 28px;
+        }
+
+        .plato-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--crema-dark);
+            transition: transform .3s, box-shadow .3s;
+            position: relative;
+        }
+        .plato-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(92,51,23,.15);
+        }
+
+        .plato-img {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--carbon) 0%, var(--humo) 100%);
+        }
+
+        /* placeholder food illustrations using CSS */
+        .plato-img::before {
+            content: var(--food-emoji, '🍽️');
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5rem;
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,.4));
+            background: radial-gradient(ellipse at center, rgba(200,56,10,.25) 0%, transparent 70%);
+        }
+
+        /* heat shimmer effect on hover */
+        .plato-card:hover .plato-img::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(200,56,10,.15) 100%);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { opacity: 0; }
+            50%       { opacity: 1; }
+        }
+
+        .plato-badge {
+            position: absolute; top: 14px; left: 14px;
+            background: var(--brasa);
+            color: #fff; font-size: .72rem;
+            font-weight: 500; letter-spacing: .5px;
+            padding: 4px 12px; border-radius: 999px;
+            z-index: 2;
+        }
+
+        .plato-body { padding: 22px; }
+
+        .plato-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .plato-nombre {
+            font-family: var(--font-display);
+            font-size: 1.15rem; font-weight: 700;
+            color: var(--carbon); line-height: 1.2;
+            flex: 1;
+        }
+
+        .plato-precio-box { text-align: right; flex-shrink: 0; }
+        .plato-precio {
+            display: block;
+            font-size: 1.4rem; font-weight: 700;
+            color: var(--brasa);
+            font-family: var(--font-display);
+        }
+        .plato-peso {
+            font-size: .78rem; color: var(--texto-suave);
+        }
+
+        .plato-desc {
+            font-size: .875rem; line-height: 1.65;
+            color: var(--texto-suave);
+            margin-bottom: 16px;
+        }
+
+        .plato-extras {
+            font-size: .78rem; color: var(--madera-light);
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            background: var(--crema);
+            border-radius: 6px;
+            border-left: 3px solid var(--dorado);
+        }
+
+        /* ALLERGENS */
+        .alergenos {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-bottom: 18px;
+        }
+        .alergeno-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #FFF8F0;
+            border: 1px solid #E8D0B0;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: .72rem;
+            color: var(--madera);
+            cursor: help;
+            position: relative;
+            transition: background .2s;
+        }
+        .alergeno-chip:hover { background: #F5E8D0; }
+        .alergeno-chip:hover .alergeno-tooltip {
+            opacity: 1; pointer-events: auto; transform: translateY(0);
+        }
+        .alergeno-tooltip {
+            position: absolute; bottom: calc(100% + 6px); left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: var(--carbon);
+            color: #fff; font-size: .7rem;
+            padding: 4px 10px; border-radius: 6px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s, transform .2s;
+            z-index: 10;
+        }
+        .alergeno-tooltip::after {
+            content: '';
+            position: absolute; top: 100%; left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--carbon);
+        }
+
+        .sin-alergenos {
+            font-size: .75rem; color: #3a8c4a;
+            display: flex; align-items: center; gap: 5px;
+            margin-bottom: 18px;
+        }
+
+        .btn-pedir {
+            width: 100%;
+            background: var(--brasa);
+            color: #fff; border: none;
+            padding: 13px;
+            font-family: var(--font-body);
+            font-size: .92rem; font-weight: 500;
+            border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background .2s, transform .15s, box-shadow .2s;
+        }
+        .btn-pedir:hover {
+            background: var(--brasa-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(200,56,10,.4);
+        }
+        .btn-pedir:active { transform: translateY(0); }
+
+        /* ── RESERVA CTA ── */
+        #reserva {
+            background: linear-gradient(135deg, var(--brasa-dark) 0%, var(--carbon) 60%);
+            position: relative; overflow: hidden;
+        }
+        #reserva::before {
+            content: '';
+            position: absolute; top: -50%; right: -20%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(212,148,58,.15) 0%, transparent 70%);
+        }
+        .reserva-inner {
+            position: relative; z-index: 2;
+            max-width: 700px; margin: 0 auto;
+            text-align: center;
+        }
+        .reserva-inner .section-title { color: #fff; }
+        .reserva-inner .section-sub { color: rgba(255,255,255,.65); }
+        .reserva-ctas {
+            display: flex; gap: 16px; justify-content: center;
+            flex-wrap: wrap; margin-top: 36px;
+        }
+
+        /* ── COMO FUNCIONA ── */
+        #como-funciona { background: var(--carbon); }
+        #como-funciona .section-title { color: #fff; }
+        #como-funciona .section-sub { color: rgba(255,255,255,.55); }
+
+        .pasos {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 32px;
+        }
+        .paso {
+            text-align: center;
+            animation: fadeSlideIn .6s both;
+        }
+        .paso-num {
+            width: 60px; height: 60px;
+            background: rgba(200,56,10,.2);
+            border: 2px solid var(--brasa);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.4rem; font-weight: 900;
+            color: var(--dorado-light);
+            margin: 0 auto 20px;
+        }
+        .paso h4 {
+            font-family: var(--font-display);
+            font-size: 1.05rem; font-weight: 700;
+            color: #fff; margin-bottom: 10px;
+        }
+        .paso p { font-size: .88rem; color: rgba(255,255,255,.5); line-height: 1.6; }
+
+        /* ── TESTIMONIOS ── */
+        #testimonios { background: var(--crema-dark); }
+
+        .testimonios-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+        }
+        .testimonio {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid rgba(212,148,58,.25);
+            position: relative;
+        }
+        .testimonio::before {
+            content: '"';
+            position: absolute; top: 16px; right: 20px;
+            font-family: var(--font-display);
+            font-size: 5rem; color: var(--crema-dark);
+            line-height: 1;
+        }
+        .testimonio p {
+            font-size: .93rem; line-height: 1.7;
+            color: var(--texto); margin-bottom: 20px;
+        }
+        .testimonio-autor {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .testimonio-avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brasa), var(--dorado));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #fff;
+            font-weight: 700; flex-shrink: 0;
+        }
+        .testimonio-nombre {
+            font-weight: 600; font-size: .9rem;
+            color: var(--carbon);
+        }
+        .testimonio-rol {
+            font-size: .78rem; color: var(--texto-suave);
+        }
+        .stars { color: var(--dorado); font-size: .9rem; margin-bottom: 4px; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--carbon);
+            border-top: 1px solid rgba(255,255,255,.08);
+            padding: 60px 24px 32px;
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px; margin-bottom: 48px;
+        }
+        .footer-brand .nav-logo {
+            display: block; margin-bottom: 16px; font-size: 1.5rem;
+        }
+        .footer-brand p {
+            color: rgba(255,255,255,.4);
+            font-size: .88rem; line-height: 1.7;
+            max-width: 240px;
+        }
+        .footer-col h5 {
+            color: rgba(255,255,255,.85);
+            font-size: .82rem; font-weight: 500;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 10px; }
+        .footer-col a, .footer-col span {
+            color: rgba(255,255,255,.4);
+            text-decoration: none; font-size: .88rem;
+            transition: color .2s;
+        }
+        .footer-col a:hover { color: var(--dorado-light); }
+        .footer-bottom {
+            max-width: 1200px; margin: 0 auto;
+            padding-top: 28px;
+            border-top: 1px solid rgba(255,255,255,.07);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .footer-bottom p { color: rgba(255,255,255,.3); font-size: .8rem; }
+
+        /* ── MODAL CONFIRMACIÓN ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.7);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+            opacity: 0; pointer-events: none;
+            transition: opacity .3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px; width: 100%;
+            text-align: center;
+            transform: scale(.9);
+            transition: transform .3s;
+        }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 16px; }
+        .modal h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem; font-weight: 700;
+            color: var(--carbon); margin-bottom: 12px;
+        }
+        .modal p { color: var(--texto-suave); line-height: 1.6; margin-bottom: 24px; }
+        .modal-close {
+            background: var(--brasa); color: #fff;
+            border: none; padding: 12px 32px;
+            border-radius: 8px; cursor: pointer;
+            font-family: var(--font-body);
+            font-size: .95rem; font-weight: 500;
+            transition: background .2s;
+        }
+        .modal-close:hover { background: var(--brasa-light); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+            .hero-visual { display: none; }
+            .footer-inner { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 640px) {
+            .nav-links { display: none; }
+            .nav-mobile-btn { display: block; }
+            .stats-inner { gap: 28px; }
+            .footer-inner { grid-template-columns: 1fr; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+            section { padding: 56px 16px; }
+            .hero-inner { padding: 48px 16px; }
+        }
+
+        /* mobile menu */
+        .mobile-menu {
+            position: fixed; inset: 0; z-index: 200;
+            background: var(--carbon);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 32px;
+            transform: translateX(100%);
+            transition: transform .35s cubic-bezier(.22,.68,0,1.2);
+        }
+        .mobile-menu.open { transform: translateX(0); }
+        .mobile-menu a {
+            color: #fff; text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 1.8rem; font-weight: 700;
+        }
+        .mobile-menu-close {
+            position: absolute; top: 20px; right: 20px;
+            background: none; border: none;
+            color: rgba(255,255,255,.6); cursor: pointer;
+            font-size: 1.5rem; padding: 8px;
+        }
+
+        /* Entrance animations */
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity .7s, transform .7s;
+        }
+        .reveal.visible {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* alergen legend box */
+        .alergenos-legend {
+            background: #fff;
+            border: 1px solid var(--crema-dark);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 48px;
+            display: flex; flex-wrap: wrap; gap: 10px;
+            align-items: center;
+        }
+        .legend-title {
+            font-size: .8rem; font-weight: 600;
+            color: var(--texto-suave);
+            text-transform: uppercase; letter-spacing: 1px;
+            width: 100%; margin-bottom: 4px;
+        }
+        .legend-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #FFF8F0;
+            border: 1px solid #E8D0B0;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: .78rem; color: var(--madera);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Menú móvil">
+        <button class="mobile-menu-close" id="menu-close" aria-label="Cerrar menú">✕</button>
+        <a href="#hero" onclick="closeMobileMenu()">Inicio</a>
+        <a href="#carta" onclick="closeMobileMenu()">Carta</a>
+        <a href="#como-funciona" onclick="closeMobileMenu()">Nosotros</a>
+        <a href="#testimonios" onclick="closeMobileMenu()">Clientes</a>
+        <a href="application.html" onclick="closeMobileMenu()" style="color: var(--dorado-light)">Reservar</a>
+    </div>
+
+    <header>
+        <nav aria-label="Navegación principal">
+            <a href="index.html" class="nav-logo">Brasa<span>land</span></a>
+            <div class="nav-links">
+                <a href="#hero">Inicio</a>
+                <a href="#carta">La Carta</a>
+                <a href="#como-funciona">Nosotros</a>
+                <a href="#testimonios">Clientes</a>
+                <a href="application.html" class="btn-reserva">Reservar Mesa</a>
+            </div>
+            <button class="nav-mobile-btn" id="menu-open" aria-label="Abrir menú" aria-expanded="false">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </nav>
+    </header>
+
+    <main id="main">
+
+        <!-- HERO -->
+        <section id="hero" aria-label="Bienvenida">
+            <div class="hero-bg"></div>
+            <div class="embers" id="embers"></div>
+            <div class="hero-inner">
+                <div class="hero-text">
+                    <span class="hero-tag">🔥 Brasaland · Sevilla</span>
+                    <h1 class="hero-title">
+                        El sabor de<br>
+                        <em>Sudamérica</em><br>
+                        con alma ibérica
+                    </h1>
+                    <p class="hero-sub">
+                        Carnes maduradas a la brasa de quebracho, arroces artesanales
+                        y la mejor despensa ibérica. Una experiencia que no olvidarás.
+                    </p>
+                    <div class="hero-ctas">
+                        <a href="#carta" class="btn-primary">
+                            <span>🍖</span> Ver la Carta
+                        </a>
+                        <a href="application.html" class="btn-secondary">
+                            <span>📅</span> Reservar Mesa
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="hero-card">
+                        <div class="hero-card-icon">🥩</div>
+                        <div class="hero-card-info">
+                            <div class="hero-card-name">Entraña Fina Argentina</div>
+                            <div class="hero-card-price">32,50€ <span class="hero-card-weight">· 350g</span></div>
+                        </div>
+                    </div>
+                    <div class="hero-card">
+                        <div class="hero-card-icon">🫕</div>
+                        <div class="hero-card-info">
+                            <div class="hero-card-name">Arroz Caldoso con Bogavante</div>
+                            <div class="hero-card-price">38,00€ <span class="hero-card-weight">· Para 1p</span></div>
+                        </div>
+                    </div>
+                    <div class="hero-card">
+                        <div class="hero-card-icon">🍖</div>
+                        <div class="hero-card-info">
+                            <div class="hero-card-name">Tabla Ibérica de Bellota</div>
+                            <div class="hero-card-price">24,90€ <span class="hero-card-weight">· 150g</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS BAR -->
+        <div class="stats-bar" aria-label="Estadísticas del restaurante">
+            <div class="stats-inner">
+                <div class="stat">
+                    <span class="stat-num">18</span>
+                    <span class="stat-label">Años de brasa</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">+30</span>
+                    <span class="stat-label">Platos en carta</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">4.9★</span>
+                    <span class="stat-label">Valoración media</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">100%</span>
+                    <span class="stat-label">Producto fresco</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- LA CARTA -->
+        <section id="carta" aria-label="Nuestra carta">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-tag">Nuestra Carta</span>
+                    <h2 class="section-title">La experiencia comienza aquí</h2>
+                    <p class="section-sub">Cada plato cuenta una historia. Sabores que viajan desde el Río de la Plata hasta la Sierra Morena, fusionados en nuestra cocina.</p>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="category-tabs" role="tablist" aria-label="Categorías del menú">
+                    <button class="tab-btn active" role="tab" aria-selected="true" data-cat="carnes">
+                        <span class="tab-icon">🔥</span> Carnes a la Brasa
+                    </button>
+                    <button class="tab-btn" role="tab" aria-selected="false" data-cat="arroces">
+                        <span class="tab-icon">🍚</span> Arroces
+                    </button>
+                    <button class="tab-btn" role="tab" aria-selected="false" data-cat="entrantes">
+                        <span class="tab-icon">🍖</span> Entrantes Ibéricos
+                    </button>
+                    <button class="tab-btn" role="tab" aria-selected="false" data-cat="postres">
+                        <span class="tab-icon">🍮</span> Postres
+                    </button>
+                </div>
+
+                <!-- Allergen Legend -->
+                <div class="alergenos-legend" aria-label="Leyenda de alérgenos">
+                    <div class="legend-title">🔍 Guía de Alérgenos — Pasa el ratón sobre cada etiqueta para más info</div>
+                    <span class="legend-chip">🌾 G · Gluten</span>
+                    <span class="legend-chip">🥛 L · Lácteos</span>
+                    <span class="legend-chip">🥚 H · Huevo</span>
+                    <span class="legend-chip">🥜 F · Frutos secos</span>
+                    <span class="legend-chip">🌿 M · Mostaza</span>
+                    <span class="legend-chip">🫘 So · Soja</span>
+                    <span class="legend-chip">🌱 Se · Sésamo</span>
+                    <span class="legend-chip">🍷 Su · Sulfitos</span>
+                </div>
+
+                <!-- Category sections — rendered by JS -->
+                <div id="menu-container"></div>
+            </div>
+        </section>
+
+        <!-- RESERVA CTA -->
+        <section id="reserva" aria-label="Reservar mesa">
+            <div class="section-inner">
+                <div class="reserva-inner reveal">
+                    <span class="section-tag" style="color: var(--dorado-light)">Tu mesa te espera</span>
+                    <h2 class="section-title">¿Listos para vivir la experiencia?</h2>
+                    <p class="section-sub">Reserva tu mesa en minutos. Sin esperas, sin llamadas — tu lugar en Brasaland garantizado.</p>
+                    <div class="reserva-ctas">
+                        <a href="application.html" class="btn-primary">
+                            📅 Reservar Mesa Ahora
+                        </a>
+                        <a href="tel:+34123456789" class="btn-secondary">
+                            📞 Llamar: +34 123 456 789
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMO FUNCIONA -->
+        <section id="como-funciona" aria-label="Cómo funciona">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-tag" style="color: var(--dorado)">Proceso</span>
+                    <h2 class="section-title">Del fuego a tu mesa</h2>
+                    <p class="section-sub" style="color:rgba(255,255,255,.5)">
+                        Cada pieza pasa por un proceso cuidado para que llegue perfecta a tu mesa.
+                    </p>
+                </div>
+                <div class="pasos">
+                    <div class="paso reveal" style="animation-delay:.1s">
+                        <div class="paso-num">1</div>
+                        <h4>Selección de Origen</h4>
+                        <p>Trabajamos solo con ganaderos de confianza en Argentina, Brasil e Ibérica española.</p>
+                    </div>
+                    <div class="paso reveal" style="animation-delay:.2s">
+                        <div class="paso-num">2</div>
+                        <h4>Maduración Controlada</h4>
+                        <p>Las carnes maduran entre 21 y 45 días en cámara para potenciar sabor y ternura.</p>
+                    </div>
+                    <div class="paso reveal" style="animation-delay:.3s">
+                        <div class="paso-num">3</div>
+                        <h4>Brasa de Quebracho</h4>
+                        <p>Carbón de quebracho argentino. Un humo y una temperatura únicos, imposibles de imitar.</p>
+                    </div>
+                    <div class="paso reveal" style="animation-delay:.4s">
+                        <div class="paso-num">4</div>
+                        <h4>En tu Mesa</h4>
+                        <p>Tu plato llega en el punto exacto que pediste. Sin excusas, sin medias tintas.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIOS -->
+        <section id="testimonios" aria-label="Testimonios de clientes">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-tag">Clientes</span>
+                    <h2 class="section-title">Lo que dicen nuestros comensales</h2>
+                    <p class="section-sub">No nos creas a nosotros. Pregúntales a ellos.</p>
+                </div>
+                <div class="testimonios-grid">
+                    <figure class="testimonio reveal">
+                        <div class="stars">★★★★★</div>
+                        <p>La entraña es el mejor corte que he probado fuera de Buenos Aires. El chimichurri casero es auténtico. ¡Volveré cada semana!</p>
+                        <figcaption class="testimonio-autor">
+                            <div class="testimonio-avatar">M</div>
+                            <div>
+                                <div class="testimonio-nombre">María González</div>
+                                <div class="testimonio-rol">Cliente habitual · Sevilla</div>
+                            </div>
+                        </figcaption>
+                    </figure>
+                    <figure class="testimonio reveal" style="animation-delay:.15s">
+                        <div class="stars">★★★★★</div>
+                        <p>El arroz con bogavante es un espectáculo. Lo piden mínimo 2 personas y valió cada euro. El socarrat, perfecto. No se improvisa esto.</p>
+                        <figcaption class="testimonio-autor">
+                            <div class="testimonio-avatar">C</div>
+                            <div>
+                                <div class="testimonio-nombre">Carlos Martínez</div>
+                                <div class="testimonio-rol">Crítico gastronómico</div>
+                            </div>
+                        </figcaption>
+                    </figure>
+                    <figure class="testimonio reveal" style="animation-delay:.3s">
+                        <div class="stars">★★★★★</div>
+                        <p>Vinimos con alergias al gluten y el equipo fue impecable. Señalaron qué era seguro, no hubo ningún susto. Eso vale todo.</p>
+                        <figcaption class="testimonio-autor">
+                            <div class="testimonio-avatar">L</div>
+                            <div>
+                                <div class="testimonio-nombre">Laura Fernández</div>
+                                <div class="testimonio-rol">Familia con celíacos</div>
+                            </div>
+                        </figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="index.html" class="nav-logo">Brasa<span>land</span></a>
+                <p>Carnes sudamericanas, arroces artesanales y despensa ibérica. Sevilla, desde 2006.</p>
+            </div>
+            <div class="footer-col">
+                <h5>La Carta</h5>
+                <ul>
+                    <li><a href="#carta" onclick="setTab('carnes')">Carnes a la Brasa</a></li>
+                    <li><a href="#carta" onclick="setTab('arroces')">Arroces</a></li>
+                    <li><a href="#carta" onclick="setTab('entrantes')">Entrantes Ibéricos</a></li>
+                    <li><a href="#carta" onclick="setTab('postres')">Postres</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Restaurante</h5>
+                <ul>
+                    <li><a href="#como-funciona">Nuestra Filosofía</a></li>
+                    <li><a href="#testimonios">Testimonios</a></li>
+                    <li><a href="application.html">Reservar Mesa</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contacto</h5>
+                <ul>
+                    <li><span>📞 +34 123 456 789</span></li>
+                    <li><span>✉️ reservas@brasaland.com</span></li>
+                    <li><span>📍 C/ Las Ánimas 4, Sevilla</span></li>
+                    <li><span>🕐 Martes–Dom · 13h–16h / 20h–23h</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Brasaland. Todos los derechos reservados.</p>
+            <p>Alérgenos disponibles en carta y en sala. Consulta a nuestro equipo.</p>
+        </div>
+    </footer>
+
+    <!-- ORDER MODAL -->
+    <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal">
+            <div class="modal-icon">🎉</div>
+            <h3 id="modal-title">¡Añadido al pedido!</h3>
+            <p id="modal-text">Tu plato ha sido añadido. Para hacer tu pedido completo o reservar, llámanos o usa el formulario de reservas.</p>
+            <button class="modal-close" onclick="closeModal()">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+    // ── MENU DATA (inline for single-file delivery; you can also fetch from menu.json) ──
+    const MENU_DATA = {
+        alergenos_clave: {
+            G:  { nombre: "Gluten", emoji: "🌾" },
+            L:  { nombre: "Lácteos", emoji: "🥛" },
+            H:  { nombre: "Huevo", emoji: "🥚" },
+            F:  { nombre: "Frutos secos", emoji: "🥜" },
+            M:  { nombre: "Mostaza", emoji: "🌿" },
+            So: { nombre: "Soja", emoji: "🫘" },
+            Se: { nombre: "Sésamo", emoji: "🌱" },
+            Su: { nombre: "Sulfitos", emoji: "🍷" }
+        },
+        categorias: [
+            {
+                id: "carnes",
+                nombre: "Carnes a la Brasa",
+                descripcion: "Cortes seleccionados de res argentina y vacuno ibérico, madurados y cocinados a fuego vivo",
+                platos: [
+                    { id:"tira-asado", emoji:"🥩", nombre:"Tira de Asado Argentina", descripcion:"Costilla de res cortada al través, marinada 24h con chimichurri casero. Cocinada lentamente sobre brasa de quebracho.", precio:28.90, peso:"500g", badge:"Más pedido", alergenos:["Su"], extras:"Acompañada de chimichurri y ensalada criolla" },
+                    { id:"entraña", emoji:"🔥", nombre:"Entraña Fina", descripcion:"Corte premium del diafragma, jugoso e intenso. La joya de la parrilla argentina. Punto perfecto garantizado.", precio:32.50, peso:"350g", badge:"Chef recomienda", alergenos:["Su"], extras:"Con papas bravas y salsa criolla" },
+                    { id:"picanha", emoji:"🇧🇷", nombre:"Picanha Brasileña", descripcion:"Tapa de cuadril con su capa de grasa intacta. Sabor inconfundible, textura extraordinaria. Emblema de la churrascaria.", precio:35.00, peso:"400g", badge:null, alergenos:["Su"], extras:"Con farofa artesanal y vinagreta" },
+                    { id:"secreto", emoji:"🐷", nombre:"Secreto Ibérico de Bellota", descripcion:"El corte más codiciado del cerdo ibérico de bellota. Infiltración de grasa única que lo hace inigualable a la brasa.", precio:26.90, peso:"300g", badge:"Ibérico", alergenos:["Su"], extras:"Con pimientos del piquillo asados" },
+                    { id:"ribeye", emoji:"💎", nombre:"Ribeye Black Angus", descripcion:"Corte con hueso de res Black Angus madurado 45 días. Infiltración perfecta, sabor profundo e intenso.", precio:42.00, peso:"500g", badge:"Premium", alergenos:["Su","L"], extras:"Con mantequilla de hierbas y patatas rústicas" }
+                ]
+            },
+            {
+                id: "arroces",
+                nombre: "Arroces del Mundo",
+                descripcion: "Arroces artesanales que fusionan técnicas mediterráneas con los sabores de América del Sur",
+                platos: [
+                    { id:"bogavante", emoji:"🦞", nombre:"Arroz Caldoso con Bogavante", descripcion:"Arroz bomba en caldo de marisco, con bogavante fresco de la lonja. Un festival de mar en cada cucharada.", precio:38.00, peso:"Para 1p", badge:"Mar", alergenos:["G","So","Su"], extras:"Mínimo 2 personas · Preparación: 25 min" },
+                    { id:"negro", emoji:"🦑", nombre:"Arroz Negro con Chipirones", descripcion:"Arroz teñido con tinta de calamar, chipirones salteados y alioli casero. Sabor marino profundo e intenso.", precio:22.50, peso:"Para 1p", badge:null, alergenos:["H","G","So","Su"], extras:"Con alioli tradicional" },
+                    { id:"pollo-macho", emoji:"🌶️", nombre:"Arroz con Pollo a lo Macho", descripcion:"Receta peruana tradicional: pollo en salsa de ají amarillo, cilantro y chicha de jora sobre arroz verde vibrante.", precio:19.90, peso:"Para 1p", badge:"Perú", alergenos:["G","Su"], extras:"Con salsa huancaína al lado" },
+                    { id:"paella", emoji:"🥘", nombre:"Paella Mixta de la Casa", descripcion:"La clásica paella valenciana con pollo, conejo, gambas y sepia. Socarrat garantizado.", precio:21.00, peso:"Por p (mín. 2)", badge:"Clásico", alergenos:["G","So","Su"], extras:"Disponible martes–domingo al mediodía" }
+                ]
+            },
+            {
+                id: "entrantes",
+                nombre: "Entrantes Ibéricos",
+                descripcion: "Lo mejor de la despensa ibérica para abrir el apetito con clase y sabor auténtico",
+                platos: [
+                    { id:"tabla", emoji:"🍖", nombre:"Tabla Ibérica de Bellota", descripcion:"Selección de jamón ibérico de bellota D.O. Jabugo, lomo embuchado y chorizo ibérico. Cortado al momento.", precio:24.90, peso:"150g", badge:"D.O. Jabugo", alergenos:["Su"], extras:"Con pan de cristal tostado y tomate rallado" },
+                    { id:"croquetas", emoji:"🍳", nombre:"Croquetas de Jamón Ibérico", descripcion:"Croquetas caseras de bechamel densa con trozos generosos de jamón ibérico. Crujientes por fuera, cremosas por dentro.", precio:12.50, peso:"6 uds.", badge:"Artesanal", alergenos:["G","L","H"], extras:"Receta de la abuela, elaboradas cada mañana" },
+                    { id:"patacon", emoji:"🍌", nombre:"Patacón con Hogao y Guacamole", descripcion:"Plátano verde aplastado y frito, base crujiente con salsa hogao colombiana y guacamole fresco.", precio:9.90, peso:"1 ud. grande", badge:"Colombia", alergenos:[], extras:"Vegano · Sin alérgenos comunes" },
+                    { id:"empanadas", emoji:"🥟", nombre:"Empanadas Criollas Surtidas", descripcion:"Empanadas argentinas de masa casera: carne cortada a cuchillo, pollo al curry y espinacas con queso.", precio:14.50, peso:"3 uds.", badge:"Argentina", alergenos:["G","L","H"], extras:"Salsas: chimichurri, criolla y picante" },
+                    { id:"pulpo", emoji:"🐙", nombre:"Pulpo a la Gallega con Cachelos", descripcion:"Pulpo de roca cocido a punto, sobre cachelos de patata gallega, pimentón de La Vera y aceite de oliva virgen extra.", precio:18.90, peso:"200g", badge:"Mar", alergenos:["Su"], extras:"D.O. Pimentón de La Vera" }
+                ]
+            },
+            {
+                id: "postres",
+                nombre: "Postres",
+                descripcion: "El dulce final que merece tu historia en Brasaland. Tradición sudamericana e ibérica en cada bocado",
+                platos: [
+                    { id:"tres-leches", emoji:"🍰", nombre:"Pastel Tres Leches", descripcion:"Bizcocho empapado en tres tipos de leche, cubierto de merengue flambeado. Receta colombiana original.", precio:8.50, peso:"Ración generosa", badge:"Colombia", alergenos:["G","L","H"], extras:"Sin gluten disponible bajo pedido" },
+                    { id:"churros", emoji:"🍩", nombre:"Churros con Chocolate Negro", descripcion:"Churros crujientes recién hechos con masa de mantequilla, servidos con chocolate negro 70% a la taza caliente.", precio:7.90, peso:"6 churros", badge:"Clásico", alergenos:["G","L","H"], extras:"Chocolate negro Valrhona" },
+                    { id:"alfajores", emoji:"🍪", nombre:"Alfajores de Maicena", descripcion:"Galletas de maicena que se deshacen en la boca, rellenas de dulce de leche artesanal argentino y recubiertas de coco.", precio:6.50, peso:"3 uds.", badge:"Argentina", alergenos:["G","L","H","F"], extras:"Dulce de leche elaborado en casa" },
+                    { id:"flan", emoji:"🍮", nombre:"Flan de Huevo con Caramelo", descripcion:"Flan artesanal de huevo campero con caramelo oscuro. La receta más clásica de la gastronomía española.", precio:6.00, peso:"Ración individual", badge:"Ibérico", alergenos:["L","H"], extras:"Con nata montada sin azúcar" }
+                ]
+            }
+        ]
+    };
+
+    // ── RENDER MENU ──
+    function renderMenu(activeId = "carnes") {
+        const container = document.getElementById("menu-container");
+        container.innerHTML = "";
+
+        MENU_DATA.categorias.forEach(cat => {
+            const section = document.createElement("div");
+            section.className = "category-section" + (cat.id === activeId ? " active" : "");
+            section.id = "cat-" + cat.id;
+            section.setAttribute("role", "tabpanel");
+
+            const grid = cat.platos.map(plato => buildPlatoCard(plato)).join("");
+
+            section.innerHTML = `
+                <div class="category-header">
+                    <h3>${cat.nombre}</h3>
+                    <p>${cat.descripcion}</p>
+                </div>
+                <div class="platos-grid">${grid}</div>
+            `;
+            container.appendChild(section);
+        });
+    }
+
+    function buildPlatoCard(plato) {
+        const badge = plato.badge
+            ? `<span class="plato-badge">${plato.badge}</span>`
+            : "";
+
+        const alergenosHtml = plato.alergenos.length === 0
+            ? `<div class="sin-alergenos">✅ Sin alérgenos comunes</div>`
+            : `<div class="alergenos" aria-label="Alérgenos: ${plato.alergenos.join(', ')}">
+                ${plato.alergenos.map(a => {
+                    const info = MENU_DATA.alergenos_clave[a];
+                    return info
+                        ? `<span class="alergeno-chip" tabindex="0" role="img" aria-label="${info.nombre}">
+                            ${info.emoji} ${a}
+                            <span class="alergeno-tooltip">${info.nombre}</span>
+                           </span>`
+                        : "";
+                }).join("")}
+               </div>`;
+
+        const precioFmt = plato.precio.toFixed(2).replace(".", ",") + "€";
+
+        return `
+        <article class="plato-card" data-id="${plato.id}">
+            <div class="plato-img" style="--food-emoji: '${plato.emoji}'">${badge}</div>
+            <div class="plato-body">
+                <div class="plato-top">
+                    <h3 class="plato-nombre">${plato.nombre}</h3>
+                    <div class="plato-precio-box">
+                        <span class="plato-precio">${precioFmt}</span>
+                        <span class="plato-peso">${plato.peso}</span>
+                    </div>
+                </div>
+                <p class="plato-desc">${plato.descripcion}</p>
+                ${plato.extras ? `<p class="plato-extras">ℹ️ ${plato.extras}</p>` : ""}
+                ${alergenosHtml}
+                <button class="btn-pedir" onclick="handlePedir('${plato.id}', '${plato.nombre.replace(/'/g, "\\'")}')">
+                    🛒 Añadir al Pedido
+                </button>
+            </div>
+        </article>`;
+    }
+
+    // ── TABS ──
+    function setTab(catId) {
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.cat === catId);
+            btn.setAttribute("aria-selected", btn.dataset.cat === catId);
+        });
+        document.querySelectorAll(".category-section").forEach(sec => {
+            sec.classList.toggle("active", sec.id === "cat-" + catId);
+        });
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => setTab(btn.dataset.cat));
+    });
+
+    // ── MODAL ──
+    function handlePedir(id, nombre) {
+        document.getElementById("modal-title").textContent = `¡"${nombre}" añadido!`;
+        document.getElementById("modal-text").textContent =
+            `Para hacer tu pedido completo o reservar mesa, llámanos al +34 123 456 789 o usa el formulario de reservas.`;
+        document.getElementById("modal").classList.add("open");
+    }
+
+    function closeModal() {
+        document.getElementById("modal").classList.remove("open");
+    }
+
+    document.getElementById("modal").addEventListener("click", e => {
+        if (e.target === document.getElementById("modal")) closeModal();
+    });
+
+    // ── MOBILE MENU ──
+    document.getElementById("menu-open").addEventListener("click", () => {
+        document.getElementById("mobile-menu").classList.add("open");
+        document.getElementById("menu-open").setAttribute("aria-expanded", "true");
+    });
+    document.getElementById("menu-close").addEventListener("click", closeMobileMenu);
+    function closeMobileMenu() {
+        document.getElementById("mobile-menu").classList.remove("open");
+        document.getElementById("menu-open").setAttribute("aria-expanded", "false");
+    }
+
+    // ── EMBERS ANIMATION ──
+    function createEmbers() {
+        const container = document.getElementById("embers");
+        if (!container) return;
+        for (let i = 0; i < 22; i++) {
+            const e = document.createElement("div");
+            e.className = "ember";
+            e.style.cssText = `
+                left: ${Math.random() * 100}%;
+                bottom: ${Math.random() * 20}%;
+                --dur: ${4 + Math.random() * 5}s;
+                --delay: ${Math.random() * 6}s;
+                --drift: ${(Math.random() - .5) * 80}px;
+                width: ${2 + Math.random() * 3}px;
+                height: ${2 + Math.random() * 3}px;
+            `;
+            container.appendChild(e);
+        }
+    }
+
+    // ── SCROLL REVEAL ──
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+            }
+        });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+    // ── INIT ──
+    renderMenu("carnes");
+    createEmbers();
+
+    // Re-observe after render (cards added dynamically)
+    setTimeout(() => {
+        document.querySelectorAll(".plato-card").forEach((el, i) => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(24px)";
+            el.style.transition = `opacity .5s ${i * .06}s, transform .5s ${i * .06}s`;
+            observer.observe(el);
+        });
+    }, 50);
+    </script>
+
+</body>
+</html>

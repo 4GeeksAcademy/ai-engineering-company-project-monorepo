@@ -1,0 +1,251 @@
+{
+  "restaurante": {
+    "nombre": "Brasaland",
+    "slogan": "El sabor de Sudamérica con alma ibérica",
+    "telefono": "+34 123 456 789",
+    "email": "reservas@brasaland.com",
+    "direccion": "Calle Las Ánimas 4, Sevilla"
+  },
+  "alergenos_clave": {
+    "G": { "nombre": "Gluten", "emoji": "🌾" },
+    "L": { "nombre": "Lácteos", "emoji": "🥛" },
+    "H": { "nombre": "Huevo", "emoji": "🥚" },
+    "F": { "nombre": "Frutos secos", "emoji": "🥜" },
+    "M": { "nombre": "Mostaza", "emoji": "🌿" },
+    "So": { "nombre": "Soja", "emoji": "🫘" },
+    "Se": { "nombre": "Sésamo", "emoji": "🌱" },
+    "Su": { "nombre": "Sulfitos", "emoji": "🍷" }
+  },
+  "categorias": [
+    {
+      "id": "carnes",
+      "nombre": "Carnes a la Brasa",
+      "icono": "🔥",
+      "descripcion": "Cortes seleccionados de res argentina y vacuno ibérico, madurados y cocinados a fuego vivo",
+      "platos": [
+        {
+          "id": "tira-asado",
+          "nombre": "Tira de Asado Argentina",
+          "descripcion": "Costilla de res cortada al través, marinada 24h con chimichurri casero. Cocinada lentamente sobre brasa de quebracho.",
+          "precio": 28.90,
+          "peso": "500g",
+          "imagen_placeholder": "tira-asado",
+          "badge": "Más pedido",
+          "alergenos": ["Su"],
+          "extras": "Acompañada de chimichurri y ensalada criolla"
+        },
+        {
+          "id": "entraña",
+          "nombre": "Entraña Fina",
+          "descripcion": "Corte premium del diafragma, jugoso e intenso. La joya de la parrilla argentina. Punto perfecto garantizado.",
+          "precio": 32.50,
+          "peso": "350g",
+          "imagen_placeholder": "entraña",
+          "badge": "Chef recomienda",
+          "alergenos": ["Su"],
+          "extras": "Con papas bravas y salsa criolla"
+        },
+        {
+          "id": "picanha",
+          "nombre": "Picanha Brasileña",
+          "descripcion": "Tapa de cuadril con su capa de grasa intacta. Sabor inconfundible, textura extraordinaria. Emblema de la churrascaria.",
+          "precio": 35.00,
+          "peso": "400g",
+          "imagen_placeholder": "picanha",
+          "badge": null,
+          "alergenos": ["Su"],
+          "extras": "Con farofa artesanal y vinagreta"
+        },
+        {
+          "id": "secreto-iberico",
+          "nombre": "Secreto Ibérico de Bellota",
+          "descripcion": "El corte más codiciado del cerdo ibérico de bellota. Infiltración de grasa única que lo hace inigualable a la brasa.",
+          "precio": 26.90,
+          "peso": "300g",
+          "imagen_placeholder": "secreto",
+          "badge": "Ibérico",
+          "alergenos": ["Su"],
+          "extras": "Con pimientos del piquillo asados"
+        },
+        {
+          "id": "ribeye",
+          "nombre": "Ribeye Black Angus",
+          "descripcion": "Corte con hueso de res Black Angus madurado 45 días. Infiltración perfecta, sabor profundo e intenso.",
+          "precio": 42.00,
+          "peso": "500g",
+          "imagen_placeholder": "ribeye",
+          "badge": "Premium",
+          "alergenos": ["Su", "L"],
+          "extras": "Con mantequilla de hierbas y patatas rústicas"
+        }
+      ]
+    },
+    {
+      "id": "arroces",
+      "nombre": "Arroces del Mundo",
+      "icono": "🍚",
+      "descripcion": "Arroces artesanales que fusionan técnicas mediterráneas con los sabores de América del Sur",
+      "platos": [
+        {
+          "id": "arroz-bogavante",
+          "nombre": "Arroz Caldoso con Bogavante",
+          "descripcion": "Arroz bomba en caldo de marisco, con bogavante fresco de la lonja. Un festival de mar en cada cucharada.",
+          "precio": 38.00,
+          "peso": "Para 1 persona",
+          "imagen_placeholder": "arroz-bogavante",
+          "badge": "Mar",
+          "alergenos": ["G", "So", "Su"],
+          "extras": "Mínimo 2 personas. Tiempo de preparación: 25 min"
+        },
+        {
+          "id": "arroz-negro",
+          "nombre": "Arroz Negro con Chipirones",
+          "descripcion": "Arroz teñido con tinta de calamar, chipirones salteados y alioli casero. Sabor marino profundo e intenso.",
+          "precio": 22.50,
+          "peso": "Para 1 persona",
+          "imagen_placeholder": "arroz-negro",
+          "badge": null,
+          "alergenos": ["H", "G", "So", "Su"],
+          "extras": "Con alioli tradicional"
+        },
+        {
+          "id": "arroz-sudamericano",
+          "nombre": "Arroz con Pollo a lo Macho",
+          "descripcion": "Receta peruana tradicional: pollo en salsa de ají amarillo, cilantro y chicha de jora sobre arroz verde vibrante.",
+          "precio": 19.90,
+          "peso": "Para 1 persona",
+          "imagen_placeholder": "arroz-pollo",
+          "badge": "Perú",
+          "alergenos": ["G", "Su"],
+          "extras": "Con salsa huancaína al lado"
+        },
+        {
+          "id": "paella-mixta",
+          "nombre": "Paella Mixta de la Casa",
+          "descripcion": "La clásica paella valenciana con pollo, conejo, gambas y sepia. Socarrat garantizado.",
+          "precio": 21.00,
+          "peso": "Por persona (mín. 2)",
+          "imagen_placeholder": "paella",
+          "badge": "Clásico",
+          "alergenos": ["G", "So", "Su"],
+          "extras": "Disponible de martes a domingo al mediodía"
+        }
+      ]
+    },
+    {
+      "id": "entrantes",
+      "nombre": "Entrantes Ibéricos",
+      "icono": "🍖",
+      "descripcion": "Lo mejor de la despensa ibérica para abrir el apetito con clase y sabor auténtico",
+      "platos": [
+        {
+          "id": "tabla-ibericos",
+          "nombre": "Tabla Ibérica de Bellota",
+          "descripcion": "Selección de jamón ibérico de bellota D.O. Jabugo, lomo embuchado y chorizo ibérico. Cortado al momento.",
+          "precio": 24.90,
+          "peso": "150g",
+          "imagen_placeholder": "tabla-iberica",
+          "badge": "D.O. Jabugo",
+          "alergenos": ["Su"],
+          "extras": "Con pan de cristal tostado y tomate rallado"
+        },
+        {
+          "id": "croquetas",
+          "nombre": "Croquetas de Jamón Ibérico",
+          "descripcion": "Croquetas caseras de bechamel densa con trozos generosos de jamón ibérico. Crujientes por fuera, cremosas por dentro.",
+          "precio": 12.50,
+          "peso": "6 unidades",
+          "imagen_placeholder": "croquetas",
+          "badge": "Artesanal",
+          "alergenos": ["G", "L", "H"],
+          "extras": "Receta de la abuela, elaboradas cada mañana"
+        },
+        {
+          "id": "patacon",
+          "nombre": "Patacón con Hogao y Guacamole",
+          "descripcion": "Plátano verde aplastado y frito, base crujiente con salsa hogao colombiana y guacamole fresco. Fusión perfecta.",
+          "precio": 9.90,
+          "peso": "1 unidad grande",
+          "imagen_placeholder": "patacon",
+          "badge": "Colombia",
+          "alergenos": [],
+          "extras": "Vegano. Sin alérgenos comunes"
+        },
+        {
+          "id": "empanadas",
+          "nombre": "Empanadas Criollas Surtidas",
+          "descripcion": "Empanadas argentinas de masa casera: carne cortada a cuchillo, pollo al curry y espinacas con queso.",
+          "precio": 14.50,
+          "peso": "3 unidades",
+          "imagen_placeholder": "empanadas",
+          "badge": "Argentina",
+          "alergenos": ["G", "L", "H"],
+          "extras": "Salsas: chimichurri, salsa criolla y picante"
+        },
+        {
+          "id": "pulpo",
+          "nombre": "Pulpo a la Gallega con Cachelos",
+          "descripcion": "Pulpo de roca cocido a punto, sobre cachelos de patata gallega, pimentón de La Vera y aceite de oliva virgen extra.",
+          "precio": 18.90,
+          "peso": "200g",
+          "imagen_placeholder": "pulpo",
+          "badge": "Mar",
+          "alergenos": ["Su"],
+          "extras": "D.O. Pimentón de La Vera"
+        }
+      ]
+    },
+    {
+      "id": "postres",
+      "nombre": "Postres",
+      "icono": "🍮",
+      "descripcion": "El dulce final que merece tu historia en Brasaland. Tradición sudamericana e ibérica en cada bocado",
+      "platos": [
+        {
+          "id": "tres-leches",
+          "nombre": "Pastel Tres Leches",
+          "descripcion": "Bizcocho empapado en tres tipos de leche (condensada, evaporada y nata), cubierto de merengue flambeado. Receta colombiana original.",
+          "precio": 8.50,
+          "peso": "Ración generosa",
+          "imagen_placeholder": "tres-leches",
+          "badge": "Colombia",
+          "alergenos": ["G", "L", "H"],
+          "extras": "Sin gluten disponible bajo pedido"
+        },
+        {
+          "id": "churros",
+          "nombre": "Churros con Chocolate Negro",
+          "descripcion": "Churros crujientes recién hechos con masa de mantequilla, servidos con chocolate negro 70% a la taza caliente.",
+          "precio": 7.90,
+          "peso": "6 churros",
+          "imagen_placeholder": "churros",
+          "badge": "Clásico",
+          "alergenos": ["G", "L", "H"],
+          "extras": "Chocolate negro Valrhona"
+        },
+        {
+          "id": "alfajores",
+          "nombre": "Alfajores de Maicena",
+          "descripcion": "Galletas de maicena que se deshacen en la boca, rellenas de dulce de leche artesanal argentino y recubiertas de coco.",
+          "precio": 6.50,
+          "peso": "3 unidades",
+          "imagen_placeholder": "alfajores",
+          "badge": "Argentina",
+          "alergenos": ["G", "L", "H", "F"],
+          "extras": "Dulce de leche elaborado en casa"
+        },
+        {
+          "id": "flan-iberico",
+          "nombre": "Flan de Huevo con Caramelo",
+          "descripcion": "Flan artesanal de huevo campero con caramelo oscuro. La receta más clásica de la gastronomía española, sin artificios.",
+          "precio": 6.00,
+          "peso": "Ración individual",
+          "imagen_placeholder": "flan",
+          "badge": "Ibérico",
+          "alergenos": ["L", "H"],
+          "extras": "Con nata montada sin azúcar"
+        }
+      ]
+    }
+  ]
+}

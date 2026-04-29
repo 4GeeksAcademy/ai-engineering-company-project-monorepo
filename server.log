@@ -1,0 +1,5 @@
+
+> ai-engineering-company-project@0.1.0 start
+> node server.js
+
+Static server running at http://localhost:3000
