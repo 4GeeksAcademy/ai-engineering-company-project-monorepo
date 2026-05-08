@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Track Flow client application form for warehousing, fulfillment, and last-mile delivery services."
+  />
+  <title>Track Flow | Client Application</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            flowBlue: '#2563EB',
+            flowBlueDeep: '#1B4FBB'
+          },
+          fontFamily: {
+            heading: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+            body: ['"Manrope"', 'ui-sans-serif', 'system-ui']
+          },
+          boxShadow: {
+            panel: '0 20px 50px rgba(37, 99, 235, 0.15)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body class="min-h-screen bg-slate-50 font-body text-slate-900 antialiased">
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_15%,rgba(37,99,235,0.18),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(16,185,129,0.14),transparent_28%),linear-gradient(to_bottom,#f1f7ff,#f8fbff,#ffffff)]"></div>
+
+  <header class="sticky top-0 z-20 border-b border-blue-100 bg-white/85 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <a
+        href="TrackFlow.html"
+        class="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
+        aria-label="Go back to Track Flow homepage"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        Back
+      </a>
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Track Flow Application</p>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-5xl px-4 pb-14 pt-8 sm:px-6 lg:px-8">
+    <section class="mb-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8">
+      <p class="mb-3 inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-flowBlueDeep">
+        Faster routes, smarter deliveries
+      </p>
+      <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">Client Logistics Application</h1>
+      <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
+        Share your company and distribution requirements so our operations team can design the right warehousing,
+        fulfillment, and last-mile plan for your growth goals.
+      </p>
+    </section>
+
+    <form action="#" method="post" class="space-y-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8" novalidate>
+      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Company Information</legend>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="space-y-2 sm:col-span-2">
+            <label for="companyName" class="block text-sm font-semibold text-slate-800">Company name</label>
+            <input
+              id="companyName"
+              name="companyName"
+              type="text"
+              required
+              autocomplete="organization"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Example: NorthPoint Commerce"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="industry" class="block text-sm font-semibold text-slate-800">Industry</label>
+            <input
+              id="industry"
+              name="industry"
+              type="text"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Retail, healthcare, electronics..."
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="website" class="block text-sm font-semibold text-slate-800">Company website</label>
+            <input
+              id="website"
+              name="website"
+              type="url"
+              autocomplete="url"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Primary Contact</legend>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label for="contactName" class="block text-sm font-semibold text-slate-800">Full name</label>
+            <input
+              id="contactName"
+              name="contactName"
+              type="text"
+              required
+              autocomplete="name"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Your full name"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="jobTitle" class="block text-sm font-semibold text-slate-800">Job title</label>
+            <input
+              id="jobTitle"
+              name="jobTitle"
+              type="text"
+              required
+              autocomplete="organization-title"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Operations Manager"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-semibold text-slate-800">Business email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="you@company.com"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone number</label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              required
+              autocomplete="tel"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="+1 800 555 0199"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Logistics Requirements</legend>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label for="serviceType" class="block text-sm font-semibold text-slate-800">Primary service needed</label>
+            <select
+              id="serviceType"
+              name="serviceType"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+            >
+              <option value="">Select an option</option>
+              <option value="warehousing">Warehousing</option>
+              <option value="inventory-management">Inventory Management</option>
+              <option value="order-fulfillment">Order Fulfillment</option>
+              <option value="last-mile-delivery">Last-Mile Delivery</option>
+              <option value="full-solution">Complete End-to-End Solution</option>
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label for="monthlyOrders" class="block text-sm font-semibold text-slate-800">Estimated monthly orders</label>
+            <input
+              id="monthlyOrders"
+              name="monthlyOrders"
+              type="number"
+              required
+              min="1"
+              step="1"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="e.g. 2500"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="coverageArea" class="block text-sm font-semibold text-slate-800">Coverage area</label>
+            <input
+              id="coverageArea"
+              name="coverageArea"
+              type="text"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Major cities, regional routes, or both"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label for="goLiveDate" class="block text-sm font-semibold text-slate-800">Target go-live date</label>
+            <input
+              id="goLiveDate"
+              name="goLiveDate"
+              type="date"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+            />
+          </div>
+
+          <div class="space-y-2 sm:col-span-2">
+            <label for="notes" class="block text-sm font-semibold text-slate-800">Operational notes</label>
+            <textarea
+              id="notes"
+              name="notes"
+              required
+              rows="5"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
+              placeholder="Share storage constraints, SKU count, shipment windows, or delivery expectations."
+            ></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+        <button
+          type="reset"
+          class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
+        >
+          Clear form
+        </button>
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center rounded-xl border border-flowBlue bg-flowBlue px-5 py-3 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
+        >
+          Submit application
+        </button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Track Flow provides secure warehousing, inventory management, and reliable last-mile delivery for fast-growing businesses." />
+  <title>Track Flow | Faster routes, smarter deliveries</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --flow-blue: #2563eb;
+      --flow-blue-deep: #1b4fbb;
+      --ink: #0f172a;
+      --slate: #334155;
+      --muted: #64748b;
+      --cloud: #f8fbff;
+      --card: #ffffff;
+      --line: #dbeafe;
+      --accent: #10b981;
+      --radius: 18px;
+      --shadow: 0 15px 45px rgba(37, 99, 235, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Manrope", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 15%, rgba(37, 99, 235, 0.14), transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.1), transparent 22%),
+        linear-gradient(180deg, #f0f7ff 0%, #ffffff 40%, #f8fbff 100%);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1120px, 92%);
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(248, 251, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--slate);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.25s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--flow-blue);
+      outline: none;
+    }
+
+    .hero {
+      padding: 92px 0 72px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: 18%;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: conic-gradient(from 100deg, rgba(37, 99, 235, 0.25), rgba(16, 185, 129, 0.16), rgba(37, 99, 235, 0.08));
+      filter: blur(4px);
+      z-index: -1;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      gap: 36px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--flow-blue-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: var(--flow-blue);
+    }
+
+    h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .hero p {
+      font-size: 1.08rem;
+      color: var(--slate);
+      max-width: 62ch;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 13px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--flow-blue), #1d4ed8);
+      color: #ffffff;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(37, 99, 235, 0.32);
+      outline: none;
+    }
+
+    .btn-secondary {
+      color: var(--flow-blue-deep);
+      border-color: rgba(37, 99, 235, 0.3);
+      background: #ffffff;
+    }
+
+    .btn-secondary:hover,
+    .btn-secondary:focus-visible {
+      background: #eff6ff;
+      outline: none;
+    }
+
+    .hero-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel h2 {
+      font-family: "Space Grotesk", sans-serif;
+      margin-bottom: 14px;
+      font-size: 1.35rem;
+    }
+
+    .hero-panel ul {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: var(--slate);
+    }
+
+    .hero-panel li {
+      padding-left: 22px;
+      position: relative;
+      font-weight: 600;
+    }
+
+    .hero-panel li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
+
+    section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.65rem, 2.8vw, 2.35rem);
+      margin-bottom: 12px;
+      text-wrap: balance;
+    }
+
+    .section-lead {
+      color: var(--muted);
+      margin-bottom: 28px;
+      max-width: 70ch;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+      transform: translateY(12px);
+      opacity: 0;
+      animation: rise 0.6s ease forwards;
+    }
+
+    .feature-card:nth-child(2) { animation-delay: 0.12s; }
+    .feature-card:nth-child(3) { animation-delay: 0.24s; }
+
+    .feature-card h3 {
+      font-family: "Space Grotesk", sans-serif;
+      margin-bottom: 10px;
+      font-size: 1.12rem;
+    }
+
+    .feature-card p {
+      color: var(--slate);
+      font-size: 0.98rem;
+    }
+
+    .contact {
+      background: linear-gradient(135deg, #e0ecff 0%, #f5fbff 100%);
+      border-top: 1px solid rgba(37, 99, 235, 0.16);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.16);
+    }
+
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .contact p {
+      color: var(--slate);
+      font-size: 1rem;
+    }
+
+    .contact-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .contact-links a {
+      color: var(--flow-blue-deep);
+      font-weight: 700;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+
+    .site-footer {
+      background: #0b224f;
+      color: #dbeafe;
+      padding: 30px 0;
+      font-size: 0.95rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .motto {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    @keyframes rise {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        padding-top: 72px;
+      }
+
+      .hero-layout,
+      .contact-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        width: 100%;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Track Flow home">
+        <img src="shared/TrackFlowLogo.png" alt="Track Flow logo" />
+        <span>Track Flow</span>
+      </a>
+
+      <nav aria-label="Primary navigation">
+        <ul class="nav-links">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#benefits">Benefits</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="application.html">Apply</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="services">
+      <div class="container hero-layout">
+        <div>
+          <span class="eyebrow">Logistics Partner</span>
+          <h1>Secure warehousing and smarter last-mile delivery for growing businesses.</h1>
+          <p>
+            Track Flow helps companies store, process, and move products with speed and reliability. From organized inventory management to accurate order fulfillment and on-time delivery, we design routes and operations that keep your business moving forward.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="application.html">Start Your Application</a>
+            <a class="btn btn-secondary" href="#benefits">See Why Clients Choose Us</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel" aria-label="Core strengths">
+          <h2>Why Track Flow</h2>
+          <ul>
+            <li>Secure and scalable warehousing operations</li>
+            <li>Inventory visibility with smooth fulfillment workflows</li>
+            <li>Fast, reliable delivery across cities and regional markets</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="benefits">
+      <div class="container">
+        <h2 class="section-title">Main features powered by industry experience</h2>
+        <p class="section-lead">
+          Our team supports major city distribution, nearby regional markets, and strategic commercial routes. We combine practical warehouse operations and route planning to help you scale confidently.
+        </p>
+
+        <div class="features-grid">
+          <article class="feature-card">
+            <h3>Reliable Warehousing</h3>
+            <p>
+              Structured storage and handling processes protect your inventory while keeping products ready for rapid movement.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <h3>End-to-End Fulfillment</h3>
+            <p>
+              Integrated inventory management and order fulfillment reduce friction and improve delivery accuracy.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <h3>On-Time Last-Mile Routes</h3>
+            <p>
+              Route optimization and local market coverage improve delivery speed so your customers receive orders on schedule.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="container contact-wrap">
+        <div>
+          <h2 class="section-title">Ready to improve your logistics flow?</h2>
+          <p>
+            Connect with our team to plan a warehousing and distribution model tailored to your growth goals.
+          </p>
+          <div class="contact-links">
+            <a href="mailto:hello@trackflow.com">hello@trackflow.com</a>
+            <a href="tel:+18005550199">+1 (800) 555-0199</a>
+          </div>
+        </div>
+
+        <a class="btn btn-primary" href="mailto:hello@trackflow.com">Start the Conversation</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="container contact-wrap">
+        <div>
+          <h2 class="section-title">Looking for a custom logistics setup?</h2>
+          <p>
+            Complete a quick application so our operations team can review your needs and propose the right warehousing and delivery plan.
+          </p>
+        </div>
+
+        <a class="btn btn-primary" href="application.html">Open Application Form</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>Track Flow Logistics Solutions</p>
+      <p class="motto">Faster routes, smarter deliveries</p>
+      <p>&copy; 2026 Track Flow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
