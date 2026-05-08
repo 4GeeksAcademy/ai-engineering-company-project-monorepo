@@ -67,12 +67,16 @@
     </section>
 
     <form action="#" method="post" class="space-y-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8" novalidate>
+      <p class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-slate-700">
+        <span class="font-bold text-flowBlueDeep" aria-hidden="true">*</span> indicates a required field.
+      </p>
+
       <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
         <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Company Information</legend>
 
         <div class="grid gap-5 sm:grid-cols-2">
           <div class="space-y-2 sm:col-span-2">
-            <label for="companyName" class="block text-sm font-semibold text-slate-800">Company name</label>
+            <label for="companyName" class="block text-sm font-semibold text-slate-800">Company name <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="companyName"
               name="companyName"
@@ -85,7 +89,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="industry" class="block text-sm font-semibold text-slate-800">Industry</label>
+            <label for="industry" class="block text-sm font-semibold text-slate-800">Industry <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="industry"
               name="industry"
@@ -115,7 +119,7 @@
 
         <div class="grid gap-5 sm:grid-cols-2">
           <div class="space-y-2">
-            <label for="contactName" class="block text-sm font-semibold text-slate-800">Full name</label>
+            <label for="contactName" class="block text-sm font-semibold text-slate-800">Full name <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="contactName"
               name="contactName"
@@ -128,7 +132,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="jobTitle" class="block text-sm font-semibold text-slate-800">Job title</label>
+            <label for="jobTitle" class="block text-sm font-semibold text-slate-800">Job title <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="jobTitle"
               name="jobTitle"
@@ -141,7 +145,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="email" class="block text-sm font-semibold text-slate-800">Business email</label>
+            <label for="email" class="block text-sm font-semibold text-slate-800">Business email <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="email"
               name="email"
@@ -154,7 +158,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone number</label>
+            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone number <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="phone"
               name="phone"
@@ -173,7 +177,7 @@
 
         <div class="grid gap-5 sm:grid-cols-2">
           <div class="space-y-2">
-            <label for="serviceType" class="block text-sm font-semibold text-slate-800">Primary service needed</label>
+            <label for="serviceType" class="block text-sm font-semibold text-slate-800">Primary service needed <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <select
               id="serviceType"
               name="serviceType"
@@ -190,7 +194,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="monthlyOrders" class="block text-sm font-semibold text-slate-800">Estimated monthly orders</label>
+            <label for="monthlyOrders" class="block text-sm font-semibold text-slate-800">Estimated monthly orders <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="monthlyOrders"
               name="monthlyOrders"
@@ -204,7 +208,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="coverageArea" class="block text-sm font-semibold text-slate-800">Coverage area</label>
+            <label for="coverageArea" class="block text-sm font-semibold text-slate-800">Coverage area <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="coverageArea"
               name="coverageArea"
@@ -216,7 +220,7 @@
           </div>
 
           <div class="space-y-2">
-            <label for="goLiveDate" class="block text-sm font-semibold text-slate-800">Target go-live date</label>
+            <label for="goLiveDate" class="block text-sm font-semibold text-slate-800">Target go-live date <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <input
               id="goLiveDate"
               name="goLiveDate"
@@ -227,7 +231,7 @@
           </div>
 
           <div class="space-y-2 sm:col-span-2">
-            <label for="notes" class="block text-sm font-semibold text-slate-800">Operational notes</label>
+            <label for="notes" class="block text-sm font-semibold text-slate-800">Operational notes <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
             <textarea
               id="notes"
               name="notes"
