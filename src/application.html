@@ -61,204 +61,159 @@
       </p>
       <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">Client Logistics Application</h1>
       <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-        Share your company and distribution requirements so our operations team can design the right warehousing,
-        fulfillment, and last-mile plan for your growth goals.
+        Tell us what your operation needs and we will build a warehousing and distribution model around your goals.
       </p>
     </section>
 
-    <form action="#" method="post" class="space-y-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8" novalidate>
+    <form id="applicationForm" action="#" method="post" class="space-y-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8" novalidate>
       <p class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-slate-700">
         <span class="font-bold text-flowBlueDeep" aria-hidden="true">*</span> indicates a required field.
       </p>
 
       <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Company Information</legend>
-
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Company Details</legend>
         <div class="grid gap-5 sm:grid-cols-2">
           <div class="space-y-2 sm:col-span-2">
             <label for="companyName" class="block text-sm font-semibold text-slate-800">Company name <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="companyName"
-              name="companyName"
-              type="text"
-              required
-              autocomplete="organization"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Example: NorthPoint Commerce"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="industry" class="block text-sm font-semibold text-slate-800">Industry <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="industry"
-              name="industry"
-              type="text"
-              required
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Retail, healthcare, electronics..."
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="website" class="block text-sm font-semibold text-slate-800">Company website</label>
-            <input
-              id="website"
-              name="website"
-              type="url"
-              autocomplete="url"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="https://example.com"
-            />
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Primary Contact</legend>
-
-        <div class="grid gap-5 sm:grid-cols-2">
-          <div class="space-y-2">
-            <label for="contactName" class="block text-sm font-semibold text-slate-800">Full name <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="contactName"
-              name="contactName"
-              type="text"
-              required
-              autocomplete="name"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Your full name"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="jobTitle" class="block text-sm font-semibold text-slate-800">Job title <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="jobTitle"
-              name="jobTitle"
-              type="text"
-              required
-              autocomplete="organization-title"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Operations Manager"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="email" class="block text-sm font-semibold text-slate-800">Business email <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autocomplete="email"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="you@company.com"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone number <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              required
-              autocomplete="tel"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="+1 800 555 0199"
-            />
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Logistics Requirements</legend>
-
-        <div class="grid gap-5 sm:grid-cols-2">
-          <div class="space-y-2">
-            <label for="serviceType" class="block text-sm font-semibold text-slate-800">Primary service needed <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <select
-              id="serviceType"
-              name="serviceType"
-              required
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-            >
-              <option value="">Select an option</option>
-              <option value="warehousing">Warehousing</option>
-              <option value="inventory-management">Inventory Management</option>
-              <option value="order-fulfillment">Order Fulfillment</option>
-              <option value="last-mile-delivery">Last-Mile Delivery</option>
-              <option value="full-solution">Complete End-to-End Solution</option>
-            </select>
-          </div>
-
-          <div class="space-y-2">
-            <label for="monthlyOrders" class="block text-sm font-semibold text-slate-800">Estimated monthly orders <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="monthlyOrders"
-              name="monthlyOrders"
-              type="number"
-              required
-              min="1"
-              step="1"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="e.g. 2500"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="coverageArea" class="block text-sm font-semibold text-slate-800">Coverage area <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="coverageArea"
-              name="coverageArea"
-              type="text"
-              required
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Major cities, regional routes, or both"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label for="goLiveDate" class="block text-sm font-semibold text-slate-800">Target go-live date <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input
-              id="goLiveDate"
-              name="goLiveDate"
-              type="date"
-              required
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-            />
+            <input id="companyName" name="companyName" type="text" required autocomplete="organization" placeholder="Example: NorthPoint Commerce" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="companyNameError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
 
           <div class="space-y-2 sm:col-span-2">
-            <label for="notes" class="block text-sm font-semibold text-slate-800">Operational notes <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <textarea
-              id="notes"
-              name="notes"
-              required
-              rows="5"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"
-              placeholder="Share storage constraints, SKU count, shipment windows, or delivery expectations."
-            ></textarea>
+            <label for="companyWebsite" class="block text-sm font-semibold text-slate-800">Company website</label>
+            <input id="companyWebsite" name="companyWebsite" type="url" autocomplete="url" placeholder="https://example.com" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="companyWebsiteError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+
+          <div class="space-y-2">
+            <label for="operatingCountry" class="block text-sm font-semibold text-slate-800">Main operating country <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <select id="operatingCountry" name="operatingCountry" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
+              <option value="">Select one</option>
+              <option value="mexico">Mexico</option>
+              <option value="spain">Spain</option>
+              <option value="both">Both</option>
+              <option value="other">Other</option>
+            </select>
+            <p id="operatingCountryError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+
+          <div class="space-y-2">
+            <label for="productType" class="block text-sm font-semibold text-slate-800">Product type <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <select id="productType" name="productType" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
+              <option value="">Select one</option>
+              <option value="fashion">Fashion</option>
+              <option value="electronics">Electronics</option>
+              <option value="cosmetics">Cosmetics</option>
+              <option value="food">Food</option>
+              <option value="other">Other</option>
+            </select>
+            <p id="productTypeError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+
+          <div class="space-y-2 sm:col-span-2">
+            <label for="shippingVolume" class="block text-sm font-semibold text-slate-800">Estimated monthly shipping volume <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <select id="shippingVolume" name="shippingVolume" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
+              <option value="">Select one</option>
+              <option value="0-100">0-100</option>
+              <option value="101-500">101-500</option>
+              <option value="501-2000">501-2000</option>
+              <option value="2000+">2000+</option>
+              <option value="not-sure">Not sure</option>
+            </select>
+            <p id="shippingVolumeError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
         </div>
       </fieldset>
 
+      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Contact Information</legend>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div class="space-y-2 sm:col-span-2">
+            <label for="contactPerson" class="block text-sm font-semibold text-slate-800">Contact person <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="contactPerson" name="contactPerson" type="text" required autocomplete="name" placeholder="First and last name" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="contactPersonError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+
+          <div class="space-y-2">
+            <label for="corporateEmail" class="block text-sm font-semibold text-slate-800">Corporate email <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="corporateEmail" name="corporateEmail" type="email" required autocomplete="email" placeholder="you@company.com" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="corporateEmailError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+
+          <div class="space-y-2">
+            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+34 612345678" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="phoneError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset id="servicesFieldset" class="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Services of interest <span class="text-flowBlueDeep" aria-hidden="true">*</span></legend>
+        <p class="text-sm text-slate-600">Select one or more options.</p>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="checkbox" name="services" value="warehousing" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Warehousing
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="checkbox" name="services" value="last-mile" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Last mile
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="checkbox" name="services" value="reverse-logistics" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Reverse logistics
+          </label>
+        </div>
+        <p id="servicesError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+      </fieldset>
+
+      <fieldset id="current3plFieldset" class="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Do you currently work with another 3PL? <span class="text-flowBlueDeep" aria-hidden="true">*</span></legend>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="radio" name="current3pl" value="yes" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Yes
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="radio" name="current3pl" value="no" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            No
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="radio" name="current3pl" value="evaluating" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Evaluating options
+          </label>
+        </div>
+        <p id="current3plError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+      </fieldset>
+
+      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Additional Notes</legend>
+        <div class="space-y-2">
+          <label for="comments" class="block text-sm font-semibold text-slate-800">Comments or specific needs</label>
+          <textarea id="comments" name="comments" rows="5" maxlength="500" placeholder="Tell us about inventory profile, channels, seasonality, or operational constraints." class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"></textarea>
+          <div class="flex items-center justify-between">
+            <p id="commentsError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <p id="commentsCounter" class="text-xs font-medium text-slate-500">0 / 500</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <div id="privacyGroup" class="space-y-2 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <label for="privacyAccepted" class="flex items-start gap-3 text-sm font-medium text-slate-800">
+          <input id="privacyAccepted" name="privacyAccepted" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+          <span>I accept the privacy policy <span class="text-flowBlueDeep" aria-hidden="true">*</span></span>
+        </label>
+        <p id="privacyAcceptedError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+      </div>
+
       <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
-        <button
-          type="reset"
-          class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
-        >
-          Clear form
-        </button>
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center rounded-xl border border-flowBlue bg-flowBlue px-5 py-3 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
-        >
-          Submit application
-        </button>
+        <button type="reset" id="clearBtn" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200">Clear form</button>
+        <button type="submit" id="submitBtn" class="inline-flex items-center justify-center rounded-xl border border-flowBlue bg-flowBlue px-5 py-3 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300">Submit application</button>
       </div>
     </form>
   </main>
+
+  <script src="validation.js"></script>
 </body>
 </html>
