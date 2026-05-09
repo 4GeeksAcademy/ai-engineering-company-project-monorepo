@@ -4,7 +4,7 @@
 - [Frase 1: Elegí la compañía "Trackflow" de logística porque me gusta el reto de la logística,siempre me atrajo y me parece que es actualmente es un modelo de negocios en pleno auge y crecimiento con ejemplos claros como MercadoLibre o Temu.]
 - [Frase 2: Lo que visualizo como problema aunque no esté detallado en la letra,es que al aplicar una solución de IA para gestionar distintas fases de la operativa de la empresa es que hay una buena parte de la plantilla hoy por hoy contratada,que quedará sin trabajo en principio y deberíamos poder reubicarlos dentro del organigrama de la empresa si esto es de interés del CEO]
 - [Frase 3: Me llama la atención como la empresa pudo crecer tanto entre tanto desorden]
-- [Frase 4 opcional: conexión con el portfolio o entrevistas]
+- [Frase 4 opcional: Considero que este tipo de proyecto encaja muy bien en un portfolio de AI Engineering porque demuestra integración de APIs, automatización, dashboards y agentes inteligentes.]
 ## Departamentos que me interesan
 - Departamento 1:Experiencia del cliente:Parece ser el lugar donde hay mas potencial para un Agente IA mejore sustancialmente el área.
 - Departamento 2: Ultima milla: Acá hay una tarea de mejoramiento importante,que, de poder desarrollarse de manera óptima y eficiente, es un motor para que la empresa crezca exponencialmente,aunque me parece la parte más desafiante desde el punto de vista técnico.
