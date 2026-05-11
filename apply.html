@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplicación | TrackFlow</title>
+    <meta
+      name="description"
+      content="Formulario de aplicación para empresas e-commerce interesadas en optimizar almacenes, última milla, devoluciones y experiencia de cliente con TrackFlow."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["Sora", "sans-serif"],
+              body: ["Manrope", "sans-serif"]
+            },
+            colors: {
+              ink: "#111827",
+              ocean: "#0f766e",
+              ambercore: "#fb923c",
+              cloud: "#e5e7eb"
+            }
+          }
+        }
+      };
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Formulario de aplicación TrackFlow",
+        "url": "https://trackflow.example/apply",
+        "description": "Formulario para que empresas e-commerce soliciten una evaluación logística con TrackFlow.",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "TrackFlow",
+          "url": "https://trackflow.example"
+        },
+        "about": {
+          "@type": "Organization",
+          "name": "TrackFlow"
+        }
+      }
+    </script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-b from-slate-50 via-emerald-50 to-orange-50 font-body text-ink antialiased">
+    <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm" aria-label="Encabezado">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <a href="index.html" class="font-display text-2xl font-extrabold text-ocean">TrackFlow</a>
+        <a
+          href="index.html"
+          class="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ocean"
+          >Volver al inicio</a
+        >
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8" aria-labelledby="form-title">
+      <section class="mb-8">
+        <h1 id="form-title" class="font-display text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Solicitud de evaluación logística
+        </h1>
+        <p class="mt-4 max-w-3xl text-slate-700">
+          Completa este formulario para que nuestro equipo analice tu operación actual y te proponga un plan de mejora en inventario, distribución, devoluciones y experiencia de cliente.
+        </p>
+      </section>
+
+      <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8" aria-label="Formulario de aplicación">
+        <div id="form-alert" class="mb-6 hidden rounded-lg border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
+
+        <form id="application-form" novalidate class="space-y-8">
+          <fieldset class="space-y-5">
+            <legend class="font-display text-xl font-bold text-slate-900">Datos de contacto</legend>
+
+            <div>
+              <label for="fullName" class="mb-2 block text-sm font-semibold">Nombre completo *</label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                autocomplete="name"
+                required
+                class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                aria-describedby="fullName-error"
+              />
+              <p id="fullName-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="workEmail" class="mb-2 block text-sm font-semibold">Email corporativo *</label>
+                <input
+                  id="workEmail"
+                  name="workEmail"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="workEmail-error"
+                />
+                <p id="workEmail-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="phone" class="mb-2 block text-sm font-semibold">Teléfono *</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="phone-error"
+                />
+                <p id="phone-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="companyName" class="mb-2 block text-sm font-semibold">Empresa *</label>
+                <input
+                  id="companyName"
+                  name="companyName"
+                  type="text"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="companyName-error"
+                />
+                <p id="companyName-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="role" class="mb-2 block text-sm font-semibold">Cargo *</label>
+                <input
+                  id="role"
+                  name="role"
+                  type="text"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="role-error"
+                />
+                <p id="role-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div>
+              <label for="website" class="mb-2 block text-sm font-semibold">Sitio web de la empresa *</label>
+              <input
+                id="website"
+                name="website"
+                type="url"
+                placeholder="https://tumarca.com"
+                required
+                class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                aria-describedby="website-error"
+              />
+              <p id="website-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="space-y-5">
+            <legend class="font-display text-xl font-bold text-slate-900">Contexto operativo</legend>
+
+            <div>
+              <p class="mb-2 block text-sm font-semibold">Países donde operas actualmente *</p>
+              <div class="grid gap-3 sm:grid-cols-2" role="group" aria-describedby="operatingCountries-error">
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3">
+                  <input class="h-4 w-4" type="checkbox" name="operatingCountries" value="US" />
+                  Estados Unidos
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3">
+                  <input class="h-4 w-4" type="checkbox" name="operatingCountries" value="ES" />
+                  España
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3">
+                  <input class="h-4 w-4" type="checkbox" name="operatingCountries" value="EU" />
+                  Resto de Europa
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3">
+                  <input class="h-4 w-4" type="checkbox" name="operatingCountries" value="LATAM" />
+                  LATAM
+                </label>
+              </div>
+              <p id="operatingCountries-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-3">
+              <div>
+                <label for="monthlyOrders" class="mb-2 block text-sm font-semibold">Pedidos mensuales *</label>
+                <input
+                  id="monthlyOrders"
+                  name="monthlyOrders"
+                  type="number"
+                  min="1"
+                  max="10000000"
+                  step="1"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="monthlyOrders-error"
+                />
+                <p id="monthlyOrders-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="avgWeight" class="mb-2 block text-sm font-semibold">Peso promedio por paquete (kg) *</label>
+                <input
+                  id="avgWeight"
+                  name="avgWeight"
+                  type="number"
+                  min="0.1"
+                  max="100"
+                  step="0.1"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="avgWeight-error"
+                />
+                <p id="avgWeight-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="returnRate" class="mb-2 block text-sm font-semibold">Tasa de devoluciones (%) *</label>
+                <input
+                  id="returnRate"
+                  name="returnRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="returnRate-error"
+                />
+                <p id="returnRate-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-2 block text-sm font-semibold">Transportistas actuales *</p>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="group" aria-describedby="carriers-error">
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="UPS" /> UPS</label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="FedEx" /> FedEx</label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="DHL" /> DHL</label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="MRW" /> MRW</label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="SEUR" /> SEUR</label>
+                <label class="flex items-center gap-3 rounded-lg border border-slate-300 px-4 py-3"><input class="h-4 w-4" type="checkbox" name="carriers" value="Otro" /> Otro</label>
+              </div>
+              <p id="carriers-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="warehouseSystem" class="mb-2 block text-sm font-semibold">Sistema actual de almacén *</label>
+                <select
+                  id="warehouseSystem"
+                  name="warehouseSystem"
+                  required
+                  class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="warehouseSystem-error"
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="WMS">WMS comercial</option>
+                  <option value="ERP">ERP con módulo logístico</option>
+                  <option value="Spreadsheet">Hojas de cálculo</option>
+                  <option value="Mixed">Sistema mixto</option>
+                </select>
+                <p id="warehouseSystem-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="timeline" class="mb-2 block text-sm font-semibold">Horizonte de implementación *</label>
+                <select
+                  id="timeline"
+                  name="timeline"
+                  required
+                  class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="timeline-error"
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="1-3">1-3 meses</option>
+                  <option value="3-6">3-6 meses</option>
+                  <option value="6-12">6-12 meses</option>
+                  <option value="12+">Más de 12 meses</option>
+                </select>
+                <p id="timeline-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div>
+              <label for="mainChallenges" class="mb-2 block text-sm font-semibold">Principales retos operativos *</label>
+              <textarea
+                id="mainChallenges"
+                name="mainChallenges"
+                rows="4"
+                required
+                class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                aria-describedby="mainChallenges-error"
+                placeholder="Ejemplo: faltas de stock, incidencias de entrega, devoluciones lentas, falta de visibilidad..."
+              ></textarea>
+              <p id="mainChallenges-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="space-y-5">
+            <legend class="font-display text-xl font-bold text-slate-900">Consentimiento</legend>
+            <div>
+              <label class="flex items-start gap-3" for="consent">
+                <input
+                  id="consent"
+                  name="consent"
+                  type="checkbox"
+                  required
+                  class="mt-1 h-4 w-4"
+                  aria-describedby="consent-error"
+                />
+                <span class="text-sm text-slate-700"
+                  >Autorizo a TrackFlow a tratar mis datos para contactarme sobre soluciones logísticas y evaluación comercial. *</span
+                >
+              </label>
+              <p id="consent-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+          </fieldset>
+
+          <button
+            type="submit"
+            class="w-full rounded-xl bg-ambercore px-6 py-3 text-base font-extrabold text-ink transition hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-ocean"
+          >
+            Enviar aplicación
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="mt-12 border-t border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <p>© 2026 TrackFlow</p>
+        <p>Operaciones logísticas modernas para e-commerce</p>
+      </div>
+    </footer>
+
+    <script>
+      const form = document.getElementById("application-form");
+      const alertBox = document.getElementById("form-alert");
+
+      const validators = {
+        fullName: (value) => value.trim().length >= 3 || "Ingresa tu nombre completo (mínimo 3 caracteres).",
+        workEmail: (value) =>
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || "Introduce un email corporativo válido.",
+        phone: (value) =>
+          /^[+]?[(]?[0-9\s\-().]{8,20}$/.test(value.trim()) || "Introduce un teléfono válido con al menos 8 dígitos.",
+        companyName: (value) => value.trim().length >= 2 || "Indica el nombre de tu empresa.",
+        role: (value) => value.trim().length >= 2 || "Indica tu cargo actual.",
+        website: (value) => {
+          try {
+            const parsed = new URL(value);
+            return ["http:", "https:"].includes(parsed.protocol) || "La URL debe empezar por http:// o https://.";
+          } catch (error) {
+            return "Introduce una URL válida, por ejemplo https://tumarca.com.";
+          }
+        },
+        monthlyOrders: (value) => {
+          const number = Number(value);
+          return (Number.isInteger(number) && number >= 1 && number <= 10000000) || "Indica un valor entero entre 1 y 10,000,000.";
+        },
+        avgWeight: (value) => {
+          const number = Number(value);
+          return (number >= 0.1 && number <= 100) || "El peso promedio debe estar entre 0.1 y 100 kg.";
+        },
+        returnRate: (value) => {
+          const number = Number(value);
+          return (number >= 0 && number <= 100) || "La tasa de devoluciones debe estar entre 0% y 100%.";
+        },
+        warehouseSystem: (value) => value !== "" || "Selecciona tu sistema de almacén actual.",
+        timeline: (value) => value !== "" || "Selecciona un horizonte de implementación.",
+        mainChallenges: (value) =>
+          value.trim().length >= 20 || "Describe tus retos operativos con al menos 20 caracteres.",
+        consent: (_, field) => field.checked || "Debes aceptar el tratamiento de datos para continuar."
+      };
+
+      function setFieldError(fieldName, message) {
+        const field = form.elements[fieldName];
+        const errorEl = document.getElementById(`${fieldName}-error`);
+
+        if (!field || !errorEl) {
+          return;
+        }
+
+        const clear = !message;
+        field.setAttribute("aria-invalid", String(!clear));
+        errorEl.textContent = message || "";
+        errorEl.classList.toggle("hidden", clear);
+        field.classList.toggle("border-red-600", !clear);
+      }
+
+      function validateCheckboxGroup(name, minSelection, errorId, message) {
+        const checkboxes = [...form.querySelectorAll(`input[name="${name}"]`)];
+        const selectedCount = checkboxes.filter((input) => input.checked).length;
+        const valid = selectedCount >= minSelection;
+        const errorEl = document.getElementById(errorId);
+
+        checkboxes.forEach((box) => {
+          box.setAttribute("aria-invalid", String(!valid));
+        });
+
+        if (errorEl) {
+          errorEl.textContent = valid ? "" : message;
+          errorEl.classList.toggle("hidden", valid);
+        }
+
+        return valid;
+      }
+
+      function validateField(fieldName) {
+        const field = form.elements[fieldName];
+        const validator = validators[fieldName];
+
+        if (!field || !validator) {
+          return true;
+        }
+
+        const result = validator(field.value, field);
+        const isValid = result === true;
+        setFieldError(fieldName, isValid ? "" : result);
+        return isValid;
+      }
+
+      function setAlert(success, message) {
+        alertBox.textContent = message;
+        alertBox.className = "mb-6 rounded-lg border px-4 py-3 text-sm";
+        alertBox.classList.remove("hidden");
+        if (success) {
+          alertBox.classList.add("border-emerald-300", "bg-emerald-50", "text-emerald-900");
+        } else {
+          alertBox.classList.add("border-red-300", "bg-red-50", "text-red-900");
+        }
+      }
+
+      const fieldNames = Object.keys(validators);
+      fieldNames.forEach((name) => {
+        const field = form.elements[name];
+        if (field) {
+          field.addEventListener("blur", () => validateField(name));
+          field.addEventListener("input", () => {
+            if (field.getAttribute("aria-invalid") === "true") {
+              validateField(name);
+            }
+          });
+        }
+      });
+
+      ["operatingCountries", "carriers"].forEach((group) => {
+        form.querySelectorAll(`input[name="${group}"]`).forEach((input) => {
+          input.addEventListener("change", () => {
+            if (group === "operatingCountries") {
+              validateCheckboxGroup(group, 1, "operatingCountries-error", "Selecciona al menos un país de operación.");
+            }
+            if (group === "carriers") {
+              validateCheckboxGroup(group, 1, "carriers-error", "Selecciona al menos un transportista actual.");
+            }
+          });
+        });
+      });
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        alertBox.classList.add("hidden");
+
+        const isFieldsValid = fieldNames.every((name) => validateField(name));
+        const countriesValid = validateCheckboxGroup(
+          "operatingCountries",
+          1,
+          "operatingCountries-error",
+          "Selecciona al menos un país de operación."
+        );
+        const carriersValid = validateCheckboxGroup(
+          "carriers",
+          1,
+          "carriers-error",
+          "Selecciona al menos un transportista actual."
+        );
+
+        if (!isFieldsValid || !countriesValid || !carriersValid) {
+          setAlert(false, "Revisa los campos marcados. Hay información incompleta o inválida.");
+          const firstInvalid = form.querySelector('[aria-invalid="true"]');
+          if (firstInvalid) {
+            firstInvalid.focus();
+          }
+          return;
+        }
+
+        setAlert(true, "Tu aplicación ha sido validada y está lista para envío. Nuestro equipo te contactará pronto.");
+        form.reset();
+      });
+    </script>
+  </body>
+</html>

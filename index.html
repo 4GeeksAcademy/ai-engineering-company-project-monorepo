@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>TrackFlow | Logística Inteligente para E-commerce</title>
+		<meta
+			name="description"
+			content="TrackFlow unifica almacenes, transportistas y devoluciones para marcas e-commerce que necesitan operar con velocidad, visibilidad y control en EE.UU. y España."
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: {
+							display: ["Sora", "sans-serif"],
+							body: ["Manrope", "sans-serif"]
+						},
+						colors: {
+							ink: "#0f172a",
+							mist: "#e2e8f0",
+							sea: "#0f766e",
+							mango: "#f97316",
+							slateblue: "#1d4ed8"
+						}
+					}
+				}
+			};
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Organization",
+				"name": "TrackFlow",
+				"url": "https://trackflow.example",
+				"logo": "https://trackflow.example/logo.png",
+				"description": "Empresa de logística de última milla y gestión de almacenes para e-commerce en Estados Unidos y España.",
+				"foundingDate": "2009",
+				"employee": {
+					"@type": "QuantitativeValue",
+					"value": 130
+				},
+				"address": [
+					{
+						"@type": "PostalAddress",
+						"addressLocality": "Los Angeles",
+						"addressCountry": "US"
+					},
+					{
+						"@type": "PostalAddress",
+						"addressLocality": "Zaragoza",
+						"addressCountry": "ES"
+					}
+				],
+				"areaServed": ["US", "ES"],
+				"contactPoint": {
+					"@type": "ContactPoint",
+					"contactType": "sales",
+					"email": "sales@trackflow.example",
+					"availableLanguage": ["Spanish", "English"]
+				}
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				"name": "TrackFlow",
+				"url": "https://trackflow.example",
+				"potentialAction": {
+					"@type": "SearchAction",
+					"target": "https://trackflow.example/?q={search_term_string}",
+					"query-input": "required name=search_term_string"
+				}
+			}
+		</script>
+	</head>
+	<body class="bg-gradient-to-br from-slate-900 via-slateblue to-sea font-body text-white antialiased">
+		<a
+			href="#contenido"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-ink"
+			>Saltar al contenido principal</a
+		>
+
+		<header class="sticky top-0 z-40 border-b border-white/20 bg-slate-900/70 backdrop-blur-md" aria-label="Encabezado principal">
+			<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+				<a href="index.html" class="font-display text-2xl font-extrabold tracking-tight">TrackFlow</a>
+				<nav aria-label="Navegación principal">
+					<ul class="flex items-center gap-5 text-sm font-semibold sm:text-base">
+						<li><a class="transition hover:text-mist" href="#beneficios">Beneficios</a></li>
+						<li><a class="transition hover:text-mist" href="#solucion">Solución</a></li>
+						<li><a class="transition hover:text-mist" href="#contacto">Contacto</a></li>
+						<li>
+							<a
+								href="apply.html"
+								class="rounded-full bg-mango px-4 py-2 text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+								>Aplicar ahora</a
+							>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+
+		<main id="contenido">
+			<section class="mx-auto grid max-w-7xl gap-10 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8 lg:pt-20" aria-labelledby="hero-title">
+				<div>
+					<p class="mb-3 inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-bold uppercase tracking-wide text-mist">
+						Logística inteligente en EE.UU. y España
+					</p>
+					<h1 id="hero-title" class="font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+						Convierte tu operación logística en una ventaja competitiva
+					</h1>
+					<p class="mt-6 max-w-xl text-lg text-slate-100">
+						Unificamos inventario, transportistas, devoluciones y atención al cliente para que tu marca escale sin perder control. Menos tareas manuales, más entregas a tiempo, más clientes felices.
+					</p>
+					<div class="mt-8 flex flex-col gap-4 sm:flex-row">
+						<a
+							href="apply.html"
+							class="rounded-xl bg-mango px-6 py-3 text-center text-base font-extrabold text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+							>Solicitar evaluación gratuita</a
+						>
+						<a
+							href="#beneficios"
+							class="rounded-xl border border-white/50 bg-white/10 px-6 py-3 text-center text-base font-bold transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+							>Explorar beneficios</a
+						>
+					</div>
+				</div>
+
+				<div class="relative">
+					<div class="absolute -left-6 -top-6 h-28 w-28 rounded-full bg-mango/40 blur-2xl" aria-hidden="true"></div>
+					<div class="absolute -bottom-8 right-4 h-36 w-36 rounded-full bg-cyan-300/30 blur-2xl" aria-hidden="true"></div>
+					<img
+						src="https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1300&q=80"
+						alt="Centro logístico moderno con estanterías y movimiento de paquetes"
+						class="relative z-10 w-full rounded-2xl border border-white/20 object-cover shadow-2xl"
+					/>
+				</div>
+			</section>
+
+			<section id="beneficios" class="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
+				<div class="mb-10 text-center">
+					<h2 id="benefits-title" class="font-display text-3xl font-bold sm:text-4xl">Por qué las marcas eligen TrackFlow</h2>
+					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
+						Diseñado para operaciones que no pueden permitirse retrasos, falta de visibilidad ni fricción entre equipos y países.
+					</p>
+				</div>
+				<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Inventario unificado</h3>
+						<p class="mt-3 text-slate-100">Stock en tiempo real por SKU entre Los Ángeles y Zaragoza para evitar roturas y sobreventa.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Selección inteligente de transportista</h3>
+						<p class="mt-3 text-slate-100">Recomendaciones automáticas por destino, urgencia y coste para mejorar entregas y margen.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Devoluciones automatizadas</h3>
+						<p class="mt-3 text-slate-100">Reglas configurables, flujos más rápidos y trazabilidad completa desde aprobación hasta inspección.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">CX omnicanal 24/7</h3>
+						<p class="mt-3 text-slate-100">Seguimiento y estado de devoluciones con atención más ágil para marcas y consumidores finales.</p>
+					</article>
+				</div>
+			</section>
+
+			<section id="solucion" class="bg-white/10 py-16" aria-labelledby="solution-title">
+				<div class="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
+					<div>
+						<h2 id="solution-title" class="font-display text-3xl font-bold sm:text-4xl">Tecnología que conecta toda tu cadena logística</h2>
+						<p class="mt-5 text-slate-100">
+							Integraciones, dashboards y automatizaciones para operaciones transfronterizas que necesitan velocidad y precisión en cada envío.
+						</p>
+						<ul class="mt-6 space-y-3 text-slate-50" aria-label="Ventajas de la plataforma">
+							<li>API de inventario global para múltiples almacenes.</li>
+							<li>Tracking unificado con datos de múltiples transportistas.</li>
+							<li>KPIs ejecutivos en tiempo real por país y por cliente.</li>
+							<li>Automatización de reportes semanales y alertas operativas.</li>
+						</ul>
+					</div>
+					<div class="rounded-2xl border border-white/20 bg-slate-900/40 p-8">
+						<h3 class="font-display text-2xl font-bold">¿Listo para modernizar tu operación?</h3>
+						<p class="mt-3 text-slate-100">
+							Cuéntanos tu volumen, tus retos y tus plazos. Te proponemos un plan inicial adaptado a tu realidad logística.
+						</p>
+						<a
+							href="apply.html"
+							class="mt-6 inline-block rounded-xl bg-mango px-6 py-3 font-bold text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+							>Ir al formulario de aplicación</a
+						>
+					</div>
+				</div>
+			</section>
+
+			<section id="contacto" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" aria-labelledby="contact-title">
+				<h2 id="contact-title" class="font-display text-3xl font-bold">Contacto</h2>
+				<p class="mt-4 max-w-2xl text-slate-100">
+					Nuestro equipo comercial y técnico te acompaña desde el diagnóstico inicial hasta la implementación.
+				</p>
+				<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Email</p>
+						<p class="mt-1 text-lg font-bold">sales@trackflow.example</p>
+					</div>
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Teléfono</p>
+						<p class="mt-1 text-lg font-bold">+1 (213) 555-0188</p>
+					</div>
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Sedes</p>
+						<p class="mt-1 text-lg font-bold">Los Ángeles · Zaragoza</p>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<footer class="border-t border-white/20 bg-slate-950/60">
+			<div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-mist sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+				<p>© 2026 TrackFlow. Todos los derechos reservados.</p>
+				<p>Logística de última milla y gestión de almacenes para e-commerce.</p>
+			</div>
+		</footer>
+	</body>
+</html>
