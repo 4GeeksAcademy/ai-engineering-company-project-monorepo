@@ -32,19 +32,23 @@ The repository currently provides a **base folder structure and documentation sk
 ## Repository structure
 
 ```text
-ai-engineering-company-project-template/
+ai-engineering-company-project-monorepo/
 ├── README.md
 ├── README.es.md
 ├── CONTEXT.md                # Placeholder to be replaced with assigned context
 ├── agents/                   # Agent patterns/templates and tools docs
-├── apps/                     # Product apps (web, APIs, dashboards)
 ├── data/                     # raw, process, pipelines, eval
 ├── docs/                     # Project and architecture documentation
+├── infra/                    # Docker, Terraform, deployment configs
+├── internal/                 # CLIs, packaged migration scripts, internal utilities
+├── mcps/                     # Model Context Protocol (MCP) Servers
 ├── packages/
 │   └── shared/               # Shared package (@repo/shared-types)
 ├── scripts/                  # Script conventions/documentation
+├── services/                 # APIs and background workers
 ├── shared/                   # Shared assets/conventions at repo level
 ├── skills/                   # Reusable agent skills
+├── uis/                      # User interfaces (React, Next.js, Streamlit, HTML)
 └── workflows/                # Automation/orchestration documentation
 ```
 
@@ -55,8 +59,8 @@ ai-engineering-company-project-template/
 1. **Use this repository as a template** and create your own project repo.
 2. **Clone** your repository (or open it in Codespaces).
 3. **Replace** `CONTEXT.md` with the full context for your assigned company.
-4. **Review** each top-level folder `README.md` to understand intended responsibilities (`apps/`, `data/`, `skills/`, etc.).
-5. **Start implementing** milestone deliverables in `apps/`, reusing `packages/shared/` and `data/` as needed.
+4. **Review** each top-level folder `README.md` to understand intended responsibilities (`uis/`, `services/`, `data/`, `skills/`, etc.).
+5. **Start implementing** milestone deliverables in `uis/` and `services/`, reusing `packages/shared/` and `data/` as needed.
 
 ---
 
