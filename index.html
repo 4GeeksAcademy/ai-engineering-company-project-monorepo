@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -107,8 +107,8 @@
 				<nav class="hidden md:block" aria-label="Navegación principal escritorio">
 					<ul class="flex items-center gap-5 text-sm font-semibold sm:text-base">
 						<li><a class="transition hover:text-mist" href="#benefits-title">Beneficios</a></li>
-						<li><a class="transition hover:text-mist" href="#features-title">Características</a></li>
-						<li><a class="transition hover:text-mist" href="#how-it-works-title">Cómo funciona</a></li>
+						<li><a class="transition hover:text-mist" href="#caracteristicas">Características</a></li>
+						<li><a class="transition hover:text-mist" href="#como-funciona">Cómo funciona</a></li>
 						<li><a class="transition hover:text-mist" href="#servicios">Servicios</a></li>
 						<li><a class="transition hover:text-mist" href="#contacto">Contacto</a></li>
 						<li>
@@ -124,8 +124,8 @@
 			<nav id="mobile-menu" class="hidden border-t border-white/20 px-4 py-4 md:hidden" aria-label="Navegación principal móvil">
 				<ul class="flex flex-col gap-3 text-sm font-semibold">
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#benefits-title">Beneficios</a></li>
-					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#features-title">Características</a></li>
-					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#how-it-works-title">Cómo funciona</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#caracteristicas">Características</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#como-funciona">Cómo funciona</a></li>
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#servicios">Servicios</a></li>
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#contacto">Contacto</a></li>
 					<li>
@@ -136,7 +136,7 @@
 		</header>
 
 		<main id="contenido">
-			<section class="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-2 lg:items-center lg:px-8 lg:pt-20" aria-labelledby="hero-title">
+			<section class="mx-auto grid min-h-screen max-w-7xl content-center gap-10 px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-24 lg:grid-cols-2 lg:items-center lg:px-8" aria-labelledby="hero-title">
 				<div>
 					<p class="mb-3 inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-bold uppercase tracking-wide text-mist">
 						Operador logístico en EE.UU. y España
@@ -172,7 +172,7 @@
 				</div>
 			</section>
 
-			<section id="beneficios" class="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
+			<section id="beneficios" class="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
 				<div class="mb-10 text-center">
 					<h2 id="benefits-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Por qué las marcas confían su logística a TrackFlow</h2>
 					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
@@ -199,7 +199,7 @@
 				</div>
 			</section>
 
-			<section id="caracteristicas" class="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8" aria-labelledby="features-title">
+			<section id="caracteristicas" class="scroll-mt-24 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="features-title">
 				<div class="mb-10 text-center">
 					<h2 id="features-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Características</h2>
 					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
@@ -222,8 +222,8 @@
 				</div>
 			</section>
 
-			<section id="como-funciona" class="bg-white/10 py-16" aria-labelledby="how-it-works-title">
-				<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<section id="como-funciona" class="scroll-mt-24 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="how-it-works-title">
+				<div class="w-full">
 					<div class="mb-10 text-center">
 						<h2 id="how-it-works-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Cómo funciona</h2>
 						<p class="mx-auto mt-4 max-w-2xl text-slate-100">
@@ -250,8 +250,8 @@
 				</div>
 			</section>
 
-			<section id="servicios" class="bg-white/10 py-16" aria-labelledby="solution-title">
-				<div class="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
+			<section id="servicios" class="flex min-h-screen items-center bg-white/10 py-24" aria-labelledby="solution-title">
+				<div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
 					<div>
 						<h2 id="solution-title" class="font-display text-3xl font-bold sm:text-4xl">Servicios logísticos que cubren todo el ciclo del pedido</h2>
 						<p class="mt-5 text-slate-100">
@@ -278,7 +278,7 @@
 				</div>
 			</section>
 
-			<section id="contacto" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" aria-labelledby="contact-title">
+			<section id="contacto" class="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="contact-title">
 				<h2 id="contact-title" class="font-display text-3xl font-bold">Contacto</h2>
 				<p class="mt-4 max-w-2xl text-slate-100">
 					Nuestro equipo comercial y de operaciones te acompaña desde la evaluación inicial hasta la puesta en marcha.
