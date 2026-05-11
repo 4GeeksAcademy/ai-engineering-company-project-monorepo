@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brasaland – Panel de Pruebas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .result-box { white-space: pre-wrap; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+
+<!-- ───── HEADER ───── -->
+<header class="bg-orange-600 text-white py-6 shadow-lg">
+  <div class="max-w-6xl mx-auto px-4">
+    <h1 class="text-3xl font-bold">🔥 Brasaland – Panel de Pruebas</h1>
+    <p class="mt-1 text-orange-100">Prueba las funciones de search, transformations, collections y&nbsp;validation</p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8 space-y-10">
+
+  <!-- ════════════════════════════════════════════
+       SECCIÓN 1 – DATOS DE EJEMPLO
+       ════════════════════════════════════════════ -->
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">📦 Datos de ejemplo cargados</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div>
+        <h3 class="font-medium text-orange-600">Menú (MenuItem[])</h3>
+        <pre id="dataMenu" class="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-48"></pre>
+      </div>
+      <div>
+        <h3 class="font-medium text-orange-600">Locaciones (Location[])</h3>
+        <pre id="dataLocations" class="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-48"></pre>
+      </div>
+      <div>
+        <h3 class="font-medium text-orange-600">Ventas (SaleTransaction[])</h3>
+        <pre id="dataSales" class="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-48"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SECCIÓN 2 – SEARCH
+       ════════════════════════════════════════════ -->
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">🔍 Search</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- findLocationById -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">findLocationById</label>
+        <select id="searchLocId" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="LOC-MEDELLIN-01">LOC-MEDELLIN-01</option>
+          <option value="LOC-MIAMI-01">LOC-MIAMI-01</option>
+          <option value="LOC-UNKNOWN">LOC-UNKNOWN (no existe)</option>
+        </select>
+        <button onclick="runFindLocationById()" class="w-full bg-orange-500 hover:bg-orange-600 text-white rounded px-4 py-2 text-sm font-medium">Buscar</button>
+        <pre id="resFindLoc" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- findMenuItemByName -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">findMenuItemByName</label>
+        <input id="searchItemName" type="text" placeholder='Ej: "Picanha 250g"' value="Picanha 250g" class="w-full border rounded px-3 py-2 text-sm" />
+        <button onclick="runFindMenuItemByName()" class="w-full bg-orange-500 hover:bg-orange-600 text-white rounded px-4 py-2 text-sm font-medium">Buscar</button>
+        <pre id="resFindItem" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- binarySearchLocationByCapacity -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">binarySearchLocationByCapacity</label>
+        <input id="searchCap" type="number" placeholder="Capacidad" value="80" class="w-full border rounded px-3 py-2 text-sm" />
+        <button onclick="runBinarySearch()" class="w-full bg-orange-500 hover:bg-orange-600 text-white rounded px-4 py-2 text-sm font-medium">Buscar</button>
+        <pre id="resBinSearch" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SECCIÓN 3 – COLLECTIONS (filtrar / ordenar)
+       ════════════════════════════════════════════ -->
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">📂 Collections – Filtrar &amp; Ordenar</h2>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- filterSalesByLocation -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">filterSalesByLocation</label>
+        <select id="filterSalesLoc" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="LOC-MEDELLIN-01">LOC-MEDELLIN-01</option>
+          <option value="LOC-MIAMI-01">LOC-MIAMI-01</option>
+        </select>
+        <button onclick="runFilterSalesByLocation()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Filtrar</button>
+        <pre id="resFilterSalesLoc" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- filterSalesByDateRange -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">filterSalesByDateRange</label>
+        <input id="filterDateStart" type="date" value="2024-03-15" class="w-full border rounded px-3 py-2 text-sm" />
+        <input id="filterDateEnd" type="date" value="2024-03-16" class="w-full border rounded px-3 py-2 text-sm" />
+        <button onclick="runFilterSalesByDateRange()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Filtrar</button>
+        <pre id="resFilterSalesDate" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- filterMenuItemsByCategory -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">filterMenuItemsByCategory</label>
+        <select id="filterCat" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="Meat">Meat</option>
+          <option value="Side">Side</option>
+          <option value="Beverage">Beverage</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Combo">Combo</option>
+        </select>
+        <button onclick="runFilterMenuItemsByCategory()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Filtrar</button>
+        <pre id="resFilterCat" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- filterActiveLocations -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">filterActiveLocations</label>
+        <button onclick="runFilterActiveLocations()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Filtrar activas</button>
+        <pre id="resFilterActive" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- sortLocationsByCapacity -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">sortLocationsByCapacity</label>
+        <select id="sortCapOrder" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+        <button onclick="runSortLocationsByCapacity()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Ordenar</button>
+        <pre id="resSortCap" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- sortMenuItemsByPrice -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">sortMenuItemsByPrice</label>
+        <div class="flex gap-2">
+          <select id="sortPriceCur" class="flex-1 border rounded px-3 py-2 text-sm">
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+          </select>
+          <select id="sortPriceOrd" class="flex-1 border rounded px-3 py-2 text-sm">
+            <option value="asc">Asc</option>
+            <option value="desc">Desc</option>
+          </select>
+        </div>
+        <button onclick="runSortMenuItemsByPrice()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium">Ordenar</button>
+        <pre id="resSortPrice" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SECCIÓN 4 – TRANSFORMATIONS
+       ════════════════════════════════════════════ -->
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">📊 Transformations – Reportes &amp; Cálculos</h2>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- calculateDailyRevenue -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">calculateDailyRevenue</label>
+        <input id="revDate" type="date" value="2024-03-15" class="w-full border rounded px-3 py-2 text-sm" />
+        <select id="revCur" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="USD">USD</option>
+          <option value="COP">COP</option>
+        </select>
+        <button onclick="runCalcDailyRevenue()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Calcular</button>
+        <pre id="resRevenue" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- calculateLocationMargin -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">calculateLocationMargin</label>
+        <select id="marginLoc" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="LOC-MEDELLIN-01">LOC-MEDELLIN-01</option>
+          <option value="LOC-MIAMI-01">LOC-MIAMI-01</option>
+        </select>
+        <select id="marginCur" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="USD">USD</option>
+          <option value="COP">COP</option>
+        </select>
+        <button onclick="runCalcMargin()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Calcular</button>
+        <pre id="resMargin" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- convertCurrency -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">convertCurrency</label>
+        <input id="convAmount" type="number" value="100" class="w-full border rounded px-3 py-2 text-sm" />
+        <div class="flex gap-2">
+          <select id="convFrom" class="flex-1 border rounded px-3 py-2 text-sm">
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+          </select>
+          <span class="self-center">→</span>
+          <select id="convTo" class="flex-1 border rounded px-3 py-2 text-sm">
+            <option value="COP">COP</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <button onclick="runConvertCurrency()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Convertir</button>
+        <pre id="resConvert" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- countSalesByPaymentMethod -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">countSalesByPaymentMethod</label>
+        <button onclick="runCountByPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Contar</button>
+        <pre id="resPayment" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- calculateAverageTicket -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">calculateAverageTicket</label>
+        <select id="avgCur" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="USD">USD</option>
+          <option value="COP">COP</option>
+        </select>
+        <button onclick="runAvgTicket()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Calcular</button>
+        <pre id="resAvgTicket" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- findTopSellingItems -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">findTopSellingItems</label>
+        <input id="topN" type="number" value="3" min="1" class="w-full border rounded px-3 py-2 text-sm" />
+        <button onclick="runTopSelling()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 text-sm font-medium">Buscar</button>
+        <pre id="resTopSelling" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- calculateCountryComparison -->
+      <div class="space-y-2 md:col-span-2 lg:col-span-3">
+        <label class="block font-medium text-sm">calculateCountryComparison</label>
+        <button onclick="runCountryComparison()" class="bg-green-600 hover:bg-green-700 text-white rounded px-6 py-2 text-sm font-medium">Generar Reporte</button>
+        <pre id="resCountry" class="result-box bg-gray-50 rounded p-3 text-xs max-h-60 overflow-auto"></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SECCIÓN 5 – VALIDATION
+       ════════════════════════════════════════════ -->
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">✅ Validation</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- validateMenuItem -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">validateMenuItem</label>
+        <select id="valMenuItem" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="0">Picanha 250g (válido)</option>
+          <option value="1">Papas Fritas (válido)</option>
+          <option value="2">Coca-Cola (válido)</option>
+          <option value="invalid">Ítem inválido (sin id ni nombre)</option>
+        </select>
+        <button onclick="runValidateMenuItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded px-4 py-2 text-sm font-medium">Validar</button>
+        <pre id="resValMenu" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- validateSaleTransaction -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">validateSaleTransaction</label>
+        <select id="valSale" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="0">TXN-2024-15482 (válida)</option>
+          <option value="1">TXN-2024-15483 (válida)</option>
+          <option value="invalid">Transacción inválida</option>
+        </select>
+        <button onclick="runValidateSale()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded px-4 py-2 text-sm font-medium">Validar</button>
+        <pre id="resValSale" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+      <!-- validateLocation -->
+      <div class="space-y-2">
+        <label class="block font-medium text-sm">validateLocation</label>
+        <select id="valLoc" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="0">Medellín Centro (válida)</option>
+          <option value="1">Miami Beach (válida)</option>
+          <option value="invalid">Locación inválida</option>
+        </select>
+        <button onclick="runValidateLocation()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded px-4 py-2 text-sm font-medium">Validar</button>
+        <pre id="resValLoc" class="result-box bg-gray-50 rounded p-3 text-xs max-h-40 overflow-auto"></pre>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="text-center text-gray-400 text-sm py-6">Brasaland – Panel de Pruebas &copy; 2024</footer>
+
+<script>
+// ╔══════════════════════════════════════════════╗
+// ║  DATOS DE EJEMPLO (copiados de sample)      ║
+// ╚══════════════════════════════════════════════╝
+
+const sampleMenuItems = [
+  { id:"ITEM-PICANHA-250", name:"Picanha 250g", category:"Meat", basePrice:{USD:18.5,COP:74000}, ingredientCost:{USD:7.2,COP:28800}, prepTimeMinutes:15, isAvailableInColombia:true, isAvailableInUSA:true, allergens:[], status:"Active" },
+  { id:"ITEM-FRIES", name:"Papas Fritas", category:"Side", basePrice:{USD:4.5,COP:18000}, ingredientCost:{USD:1.2,COP:4800}, prepTimeMinutes:8, isAvailableInColombia:true, isAvailableInUSA:true, allergens:[], status:"Active" },
+  { id:"ITEM-COKE", name:"Coca-Cola", category:"Beverage", basePrice:{USD:2.5,COP:10000}, ingredientCost:{USD:0.8,COP:3200}, prepTimeMinutes:2, isAvailableInColombia:true, isAvailableInUSA:true, allergens:[], status:"Active" },
+];
+
+const sampleLocations = [
+  { id:"LOC-MEDELLIN-01", name:"Brasaland Medellín Centro", city:"Medellín", country:"Colombia", openingYear:2008, seatingCapacity:80, staffCount:12, monthlyRentCost:{USD:1500,COP:6000000}, averageMonthlyUtilities:{USD:400,COP:1600000}, manager:"Carlos Jiménez", status:"Active" },
+  { id:"LOC-MIAMI-01", name:"Brasaland Miami Beach", city:"Miami", country:"USA", openingYear:2018, seatingCapacity:100, staffCount:15, monthlyRentCost:{USD:5500,COP:22000000}, averageMonthlyUtilities:{USD:800,COP:3200000}, manager:"Jake Morrison", status:"Active" },
+];
+
+const sampleSales = [
+  { id:"TXN-2024-15482", locationId:"LOC-MEDELLIN-01", itemId:"ITEM-PICANHA-250", quantity:2, totalPrice:{USD:37.0,COP:148000}, paymentMethod:"Credit card", timestamp:new Date("2024-03-15T19:30:00"), waiterName:"María González" },
+  { id:"TXN-2024-15483", locationId:"LOC-MIAMI-01", itemId:"ITEM-FRIES", quantity:3, totalPrice:{USD:13.5,COP:54000}, paymentMethod:"Cash", timestamp:new Date("2024-03-15T20:15:00"), waiterName:"John Smith" },
+];
+
+const sampleWasteRecords = [];
+
+// Helper: pretty-print
+const pp = (o) => JSON.stringify(o, (k,v) => v instanceof Date ? v.toISOString() : v, 2);
+
+// Mostrar datos cargados
+document.getElementById("dataMenu").textContent = pp(sampleMenuItems);
+document.getElementById("dataLocations").textContent = pp(sampleLocations);
+document.getElementById("dataSales").textContent = pp(sampleSales);
+
+// ╔══════════════════════════════════════════════╗
+// ║  FUNCIONES – COLLECTIONS                    ║
+// ╚══════════════════════════════════════════════╝
+
+function filterSalesByLocation(sales, locationId) {
+  return sales.filter(s => s.locationId === locationId);
+}
+function filterSalesByDateRange(sales, startDate, endDate) {
+  return sales.filter(s => s.timestamp >= startDate && s.timestamp <= endDate);
+}
+function filterMenuItemsByCategory(items, category) {
+  return items.filter(i => i.category === category);
+}
+function filterActiveLocations(locations) {
+  return locations.filter(l => l.status === "Active");
+}
+function sortLocationsByCapacity(locations, order) {
+  const sorted = [...locations];
+  sorted.sort((a,b) => order === "asc" ? a.seatingCapacity - b.seatingCapacity : b.seatingCapacity - a.seatingCapacity);
+  return sorted;
+}
+function sortMenuItemsByPrice(items, currency, order) {
+  const sorted = [...items];
+  sorted.sort((a,b) => order === "asc" ? a.basePrice[currency] - b.basePrice[currency] : b.basePrice[currency] - a.basePrice[currency]);
+  return sorted;
+}
+
+// ╔══════════════════════════════════════════════╗
+// ║  FUNCIONES – SEARCH                         ║
+// ╚══════════════════════════════════════════════╝
+
+function findLocationById(locations, id) {
+  return locations.find(l => l.id === id) || null;
+}
+function findMenuItemByName(items, name) {
+  return items.find(i => i.name.toLowerCase() === name.toLowerCase()) || null;
+}
+function binarySearchLocationByCapacity(sortedLocations, targetCapacity) {
+  let left = 0, right = sortedLocations.length - 1;
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    const cap = sortedLocations[mid].seatingCapacity;
+    if (cap === targetCapacity) return mid;
+    else if (cap < targetCapacity) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1;
+}
+
+// ╔══════════════════════════════════════════════╗
+// ║  FUNCIONES – TRANSFORMATIONS                ║
+// ╚══════════════════════════════════════════════╝
+
+function calculateDailyRevenue(sales, date, currency) {
+  const start = new Date(date); start.setHours(0,0,0,0);
+  const end = new Date(date); end.setHours(23,59,59,999);
+  const daily = filterSalesByDateRange(sales, start, end);
+  return Math.round(daily.reduce((t,s) => t + s.totalPrice[currency], 0) * 100) / 100;
+}
+function calculateLocationMargin(sales, menuItems, locationId, currency) {
+  const locSales = filterSalesByLocation(sales, locationId);
+  let rev = 0, cost = 0;
+  locSales.forEach(s => {
+    const mi = menuItems.find(m => m.id === s.itemId);
+    if (mi) { rev += s.totalPrice[currency]; cost += mi.ingredientCost[currency] * s.quantity; }
+  });
+  const margin = rev === 0 ? 0 : ((rev - cost) / rev) * 100;
+  return Math.round(margin * 100) / 100;
+}
+function convertCurrency(amount, from, to) {
+  const rate = 4000;
+  if (from === to) return amount;
+  const converted = from === "USD" ? amount * rate : amount / rate;
+  return Math.round(converted * 100) / 100;
+}
+function countSalesByPaymentMethod(sales) {
+  return sales.reduce((c,s) => { c[s.paymentMethod] = (c[s.paymentMethod] || 0) + 1; return c; }, {});
+}
+function calculateAverageTicket(sales, currency) {
+  if (sales.length === 0) return 0;
+  return Math.round(sales.reduce((t,s) => t + s.totalPrice[currency], 0) / sales.length * 100) / 100;
+}
+function findTopSellingItems(sales, menuItems, topN) {
+  const counts = {};
+  sales.forEach(s => { counts[s.itemId] = (counts[s.itemId] || 0) + s.quantity; });
+  return Object.entries(counts)
+    .map(([id,qty]) => ({ item: menuItems.find(m => m.id === id), totalSold: qty }))
+    .filter(e => e.item)
+    .sort((a,b) => b.totalSold - a.totalSold)
+    .slice(0, topN);
+}
+function calculateCountryComparison(sales, locations, menuItems) {
+  const m = { Colombia: { totalLocations:0, totalRevenue:{USD:0,COP:0}, averageRevenuePerLocation:{USD:0,COP:0}, totalSales:0 },
+              USA:      { totalLocations:0, totalRevenue:{USD:0,COP:0}, averageRevenuePerLocation:{USD:0,COP:0}, totalSales:0 } };
+  locations.forEach(loc => {
+    const c = loc.country;
+    m[c].totalLocations += 1;
+    const ls = filterSalesByLocation(sales, loc.id);
+    m[c].totalRevenue.USD += ls.reduce((t,s) => t + s.totalPrice.USD, 0);
+    m[c].totalRevenue.COP += ls.reduce((t,s) => t + s.totalPrice.COP, 0);
+    m[c].totalSales += ls.length;
+  });
+  ["Colombia","USA"].forEach(c => {
+    if (m[c].totalLocations > 0) {
+      m[c].averageRevenuePerLocation.USD = m[c].totalRevenue.USD / m[c].totalLocations;
+      m[c].averageRevenuePerLocation.COP = m[c].totalRevenue.COP / m[c].totalLocations;
+    }
+  });
+  return m;
+}
+
+// ╔══════════════════════════════════════════════╗
+// ║  FUNCIONES – VALIDATION                     ║
+// ╚══════════════════════════════════════════════╝
+
+function validateMenuItem(item) {
+  const errors = [];
+  if (!item.id || typeof item.id !== "string") errors.push("ID de ítem de menú es requerido y debe ser una cadena.");
+  if (!item.name || typeof item.name !== "string") errors.push("Nombre de ítem de menú es requerido y debe ser una cadena.");
+  if (!["Meat","Side","Beverage","Dessert","Combo"].includes(item.category)) errors.push("Categoría inválida.");
+  if (typeof item.basePrice?.USD !== "number" || item.basePrice.USD < 0) errors.push("Precio base USD inválido.");
+  if (typeof item.basePrice?.COP !== "number" || item.basePrice.COP < 0) errors.push("Precio base COP inválido.");
+  if (typeof item.ingredientCost?.USD !== "number" || item.ingredientCost.USD < 0) errors.push("Costo ingredientes USD inválido.");
+  if (typeof item.ingredientCost?.COP !== "number" || item.ingredientCost.COP < 0) errors.push("Costo ingredientes COP inválido.");
+  if (typeof item.prepTimeMinutes !== "number" || item.prepTimeMinutes < 0) errors.push("Tiempo de preparación inválido.");
+  if (typeof item.isAvailableInColombia !== "boolean") errors.push("isAvailableInColombia debe ser booleano.");
+  if (typeof item.isAvailableInUSA !== "boolean") errors.push("isAvailableInUSA debe ser booleano.");
+  if (!Array.isArray(item.allergens)) errors.push("Allergens debe ser un array.");
+  if (!["Active","Seasonal","Discontinued"].includes(item.status)) errors.push("Status inválido.");
+  return { valid: errors.length === 0, errors };
+}
+function validateSaleTransaction(sale) {
+  const errors = [];
+  if (!sale.id || typeof sale.id !== "string") errors.push("ID de transacción inválido.");
+  if (!sale.locationId || typeof sale.locationId !== "string") errors.push("locationId inválido.");
+  if (!sale.itemId || typeof sale.itemId !== "string") errors.push("itemId inválido.");
+  if (typeof sale.quantity !== "number" || sale.quantity <= 0) errors.push("Cantidad debe ser positiva.");
+  if (typeof sale.totalPrice?.USD !== "number" || sale.totalPrice.USD < 0) errors.push("Precio USD inválido.");
+  if (typeof sale.totalPrice?.COP !== "number" || sale.totalPrice.COP < 0) errors.push("Precio COP inválido.");
+  if (!["Cash","Credit card","Debit card","Digital wallet"].includes(sale.paymentMethod)) errors.push("Método de pago inválido.");
+  if (!(sale.timestamp instanceof Date) || isNaN(sale.timestamp.getTime())) errors.push("Timestamp inválido.");
+  if (!sale.waiterName || typeof sale.waiterName !== "string") errors.push("waiterName inválido.");
+  return { valid: errors.length === 0, errors };
+}
+function validateLocation(location) {
+  const errors = [];
+  if (!location.id || typeof location.id !== "string") errors.push("ID de locación inválido.");
+  if (!location.name || typeof location.name !== "string") errors.push("Nombre inválido.");
+  if (!location.city || typeof location.city !== "string") errors.push("Ciudad inválida.");
+  if (!["Colombia","USA"].includes(location.country)) errors.push("País inválido.");
+  if (typeof location.openingYear !== "number" || location.openingYear < 1900 || location.openingYear > new Date().getFullYear()) errors.push("Año de apertura inválido.");
+  if (typeof location.seatingCapacity !== "number" || location.seatingCapacity <= 0) errors.push("Capacidad inválida.");
+  if (typeof location.staffCount !== "number" || location.staffCount < 0) errors.push("staffCount inválido.");
+  if (typeof location.monthlyRentCost?.USD !== "number" || location.monthlyRentCost.USD < 0) errors.push("Renta USD inválida.");
+  if (typeof location.monthlyRentCost?.COP !== "number" || location.monthlyRentCost.COP < 0) errors.push("Renta COP inválida.");
+  if (typeof location.averageMonthlyUtilities?.USD !== "number" || location.averageMonthlyUtilities.USD < 0) errors.push("Servicios USD inválidos.");
+  if (typeof location.averageMonthlyUtilities?.COP !== "number" || location.averageMonthlyUtilities.COP < 0) errors.push("Servicios COP inválidos.");
+  if (!location.manager || typeof location.manager !== "string") errors.push("Manager inválido.");
+  if (!["Active","Temporarily closed","Under renovation"].includes(location.status)) errors.push("Status inválido.");
+  return { valid: errors.length === 0, errors };
+}
+
+// Datos inválidos para pruebas de validación
+const invalidMenuItem = { id:"", name:"", category:"Invalid", basePrice:{USD:-1,COP:-1}, ingredientCost:{USD:-1,COP:-1}, prepTimeMinutes:-5, isAvailableInColombia:"yes", isAvailableInUSA:"no", allergens:"none", status:"Unknown" };
+const invalidSale = { id:"", locationId:"", itemId:"", quantity:-1, totalPrice:{USD:-1,COP:-1}, paymentMethod:"Bitcoin", timestamp:"not-a-date", waiterName:"" };
+const invalidLocation = { id:"", name:"", city:"", country:"Mars", openingYear:1800, seatingCapacity:-10, staffCount:-1, monthlyRentCost:{USD:-1,COP:-1}, averageMonthlyUtilities:{USD:-1,COP:-1}, manager:"", status:"Destroyed" };
+
+// ╔══════════════════════════════════════════════╗
+// ║  HANDLERS – UI                              ║
+// ╚══════════════════════════════════════════════╝
+
+// Search
+function runFindLocationById() {
+  const id = document.getElementById("searchLocId").value;
+  const res = findLocationById(sampleLocations, id);
+  document.getElementById("resFindLoc").textContent = res ? pp(res) : "null – No encontrada";
+}
+function runFindMenuItemByName() {
+  const name = document.getElementById("searchItemName").value;
+  const res = findMenuItemByName(sampleMenuItems, name);
+  document.getElementById("resFindItem").textContent = res ? pp(res) : "null – No encontrado";
+}
+function runBinarySearch() {
+  const cap = parseInt(document.getElementById("searchCap").value, 10);
+  const sorted = sortLocationsByCapacity(sampleLocations, "asc");
+  const idx = binarySearchLocationByCapacity(sorted, cap);
+  document.getElementById("resBinSearch").textContent = idx >= 0
+    ? `Índice: ${idx}\n${pp(sorted[idx])}`
+    : `Índice: -1 – Capacidad ${cap} no encontrada`;
+}
+
+// Collections
+function runFilterSalesByLocation() {
+  const id = document.getElementById("filterSalesLoc").value;
+  document.getElementById("resFilterSalesLoc").textContent = pp(filterSalesByLocation(sampleSales, id));
+}
+function runFilterSalesByDateRange() {
+  const s = new Date(document.getElementById("filterDateStart").value);
+  const e = new Date(document.getElementById("filterDateEnd").value);
+  e.setHours(23,59,59,999);
+  document.getElementById("resFilterSalesDate").textContent = pp(filterSalesByDateRange(sampleSales, s, e));
+}
+function runFilterMenuItemsByCategory() {
+  const cat = document.getElementById("filterCat").value;
+  document.getElementById("resFilterCat").textContent = pp(filterMenuItemsByCategory(sampleMenuItems, cat));
+}
+function runFilterActiveLocations() {
+  document.getElementById("resFilterActive").textContent = pp(filterActiveLocations(sampleLocations));
+}
+function runSortLocationsByCapacity() {
+  const ord = document.getElementById("sortCapOrder").value;
+  const res = sortLocationsByCapacity(sampleLocations, ord);
+  document.getElementById("resSortCap").textContent = pp(res.map(l => ({ id:l.id, name:l.name, seatingCapacity:l.seatingCapacity })));
+}
+function runSortMenuItemsByPrice() {
+  const cur = document.getElementById("sortPriceCur").value;
+  const ord = document.getElementById("sortPriceOrd").value;
+  const res = sortMenuItemsByPrice(sampleMenuItems, cur, ord);
+  document.getElementById("resSortPrice").textContent = pp(res.map(i => ({ name:i.name, price: i.basePrice[cur] + " " + cur })));
+}
+
+// Transformations
+function runCalcDailyRevenue() {
+  const date = new Date(document.getElementById("revDate").value);
+  const cur = document.getElementById("revCur").value;
+  const rev = calculateDailyRevenue(sampleSales, date, cur);
+  document.getElementById("resRevenue").textContent = `Ingreso diario (${cur}): ${rev}`;
+}
+function runCalcMargin() {
+  const loc = document.getElementById("marginLoc").value;
+  const cur = document.getElementById("marginCur").value;
+  const m = calculateLocationMargin(sampleSales, sampleMenuItems, loc, cur);
+  document.getElementById("resMargin").textContent = `Margen de ${loc}: ${m}%`;
+}
+function runConvertCurrency() {
+  const amt = parseFloat(document.getElementById("convAmount").value);
+  const from = document.getElementById("convFrom").value;
+  const to = document.getElementById("convTo").value;
+  const res = convertCurrency(amt, from, to);
+  document.getElementById("resConvert").textContent = `${amt} ${from} = ${res} ${to}`;
+}
+function runCountByPayment() {
+  document.getElementById("resPayment").textContent = pp(countSalesByPaymentMethod(sampleSales));
+}
+function runAvgTicket() {
+  const cur = document.getElementById("avgCur").value;
+  const avg = calculateAverageTicket(sampleSales, cur);
+  document.getElementById("resAvgTicket").textContent = `Ticket promedio (${cur}): ${avg}`;
+}
+function runTopSelling() {
+  const n = parseInt(document.getElementById("topN").value, 10);
+  const res = findTopSellingItems(sampleSales, sampleMenuItems, n);
+  document.getElementById("resTopSelling").textContent = pp(res.map(e => ({ nombre: e.item.name, cantidadVendida: e.totalSold })));
+}
+function runCountryComparison() {
+  const res = calculateCountryComparison(sampleSales, sampleLocations, sampleMenuItems);
+  document.getElementById("resCountry").textContent = pp(res);
+}
+
+// Validation
+function runValidateMenuItem() {
+  const v = document.getElementById("valMenuItem").value;
+  const item = v === "invalid" ? invalidMenuItem : sampleMenuItems[parseInt(v,10)];
+  const res = validateMenuItem(item);
+  document.getElementById("resValMenu").textContent = pp(res);
+}
+function runValidateSale() {
+  const v = document.getElementById("valSale").value;
+  const sale = v === "invalid" ? invalidSale : sampleSales[parseInt(v,10)];
+  const res = validateSaleTransaction(sale);
+  document.getElementById("resValSale").textContent = pp(res);
+}
+function runValidateLocation() {
+  const v = document.getElementById("valLoc").value;
+  const loc = v === "invalid" ? invalidLocation : sampleLocations[parseInt(v,10)];
+  const res = validateLocation(loc);
+  document.getElementById("resValLoc").textContent = pp(res);
+}
+</script>
+</body>
+</html>

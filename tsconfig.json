@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowJs": false,
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "./src",
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["src/**/*.ts", "validation.ts"]
+  "include": ["src/**/*.ts"]
 }
+
