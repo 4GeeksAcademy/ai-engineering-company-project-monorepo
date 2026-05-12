@@ -1,5 +1,6 @@
 const form = document.getElementById("application-form");
 const alertBox = document.getElementById("form-alert");
+const submitSuccessIndicator = document.getElementById("submit-success-indicator");
 
 if (form && alertBox) {
   const fieldValidators = {
@@ -82,6 +83,15 @@ if (form && alertBox) {
     alertBox.classList.add("border-red-400", "bg-red-100", "text-red-900");
   }
 
+  function setSubmitSuccess(visible) {
+    if (!submitSuccessIndicator) {
+      return;
+    }
+
+    submitSuccessIndicator.classList.toggle("hidden", !visible);
+    submitSuccessIndicator.classList.toggle("inline-flex", visible);
+  }
+
   function setFieldError(fieldName, message) {
     const field = form.elements[fieldName];
     const errorEl = document.getElementById(`${fieldName}-error`);
@@ -129,6 +139,7 @@ if (form && alertBox) {
       setFieldError(fieldName, "");
     });
     alertBox.classList.add("hidden");
+    setSubmitSuccess(false);
   }
 
   const fieldNames = Object.keys(fieldValidators);
@@ -140,6 +151,7 @@ if (form && alertBox) {
     }
 
     field.addEventListener("input", () => {
+      setSubmitSuccess(false);
       validateField(fieldName);
     });
 
@@ -150,6 +162,7 @@ if (form && alertBox) {
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+    setSubmitSuccess(false);
 
     const isValid = fieldNames.every((fieldName) => validateField(fieldName));
     if (!isValid) {
@@ -161,8 +174,9 @@ if (form && alertBox) {
       return;
     }
 
-    setAlert(true, "Formulario enviado correctamente. Hemos simulado el envío con éxito.");
     form.reset();
+    setAlert(true, "Mensaje enviado.");
+    setSubmitSuccess(true);
   });
 
   form.addEventListener("reset", () => {

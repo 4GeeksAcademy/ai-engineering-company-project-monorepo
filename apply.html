@@ -77,7 +77,7 @@
       <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg sm:p-8" aria-label="Formulario de contacto">
         <div id="form-alert" class="mb-6 hidden rounded-lg border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
 
-        <form id="application-form" novalidate class="space-y-8">
+        <form id="application-form" novalidate class="space-y-8" action="#" method="post">
           <fieldset class="space-y-5">
             <legend class="font-display text-xl font-bold text-slate-900">Datos de contacto</legend>
 
@@ -171,16 +171,31 @@
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="reset"
+              form="application-form"
               class="w-full rounded-xl border border-slate-300 bg-white px-6 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ocean sm:w-auto"
             >
               Limpiar formulario
             </button>
+            <div class="flex items-center gap-3">
+              <span
+                id="submit-success-indicator"
+                class="hidden items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800"
+                role="status"
+                aria-live="polite"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.2 7.2a1 1 0 01-1.416 0l-3-3a1 1 0 111.414-1.42L8.8 11.79l6.49-6.5a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Enviado
+              </span>
             <button
               type="submit"
+              form="application-form"
               class="w-full rounded-xl bg-ambercore px-6 py-3 text-base font-extrabold text-ink transition hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-ocean sm:w-auto"
             >
               Enviar mensaje
             </button>
+            </div>
           </div>
         </form>
       </section>
