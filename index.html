@@ -8,6 +8,8 @@
 			name="description"
 			content="TrackFlow es un operador logístico para e-commerce: almacenamos, preparamos, enviamos y gestionamos devoluciones en EE.UU. y España."
 		/>
+		<link rel="icon" type="image/png" href="logo.png" />
+		<link rel="shortcut icon" href="logo.png" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -89,9 +91,11 @@
 			>Saltar al contenido principal</a
 		>
 
-		<header class="sticky top-0 z-40 border-b border-white/20 bg-slate-900/70 backdrop-blur-md" aria-label="Encabezado principal">
+		<header id="site-header" class="sticky top-0 z-40 border-b border-white/20 bg-slate-900/70 backdrop-blur-md" aria-label="Encabezado principal">
 			<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-				<a href="index.html" class="font-display text-2xl font-extrabold tracking-tight">TrackFlow</a>
+				<a href="index.html" class="flex items-center" aria-label="TrackFlow inicio">
+					<img src="logo.png" alt="Logo de TrackFlow" class="h-10 w-auto sm:h-12 md:h-14 lg:h-20 xl:h-24 2xl:h-28" />
+				</a>
 				<button
 					id="mobile-menu-button"
 					type="button"
@@ -106,7 +110,7 @@
 				</button>
 				<nav class="hidden md:block" aria-label="Navegación principal escritorio">
 					<ul class="flex items-center gap-5 text-sm font-semibold sm:text-base">
-						<li><a class="transition hover:text-mist" href="#benefits-title">Beneficios</a></li>
+						<li><a class="transition hover:text-mist" href="#beneficios">Beneficios</a></li>
 						<li><a class="transition hover:text-mist" href="#caracteristicas">Características</a></li>
 						<li><a class="transition hover:text-mist" href="#como-funciona">Cómo funciona</a></li>
 						<li><a class="transition hover:text-mist" href="#servicios">Servicios</a></li>
@@ -123,7 +127,7 @@
 			</div>
 			<nav id="mobile-menu" class="hidden border-t border-white/20 px-4 py-4 md:hidden" aria-label="Navegación principal móvil">
 				<ul class="flex flex-col gap-3 text-sm font-semibold">
-					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#benefits-title">Beneficios</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#beneficios">Beneficios</a></li>
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#caracteristicas">Características</a></li>
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#como-funciona">Cómo funciona</a></li>
 					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#servicios">Servicios</a></li>
@@ -154,7 +158,7 @@
 							>Solicitar evaluación gratuita</a
 						>
 						<a
-							href="#benefits-title"
+							href="#beneficios"
 							class="rounded-xl border border-white/50 bg-white/10 px-6 py-3 text-center text-base font-bold transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
 							>Explorar beneficios</a
 						>
@@ -172,7 +176,7 @@
 				</div>
 			</section>
 
-			<section id="beneficios" class="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
+			<section id="beneficios" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
 				<div class="mb-10 text-center">
 					<h2 id="benefits-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Por qué las marcas confían su logística a TrackFlow</h2>
 					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
@@ -199,7 +203,7 @@
 				</div>
 			</section>
 
-			<section id="caracteristicas" class="scroll-mt-24 mx-auto flex min-h-screen  flex-col justify-center px-4 bg-white/10 py-24 sm:px-6 lg:px-8" aria-labelledby="features-title">
+			<section id="caracteristicas" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen flex-col justify-center bg-white/10 px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="features-title">
 				<div class="mb-10 text-center">
 					<h2 id="features-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Características</h2>
 					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
@@ -222,7 +226,7 @@
 				</div>
 			</section>
 
-			<section id="como-funciona" class="scroll-mt-24 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="how-it-works-title">
+			<section id="como-funciona" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="how-it-works-title">
 				<div class="w-full">
 					<div class="mb-10 text-center">
 						<h2 id="how-it-works-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Cómo funciona</h2>
@@ -250,7 +254,7 @@
 				</div>
 			</section>
 
-			<section id="servicios" class="flex min-h-screen items-center bg-white/10 py-24" aria-labelledby="solution-title">
+			<section id="servicios" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 flex min-h-screen items-center bg-white/10 py-24" aria-labelledby="solution-title">
 				<div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
 					<div>
 						<h2 id="solution-title" class="font-display text-3xl font-bold sm:text-4xl">Servicios logísticos que cubren todo el ciclo del pedido</h2>
@@ -278,7 +282,7 @@
 				</div>
 			</section>
 
-			<section id="contacto" class="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="contact-title">
+			<section id="contacto" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="contact-title">
 				<h2 id="contact-title" class="font-display text-3xl font-bold">Contacto</h2>
 				<p class="mt-4 max-w-2xl text-slate-100">
 					Nuestro equipo comercial y de operaciones te acompaña desde la evaluación inicial hasta la puesta en marcha.
@@ -307,8 +311,56 @@
 			</div>
 		</footer>
 		<script>
+			const siteHeader = document.getElementById("site-header");
 			const menuButton = document.getElementById("mobile-menu-button");
 			const mobileMenu = document.getElementById("mobile-menu");
+
+			const getAnchorOffset = () => {
+				const headerHeight = siteHeader ? siteHeader.offsetHeight : 0;
+				return headerHeight + 16;
+			};
+
+			const updateScrollMargins = () => {
+				const offset = getAnchorOffset();
+				document.querySelectorAll("main[id], section[id], h1[id], h2[id]").forEach((element) => {
+					element.style.scrollMarginTop = `${offset}px`;
+				});
+			};
+
+			const scrollToHash = (hash, updateHistory = false) => {
+				if (!hash || hash === "#") return;
+				const target = document.querySelector(hash);
+				if (!target) return;
+
+				const top = target.getBoundingClientRect().top + window.scrollY - getAnchorOffset();
+				window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+
+				if (updateHistory) {
+					history.pushState(null, "", hash);
+				}
+			};
+
+			document.querySelectorAll('a[href^="#"]').forEach((link) => {
+				link.addEventListener("click", (event) => {
+					const hash = link.getAttribute("href");
+					if (!hash || hash === "#") return;
+					if (!document.querySelector(hash)) return;
+
+					event.preventDefault();
+					scrollToHash(hash, true);
+				});
+			});
+
+			window.addEventListener("resize", updateScrollMargins);
+			window.addEventListener("load", () => {
+				updateScrollMargins();
+				if (window.location.hash) {
+					scrollToHash(window.location.hash);
+				}
+			});
+			window.addEventListener("hashchange", () => {
+				scrollToHash(window.location.hash);
+			});
 
 			if (menuButton && mobileMenu) {
 				menuButton.addEventListener("click", () => {
