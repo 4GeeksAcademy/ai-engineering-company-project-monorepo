@@ -1,6 +1,6 @@
 # Mi elección de negocio para este proyecto
 
-He elegido la empresa de NEXOVA  porque creo que se acerca más a lo que me gustaría profundizar en este trayecto con la acdemia.
+He elegido la empresa de NEXOVA  porque creo que se acerca más a lo que me gustaría profundizar en este trayecto con la academia.
 Aporta un ejemplo de proyecto a los que quisiera acercarme en entornos laborales reales 
 y me enseñará a trabajar con busqueda semántica avanzada y estructuración de datos.
 
