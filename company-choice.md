@@ -4,7 +4,20 @@ He elegido la empresa de NEXOVA  porque creo que se acerca más a lo que me gust
 Aporta un ejemplo de proyecto a los que quisiera acercarme en entornos laborales reales 
 y me enseñará a trabajar con busqueda semántica avanzada y estructuración de datos.
 
+El primero departamento que encuentro interesante es el de Operciones de selección:
+-No tienen ningún tipo de soporte que pueda ayudarlos en el proceso de reclutamiento siguiendo un cribado inteligente y tienen que leer los CV's dejando mucho tiempo a ese trabajo sin ninguna ayuda de filtrado automático.
+
+El segundo departamento que me resulta interesante es el de atención al cliente:
+- El tiempo medio de resolución de incidencias dobla por dos el tiempo estimado que deberían ofrecer, esto hace que el servicio de atención al cliente sea inefectivo, y genera frustración cuando los clientes tienen problemas que resolver.
+
 ## Mi idea de Agente de IA.
+
+- **Operaciones de selección:** se podría hacer un panel donde la IA pueda ofrecer un scoring de 0 a 100 en base a la compatibilidad de experiencia y habilidad que necesita el candidato para poder optar al puesto de trabajo, de esta manera los consultores tienen información más detallada y un ranking de los mejores perfiles sin necesidad de leer todos los CV's uno por uno.
+
+-**Atención al cliente:** Se puede crear un chatbot que filtre el tipo de incidencia en el momento que el cliente se ponga en contacto con este servicio, y generar un sistema de ticketing donde el cliente también pueda exponer todos los problemas que tiene, el chatbot irá guiando al cliente a rellenar todos los puntos para capturar la mayor cantidad de información sobre el problema real, para que los agentes puedan analizar la gravedad y actuar lo antes posible con información de la situación de antemano.
+Si los problemas pueden ser resueltos por el chatbot, generariamos ese 40% de gestiones resueltas de manera automatizada, si el agente de IA necesitase escalar el problema, los agentes estarán más disponibles ya que no tienen que estar en asistencia con otras incidencias.
+
+
 
 # Bienvenido a Nexova Solutions
 
