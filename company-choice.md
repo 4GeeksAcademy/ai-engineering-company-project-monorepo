@@ -12,9 +12,11 @@ El segundo departamento que me resulta interesante es el de atención al cliente
 
 ## Mi idea de Agente de IA.
 
-- **Operaciones de selección:** se podría hacer un panel donde la IA pueda ofrecer un scoring de 0 a 100 en base a la compatibilidad de experiencia y habilidad que necesita el candidato para poder optar al puesto de trabajo, de esta manera los consultores tienen información más detallada y un ranking de los mejores perfiles sin necesidad de leer todos los CV's uno por uno.
+**Operaciones de selección:** 
+- se podría hacer un panel donde la IA pueda ofrecer un scoring de 0 a 100 en base a la compatibilidad de experiencia y habilidad que necesita el candidato para poder optar al puesto de trabajo, de esta manera los consultores tienen información más detallada y un ranking de los mejores perfiles sin necesidad de leer todos los CV's uno por uno.
 
--**Atención al cliente:** Se puede crear un chatbot que filtre el tipo de incidencia en el momento que el cliente se ponga en contacto con este servicio, y generar un sistema de ticketing donde el cliente también pueda exponer todos los problemas que tiene, el chatbot irá guiando al cliente a rellenar todos los puntos para capturar la mayor cantidad de información sobre el problema real, para que los agentes puedan analizar la gravedad y actuar lo antes posible con información de la situación de antemano.
+**Atención al cliente:** 
+- Se puede crear un chatbot que filtre el tipo de incidencia en el momento que el cliente se ponga en contacto con este servicio, y generar un sistema de ticketing donde el cliente también pueda exponer todos los problemas que tiene, el chatbot irá guiando al cliente a rellenar todos los puntos para capturar la mayor cantidad de información sobre el problema real, para que los agentes puedan analizar la gravedad y actuar lo antes posible con información de la situación de antemano.
 Si los problemas pueden ser resueltos por el chatbot, generariamos ese 40% de gestiones resueltas de manera automatizada, si el agente de IA necesitase escalar el problema, los agentes estarán más disponibles ya que no tienen que estar en asistencia con otras incidencias.
 
 
