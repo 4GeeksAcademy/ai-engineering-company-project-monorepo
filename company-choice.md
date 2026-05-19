@@ -5,7 +5,7 @@ Aporta un ejemplo de proyecto a los que quisiera acercarme en entornos laborales
 y me enseñará a trabajar con busqueda semántica avanzada y estructuración de datos.
 
 El primero departamento que encuentro interesante es el de Operciones de selección:
--No tienen ningún tipo de soporte que pueda ayudarlos en el proceso de reclutamiento siguiendo un cribado inteligente y tienen que leer los CV's dejando mucho tiempo a ese trabajo sin ninguna ayuda de filtrado automático.
+- No tienen ningún tipo de soporte que pueda ayudarlos en el proceso de reclutamiento siguiendo un cribado inteligente y tienen que leer los CV's dejando mucho tiempo a ese trabajo sin ninguna ayuda de filtrado automático.
 
 El segundo departamento que me resulta interesante es el de atención al cliente:
 - El tiempo medio de resolución de incidencias dobla por dos el tiempo estimado que deberían ofrecer, esto hace que el servicio de atención al cliente sea inefectivo, y genera frustración cuando los clientes tienen problemas que resolver.
