@@ -1,5 +1,11 @@
 Bienvenido a Nexova Solutions
+
 AI Engineering · 4Geeks Academy — Briefing de empresa
+
+He elegido la empresa de NEXOVA  porque creo que se acerca más a lo que me gustaría profundizar en este trayecto con la acdemia.
+Aporta un ejemplo de proyecto a los que quisiera acercarme en entornos laborales reales 
+y me enseñará a trabajar con busqueda semántica avanzada y estructuración de datos.
+
 Nexova Solutions es una consultora de recursos humanos y selección de talento fundada en 2011, con sede en Valencia, España, y una oficina de expansión en Miami, Florida. La empresa cuenta con 120 empleados y factura aproximadamente 8 millones de dólares anuales a través de tres líneas de negocio: headhunting para perfiles de mandos medios y directivos, outsourcing de equipos de soporte al cliente para empresas tecnológicas, y formación corporativa en habilidades blandas y liderazgo.
 
 Los clientes de Nexova son medianas empresas — principalmente del sector tecnológico, retail y servicios financieros — que han decidido externalizar una parte o la totalidad de su gestión de talento. Vienen a Nexova porque encontrar a las personas adecuadas, formarlas y mantenerlas comprometidas es difícil, y Nexova lleva doce años construyendo la experiencia para hacerlo bien.
