@@ -10,6 +10,8 @@ El primero departamento que encuentro interesante es el de Operciones de selecci
 El segundo departamento que me resulta interesante es el de atención al cliente:
 - El tiempo medio de resolución de incidencias dobla por dos el tiempo estimado que deberían ofrecer, esto hace que el servicio de atención al cliente sea inefectivo, y genera frustración cuando los clientes tienen problemas que resolver.
 
+
+
 ## Mi idea de Agente de IA.
 
 **Operaciones de selección:** 
@@ -19,7 +21,8 @@ El segundo departamento que me resulta interesante es el de atención al cliente
 - Se puede crear un chatbot que filtre el tipo de incidencia en el momento que el cliente se ponga en contacto con este servicio, y generar un sistema de ticketing donde el cliente también pueda exponer todos los problemas que tiene, el chatbot irá guiando al cliente a rellenar todos los puntos para capturar la mayor cantidad de información sobre el problema real, para que los agentes puedan analizar la gravedad y actuar lo antes posible con información de la situación de antemano.
 Si los problemas pueden ser resueltos por el chatbot, generariamos ese 40% de gestiones resueltas de manera automatizada, si el agente de IA necesitase escalar el problema, los agentes estarán más disponibles ya que no tienen que estar en asistencia con otras incidencias.
 
-
+## Milestone o reto
+Me gustaría poder ser capaz de crear dashboards o paneles administrativos que puedan tener todo el contenido necesario para los empleados y que puedan acceder a la información en tiempo real y automatizar tareas de manera eficiente. 
 
 # Bienvenido a Nexova Solutions
 
