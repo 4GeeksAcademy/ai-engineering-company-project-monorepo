@@ -60,7 +60,11 @@ La empresa se organiza en las siguientes áreas:
 
 Nexova tiene una sólida reputación en sus mercados, una red profunda de candidatos y clientes construida en doce años, y un equipo que realmente sabe encontrar, desarrollar y acompañar el talento. Lo que no tiene es la infraestructura para operar a escala.
 
-Las consecuencias son tangibles: los consultores dedican la mayor parte de su tiempo a tareas manuales que podrían automatizarse, los clientes no tienen visibilidad del estado de sus procesos de selección, el catálogo de formación es invisible para la mayoría de los compradores potenciales, el equipo de soporte incumple sus SLAs, y la dirección toma decisiones con datos que siempre llevan una semana de retraso.
+Las consecuencias son tangibles: 
+**los consultores dedican la mayor parte de su tiempo a tareas manuales que podrían automatizarse**,  **clientes no tienen visibilidad del estado de sus procesos de selección**, el 
+**catálogo de formación es invisible para la mayoría de los compradores potenciales**, el 
+**equipo de soporte incumple sus SLAs,**
+**dirección toma decisiones con datos que siempre llevan una semana de retraso**.
 
 Nuevas plataformas — automatizadas, basadas en datos y construidas para escalar — empiezan a competir directamente con lo que ofrece Nexova. Laura sabe que la ventana para responder no es ilimitada.
 
