@@ -3,8 +3,222 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Landing Page</title>
+    <title>TrackFlow | Logistica de ultima milla</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "TrackFlow",
+            "url": "https://trackflow.example",
+            "logo": "logo.png",
+            "description": "Empresa de logistica de ultima milla y gestion de almacenes en Estados Unidos y Espana.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "contacto@trackflow.com",
+              "telephone": "+34 900 123 456",
+              "availableLanguage": ["es", "en"]
+            },
+            "address": [
+              {
+                "@type": "PostalAddress",
+                "addressLocality": "Los Angeles",
+                "addressCountry": "US"
+              },
+              {
+                "@type": "PostalAddress",
+                "addressLocality": "Zaragoza",
+                "addressCountry": "ES"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "name": "TrackFlow",
+            "url": "https://trackflow.example",
+            "inLanguage": "es"
+          }
+        ]
+      }
+    </script>
   </head>
-  <body></body>
+  <body class="bg-slate-950 text-slate-100" style="font-family: 'Space Grotesk', sans-serif;">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(249,115,22,0.25),transparent_35%),radial-gradient(circle_at_85%_12%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)]">
+      <header role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <a href="#" aria-label="Ir al inicio de TrackFlow" class="flex items-center gap-3">
+            <img
+              src="logo.png"
+              alt="Logo de TrackFlow"
+              class="h-12 w-12 rounded-full border border-white/10 bg-white/5 object-cover p-1"
+            />
+            <span class="text-xl font-bold tracking-wide">TrackFlow</span>
+          </a>
+          <nav role="navigation" aria-label="Navegacion principal">
+            <a
+              href="application.html"
+              aria-label="Ir al formulario de aplicacion"
+              class="rounded-full border border-orange-400/60 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-500 hover:text-slate-950"
+              >Aplicar ahora</a
+            >
+          </nav>
+        </div>
+      </header>
+
+      <main role="main" aria-label="Contenido principal">
+        <section id="hero" role="region" aria-labelledby="hero-title" class="mx-auto max-w-6xl px-6 pb-20 pt-16 lg:pt-24">
+          <div class="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <p class="mb-4 inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                Logistica inteligente para e-commerce
+              </p>
+              <h1 id="hero-title" class="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                De almacen a puerta, con control total en tiempo real.
+              </h1>
+              <p class="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">
+                TrackFlow conecta inventario, transporte y devoluciones para que las marcas escalen sin friccion.
+                Operamos en Estados Unidos y Espana con una propuesta centrada en velocidad, trazabilidad y automatizacion.
+              </p>
+              <div class="mt-8 flex flex-wrap gap-4">
+                <a
+                  href="#estadisticas"
+                  aria-label="Ver mas informacion en la seccion de estadisticas"
+                  class="rounded-full bg-orange-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-orange-400"
+                  >Ver mas</a
+                >
+                <a
+                  href="application.html"
+                  aria-label="Comenzar aplicacion en el formulario"
+                  class="rounded-full border border-slate-400/40 px-6 py-3 font-semibold text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200"
+                  >Comenzar aplicacion</a
+                >
+              </div>
+            </div>
+
+            <div class="relative">
+              <div class="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-tr from-orange-500/30 via-amber-300/10 to-cyan-500/20 blur-2xl"></div>
+              <div class="max-w-md rounded-3xl border border-white/10 bg-white/5 p-0 shadow-2xl shadow-orange-900/20">
+                <img
+                  src="truck-hero.jpg"
+                  alt="Camion de TrackFlow"
+                  class="mx-auto w-full max-w-md object-cover rounded-3xl"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section role="region" aria-labelledby="cta-title" class="mx-auto max-w-6xl px-6 pb-16">
+          <div class="rounded-3xl border border-orange-300/30 bg-gradient-to-r from-orange-500/20 via-orange-300/10 to-amber-300/20 p-8">
+            <div class="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+              <div>
+                <h2 id="cta-title" class="text-2xl font-bold text-white">Da el siguiente paso con TrackFlow Tech</h2>
+                <p class="mt-2 max-w-2xl text-slate-200">
+                  Forma parte de la unidad que esta modernizando una operacion logistica internacional.
+                  Crea soluciones reales con impacto en miles de envios.
+                </p>
+              </div>
+              <a
+                href="application.html"
+                aria-label="Ir al formulario de aplicacion"
+                class="rounded-full bg-white px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-100"
+                >Ir al formulario de aplicacion</a
+              >
+            </div>
+          </div>
+        </section>
+
+        <section id="estadisticas" role="region" aria-labelledby="stats-title" class="mx-auto max-w-6xl px-6 pb-16">
+          <h2 id="stats-title" class="text-3xl font-bold text-white">TrackFlow en numeros</h2>
+          <p class="mt-2 text-slate-300">Datos clave extraidos del contexto operativo actual de la empresa.</p>
+          <div role="list" aria-label="Estadisticas destacadas de TrackFlow" class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <article role="listitem" class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p class="text-sm uppercase tracking-widest text-cyan-200">Empleados</p>
+              <p class="mt-3 text-4xl font-bold text-white">130+</p>
+              <p class="mt-2 text-sm text-slate-300">Equipo distribuido entre Los Angeles y Zaragoza.</p>
+            </article>
+            <article role="listitem" class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p class="text-sm uppercase tracking-widest text-cyan-200">Facturacion anual</p>
+              <p class="mt-3 text-4xl font-bold text-white">EUR 9M</p>
+              <p class="mt-2 text-sm text-slate-300">Escala actual del negocio logistico.</p>
+            </article>
+            <article role="listitem" class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p class="text-sm uppercase tracking-widest text-cyan-200">Transportistas</p>
+              <p class="mt-3 text-4xl font-bold text-white">8</p>
+              <p class="mt-2 text-sm text-slate-300">Red multimercado para envios de ultima milla.</p>
+            </article>
+            <article role="listitem" class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p class="text-sm uppercase tracking-widest text-cyan-200">Devoluciones</p>
+              <p class="mt-3 text-4xl font-bold text-white">18-25%</p>
+              <p class="mt-2 text-sm text-slate-300">Rango de devolucion segun cliente y pais.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="timeline" role="region" aria-labelledby="timeline-title" class="mx-auto max-w-6xl px-6 pb-20">
+          <h2 id="timeline-title" class="text-3xl font-bold text-white">Como llega un paquete a destino</h2>
+          <p class="mt-2 text-slate-300">Proceso operativo simplificado de extremo a extremo.</p>
+
+          <ol role="list" aria-label="Linea de tiempo de entrega" class="mt-8 space-y-6 border-l border-orange-300/40 pl-6">
+            <li class="relative">
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <h3 class="text-lg font-semibold text-white">1. Recepcion del pedido</h3>
+              <p class="mt-1 text-slate-300">El pedido se recibe, valida y enruta al almacen correcto.</p>
+            </li>
+            <li class="relative">
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <h3 class="text-lg font-semibold text-white">2. Picking y empaquetado</h3>
+              <p class="mt-1 text-slate-300">Se prepara el SKU y se empaqueta segun los requisitos de la marca.</p>
+            </li>
+            <li class="relative">
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <h3 class="text-lg font-semibold text-white">3. Asignacion de transportista</h3>
+              <p class="mt-1 text-slate-300">Se selecciona el carrier mas adecuado por destino, coste y urgencia.</p>
+            </li>
+            <li class="relative">
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <h3 class="text-lg font-semibold text-white">4. Tracking y entrega</h3>
+              <p class="mt-1 text-slate-300">El envio se monitoriza hasta la entrega final al cliente.</p>
+            </li>
+            <li class="relative">
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <h3 class="text-lg font-semibold text-white">5. Gestion de devolucion</h3>
+              <p class="mt-1 text-slate-300">Si aplica, se procesa la logistica inversa para cerrar el ciclo.</p>
+            </li>
+          </ol>
+        </section>
+      </main>
+
+      <footer role="contentinfo" aria-label="Informacion de contacto" class="border-t border-white/10 bg-slate-950/60">
+        <div class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-xl font-bold text-white">TrackFlow</p>
+            <p class="mt-2 max-w-md text-slate-300">Soluciones logisticas de ultima milla para marcas que necesitan escalar con confianza.</p>
+          </div>
+          <div class="text-slate-300">
+            <p class="font-semibold text-white">Contacto</p>
+            <p class="mt-2">Email: contacto@trackflow.com</p>
+            <p>Telefono: +34 900 123 456</p>
+            <p>Oficinas: Los Angeles y Zaragoza</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
 </html>

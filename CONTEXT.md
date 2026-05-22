@@ -127,3 +127,20 @@ Los retos de IA en TrackFlow incluyen clasificación de estado de productos devu
 
 _Documento interno — 4Geeks Academy · AI Engineering Track_
 _Uso exclusivo para la generación de proyectos del programa_
+
+## Hito 1
+
+Comando para correr la app:
+
+```bash
+npx http-server . -p 3000 -a 0.0.0.0
+```
+
+Estructura base creada:
+
+```text
+/
+├── index.html (landing page)
+├── application.html (formulario de aplicación/registro)
+└── validation.js (lógica de validación del formulario)
+```
