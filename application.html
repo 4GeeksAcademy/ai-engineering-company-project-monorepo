@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solicitud | Nexova Solutions</title>
+    <meta
+      name="description"
+      content="Completa tu solicitud en Nexova Solutions para recibir una propuesta de consultoria en seleccion, soporte y formacion corporativa."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="geo.region" content="ES-VC" />
+    <meta name="geo.placename" content="Valencia" />
+    <meta name="geo.position" content="39.4699;-0.3763" />
+    <meta name="ICBM" content="39.4699, -0.3763" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Solicitud de Servicios | Nexova Solutions" />
+    <meta
+      property="og:description"
+      content="Cuentanos tus necesidades de talento para disenar una propuesta personalizada."
+    />
+    <meta property="og:url" content="https://nexova.example.com/application.html" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Merriweather:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Manrope", "sans-serif"],
+              display: ["Merriweather", "serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ContactPage",
+        "name": "Solicitud de Servicios - Nexova Solutions",
+        "url": "https://nexova.example.com/application.html",
+        "about": {
+          "@type": "ProfessionalService",
+          "name": "Nexova Solutions",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Valencia",
+            "addressCountry": "ES"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": "hola@nexovasolutions.com",
+            "telephone": "+34 960 000 000"
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased">
+    <div class="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+      <div class="absolute -left-16 top-16 h-72 w-72 rounded-full bg-teal-500/20 blur-3xl"></div>
+      <div class="absolute right-0 top-32 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl"></div>
+    </div>
+
+    <header class="border-b border-white/10 bg-slate-950/85 backdrop-blur">
+      <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <a href="index.html" class="text-sm font-semibold text-teal-200 hover:text-teal-100" aria-label="Volver a la pagina principal">← Volver al inicio</a>
+        <p class="text-sm text-slate-300">Nexova Solutions</p>
+      </div>
+    </header>
+
+    <main class="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+      <section class="mb-10">
+        <h1 class="font-display text-4xl font-black text-white sm:text-5xl">Solicitud de servicios</h1>
+        <p class="mt-4 max-w-2xl text-slate-300">
+          Comparte los detalles de tu empresa y objetivos. Validaremos tu informacion y un consultor te contactara con una propuesta personalizada.
+        </p>
+      </section>
+
+      <section class="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-900/40 sm:p-8">
+        <div id="formStatus" class="mb-6 hidden rounded-md border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
+        <div id="errorSummary" class="mb-6 hidden rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-100" role="alert" aria-live="assertive"></div>
+
+        <form id="applicationForm" novalidate aria-describedby="errorSummary formStatus">
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <label for="fullName" class="mb-2 block text-sm font-medium text-slate-100">Nombre completo *</label>
+              <input id="fullName" name="fullName" type="text" autocomplete="name" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="fullNameError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="company" class="mb-2 block text-sm font-medium text-slate-100">Empresa *</label>
+              <input id="company" name="company" type="text" autocomplete="organization" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="companyError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="email" class="mb-2 block text-sm font-medium text-slate-100">Email corporativo *</label>
+              <input id="email" name="email" type="email" autocomplete="email" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="emailError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="phone" class="mb-2 block text-sm font-medium text-slate-100">Telefono de contacto *</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+34 600 000 000" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="phoneError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="city" class="mb-2 block text-sm font-medium text-slate-100">Ciudad *</label>
+              <input id="city" name="city" type="text" autocomplete="address-level2" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="cityError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="country" class="mb-2 block text-sm font-medium text-slate-100">Pais *</label>
+              <input id="country" name="country" type="text" autocomplete="country-name" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true" />
+              <p id="countryError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="serviceLine" class="mb-2 block text-sm font-medium text-slate-100">Servicio de interes *</label>
+              <select id="serviceLine" name="serviceLine" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true">
+                <option value="">Selecciona una opcion</option>
+                <option value="headhunting">Headhunting para mandos y directivos</option>
+                <option value="outsourcing">Outsourcing de soporte al cliente</option>
+                <option value="training">Formacion corporativa</option>
+                <option value="full">Solucion integral de talento</option>
+              </select>
+              <p id="serviceLineError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="teamSize" class="mb-2 block text-sm font-medium text-slate-100">Tamano aproximado del equipo *</label>
+              <select id="teamSize" name="teamSize" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true">
+                <option value="">Selecciona una opcion</option>
+                <option value="1-20">1 - 20 personas</option>
+                <option value="21-100">21 - 100 personas</option>
+                <option value="101-500">101 - 500 personas</option>
+                <option value="500+">Mas de 500 personas</option>
+              </select>
+              <p id="teamSizeError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="industry" class="mb-2 block text-sm font-medium text-slate-100">Sector principal *</label>
+              <select id="industry" name="industry" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true">
+                <option value="">Selecciona una opcion</option>
+                <option value="tech">Tecnologia</option>
+                <option value="retail">Retail</option>
+                <option value="finance">Servicios financieros</option>
+                <option value="other">Otro</option>
+              </select>
+              <p id="industryError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+
+            <div>
+              <label for="timeline" class="mb-2 block text-sm font-medium text-slate-100">Plazo para iniciar *</label>
+              <select id="timeline" name="timeline" class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true">
+                <option value="">Selecciona una opcion</option>
+                <option value="immediate">Inmediato (0-30 dias)</option>
+                <option value="quarter">Este trimestre</option>
+                <option value="semester">Este semestre</option>
+                <option value="exploring">Aun evaluando opciones</option>
+              </select>
+              <p id="timelineError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <fieldset class="mt-8 rounded-lg border border-slate-700 p-4">
+            <legend class="px-2 text-sm font-semibold text-slate-100">Retos prioritarios (selecciona al menos uno) *</legend>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <label class="flex items-center gap-2 text-sm text-slate-200">
+                <input type="checkbox" name="challenges" value="speed" class="h-4 w-4 rounded border-slate-500 bg-slate-900" />
+                Reducir tiempo de contratacion
+              </label>
+              <label class="flex items-center gap-2 text-sm text-slate-200">
+                <input type="checkbox" name="challenges" value="quality" class="h-4 w-4 rounded border-slate-500 bg-slate-900" />
+                Mejorar calidad del talento contratado
+              </label>
+              <label class="flex items-center gap-2 text-sm text-slate-200">
+                <input type="checkbox" name="challenges" value="sla" class="h-4 w-4 rounded border-slate-500 bg-slate-900" />
+                Cumplir SLA de soporte al cliente
+              </label>
+              <label class="flex items-center gap-2 text-sm text-slate-200">
+                <input type="checkbox" name="challenges" value="leadership" class="h-4 w-4 rounded border-slate-500 bg-slate-900" />
+                Fortalecer liderazgo y habilidades blandas
+              </label>
+            </div>
+            <p id="challengesError" class="mt-2 text-sm text-red-300" aria-live="polite"></p>
+          </fieldset>
+
+          <div class="mt-8">
+            <label for="message" class="mb-2 block text-sm font-medium text-slate-100">Describe tu necesidad de talento *</label>
+            <textarea id="message" name="message" rows="5" minlength="80" placeholder="Cuentanos tu situacion actual, objetivo y perfil del talento que necesitas..." class="w-full rounded-md border border-slate-600 bg-slate-900/80 px-3 py-2 text-slate-100 outline-none transition focus:border-teal-300" aria-required="true"></textarea>
+            <p class="mt-1 text-xs text-slate-400">Minimo 80 caracteres para poder disenar una propuesta inicial.</p>
+            <p id="messageError" class="mt-1 text-sm text-red-300" aria-live="polite"></p>
+          </div>
+
+          <div class="mt-8 space-y-3">
+            <label class="flex items-start gap-2 text-sm text-slate-200">
+              <input id="privacy" name="privacy" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900" />
+              Acepto la politica de privacidad y el tratamiento de mis datos para gestionar esta solicitud. *
+            </label>
+            <p id="privacyError" class="text-sm text-red-300" aria-live="polite"></p>
+
+            <label class="flex items-start gap-2 text-sm text-slate-200">
+              <input id="consent" name="consent" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900" />
+              Autorizo a Nexova Solutions a contactarme por email o telefono para seguimiento comercial. *
+            </label>
+            <p id="consentError" class="text-sm text-red-300" aria-live="polite"></p>
+          </div>
+
+          <button type="submit" class="mt-10 w-full rounded-md bg-teal-400 px-6 py-3 font-semibold text-slate-900 transition hover:bg-teal-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 sm:w-auto">
+            Enviar solicitud
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="border-t border-white/10 py-8">
+      <div class="mx-auto w-full max-w-5xl px-4 text-sm text-slate-400 sm:px-6 lg:px-8">
+        (c) 2026 Nexova Solutions. Valencia, Espana | Miami, Florida
+      </div>
+    </footer>
+
+    <script src="validation.js"></script>
+  </body>
+</html>
