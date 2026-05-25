@@ -21,11 +21,49 @@
                         'brasa-gold-light': '#f0d68a',
                         'brasa-cream': '#f5e6d3',
                         'brasa-brown': '#3d2b1f',
+                        'brasa-orange': '#e67e22',
+                        'brasa-ember': '#d35400',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        glow: {
+                            '0%': { opacity: '0.4' },
+                            '100%': { opacity: '0.8' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
                     }
                 }
             }
         }
     </script>
+    <style>
+        /* Scroll-triggered animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        /* Glowing accents */
+        .glow-red { box-shadow: 0 0 30px rgba(192, 57, 43, 0.3), 0 0 60px rgba(192, 57, 43, 0.1); }
+        .glow-gold { box-shadow: 0 0 30px rgba(212, 168, 83, 0.2), 0 0 60px rgba(212, 168, 83, 0.1); }
+    </style>
 
     <!-- Schema.org structured data -->
     <script type="application/ld+json">
@@ -119,53 +157,63 @@
 
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-brasa-dark border-t border-brasa-brown/30" role="menu">
-            <ul class="px-4 py-4 space-y-3">
-                <li><a href="#menu" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Menú</a></li>
-                <li><a href="#locales" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Locales</a></li>
-                <li><a href="#nosotros" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Nosotros</a></li>
-                <li><a href="#brasa-points" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Brasa Points</a></li>
-                <li><a href="application.html" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Trabaja con Nosotros</a></li>
-                <li class="pt-2">
-                    <a href="application.html" class="block text-center bg-brasa-red hover:bg-brasa-red-hover text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-                        Únete al Equipo
-                    </a>
-                </li>
+            <ul class="px-6 py-6 space-y-1 text-center">
+                <li><a href="#menu" class="block py-3 text-brasa-cream hover:text-brasa-gold hover:bg-brasa-card rounded-lg transition-all">Menú</a></li>
+                <li><a href="#locales" class="block py-3 text-brasa-cream hover:text-brasa-gold hover:bg-brasa-card rounded-lg transition-all">Locales</a></li>
+                <li><a href="#nosotros" class="block py-3 text-brasa-cream hover:text-brasa-gold hover:bg-brasa-card rounded-lg transition-all">Nosotros</a></li>
+                <li><a href="#brasa-points" class="block py-3 text-brasa-cream hover:text-brasa-gold hover:bg-brasa-card rounded-lg transition-all">Brasa Points</a></li>
+                <li><a href="application.html" class="block py-3 text-brasa-cream hover:text-brasa-gold hover:bg-brasa-card rounded-lg transition-all">Trabaja con Nosotros</a></li>
             </ul>
+            <div class="border-t border-brasa-brown/40 mx-6 pt-4 pb-6">
+                <a href="application.html" class="block text-center bg-brasa-red hover:bg-brasa-red-hover text-white px-5 py-3 rounded-full text-sm font-semibold transition-colors shadow-lg shadow-brasa-red/20">
+                    Únete al Equipo
+                </a>
+            </div>
         </div>
     </header>
 
     <main>
         <!-- Hero Section -->
-        <section class="relative min-h-screen flex items-center justify-center pt-16 md:pt-20" aria-labelledby="hero-heading">
-            <!-- Background overlay -->
-            <div class="absolute inset-0 bg-gradient-to-b from-brasa-darker/80 via-brasa-darker/60 to-brasa-darker z-10"></div>
-            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80')] bg-cover bg-center"></div>
+        <section class="relative min-h-screen flex items-center justify-center pt-16 md:pt-20 overflow-hidden" aria-labelledby="hero-heading">
+            <!-- Background overlay with warmer gradient -->
+            <div class="absolute inset-0 bg-gradient-to-b from-brasa-darker/70 via-brasa-dark/50 to-brasa-darker z-10"></div>
+            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80')] bg-cover bg-center scale-105"></div>
+            <!-- Warm glow overlays -->
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brasa-orange/10 rounded-full blur-3xl animate-glow z-10"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-brasa-red/10 rounded-full blur-3xl animate-glow z-10" style="animation-delay: 1.5s"></div>
 
             <div class="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 text-center">
-                <span class="inline-block border border-brasa-gold/60 text-brasa-gold text-xs md:text-sm font-medium tracking-widest uppercase px-4 py-1.5 rounded-full mb-6">
+                <span class="inline-block border border-brasa-gold/60 text-brasa-gold text-xs md:text-sm font-medium tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 backdrop-blur-sm bg-brasa-darker/30 animate-fade-in-up">
                     Experiencia Premium
                 </span>
-                <h1 id="hero-heading" class="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight mb-6">
+                <h1 id="hero-heading" class="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
                     Tradición que se siente,<br>
-                    <span class="text-brasa-gold">sabor que nos une</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brasa-gold via-brasa-orange to-brasa-gold">sabor que nos une</span>
                 </h1>
-                <p class="text-lg md:text-xl text-brasa-cream/80 mb-10 max-w-2xl mx-auto">
+                <p class="text-lg md:text-xl text-brasa-cream/90 mb-10 max-w-2xl mx-auto animate-fade-in-up" style="animation-delay: 0.4s">
                     De Medellín a Miami, la misma pasión en cada bocado. 14 locales, dos países, una sola brasa.
                 </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="#locales" class="bg-brasa-red hover:bg-brasa-red-hover text-white px-8 py-3.5 rounded-full font-semibold text-base transition-colors flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style="animation-delay: 0.6s">
+                    <a href="#locales" class="bg-brasa-red hover:bg-brasa-red-hover text-white px-8 py-3.5 rounded-full font-semibold text-base transition-all flex items-center gap-2 glow-red hover:scale-105">
                         Reservar Mesa
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                     </a>
-                    <a href="#menu" class="border border-brasa-cream/40 hover:border-brasa-gold text-brasa-cream hover:text-brasa-gold px-8 py-3.5 rounded-full font-semibold text-base transition-colors">
+                    <a href="#menu" class="border border-brasa-cream/40 hover:border-brasa-gold text-brasa-cream hover:text-brasa-gold px-8 py-3.5 rounded-full font-semibold text-base transition-all hover:scale-105 backdrop-blur-sm">
                         Ver Menú
                     </a>
                 </div>
             </div>
+
+            <!-- Scroll indicator -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 animate-float">
+                <svg class="w-6 h-6 text-brasa-gold/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            </div>
         </section>
 
         <!-- Region Selector -->
-        <section class="py-16 md:py-24 bg-brasa-dark" aria-labelledby="region-heading">
+        <section class="py-16 md:py-24 bg-brasa-dark relative overflow-hidden" aria-labelledby="region-heading">
+            <!-- Decorative background glow -->
+            <div class="absolute -top-20 -right-20 w-72 h-72 bg-brasa-gold/5 rounded-full blur-3xl"></div>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
@@ -218,34 +266,37 @@
 
                 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     <!-- Card 1 -->
-                    <article class="bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/30 transition-all">
-                        <div class="h-48 overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80" alt="Costillas a la brasa glaseadas con salsa especial Brasaland" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <article class="animate-on-scroll bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brasa-gold/5">
+                        <div class="h-48 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80" alt="Costillas a la brasa glaseadas con salsa especial Brasaland" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-brasa-card/60 to-transparent"></div>
                         </div>
                         <div class="p-6">
-                            <h3 class="text-xl font-bold mb-2">Costillas Brasaland</h3>
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-brasa-gold transition-colors">Costillas Brasaland</h3>
                             <p class="text-brasa-cream/70 text-sm">Nuestras icónicas costillas marinadas 24 horas y cocidas lentamente sobre brasa de carbón natural. El plato que nos hizo famosos.</p>
                         </div>
                     </article>
 
                     <!-- Card 2 -->
-                    <article class="bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/30 transition-all">
-                        <div class="h-48 overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1558030006-450675393462?w=500&q=80" alt="Hamburguesa premium Brasaland con ingredientes frescos" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <article class="animate-on-scroll bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brasa-gold/5" style="transition-delay: 0.1s">
+                        <div class="h-48 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1558030006-450675393462?w=500&q=80" alt="Hamburguesa premium Brasaland con ingredientes frescos" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-brasa-card/60 to-transparent"></div>
                         </div>
                         <div class="p-6">
-                            <h3 class="text-xl font-bold mb-2">Burger Brasa Premium</h3>
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-brasa-gold transition-colors">Burger Brasa Premium</h3>
                             <p class="text-brasa-cream/70 text-sm">200g de carne angus sellada a la brasa, con queso fundido artesanal y nuestra salsa secreta. El mismo sabor en cada local.</p>
                         </div>
                     </article>
 
                     <!-- Card 3 -->
-                    <article class="bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/30 transition-all sm:col-span-2 lg:col-span-1">
-                        <div class="h-48 overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=500&q=80" alt="Alitas de pollo a la brasa con diferentes salsas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <article class="animate-on-scroll bg-brasa-card rounded-2xl overflow-hidden group hover:ring-1 hover:ring-brasa-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brasa-gold/5 sm:col-span-2 lg:col-span-1" style="transition-delay: 0.2s">
+                        <div class="h-48 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=500&q=80" alt="Alitas de pollo a la brasa con diferentes salsas" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-brasa-card/60 to-transparent"></div>
                         </div>
                         <div class="p-6">
-                            <h3 class="text-xl font-bold mb-2">Alitas de Fuego</h3>
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-brasa-gold transition-colors">Alitas de Fuego</h3>
                             <p class="text-brasa-cream/70 text-sm">Crujientes por fuera, jugosas por dentro. Disponibles en 5 niveles de picante y con nuestro glaseado de miel ahumada.</p>
                         </div>
                     </article>
@@ -302,9 +353,11 @@
         </section>
 
         <!-- Brasa Points -->
-        <section id="brasa-points" class="py-16 md:py-24 bg-brasa-darker" aria-labelledby="points-heading">
+        <section id="brasa-points" class="py-16 md:py-24 bg-brasa-darker relative overflow-hidden" aria-labelledby="points-heading">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-brasa-gold/30 to-transparent"></div>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-gradient-to-r from-brasa-card to-brasa-brown/50 rounded-3xl p-8 md:p-12 lg:p-16">
+                <div class="bg-gradient-to-br from-brasa-card via-brasa-brown/40 to-brasa-card rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden border border-brasa-gold/10">
+                    <div class="absolute -top-10 -right-10 w-60 h-60 bg-brasa-gold/5 rounded-full blur-3xl"></div>
                     <div class="grid md:grid-cols-2 gap-8 items-center">
                         <div>
                             <span class="inline-flex items-center gap-2 bg-brasa-gold/20 text-brasa-gold px-3 py-1 rounded-full text-xs font-semibold mb-4">
@@ -414,14 +467,16 @@
         </section>
 
         <!-- CTA Section -->
-        <section class="py-16 md:py-24 bg-brasa-darker" aria-labelledby="cta-heading">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-                <h2 id="cta-heading" class="text-3xl md:text-4xl font-bold mb-4">¿Quieres ser parte del equipo?</h2>
-                <p class="text-brasa-cream/70 mb-8 max-w-2xl mx-auto">
+        <section class="py-20 md:py-28 bg-gradient-to-b from-brasa-darker via-brasa-dark to-brasa-darker relative overflow-hidden" aria-labelledby="cta-heading">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(212,168,83,0.06)_0%,_transparent_70%)]"></div>
+            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brasa-brown/40 to-transparent"></div>
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+                <h2 id="cta-heading" class="text-3xl md:text-5xl font-bold mb-4 animate-on-scroll">¿Quieres ser parte del equipo?</h2>
+                <p class="text-brasa-cream/70 mb-10 max-w-2xl mx-auto text-lg animate-on-scroll">
                     Estamos en constante crecimiento. Si te apasiona la cocina, el servicio al cliente o la gestión de restaurantes, 
                     queremos conocerte. Aplica ahora y únete a la familia Brasaland.
                 </p>
-                <a href="application.html" class="inline-flex items-center gap-2 bg-brasa-red hover:bg-brasa-red-hover text-white px-8 py-4 rounded-full font-semibold text-lg transition-colors">
+                <a href="application.html" class="animate-on-scroll inline-flex items-center gap-2 bg-brasa-red hover:bg-brasa-red-hover text-white px-10 py-4 rounded-full font-semibold text-lg transition-all glow-red hover:scale-105">
                     Aplicar Ahora
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                 </a>
@@ -432,7 +487,7 @@
     <!-- Footer -->
     <footer class="bg-brasa-darker border-t border-brasa-brown/30 py-12" role="contentinfo">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
                 <!-- Brand -->
                 <div class="md:col-span-1">
                     <p class="text-2xl font-bold italic text-brasa-cream mb-3">Brasaland</p>
@@ -469,8 +524,8 @@
                 </div>
             </div>
 
-            <div class="border-t border-brasa-brown/30 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-brasa-cream/50 text-sm">© 2024 Brasaland. Tradición a la brasa & Innovación digital.</p>
+            <div class="border-t border-brasa-brown/30 pt-8 flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
+                <p class="text-brasa-cream/50 text-sm text-center">© 2024 Brasaland. Tradición a la brasa & Innovación digital.</p>
                 <div class="flex items-center gap-6 text-sm text-brasa-cream/50">
                     <a href="#" class="hover:text-brasa-cream transition-colors">Privacidad</a>
                     <a href="#" class="hover:text-brasa-cream transition-colors">Términos</a>
@@ -481,7 +536,7 @@
         </div>
     </footer>
 
-    <!-- Mobile Menu Script -->
+    <!-- Mobile Menu Script + Scroll Animations -->
     <script>
         const menuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
@@ -499,6 +554,17 @@
                 menuBtn.setAttribute('aria-expanded', 'false');
             });
         });
+
+        // Scroll-triggered animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
     </script>
 </body>
 </html>
