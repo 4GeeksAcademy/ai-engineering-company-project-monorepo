@@ -5,6 +5,7 @@ const nextBtn = document.getElementById('next-btn');
 const submitBtn = document.getElementById('submit-btn');
 const stepIndicator = document.getElementById('step-indicator');
 const errorMessage = document.getElementById('error-message');
+const successMessage = document.getElementById('success-message');
 const DEFAULT_ERROR_MESSAGE = 'Revisa los campos obligatorios del paso actual antes de continuar.';
 const INVALID_EMAIL_MESSAGE = 'Introduce un email válido (por ejemplo, nombre@empresa.com).';
 const INVALID_PHONE_MESSAGE = 'Introduce un teléfono válido usando solo números y símbolos como +, - o paréntesis.';
@@ -167,6 +168,7 @@ function goToStep(stepNumber) {
 	showStep(currentStep);
 	updateButtons();
 	document.getElementById('error-message').classList.add('hidden');
+	successMessage.classList.add('hidden');
 }
 
 function resetForm() {
@@ -189,7 +191,8 @@ function submitForm(event) {
 	};
 
 	console.log('Enviando datos del formulario:', formData);
-	alert('Gracias. Tu mensaje ha sido enviado.');
+	errorMessage.classList.add('hidden');
+	successMessage.classList.remove('hidden');
 	resetForm();
 	currentStep = 1;
 	showStep(currentStep);
@@ -216,6 +219,8 @@ prevBtn.addEventListener('click', () => {
 		...formData,
 		...collectStepData(currentStep),
 	};
+
+	successMessage.classList.add('hidden');
 
 	if (currentStep > 1) {
 		goToStep(currentStep - 1);
