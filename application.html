@@ -3,8 +3,324 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Application</title>
+    <title>TrackFlow | Aplicacion</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "TrackFlow",
+            "url": "https://trackflow.example",
+            "logo": "logo.png",
+            "description": "Empresa de logistica de ultima milla y gestion de almacenes en Estados Unidos y Espana.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "contacto@trackflow.com",
+              "telephone": "+34 900 123 456",
+              "availableLanguage": ["es", "en"]
+            },
+            "address": [
+              {
+                "@type": "PostalAddress",
+                "addressLocality": "Los Angeles",
+                "addressCountry": "US"
+              },
+              {
+                "@type": "PostalAddress",
+                "addressLocality": "Zaragoza",
+                "addressCountry": "ES"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "name": "TrackFlow",
+            "url": "https://trackflow.example",
+            "inLanguage": "es"
+          }
+        ]
+      }
+    </script>
   </head>
-  <body></body>
+  <body class="bg-slate-950 text-slate-100" style="font-family: 'Space Grotesk', sans-serif;">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(249,115,22,0.25),transparent_35%),radial-gradient(circle_at_85%_12%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)]">
+      <header role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <a href="index.html" aria-label="Ir al inicio de TrackFlow" class="flex items-center gap-3">
+            <img
+              src="logo.png"
+              alt="Logo de TrackFlow"
+              class="h-15 w-15 object-contain"
+            />
+            <span class="text-xl font-bold tracking-wide">TrackFlow</span>
+          </a>
+          <nav role="navigation" aria-label="Navegacion principal">
+            <a
+              href="index.html"
+              aria-label="Volver a la pagina principal"
+              class="rounded-md border border-orange-400/60 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-500 hover:text-slate-950"
+              >Volver al inicio</a
+            >
+          </nav>
+        </div>
+      </header>
+
+      <main role="main" aria-label="Contenido principal">
+        <section class="mx-auto max-w-4xl px-6 py-12">
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-900/40 sm:p-8">
+            <div class="mb-8">
+              <p class="inline-flex rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                ÚNETE A TRACKFLOW
+              </p>
+              <h1 class="mt-4 text-3xl font-bold text-white sm:text-4xl">Formulario de Aplicación</h1>
+              <p class="mt-3 text-slate-300">
+                Comparte tu perfil y tu propuesta para ayudar a modernizar operaciones logísticas entre Estados Unidos y España.
+              </p>
+            </div>
+
+            <div class="mb-6 flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/40 px-4 py-3 text-sm text-slate-300">
+              <p id="step-indicator">Paso 1 de 3</p>
+            </div>
+
+            <form id="application-form" novalidate>
+              <div class="space-y-6">
+                <section data-step="1" class="step space-y-4">
+                  <h2 class="text-xl font-semibold text-white">Paso 1 · Datos personales</h2>
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="text-sm text-slate-200" for="fullName">
+                      Nombre completo *
+                      <input id="fullName" name="fullName" type="text" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="email">
+                      Email profesional *
+                      <input id="email" name="email" type="email" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="phone">
+                      Teléfono *
+                      <input id="phone" name="phone" type="tel" inputmode="tel" pattern="^\+?[0-9()\-\s]+$" title="Usa solo numeros y simbolos de telefono como +, -, espacios o parentesis" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="city">
+                      Ciudad de residencia *
+                      <input id="city" name="city" type="text" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="country">
+                      País principal de trabajo *
+                      <select id="country" name="country" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                        <option value="">Selecciona un país</option>
+                        <option value="ES">España</option>
+                        <option value="US">Estados Unidos</option>
+                        <option value="MIXED">Ambos mercados</option>
+                      </select>
+                    </label>
+                    <label class="text-sm text-slate-200" for="experienceYears">
+                      Años de experiencia *
+                      <input id="experienceYears" name="experienceYears" type="number" min="0" max="40" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                  </div>
+                </section>
+
+                <section data-step="2" class="step hidden space-y-4">
+                  <h2 class="text-xl font-semibold text-white">Paso 2 · Enfoque en TrackFlow</h2>
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="text-sm text-slate-200" for="department">
+                      Área objetivo *
+                      <select id="department" name="department" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                        <option value="">Selecciona un área</option>
+                        <option value="warehouse-ops">Operaciones de almacén</option>
+                        <option value="last-mile">Última milla y transportistas</option>
+                        <option value="reverse-logistics">Logística inversa</option>
+                        <option value="cx">Experiencia del cliente</option>
+                        <option value="commercial">Comercial y relación con clientes</option>
+                        <option value="technology">Tecnología</option>
+                        <option value="executive">Dirección ejecutiva</option>
+                      </select>
+                    </label>
+                    <label class="text-sm text-slate-200" for="roleProfile">
+                      Perfil operativo *
+                      <select id="roleProfile" name="roleProfile" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                        <option value="">Selecciona un perfil</option>
+                        <option value="route-planning">Planificacion y optimizacion de rutas</option>
+                        <option value="warehouse-systems">Sistemas de almacen (WMS)</option>
+                        <option value="transport-network">Gestion de red de transportistas</option>
+                        <option value="tracking-operations">Seguimiento y control operativo (TMS)</option>
+                        <option value="logistics-analytics">Analitica y mejora continua logistica</option>
+                      </select>
+                    </label>
+                    <label class="text-sm text-slate-200" for="availabilityDate">
+                      Fecha de inicio disponible *
+                      <input id="availabilityDate" name="availabilityDate" type="date" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="englishLevel">
+                      Nivel de inglés *
+                      <select id="englishLevel" name="englishLevel" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                        <option value="">Selecciona nivel</option>
+                        <option value="basic">Básico</option>
+                        <option value="intermediate">Intermedio</option>
+                        <option value="advanced">Avanzado</option>
+                        <option value="bilingual">Bilingüe</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <fieldset>
+                    <legend class="text-sm font-semibold text-slate-200">Modalidad preferida *</legend>
+                    <div class="mt-2 flex flex-wrap gap-4 text-sm text-slate-200">
+                      <label class="inline-flex items-center gap-2" for="workModeRemote">
+                        <input id="workModeRemote" type="radio" name="workMode" value="remote" required />
+                        Remoto
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="workModeHybrid">
+                        <input id="workModeHybrid" type="radio" name="workMode" value="hybrid" required />
+                        Híbrido
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="workModeOnsite">
+                        <input id="workModeOnsite" type="radio" name="workMode" value="onsite" required />
+                        Presencial
+                      </label>
+                    </div>
+                  </fieldset>
+                </section>
+
+                <section data-step="3" class="step hidden space-y-4">
+                  <h2 class="text-xl font-semibold text-white">Paso 3 · Experiencia, condiciones y cierre</h2>
+
+                  <fieldset>
+                    <legend class="text-sm font-semibold text-slate-200">Qué reto quieres priorizar? *</legend>
+                    <div class="mt-2 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+                      <label class="inline-flex items-center gap-2" for="focusInventory">
+                        <input id="focusInventory" name="focusInventory" type="checkbox" /> Reducir errores de inventario y preparacion de pedidos
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="focusTracking">
+                        <input id="focusTracking" name="focusTracking" type="checkbox" /> Mejorar visibilidad y trazabilidad de envios
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="focusReturns">
+                        <input id="focusReturns" name="focusReturns" type="checkbox" /> Agilizar gestion de devoluciones y reclamaciones
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="focusCx">
+                        <input id="focusCx" name="focusCx" type="checkbox" /> Mejorar comunicacion con clientes en incidencias
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="focusCarrierOptimization">
+                        <input id="focusCarrierOptimization" name="focusCarrierOptimization" type="checkbox" /> Optimizar asignacion de rutas y transportistas
+                      </label>
+                      <label class="inline-flex items-center gap-2" for="focusExecutiveDashboard">
+                        <input id="focusExecutiveDashboard" name="focusExecutiveDashboard" type="checkbox" /> Incrementar puntualidad de entregas (OTD)
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <label class="block text-sm text-slate-200" for="techStack">
+                    Experiencia operativa y herramientas que dominas *
+                    <textarea id="techStack" name="techStack" rows="3" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" placeholder="Ejemplo: WMS/TMS, ERP, Excel avanzado, Power BI, gestion de turnos, control de SLA"></textarea>
+                  </label>
+
+                  <label class="block text-sm text-slate-200" for="proposalSummary">
+                    Resumen de propuesta (max 400 caracteres) *
+                    <textarea id="proposalSummary" name="proposalSummary" rows="4" maxlength="400" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" placeholder="Describe como resolverias el reto operativo, su impacto en servicio y que metricas mejorarias."></textarea>
+                  </label>
+
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="text-sm text-slate-200" for="portfolioUrl">
+                      Perfil profesional (LinkedIn o similar) (URL) *
+                      <input id="portfolioUrl" name="portfolioUrl" type="url" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                    <label class="text-sm text-slate-200" for="cvUrl">
+                      CV (URL) *
+                      <input id="cvUrl" name="cvUrl" type="url" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" />
+                    </label>
+                  </div>
+
+                  <label class="text-sm text-slate-200" for="salaryRange">
+                    Rango salarial esperado (EUR bruto anual) *
+                    <select id="salaryRange" name="salaryRange" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                      <option value="">Selecciona un rango</option>
+                      <option value="30k-40k">30k - 40k</option>
+                      <option value="40k-50k">40k - 50k</option>
+                      <option value="50k-65k">50k - 65k</option>
+                      <option value="65k+">65k+</option>
+                    </select>
+                  </label>
+
+                  <label class="text-sm text-slate-200" for="shiftAvailability">
+                    Disponibilidad para turnos y picos de demanda *
+                    <select id="shiftAvailability" name="shiftAvailability" required class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300">
+                      <option value="">Selecciona una opción</option>
+                      <option value="full">Disponible en cualquier turno</option>
+                      <option value="business-hours">Solo horario laboral</option>
+                      <option value="weekends">Incluye fines de semana puntuales</option>
+                    </select>
+                  </label>
+
+                  <label class="block text-sm text-slate-200" for="additionalComments">
+                    Comentarios adicionales
+                    <textarea id="additionalComments" name="additionalComments" rows="3" class="mt-2 w-full rounded-md border border-white/20 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-cyan-300" placeholder="Comparte informacion relevante sobre disponibilidad, movilidad o experiencia en operaciones similares."></textarea>
+                  </label>
+
+                  <div class="space-y-2 text-sm text-slate-200">
+                    <label class="inline-flex items-center gap-2" for="acceptPolicy">
+                      <input id="acceptPolicy" name="acceptPolicy" type="checkbox" required />
+                      Acepto la política de privacidad y el tratamiento de datos. *
+                    </label>
+                    <label class="inline-flex items-center gap-2" for="acceptUpdates">
+                      <input id="acceptUpdates" name="acceptUpdates" type="checkbox" />
+                      Quiero recibir novedades sobre vacantes y operaciones de TrackFlow.
+                    </label>
+                  </div>
+                </section>
+              </div>
+
+              <p id="error-message" class="mt-6 hidden rounded-md border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
+                Revisa los campos obligatorios del paso actual antes de continuar.
+              </p>
+
+              <div class="mt-8 flex flex-wrap items-center justify-between gap-3">
+                <button id="prev-btn" type="button" class="rounded-md border border-slate-400/40 px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200">
+                  Anterior
+                </button>
+                <div class="flex gap-3">
+                  <button id="next-btn" type="button" class="rounded-md bg-orange-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-400">
+                    Siguiente
+                  </button>
+                  <button id="submit-btn" type="submit" class="hidden rounded-md bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+                    Enviar aplicación
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer role="contentinfo" aria-label="Informacion de contacto" class="border-t border-white/10 bg-slate-950/60">
+        <div class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-xl font-bold text-white">TrackFlow</p>
+            <p class="mt-2 max-w-md text-slate-300">Soluciones logísticas de última milla para marcas que necesitan escalar con confianza.</p>
+          </div>
+          <div class="text-slate-300">
+            <p class="font-semibold text-white">Contacto</p>
+            <p class="mt-2">Email: contacto@trackflow.com</p>
+            <p>Teléfono: +34 900 123 456</p>
+            <p>Oficinas: Los Ángeles y Zaragoza</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="validation.js" defer></script>
+  </body>
 </html>

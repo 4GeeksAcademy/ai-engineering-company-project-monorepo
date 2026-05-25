@@ -62,11 +62,11 @@
     <div class="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(249,115,22,0.25),transparent_35%),radial-gradient(circle_at_85%_12%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)]">
       <header role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <a href="#" aria-label="Ir al inicio de TrackFlow" class="flex items-center gap-3">
+          <a href="/" aria-label="Ir al inicio de TrackFlow" class="flex items-center gap-3">
             <img
               src="logo.png"
               alt="Logo de TrackFlow"
-              class="h-12 w-12 rounded-full border border-white/10 bg-white/5 object-cover p-1"
+              class="h-15 w-15 object-contain"
             />
             <span class="text-xl font-bold tracking-wide">TrackFlow</span>
           </a>
@@ -74,7 +74,7 @@
             <a
               href="application.html"
               aria-label="Ir al formulario de aplicacion"
-              class="rounded-full border border-orange-400/60 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-500 hover:text-slate-950"
+              class="rounded-md border border-orange-400/60 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-500 hover:text-slate-950"
               >Aplicar ahora</a
             >
           </nav>
@@ -85,7 +85,7 @@
         <section id="hero" role="region" aria-labelledby="hero-title" class="mx-auto max-w-6xl px-6 pb-20 pt-16 lg:pt-24">
           <div class="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <p class="mb-4 inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+              <p class="mb-4 inline-flex rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
                 Logistica inteligente para e-commerce
               </p>
               <h1 id="hero-title" class="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
@@ -99,13 +99,13 @@
                 <a
                   href="#estadisticas"
                   aria-label="Ver mas informacion en la seccion de estadisticas"
-                  class="rounded-full bg-orange-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-orange-400"
+                  class="rounded-md bg-orange-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-orange-400"
                   >Ver mas</a
                 >
                 <a
                   href="application.html"
                   aria-label="Comenzar aplicacion en el formulario"
-                  class="rounded-full border border-slate-400/40 px-6 py-3 font-semibold text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200"
+                  class="rounded-md border border-slate-400/40 px-6 py-3 font-semibold text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200"
                   >Comenzar aplicacion</a
                 >
               </div>
@@ -124,7 +124,7 @@
           </div>
         </section>
 
-        <section role="region" aria-labelledby="cta-title" class="mx-auto max-w-6xl px-6 pb-16">
+        <section id="estadisticas" role="region" aria-labelledby="cta-title" class="mx-auto max-w-6xl px-6 pb-16">
           <div class="rounded-3xl border border-orange-300/30 bg-gradient-to-r from-orange-500/20 via-orange-300/10 to-amber-300/20 p-8">
             <div class="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
               <div>
@@ -137,16 +137,15 @@
               <a
                 href="application.html"
                 aria-label="Ir al formulario de aplicacion"
-                class="rounded-full bg-white px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-100"
+                class="rounded-md bg-white px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-100"
                 >Ir al formulario de aplicacion</a
               >
             </div>
           </div>
         </section>
-
-        <section id="estadisticas" role="region" aria-labelledby="stats-title" class="mx-auto max-w-6xl px-6 pb-16">
-          <h2 id="stats-title" class="text-3xl font-bold text-white">TrackFlow en numeros</h2>
-          <p class="mt-2 text-slate-300">Datos clave extraidos del contexto operativo actual de la empresa.</p>
+        <section role="region" aria-labelledby="stats-title" class="mx-auto max-w-6xl px-6 pb-16">
+          <h2 id="stats-title" class="text-3xl font-bold text-white">TrackFlow en números</h2>
+          <p class="mt-2 text-slate-300">Datos clave extraídos del contexto operativo actual de la empresa.</p>
           <div role="list" aria-label="Estadisticas destacadas de TrackFlow" class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <article role="listitem" class="rounded-2xl border border-white/10 bg-white/5 p-6">
               <p class="text-sm uppercase tracking-widest text-cyan-200">Empleados</p>
@@ -177,27 +176,27 @@
 
           <ol role="list" aria-label="Linea de tiempo de entrega" class="mt-8 space-y-6 border-l border-orange-300/40 pl-6">
             <li class="relative">
-              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-md bg-orange-400 ring-4 ring-orange-400/20"></span>
               <h3 class="text-lg font-semibold text-white">1. Recepcion del pedido</h3>
               <p class="mt-1 text-slate-300">El pedido se recibe, valida y enruta al almacen correcto.</p>
             </li>
             <li class="relative">
-              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-md bg-orange-400 ring-4 ring-orange-400/20"></span>
               <h3 class="text-lg font-semibold text-white">2. Picking y empaquetado</h3>
               <p class="mt-1 text-slate-300">Se prepara el SKU y se empaqueta segun los requisitos de la marca.</p>
             </li>
             <li class="relative">
-              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-md bg-orange-400 ring-4 ring-orange-400/20"></span>
               <h3 class="text-lg font-semibold text-white">3. Asignacion de transportista</h3>
               <p class="mt-1 text-slate-300">Se selecciona el carrier mas adecuado por destino, coste y urgencia.</p>
             </li>
             <li class="relative">
-              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-md bg-orange-400 ring-4 ring-orange-400/20"></span>
               <h3 class="text-lg font-semibold text-white">4. Tracking y entrega</h3>
               <p class="mt-1 text-slate-300">El envio se monitoriza hasta la entrega final al cliente.</p>
             </li>
             <li class="relative">
-              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-full bg-orange-400 ring-4 ring-orange-400/20"></span>
+              <span aria-hidden="true" class="absolute -left-[34px] top-1 inline-flex h-4 w-4 rounded-md bg-orange-400 ring-4 ring-orange-400/20"></span>
               <h3 class="text-lg font-semibold text-white">5. Gestion de devolucion</h3>
               <p class="mt-1 text-slate-300">Si aplica, se procesa la logistica inversa para cerrar el ciclo.</p>
             </li>
