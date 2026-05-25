@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trabaja con Brasaland — Aplica para unirte a nuestro equipo en Colombia o Florida. Posiciones en cocina, servicio, supervisión y administración.">
+    <title>Trabaja con Nosotros — Brasaland</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brasa-dark': '#1a1210',
+                        'brasa-darker': '#0f0b0a',
+                        'brasa-card': '#2a2018',
+                        'brasa-red': '#c0392b',
+                        'brasa-red-hover': '#e74c3c',
+                        'brasa-gold': '#d4a853',
+                        'brasa-gold-light': '#f0d68a',
+                        'brasa-cream': '#f5e6d3',
+                        'brasa-brown': '#3d2b1f',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        "hiringOrganization": {
+            "@type": "Organization",
+            "name": "Brasaland",
+            "url": "https://brasaland.com",
+            "logo": "https://brasaland.com/logo.png"
+        },
+        "jobLocation": [
+            {
+                "@type": "Place",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Medellín",
+                    "addressCountry": "CO"
+                }
+            },
+            {
+                "@type": "Place",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Miami",
+                    "addressRegion": "FL",
+                    "addressCountry": "US"
+                }
+            }
+        ],
+        "title": "Múltiples posiciones disponibles",
+        "description": "Brasaland busca personas apasionadas para unirse a su equipo en Colombia y Florida.",
+        "employmentType": ["FULL_TIME", "PART_TIME"],
+        "datePosted": "2024-01-01"
+    }
+    </script>
+</head>
+<body class="bg-brasa-darker text-brasa-cream font-sans">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-brasa-darker/95 backdrop-blur-sm border-b border-brasa-brown/30" role="banner">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-20" aria-label="Navegación principal">
+            <a href="index.html" class="text-2xl md:text-3xl font-bold italic text-brasa-cream hover:text-brasa-gold transition-colors" aria-label="Brasaland - Inicio">
+                Brasaland
+            </a>
+
+            <!-- Mobile menu button -->
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-md text-brasa-cream hover:text-brasa-gold" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú de navegación">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            <!-- Desktop navigation -->
+            <ul class="hidden md:flex items-center gap-8 text-sm font-medium" role="menubar">
+                <li role="none"><a href="index.html" role="menuitem" class="hover:text-brasa-gold transition-colors">Inicio</a></li>
+                <li role="none"><a href="index.html#menu" role="menuitem" class="hover:text-brasa-gold transition-colors">Menú</a></li>
+                <li role="none"><a href="index.html#locales" role="menuitem" class="hover:text-brasa-gold transition-colors">Locales</a></li>
+                <li role="none"><a href="index.html#nosotros" role="menuitem" class="hover:text-brasa-gold transition-colors">Nosotros</a></li>
+                <li role="none"><a href="application.html" role="menuitem" class="text-brasa-gold font-semibold">Trabaja con Nosotros</a></li>
+            </ul>
+
+            <div class="hidden md:flex items-center gap-4">
+                <a href="index.html" class="border border-brasa-cream/30 hover:border-brasa-gold text-brasa-cream hover:text-brasa-gold px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                    Volver al Inicio
+                </a>
+            </div>
+        </nav>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brasa-dark border-t border-brasa-brown/30" role="menu">
+            <ul class="px-4 py-4 space-y-3">
+                <li><a href="index.html" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Inicio</a></li>
+                <li><a href="index.html#menu" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Menú</a></li>
+                <li><a href="index.html#locales" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Locales</a></li>
+                <li><a href="index.html#nosotros" class="block py-2 text-brasa-cream hover:text-brasa-gold transition-colors">Nosotros</a></li>
+                <li><a href="application.html" class="block py-2 text-brasa-gold font-semibold">Trabaja con Nosotros</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="pt-20 md:pt-24">
+        <!-- Hero -->
+        <section class="py-12 md:py-16 bg-brasa-dark" aria-labelledby="form-hero-heading">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                <span class="inline-block border border-brasa-gold/60 text-brasa-gold text-xs font-medium tracking-widest uppercase px-4 py-1.5 rounded-full mb-4">
+                    Únete al Equipo
+                </span>
+                <h1 id="form-hero-heading" class="text-3xl md:text-5xl font-bold mb-4">Trabaja con Nosotros</h1>
+                <p class="text-brasa-cream/70 text-lg max-w-xl mx-auto">
+                    Estamos buscando personas apasionadas para unirse a la familia Brasaland. 
+                    14 locales, 2 países, infinitas oportunidades.
+                </p>
+            </div>
+        </section>
+
+        <!-- Application Form -->
+        <section class="py-12 md:py-16 bg-brasa-darker" aria-labelledby="form-heading">
+            <div class="max-w-2xl mx-auto px-4 sm:px-6">
+                <form id="application-form" novalidate class="space-y-8" aria-labelledby="form-heading">
+                    <h2 id="form-heading" class="sr-only">Formulario de aplicación</h2>
+
+                    <!-- Personal Information -->
+                    <fieldset class="space-y-6">
+                        <legend class="text-xl font-bold text-brasa-gold mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                            Información Personal
+                        </legend>
+
+                        <!-- Full Name -->
+                        <div>
+                            <label for="full-name" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Nombre completo <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="text" id="full-name" name="full-name" required minlength="3" maxlength="100"
+                                placeholder="Ej: María García López"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="full-name-error">
+                            <p id="full-name-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Correo electrónico <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="email" id="email" name="email" required
+                                placeholder="Ej: maria@ejemplo.com"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="email-error">
+                            <p id="email-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Teléfono <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="tel" id="phone" name="phone" required
+                                placeholder="Ej: +57 300 123 4567 o +1 305 123 4567"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="phone-error">
+                            <p id="phone-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div>
+                            <label for="birth-date" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Fecha de nacimiento <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="date" id="birth-date" name="birth-date" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="birth-date-error">
+                            <p id="birth-date-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- ID Number -->
+                        <div>
+                            <label for="id-number" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Número de identificación (Cédula o ID) <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="text" id="id-number" name="id-number" required minlength="5" maxlength="20"
+                                placeholder="Ej: 1234567890"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="id-number-error">
+                            <p id="id-number-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+
+                    <!-- Location Preferences -->
+                    <fieldset class="space-y-6">
+                        <legend class="text-xl font-bold text-brasa-gold mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                            Ubicación
+                        </legend>
+
+                        <!-- Country -->
+                        <div>
+                            <label for="country" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                País <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="country" name="country" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="country-error">
+                                <option value="">Selecciona un país</option>
+                                <option value="colombia">Colombia</option>
+                                <option value="usa">Estados Unidos (Florida)</option>
+                            </select>
+                            <p id="country-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- City -->
+                        <div>
+                            <label for="city" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Ciudad <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="city" name="city" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="city-error">
+                                <option value="">Primero selecciona un país</option>
+                            </select>
+                            <p id="city-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Preferred Location -->
+                        <div>
+                            <label for="preferred-location" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Local de preferencia <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="preferred-location" name="preferred-location" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="preferred-location-error">
+                                <option value="">Primero selecciona una ciudad</option>
+                            </select>
+                            <p id="preferred-location-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+
+                    <!-- Position & Experience -->
+                    <fieldset class="space-y-6">
+                        <legend class="text-xl font-bold text-brasa-gold mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg>
+                            Puesto y Experiencia
+                        </legend>
+
+                        <!-- Position -->
+                        <div>
+                            <label for="position" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Puesto al que aplicas <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="position" name="position" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="position-error">
+                                <option value="">Selecciona un puesto</option>
+                                <option value="cocina">Cocina — Parrillero / Chef de línea</option>
+                                <option value="servicio">Servicio — Mesero / Atención al cliente</option>
+                                <option value="caja">Caja — Cajero / Punto de venta</option>
+                                <option value="domicilios">Domicilios — Repartidor</option>
+                                <option value="supervision">Supervisión — Líder de turno</option>
+                                <option value="administracion">Administración — Gerente de local</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <p id="position-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Experience -->
+                        <div>
+                            <label for="experience" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Años de experiencia en restaurantes <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="experience" name="experience" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="experience-error">
+                                <option value="">Selecciona tu experiencia</option>
+                                <option value="sin-experiencia">Sin experiencia previa</option>
+                                <option value="menos-1">Menos de 1 año</option>
+                                <option value="1-3">1 a 3 años</option>
+                                <option value="3-5">3 a 5 años</option>
+                                <option value="mas-5">Más de 5 años</option>
+                            </select>
+                            <p id="experience-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Previous employer (optional) -->
+                        <div>
+                            <label for="previous-employer" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Empleador anterior (opcional)
+                            </label>
+                            <input type="text" id="previous-employer" name="previous-employer" maxlength="100"
+                                placeholder="Ej: Restaurante La Parrilla"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all">
+                        </div>
+                    </fieldset>
+
+                    <!-- Availability -->
+                    <fieldset class="space-y-6">
+                        <legend class="text-xl font-bold text-brasa-gold mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                            Disponibilidad
+                        </legend>
+
+                        <!-- Contract type -->
+                        <div>
+                            <label for="contract-type" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Tipo de contrato deseado <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <select id="contract-type" name="contract-type" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="contract-type-error">
+                                <option value="">Selecciona un tipo</option>
+                                <option value="tiempo-completo">Tiempo completo</option>
+                                <option value="medio-tiempo">Medio tiempo</option>
+                                <option value="fines-semana">Solo fines de semana</option>
+                                <option value="temporal">Temporal / Por temporada</option>
+                            </select>
+                            <p id="contract-type-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Availability schedule -->
+                        <div>
+                            <p class="block text-sm font-medium text-brasa-cream mb-3">
+                                Disponibilidad horaria <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" role="group" aria-labelledby="availability-label" aria-describedby="availability-error">
+                                <span id="availability-label" class="sr-only">Selecciona tu disponibilidad horaria</span>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="manana" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Mañana</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="tarde" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Tarde</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="noche" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Noche</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="rotativos" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Rotativos</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="fines-semana" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Fines de semana</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-brasa-card border border-brasa-brown/50 rounded-lg px-3 py-2.5 cursor-pointer hover:border-brasa-gold/50 transition-colors">
+                                    <input type="checkbox" name="availability" value="festivos" class="w-4 h-4 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50">
+                                    <span class="text-sm">Festivos</span>
+                                </label>
+                            </div>
+                            <p id="availability-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+
+                        <!-- Start date -->
+                        <div>
+                            <label for="start-date" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                Fecha disponible para empezar <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <input type="date" id="start-date" name="start-date" required
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all"
+                                aria-describedby="start-date-error">
+                            <p id="start-date-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+
+                    <!-- Additional Information -->
+                    <fieldset class="space-y-6">
+                        <legend class="text-xl font-bold text-brasa-gold mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            Información Adicional
+                        </legend>
+
+                        <!-- Why Brasaland -->
+                        <div>
+                            <label for="motivation" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                ¿Por qué quieres trabajar en Brasaland? <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                            </label>
+                            <textarea id="motivation" name="motivation" required minlength="20" maxlength="500" rows="4"
+                                placeholder="Cuéntanos qué te motiva a unirte a nuestro equipo..."
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream placeholder-brasa-cream/40 focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all resize-none"
+                                aria-describedby="motivation-error motivation-counter"></textarea>
+                            <div class="flex justify-between items-center mt-1.5">
+                                <p id="motivation-error" class="text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                                <p id="motivation-counter" class="text-xs text-brasa-cream/50 ml-auto"><span id="motivation-count">0</span>/500</p>
+                            </div>
+                        </div>
+
+                        <!-- How did you hear about us -->
+                        <div>
+                            <label for="referral-source" class="block text-sm font-medium text-brasa-cream mb-1.5">
+                                ¿Cómo te enteraste de esta oportunidad?
+                            </label>
+                            <select id="referral-source" name="referral-source"
+                                class="w-full bg-brasa-card border border-brasa-brown/50 rounded-xl px-4 py-3 text-brasa-cream focus:outline-none focus:ring-2 focus:ring-brasa-gold/50 focus:border-brasa-gold transition-all">
+                                <option value="">Selecciona una opción (opcional)</option>
+                                <option value="redes-sociales">Redes sociales</option>
+                                <option value="recomendacion">Recomendación de un empleado</option>
+                                <option value="portal-empleo">Portal de empleo</option>
+                                <option value="sitio-web">Sitio web de Brasaland</option>
+                                <option value="visita-local">Visité un local</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <!-- Terms and conditions -->
+                        <div>
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" id="terms" name="terms" required
+                                    class="w-4 h-4 mt-0.5 rounded border-brasa-brown text-brasa-gold focus:ring-brasa-gold/50"
+                                    aria-describedby="terms-error">
+                                <span class="text-sm text-brasa-cream/80">
+                                    Acepto la <a href="#" class="text-brasa-gold hover:underline">política de privacidad</a> y autorizo a Brasaland a procesar mis datos personales con fines de selección de personal. <span class="text-brasa-red" aria-label="campo obligatorio">*</span>
+                                </span>
+                            </label>
+                            <p id="terms-error" class="mt-1.5 text-sm text-brasa-red hidden" role="alert" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+
+                    <!-- Submit buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button type="submit" class="flex-1 bg-brasa-red hover:bg-brasa-red-hover text-white px-8 py-4 rounded-full font-semibold text-base transition-colors flex items-center justify-center gap-2">
+                            Enviar Aplicación
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </button>
+                        <button type="reset" class="flex-1 border border-brasa-cream/30 hover:border-brasa-gold text-brasa-cream hover:text-brasa-gold px-8 py-4 rounded-full font-semibold text-base transition-colors">
+                            Limpiar Formulario
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Success message (hidden by default) -->
+                <div id="success-message" class="hidden mt-8 bg-green-900/30 border border-green-500/50 rounded-2xl p-8 text-center" role="alert" aria-live="polite">
+                    <svg class="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h3 class="text-2xl font-bold text-green-400 mb-2">¡Aplicación Enviada!</h3>
+                    <p class="text-brasa-cream/80">
+                        Gracias por tu interés en unirte a Brasaland. Nuestro equipo de People & Culture revisará tu aplicación y te contactará pronto.
+                    </p>
+                    <a href="index.html" class="inline-block mt-6 text-brasa-gold hover:text-brasa-gold-light font-semibold transition-colors">
+                        ← Volver al inicio
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brasa-darker border-t border-brasa-brown/30 py-8" role="contentinfo">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-brasa-cream/50 text-sm">© 2024 Brasaland. Tradición a la brasa & Innovación digital.</p>
+                <div class="flex items-center gap-6 text-sm text-brasa-cream/50">
+                    <a href="#" class="hover:text-brasa-cream transition-colors">Privacidad</a>
+                    <a href="#" class="hover:text-brasa-cream transition-colors">Términos</a>
+                    <a href="index.html" class="hover:text-brasa-cream transition-colors">Inicio</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Script -->
+    <script>
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.addEventListener('click', () => {
+            const isExpanded = menuBtn.getAttribute('aria-expanded') === 'true';
+            menuBtn.setAttribute('aria-expanded', !isExpanded);
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+
+    <!-- Validation Script -->
+    <script src="validation.js"></script>
+</body>
+</html>
