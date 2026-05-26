@@ -1,0 +1,366 @@
+with open("application2.html", "w", encoding="utf-8") as f:
+    f.write("""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplica a Brasaland — Nueva Generación</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Syne', 'sans-serif'] },
+                    colors: {
+                        'brasa-red': '#ff2a5f', 'brasa-gold': '#ff6b00', 'brasa-dark': '#050505',
+                    },
+                    animation: { 'blob': 'blob 10s infinite' },
+                    keyframes: {
+                        blob: {
+                            '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #050505; color: white; overflow: hidden; height: 100vh; }
+        .tf-input { background: transparent; border: none; border-bottom: 2px solid rgba(255,255,255,0.2); border-radius: 0; color: #ff6b00; font-family: 'Syne', sans-serif; font-size: 2rem; width: 100%; padding: 0.5rem 0; box-shadow: none !important; transition: border-color 0.3s; }
+        .tf-input:focus { outline: none; border-bottom-color: #ff2a5f; }
+        .tf-input::placeholder { color: rgba(255,255,255,0.15); }
+        
+        .step { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(40px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .step.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .step.prev { opacity: 0; transform: translateY(-40px); }
+        
+        select.tf-input option { background: #0a0a0c; color: white; font-size: 1rem; }
+    </style>
+</head>
+<body class="antialiased relative">
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-brasa-red/20 blur-[100px] animate-blob mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-brasa-gold/20 blur-[100px] animate-blob mix-blend-screen" style="animation-delay: 2s"></div>
+    </div>
+
+    <!-- Minimal Header -->
+    <header class="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center bg-gradient-to-b from-[#050505] to-transparent">
+        <a href="index2.html" class="text-2xl font-display font-extrabold tracking-tighter hover:text-brasa-gold transition-colors">BRASALAND<span class="text-brasa-red">.</span></a>
+        <a href="index2.html" class="text-sm font-bold text-white/50 hover:text-white transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            SALIR
+        </a>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="fixed top-20 left-0 w-full h-1 bg-white/10 z-50">
+        <div id="progress" class="h-full bg-gradient-to-r from-brasa-red to-brasa-gold transition-all duration-500 w-0"></div>
+    </div>
+
+    <main class="relative w-full h-full z-10 max-w-4xl mx-auto px-6">
+        <form id="tf-form" class="w-full h-full relative" novalidate onsubmit="return false;">
+            
+            <!-- Step 0: Welcome -->
+            <div class="step active" id="step-0">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 mb-8 bg-white/5 backdrop-blur-sm">
+                    <span class="w-2 h-2 rounded-full bg-brasa-gold animate-pulse"></span>
+                    <span class="text-xs font-bold tracking-widest uppercase">Únete al Equipo</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-display font-bold mb-6 leading-tight">Trabaja en la nueva<br>generación a la brasa.</h1>
+                <p class="text-xl text-white/60 mb-10 max-w-2xl font-light">Buscamos talento para Colombia y Florida. Olvídate de los formularios aburridos, responde un par de preguntas y listo.</p>
+                <div class="flex items-center gap-4">
+                    <button type="button" class="btn-next bg-brasa-red hover:bg-[#ff003c] text-white px-10 py-4 rounded-full font-bold tracking-wider hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,42,95,0.4)]">Comenzar →</button>
+                    <span class="text-white/40 text-sm ml-2">presiona <kbd class="px-2 py-1 bg-white/10 rounded-md font-sans">Enter ↵</kbd></span>
+                </div>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="step" id="step-1">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">1 → INFORMACIÓN PERSONAL</p>
+                <h1 class="text-4xl md:text-6xl font-display font-bold mb-8">¡Hola! Para empezar, <br>¿cuál es tu nombre completo?</h1>
+                <div class="max-w-2xl">
+                    <input type="text" name="full-name" class="tf-input" placeholder="Escribe tu nombre..." required minlength="3">
+                    <div class="flex items-center gap-4 mt-8">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                        <span class="text-white/40 text-sm">presiona Enter</span>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Por favor, ingresa tu nombre (mín. 3 letras).</p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step" id="step-2">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">2 → CONTACTO</p>
+                <h1 class="text-4xl md:text-5xl font-display font-bold mb-8">Encantado. ¿Cómo podemos localizarte?</h1>
+                <div class="max-w-2xl space-y-8">
+                    <div>
+                        <input type="email" name="email" class="tf-input text-3xl" placeholder="Tu correo electrónico..." required>
+                    </div>
+                    <div>
+                        <input type="tel" name="phone" class="tf-input text-3xl" placeholder="Tu teléfono móvil (+57 / +1)..." required>
+                    </div>
+                    <div class="flex items-center gap-4 mt-8">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Por favor, completa un email y teléfono válidos.</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step" id="step-3">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">3 → NACIMIENTO</p>
+                <h1 class="text-4xl md:text-6xl font-display font-bold mb-8">¿Cuál es tu fecha de nacimiento?</h1>
+                <div class="max-w-2xl">
+                    <input type="date" name="birth-date" class="tf-input w-auto" required>
+                    <div class="flex items-center gap-4 mt-8">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Selecciona tu fecha de nacimiento.</p>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step" id="step-4">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">4 → UBICACIÓN</p>
+                <h1 class="text-4xl md:text-5xl font-display font-bold mb-8">¿Dónde quieres trabajar?</h1>
+                <div class="max-w-2xl space-y-6">
+                    <select name="country" class="tf-input text-2xl" id="country-select" required>
+                        <option value="" disabled selected>Selecciona País...</option>
+                        <option value="colombia">Colombia</option>
+                        <option value="usa">Estados Unidos (Florida)</option>
+                    </select>
+                    <select name="city" class="tf-input text-2xl" id="city-select" required disabled>
+                        <option value="" disabled selected>Selecciona Ciudad...</option>
+                    </select>
+                    <select name="location" class="tf-input text-2xl" id="location-select" required disabled>
+                        <option value="" disabled selected>Selecciona Local...</option>
+                    </select>
+                    <div class="flex items-center gap-4 mt-8">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Selecciona todas las ubicaciones.</p>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step" id="step-5">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">5 → EXPERIENCIA</p>
+                <h1 class="text-3xl md:text-5xl font-display font-bold mb-8">Hablemos de tu experiencia</h1>
+                <div class="max-w-2xl space-y-6">
+                    <select name="position" class="tf-input text-2xl" required>
+                        <option value="" disabled selected>Puesto al que aplicas...</option>
+                        <option value="cocina">Cocina — Parrillero / Chef</option>
+                        <option value="servicio">Servicio — Mesero / Atención</option>
+                        <option value="administracion">Administración o Supervisión</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                    <select name="experience" class="tf-input text-2xl" required>
+                        <option value="" disabled selected>Años de experiencia...</option>
+                        <option value="0">Sin experiencia</option>
+                        <option value="1">Menos de 1 año</option>
+                        <option value="2">1-3 años</option>
+                        <option value="3">Más de 3 años</option>
+                    </select>
+                    <input type="text" name="previous" class="tf-input text-2xl" placeholder="Empleador anterior (Opcional)">
+                    
+                    <div class="flex items-center gap-4 mt-8">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Completa los campos requeridos.</p>
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="step" id="step-6">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">6 → DISPONIBILIDAD</p>
+                <h1 class="text-4xl md:text-5xl font-display font-bold mb-8">¿Cómo y cuándo puedes unirte?</h1>
+                <div class="max-w-2xl space-y-6">
+                    <select name="contract" class="tf-input text-2xl" required>
+                        <option value="" disabled selected>Tipo de contrato...</option>
+                        <option value="full">Tiempo Completo</option>
+                        <option value="part">Medio Tiempo</option>
+                        <option value="weekends">Solo fines de semana</option>
+                    </select>
+                    <input type="date" name="start-date" class="tf-input text-2xl w-auto" required>
+                    <p class="text-white/40 text-sm mt-1 -translate-y-4">Fecha disponible para iniciar</p>
+                    
+                    <div class="flex items-center gap-4 mt-4">
+                        <button type="button" class="btn-next bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">OK <span class="opacity-50 ml-2">✓</span></button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Por favor, responde ambas preguntas.</p>
+                </div>
+            </div>
+
+            <!-- Step 7 -->
+            <div class="step" id="step-7">
+                <p class="text-brasa-gold font-bold tracking-widest text-sm mb-4">7 → ÚLTIMO PASO</p>
+                <h1 class="text-3xl md:text-4xl font-display font-bold mb-6">¿Qué te motiva a entrar a Brasaland?</h1>
+                <div class="max-w-3xl">
+                    <textarea name="motivation" class="tf-input text-2xl resize-none bg-white/5 p-4 rounded-xl border-none h-32 focus:ring-2 focus:ring-brasa-red" placeholder="Dinos brevemente..." required minlength="10"></textarea>
+                    
+                    <label class="flex items-center gap-4 mt-6 cursor-pointer group w-max">
+                        <div class="w-6 h-6 border-2 border-white/30 rounded flex items-center justify-center group-hover:border-brasa-red transition-colors shrink-0">
+                            <input type="checkbox" name="terms" class="hidden" required>
+                            <svg class="w-4 h-4 text-brasa-red opacity-0 transition-opacity term-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-sm text-white/70">Acepto los términos y condiciones, y el tratamiento de mis datos personales.</span>
+                    </label>
+
+                    <div class="flex items-center gap-4 mt-10">
+                        <button type="button" id="btn-submit" class="bg-gradient-to-r from-brasa-red to-brasa-gold text-white px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,42,95,0.4)]">Enviar Aplicación →</button>
+                    </div>
+                    <p class="error-msg text-brasa-red text-sm mt-3 hidden">Debes contarnos tu motivación y aceptar los términos.</p>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="step" id="step-success">
+                <div class="text-center w-full max-w-2xl mx-auto">
+                    <div class="w-24 h-24 bg-green-500/10 text-green-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(34,197,94,0.2)]">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h1 class="text-5xl md:text-6xl font-display font-bold mb-6">¡Fuego Encendido!</h1>
+                    <p class="text-xl text-white/70 mb-10 font-light">Tu aplicación ha sido enviada con éxito. Nuestro equipo de People & Culture revisará tu perfil muy pronto.</p>
+                    <a href="index2.html" class="bg-white text-black px-8 py-4 rounded-full font-bold hover:scale-105 transition-transform inline-block">← Volver al Inicio</a>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <script>
+        // Data for Location step
+        const countryCityMap = {
+            colombia: ['Medellín', 'Bogotá', 'Cali'],
+            usa: ['Miami', 'Orlando', 'Tampa']
+        };
+        const cityLocationMap = {
+            'Medellín': ['El Poblado', 'Laureles'],
+            'Bogotá': ['Zona T', 'Parque 93'],
+            'Cali': ['Granada'],
+            'Miami': ['Brickell', 'Wynwood'],
+            'Orlando': ['Downtown'],
+            'Tampa': ['Ybor City']
+        };
+
+        const countrySel = document.getElementById('country-select');
+        const citySel = document.getElementById('city-select');
+        const locSel = document.getElementById('location-select');
+
+        countrySel.addEventListener('change', (e) => {
+            const cities = countryCityMap[e.target.value] || [];
+            citySel.innerHTML = '<option value="" disabled selected>Selecciona Ciudad...</option>';
+            cities.forEach(c => citySel.innerHTML += `<option value="${c}">${c}</option>`);
+            citySel.disabled = false;
+            locSel.innerHTML = '<option value="" disabled selected>Selecciona Local...</option>';
+            locSel.disabled = true;
+        });
+
+        citySel.addEventListener('change', (e) => {
+            const locs = cityLocationMap[e.target.value] || [];
+            locSel.innerHTML = '<option value="" disabled selected>Selecciona Local...</option>';
+            locs.forEach(l => locSel.innerHTML += `<option value="${l}">${l}</option>`);
+            locSel.disabled = false;
+        });
+
+        // Checkbox visual logic
+        document.querySelector('input[name="terms"]').addEventListener('change', function() {
+            const svg = document.querySelector('.term-check');
+            if(this.checked) svg.classList.remove('opacity-0');
+            else svg.classList.add('opacity-0');
+        });
+
+        // Typeform multi-step logic
+        const steps = Array.from(document.querySelectorAll('.step'));
+        const totalSteps = steps.length - 1; // excluding success state
+        let currentStepIdx = 0;
+        const progress = document.getElementById('progress');
+
+        function updateProgress() {
+            // max progress is exactly 100% on the last input step
+            const p = (currentStepIdx / (totalSteps - 1)) * 100;
+            progress.style.width = p + '%';
+        }
+
+        function showStep(idx) {
+            steps.forEach((s, i) => {
+                s.classList.remove('active', 'prev');
+                if (i < idx) s.classList.add('prev');
+                else if (i === idx) s.classList.add('active');
+            });
+            
+            // Focus active input, avoiding glitch
+            const activeInput = steps[idx].querySelector('input:not([type="checkbox"]), select, textarea');
+            if(activeInput && window.innerWidth > 768) {
+                setTimeout(() => activeInput.focus(), 400);
+            }
+            updateProgress();
+        }
+
+        function validateStep(idx) {
+            const stepEl = steps[idx];
+            const inputs = stepEl.querySelectorAll('input, select, textarea');
+            let valid = true;
+            inputs.forEach(inp => {
+                if (!inp.checkValidity()) {
+                    valid = false;
+                    // trigger default visual cues for testing if needed
+                }
+            });
+            const errMsg = stepEl.querySelector('.error-msg');
+            if (!valid) {
+                if(errMsg) errMsg.classList.remove('hidden');
+            } else {
+                if(errMsg) errMsg.classList.add('hidden');
+            }
+            return valid;
+        }
+
+        function nextStep() {
+            if(validateStep(currentStepIdx)) {
+                if (currentStepIdx < totalSteps - 1) {
+                    currentStepIdx++;
+                    showStep(currentStepIdx);
+                }
+            }
+        }
+
+        // Bind Next buttons
+        document.querySelectorAll('.btn-next').forEach(btn => {
+            btn.addEventListener('click', nextStep);
+        });
+
+        // Bind Enter key to move forward
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName.toLowerCase() === 'textarea') return; // multiline
+                e.preventDefault();
+                if(currentStepIdx < totalSteps - 1) nextStep();
+            }
+        });
+
+        // Final Submit
+        document.getElementById('btn-submit').addEventListener('click', () => {
+            if(validateStep(currentStepIdx)) {
+                currentStepIdx++;
+                showStep(currentStepIdx);
+                document.querySelector('.fixed.top-20').style.display = 'none'; // hide progress bar
+            }
+        });
+
+        // Hide error message on input change
+        document.querySelectorAll('input, select, textarea').forEach(inp => {
+            inp.addEventListener('input', () => {
+                const msg = inp.closest('.step').querySelector('.error-msg');
+                if(msg) msg.classList.add('hidden');
+            });
+        });
+
+    </script>
+</body>
+</html>""")
