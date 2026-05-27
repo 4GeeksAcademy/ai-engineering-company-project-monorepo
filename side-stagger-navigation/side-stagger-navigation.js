@@ -1,9 +1,9 @@
 const NUM_LINES = 30;
 const navItems = [
   { position: 1, title: 'Inicio', target: '#hero' },
-  { position: 9, title: 'Estadisticas', target: '#estadisticas' },
-  { position: 20, title: 'Proceso', target: '#timeline' },
-  { position: 27, title: 'Contacto', target: '#contacto' },
+  { position: 15, title: 'Estadisticas', target: '#estadisticas' },
+  { position: 26, title: 'Proceso', target: '#timeline' },
+  { position: 29, title: 'Contacto', target: '#contacto' },
 ];
 
 const sideNav = document.getElementById('side-stagger-navigation');
@@ -83,6 +83,23 @@ function syncActiveLinkAtPageEnd() {
   }
 }
 
+function scrollToSidebarPercentage(clientY) {
+  if (!sideNav) {
+    return;
+  }
+
+  const rect = sideNav.getBoundingClientRect();
+  const relativeY = clamp(clientY - rect.top, 0, rect.height);
+  const ratio = rect.height === 0 ? 0 : relativeY / rect.height;
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const targetScroll = ratio * maxScroll;
+
+  window.scrollTo({
+    top: targetScroll,
+    behavior: 'smooth',
+  });
+}
+
 if (sideNav && lineStack) {
   syncHeaderHeight();
   window.addEventListener('resize', syncHeaderHeight);
@@ -136,6 +153,19 @@ if (sideNav && lineStack) {
     isHovered = false;
     sideNav.classList.remove('is-hovered');
     requestLineUpdate();
+  });
+
+  sideNav.addEventListener('click', (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest('a.nav-line--link')) {
+      event.preventDefault();
+    }
+
+    scrollToSidebarPercentage(event.clientY);
   });
 
   const sections = navItems
