@@ -18,6 +18,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="side-stagger-navigation/side-stagger-navigation.css" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -60,7 +61,7 @@
   </head>
   <body class="bg-slate-950 text-slate-100" style="font-family: 'Space Grotesk', sans-serif;">
     <div class="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(249,115,22,0.25),transparent_35%),radial-gradient(circle_at_85%_12%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)]">
-      <header role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
+      <header id="site-header" role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <a href="/" aria-label="Ir al inicio de TrackFlow" class="flex items-center gap-3">
             <img
@@ -68,7 +69,7 @@
               alt="Logo de TrackFlow"
               class="h-15 w-15 object-contain"
             />
-            <span class="text-xl font-bold tracking-wide">TrackFlow</span>
+            <span class="text-xl font-bold uppercase italic tracking-wide border-b-2 border-orange-500">TrackFlow</span>
           </a>
           <nav role="navigation" aria-label="Navegacion principal">
             <a
@@ -82,7 +83,11 @@
       </header>
 
       <main role="main" aria-label="Contenido principal">
-        <section id="hero" role="region" aria-labelledby="hero-title" class="mx-auto max-w-6xl px-6 pb-20 pt-16 lg:pt-24">
+        <aside class="side-stagger-nav" aria-label="Navegacion lateral por secciones" id="side-stagger-navigation">
+          <div class="line-stack" id="side-line-stack"></div>
+        </aside>
+
+        <section id="hero" role="region" aria-labelledby="hero-title" class="mx-auto max-w-6xl px-6 pb-20 md:pb-42 pt-16 lg:pt-24">
           <div class="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <p class="mb-4 inline-flex rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
@@ -124,7 +129,7 @@
           </div>
         </section>
 
-        <section id="estadisticas" role="region" aria-labelledby="cta-title" class="mx-auto max-w-6xl px-6 pb-16">
+        <section id="estadisticas" role="region" aria-labelledby="cta-title" class="mx-auto max-w-6xl px-6 pb-16 md:pb-42">
           <div class="rounded-3xl border border-orange-300/30 bg-gradient-to-r from-orange-500/20 via-orange-300/10 to-amber-300/20 p-8">
             <div class="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
               <div>
@@ -143,7 +148,7 @@
             </div>
           </div>
         </section>
-        <section role="region" aria-labelledby="stats-title" class="mx-auto max-w-6xl px-6 pb-16">
+        <section role="region" aria-labelledby="stats-title" class="mx-auto max-w-6xl px-6 pb-16 md:pb-42">
           <h2 id="stats-title" class="text-3xl font-bold text-white">TrackFlow en números</h2>
           <p class="mt-2 text-slate-300">Datos clave extraídos del contexto operativo actual de la empresa.</p>
           <div role="list" aria-label="Estadisticas destacadas de TrackFlow" class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -204,10 +209,10 @@
         </section>
       </main>
 
-      <footer role="contentinfo" aria-label="Informacion de contacto" class="border-t border-white/10 bg-slate-950/60">
+      <footer id="contacto" role="contentinfo" aria-label="Informacion de contacto" class="flex items-center border-t border-white/10 bg-slate-950/60">
         <div class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p class="text-xl font-bold text-white">TrackFlow</p>
+            <p class="text-xl font-bold text-white"><span class="uppercase italic border-b-2 border-orange-500">TrackFlow</span></p>
             <p class="mt-2 max-w-md text-slate-300">Soluciones logisticas de ultima milla para marcas que necesitan escalar con confianza.</p>
           </div>
           <div class="text-slate-300">
@@ -219,5 +224,7 @@
         </div>
       </footer>
     </div>
+
+    <script src="side-stagger-navigation/side-stagger-navigation.js" defer></script>
   </body>
 </html>
