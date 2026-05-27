@@ -85,6 +85,20 @@ main > section {
   background: rgba(83, 234, 253, 0.95);
 }
 
+.nav-line--link:focus-visible {
+  outline: 2px solid rgba(83, 234, 253, 0.95);
+  outline-offset: 4px;
+}
+
+.nav-line--link:focus-visible .line-bar {
+  background: rgba(83, 234, 253, 0.95);
+}
+
+.nav-line--link:focus-visible .line-label {
+  opacity: 1;
+  color: rgba(83, 234, 253, 0.98);
+}
+
 .nav-line--active .line-label,
 .nav-line--link:hover .line-label {
   color: rgba(83, 234, 253, 0.98);
@@ -93,5 +107,16 @@ main > section {
 @media (max-width: 1024px) {
   .side-stagger-nav {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .line-bar,
+  .line-label {
+    transition: none;
   }
 }

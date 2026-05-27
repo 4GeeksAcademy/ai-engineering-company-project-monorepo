@@ -59,6 +59,11 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100" style="font-family: 'Space Grotesk', sans-serif;">
+    <a
+      href="#main-content"
+      class="sr-only fixed left-4 top-4 z-50 rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950 focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950"
+      >Saltar al contenido principal</a
+    >
     <div class="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(249,115,22,0.25),transparent_35%),radial-gradient(circle_at_85%_12%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)]">
       <header role="banner" class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -81,7 +86,7 @@
         </div>
       </header>
 
-      <main role="main" aria-label="Contenido principal">
+      <main id="main-content" role="main" aria-label="Contenido principal" tabindex="-1">
         <section class="mx-auto max-w-4xl px-6 py-12">
           <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-900/40 sm:p-8">
             <div class="mb-8">
@@ -95,7 +100,7 @@
             </div>
 
             <div class="mb-6 flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/40 px-4 py-3 text-sm text-slate-300">
-              <p id="step-indicator">Paso 1 de 3</p>
+              <p id="step-indicator" role="status" aria-live="polite" aria-atomic="true">Paso 1 de 3</p>
             </div>
 
             <form id="application-form" novalidate>
@@ -284,7 +289,7 @@
                 </section>
               </div>
 
-              <p id="error-message" class="mt-6 hidden rounded-md border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
+              <p id="error-message" class="mt-6 hidden rounded-md border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert" tabindex="-1">
                 Revisa los campos obligatorios del paso actual antes de continuar.
               </p>
 
@@ -318,8 +323,8 @@
           </div>
           <div class="text-slate-300">
             <p class="font-semibold text-white">Contacto</p>
-            <p class="mt-2">Email: contacto@trackflow.com</p>
-            <p>Teléfono: +34 900 123 456</p>
+            <p class="mt-2">Email: <a href="mailto:contacto@trackflow.com" class="underline decoration-cyan-300/70 underline-offset-2 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950">contacto@trackflow.com</a></p>
+            <p>Teléfono: <a href="tel:+34900123456" class="underline decoration-cyan-300/70 underline-offset-2 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950">+34 900 123 456</a></p>
             <p>Oficinas: Los Ángeles y Zaragoza</p>
           </div>
         </div>

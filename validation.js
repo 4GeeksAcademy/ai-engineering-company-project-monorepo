@@ -13,11 +13,90 @@ const INVALID_PHONE_MESSAGE = 'Introduce un teléfono válido usando solo númer
 let currentStep = 1;
 let formData = {};
 const totalSteps = steps.length;
+let lastInvalidField = null;
+
+function getStepElement(stepNumber) {
+	return document.querySelector(`[data-step="${stepNumber}"]`);
+}
+
+function addErrorReference(input) {
+	if (!input) {
+		return;
+	}
+
+	const describedBy = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+	if (!describedBy.includes('error-message')) {
+		describedBy.push('error-message');
+		input.setAttribute('aria-describedby', describedBy.join(' '));
+	}
+}
+
+function clearErrorReference(input) {
+	if (!input) {
+		return;
+	}
+
+	const describedBy = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+	const filtered = describedBy.filter((id) => id !== 'error-message');
+	if (filtered.length > 0) {
+		input.setAttribute('aria-describedby', filtered.join(' '));
+	} else {
+		input.removeAttribute('aria-describedby');
+	}
+}
+
+function markInputInvalid(input) {
+	if (!input) {
+		return;
+	}
+
+	input.setAttribute('aria-invalid', 'true');
+	addErrorReference(input);
+	if (!lastInvalidField) {
+		lastInvalidField = input;
+	}
+}
+
+function clearStepFieldErrors(step) {
+	if (!step) {
+		return;
+	}
+
+	const stepInputs = step.querySelectorAll('input, select, textarea');
+	stepInputs.forEach((input) => {
+		input.removeAttribute('aria-invalid');
+		clearErrorReference(input);
+	});
+}
+
+function focusFirstFieldInStep(stepNumber) {
+	const step = getStepElement(stepNumber);
+	if (!step) {
+		return;
+	}
+
+	const firstFocusable = step.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])');
+	if (firstFocusable instanceof HTMLElement) {
+		firstFocusable.focus();
+	}
+}
+
+function focusValidationTarget() {
+	if (lastInvalidField instanceof HTMLElement) {
+		lastInvalidField.focus();
+		return;
+	}
+
+	if (!errorMessage.classList.contains('hidden')) {
+		errorMessage.focus();
+	}
+}
 
 function showStep(stepNumber) {
 	steps.forEach((step) => {
 		const isCurrentStep = Number(step.dataset.step) === stepNumber;
 		step.classList.toggle('hidden', !isCurrentStep);
+		step.setAttribute('aria-hidden', String(!isCurrentStep));
 	});
 
 	stepIndicator.textContent = `Paso ${stepNumber} de ${totalSteps}`;
@@ -44,10 +123,12 @@ function isValidPhone(phone) {
 }
 
 function validateStep(stepNumber) {
-	const step = document.querySelector(`[data-step="${stepNumber}"]`);
+	const step = getStepElement(stepNumber);
 	const requiredInputs = step.querySelectorAll('[required]');
 	let isValid = true;
 	let firstErrorMessage = DEFAULT_ERROR_MESSAGE;
+	lastInvalidField = null;
+	clearStepFieldErrors(step);
 
 	requiredInputs.forEach((input) => {
 		if (input.type === 'radio') {
@@ -56,6 +137,7 @@ function validateStep(stepNumber) {
 
 			if (!oneChecked) {
 				isValid = false;
+				group.forEach((radio) => markInputInvalid(radio));
 			}
 			return;
 		}
@@ -63,18 +145,21 @@ function validateStep(stepNumber) {
 		if (input.type === 'checkbox') {
 			if (!input.checked) {
 				isValid = false;
+				markInputInvalid(input);
 			}
 			return;
 		}
 
 		if (!input.value.trim()) {
 			isValid = false;
+			markInputInvalid(input);
 			return;
 		}
 
 		const isEmailField = input.type === 'email' || input.id === 'email' || input.name === 'email';
 		if (isEmailField && !isValidEmail(input.value.trim())) {
 			isValid = false;
+			markInputInvalid(input);
 			if (firstErrorMessage === DEFAULT_ERROR_MESSAGE) {
 				firstErrorMessage = INVALID_EMAIL_MESSAGE;
 			}
@@ -84,6 +169,7 @@ function validateStep(stepNumber) {
 		const isPhoneField = input.type === 'tel' || input.id === 'phone' || input.name === 'phone';
 		if (isPhoneField && !isValidPhone(input.value.trim())) {
 			isValid = false;
+			markInputInvalid(input);
 			if (firstErrorMessage === DEFAULT_ERROR_MESSAGE) {
 				firstErrorMessage = INVALID_PHONE_MESSAGE;
 			}
@@ -105,6 +191,7 @@ function validateStepThreeBusinessRules() {
 	const hasAtLeastOneFocus = Array.from(challengeCheckboxes).some((checkbox) => checkbox.checked);
 
 	if (!hasAtLeastOneFocus) {
+		challengeCheckboxes.forEach((checkbox) => markInputInvalid(checkbox));
 		errorMessage.textContent = 'Selecciona al menos un reto prioritario en el paso 3.';
 		errorMessage.classList.remove('hidden');
 		return false;
@@ -125,6 +212,7 @@ function validateStepOneBusinessRules() {
 	}
 
 	if (!isValidEmail(emailInput.value.trim())) {
+		markInputInvalid(emailInput);
 		errorMessage.textContent = INVALID_EMAIL_MESSAGE;
 		errorMessage.classList.remove('hidden');
 		return false;
@@ -132,6 +220,7 @@ function validateStepOneBusinessRules() {
 
 	const phoneInput = document.getElementById('phone');
 	if (phoneInput && !isValidPhone(phoneInput.value.trim())) {
+		markInputInvalid(phoneInput);
 		errorMessage.textContent = INVALID_PHONE_MESSAGE;
 		errorMessage.classList.remove('hidden');
 		return false;
@@ -141,7 +230,7 @@ function validateStepOneBusinessRules() {
 }
 
 function collectStepData(stepNumber) {
-	const step = document.querySelector(`[data-step="${stepNumber}"]`);
+	const step = getStepElement(stepNumber);
 	const inputs = step.querySelectorAll('input, select, textarea');
 	const data = {};
 
@@ -163,12 +252,16 @@ function collectStepData(stepNumber) {
 	return data;
 }
 
-function goToStep(stepNumber) {
+function goToStep(stepNumber, shouldMoveFocus = true) {
 	currentStep = stepNumber;
 	showStep(currentStep);
 	updateButtons();
 	document.getElementById('error-message').classList.add('hidden');
 	successMessage.classList.add('hidden');
+
+	if (shouldMoveFocus) {
+		window.requestAnimationFrame(() => focusFirstFieldInStep(currentStep));
+	}
 }
 
 function resetForm() {
@@ -182,6 +275,7 @@ function submitForm(event) {
 	event.preventDefault();
 
 	if (!validateStep(currentStep) || !validateStepOneBusinessRules() || !validateStepThreeBusinessRules()) {
+		focusValidationTarget();
 		return;
 	}
 
@@ -193,14 +287,16 @@ function submitForm(event) {
 	console.log('Enviando datos del formulario:', formData);
 	errorMessage.classList.add('hidden');
 	successMessage.classList.remove('hidden');
+	successMessage.setAttribute('tabindex', '-1');
+	successMessage.focus();
 	resetForm();
 	currentStep = 1;
-	showStep(currentStep);
-	updateButtons();
+	goToStep(currentStep, false);
 }
 
 nextBtn.addEventListener('click', () => {
 	if (!validateStep(currentStep) || !validateStepOneBusinessRules() || !validateStepThreeBusinessRules()) {
+		focusValidationTarget();
 		return;
 	}
 
@@ -210,7 +306,7 @@ nextBtn.addEventListener('click', () => {
 	};
 
 	if (currentStep < totalSteps) {
-		goToStep(currentStep + 1);
+		goToStep(currentStep + 1, true);
 	}
 });
 
@@ -223,7 +319,7 @@ prevBtn.addEventListener('click', () => {
 	successMessage.classList.add('hidden');
 
 	if (currentStep > 1) {
-		goToStep(currentStep - 1);
+		goToStep(currentStep - 1, true);
 	}
 });
 

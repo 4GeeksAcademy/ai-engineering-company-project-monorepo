@@ -58,7 +58,11 @@ function setActiveLink(target) {
   navLinks.forEach((link) => {
     const isActive = link.dataset.target === target;
     link.classList.toggle('nav-line--active', isActive);
-    link.setAttribute('aria-current', isActive ? 'true' : 'false');
+    if (isActive) {
+      link.setAttribute('aria-current', 'location');
+    } else {
+      link.removeAttribute('aria-current');
+    }
   });
   requestLineUpdate();
 }
@@ -160,9 +164,15 @@ if (sideNav && lineStack) {
       return;
     }
 
-    const target = event.target;
-    if (target instanceof HTMLElement && target.closest('a.nav-line--link')) {
-      event.preventDefault();
+    const targetElement = event.target;
+    const clickedLink = targetElement instanceof HTMLElement ? targetElement.closest('a.nav-line--link') : null;
+
+    if (clickedLink instanceof HTMLAnchorElement) {
+      const target = clickedLink.getAttribute('href');
+      if (target) {
+        setActiveLink(target);
+      }
+      return;
     }
 
     scrollToSidebarPercentage(event.clientY);
