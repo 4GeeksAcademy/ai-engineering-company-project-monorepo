@@ -82,26 +82,27 @@ main > section {
 
 .nav-line--link:hover .line-bar,
 .nav-line--active .line-bar {
-  background: rgba(83, 234, 253, 0.95);
+  background: rgba(162, 244, 253, 0.95);
+
 }
 
 .nav-line--link:focus-visible {
-  outline: 2px solid rgba(83, 234, 253, 0.95);
+  outline: 2px solid rgba(162, 244, 253, 0.95);
   outline-offset: 4px;
 }
 
 .nav-line--link:focus-visible .line-bar {
-  background: rgba(83, 234, 253, 0.95);
+  background: rgba(162, 244, 253, 0.95);
 }
 
 .nav-line--link:focus-visible .line-label {
   opacity: 1;
-  color: rgba(83, 234, 253, 0.98);
+  color: rgba(162, 244, 253, 0.98);
 }
 
 .nav-line--active .line-label,
 .nav-line--link:hover .line-label {
-  color: rgba(83, 234, 253, 0.98);
+  color: rgba(162, 244, 253, 0.98);
 }
 
 @media (max-width: 1024px) {
