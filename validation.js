@@ -286,12 +286,12 @@ function submitForm(event) {
 
 	console.log('Enviando datos del formulario:', formData);
 	errorMessage.classList.add('hidden');
-	successMessage.classList.remove('hidden');
-	successMessage.setAttribute('tabindex', '-1');
-	successMessage.focus();
 	resetForm();
 	currentStep = 1;
 	goToStep(currentStep, false);
+	successMessage.classList.remove('hidden');
+	successMessage.setAttribute('tabindex', '-1');
+	successMessage.focus();
 }
 
 nextBtn.addEventListener('click', () => {
