@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Apply to join Nexova's talent pool. Submit your professional profile for job opportunities in technology, retail, and financial services." />
+  <title>Apply | Nexova Talent Pool</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-amber-50 via-orange-50 to-rose-100 text-slate-800 font-sans">
+  <header class="w-full border-b border-orange-200 bg-orange-50/90 backdrop-blur sticky top-0 z-10">
+    <nav class="container mx-auto flex items-center justify-between py-4 px-6">
+      <a href="index.html" class="text-2xl font-bold tracking-tight">Nexova</a>
+      <ul class="flex space-x-6 text-lg text-orange-900">
+        <li><a href="index.html#home" class="hover:text-rose-600">Home</a></li>
+        <li><a href="index.html#services" class="hover:text-rose-600">Services</a></li>
+        <li><a href="index.html#why" class="hover:text-rose-600">Talent</a></li>
+        <li><a href="index.html#contact" class="hover:text-rose-600">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="container mx-auto py-12 px-6 max-w-2xl">
+    <section class="mb-8">
+      <h1 class="text-3xl font-bold mb-2 text-orange-950">Join Nexova's Talent Pool</h1>
+      <p class="mb-4 text-orange-900">Fill out the form below to register your interest in job opportunities. Our team will review your profile and contact you if a suitable position arises.</p>
+      <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-900 p-4 mb-6" role="alert">
+        Are you a company looking for talent? Write to us at <a href="mailto:contacto@nexova.com" class="underline text-rose-600">contacto@nexova.com</a>
+      </div>
+    </section>
+    <form id="talentForm" class="bg-white/80 border border-orange-200 p-8 rounded-lg shadow space-y-6 backdrop-blur-sm" novalidate>
+      <fieldset>
+        <legend class="text-xl font-semibold mb-4 text-orange-900">Personal Information</legend>
+        <div class="mb-4">
+          <label for="fullName" class="block font-medium mb-1">Full name <span class="text-red-600">*</span></label>
+          <input type="text" id="fullName" name="fullName" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="First and last name" />
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-fullName"></p>
+        </div>
+        <div class="mb-4">
+          <label for="email" class="block font-medium mb-1">Email <span class="text-red-600">*</span></label>
+          <input type="email" id="email" name="email" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="name@company.com" />
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-email"></p>
+        </div>
+        <div class="mb-4">
+          <label for="phone" class="block font-medium mb-1">Phone <span class="text-red-600">*</span></label>
+          <input type="tel" id="phone" name="phone" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="+34 612 345 678" />
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-phone"></p>
+        </div>
+        <div class="mb-4">
+          <label for="country" class="block font-medium mb-1">Country of residence <span class="text-red-600">*</span></label>
+          <select id="country" name="country" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2">
+            <option value="">Select country</option>
+            <option value="Spain">Spain</option>
+            <option value="United States">United States</option>
+            <option value="Other">Other</option>
+          </select>
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-country"></p>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend class="text-xl font-semibold mb-4 text-orange-900">Professional Information</legend>
+        <div class="mb-4">
+          <label for="experience" class="block font-medium mb-1">Years of experience <span class="text-red-600">*</span></label>
+          <input type="number" id="experience" name="experience" min="0" max="50" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="e.g. 5" />
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-experience"></p>
+        </div>
+        <div class="mb-4">
+          <label for="sector" class="block font-medium mb-1">Sector of interest <span class="text-red-600">*</span></label>
+          <select id="sector" name="sector" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2">
+            <option value="">Select sector</option>
+            <option value="Technology">Technology</option>
+            <option value="Retail">Retail</option>
+            <option value="Financial Services">Financial Services</option>
+            <option value="Consulting">Consulting</option>
+            <option value="Other">Other</option>
+          </select>
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-sector"></p>
+        </div>
+        <div class="mb-4">
+          <label for="english" class="block font-medium mb-1">English level <span class="text-red-600">*</span></label>
+          <select id="english" name="english" required class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2">
+            <option value="">Select level</option>
+            <option value="Basic">Basic</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+            <option value="Native">Native</option>
+          </select>
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-english"></p>
+        </div>
+        <div class="mb-4">
+          <span class="block font-medium mb-1">Availability <span class="text-red-600">*</span></span>
+          <div class="flex flex-wrap gap-4">
+            <label><input type="radio" name="availability" value="Immediate" required class="mr-2" />Immediate</label>
+            <label><input type="radio" name="availability" value="1 month" />1 month</label>
+            <label><input type="radio" name="availability" value="2-3 months" />2-3 months</label>
+            <label><input type="radio" name="availability" value="Just exploring" />Just exploring</label>
+          </div>
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-availability"></p>
+        </div>
+        <div class="mb-4">
+          <label for="linkedin" class="block font-medium mb-1">LinkedIn (profile URL)</label>
+          <input type="url" id="linkedin" name="linkedin" class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="https://linkedin.com/in/yourprofile" />
+          <p class="text-red-600 text-sm mt-1 hidden" id="error-linkedin"></p>
+        </div>
+        <div class="mb-4">
+          <label for="comments" class="block font-medium mb-1">Additional comments</label>
+          <textarea id="comments" name="comments" maxlength="500" rows="3" class="w-full border border-orange-300 bg-white text-orange-950 rounded px-3 py-2 placeholder:text-orange-400" placeholder="Max 500 characters"></textarea>
+          <div class="flex justify-between text-sm mt-1 text-orange-700">
+            <span id="comments-counter">500 characters remaining</span>
+            <span class="text-red-600 hidden" id="error-comments"></span>
+          </div>
+        </div>
+      </fieldset>
+      <div class="flex items-center mb-4">
+        <input type="checkbox" id="policy" name="policy" required class="mr-2" />
+        <label for="policy" class="font-medium">I accept the data policy <span class="text-red-600">*</span></label>
+      </div>
+      <p class="text-red-600 text-sm mb-2 hidden" id="error-policy"></p>
+      <button type="submit" class="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold shadow hover:bg-rose-400 transition">Submit Application</button>
+    </form>
+  </main>
+  <footer class="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-orange-50 py-6 mt-10 border-t border-orange-300/40">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-6">
+      <span>© 2025 Nexova. All rights reserved.</span>
+      <div class="flex space-x-6 mt-4 md:mt-0 text-amber-100">
+        <a href="https://linkedin.com/company/nexova" target="_blank" rel="noopener" class="hover:text-white">LinkedIn</a>
+        <a href="https://instagram.com/nexova" target="_blank" rel="noopener" class="hover:text-white">Instagram</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="success-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div id="success-modal-backdrop" class="absolute inset-0 bg-black/60"></div>
+    <div class="relative z-10 flex min-h-full items-center justify-center p-4">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="success-modal-title"
+        aria-describedby="success-modal-description"
+        class="w-full max-w-lg rounded-xl bg-white border border-orange-200 p-6 shadow-2xl"
+      >
+        <h2 id="success-modal-title" class="text-2xl font-bold text-rose-600">Thank you for your interest in Nexova!</h2>
+        <p id="success-modal-description" class="mt-3 text-orange-900">
+          We have received your information. Our selection team will review it and contact you if your profile matches any of our current or future opportunities.
+        </p>
+        <p class="mt-3 text-orange-900">
+          In the meantime, follow us on
+          <a href="https://linkedin.com/company/nexova" class="font-semibold text-rose-600 underline" target="_blank" rel="noopener">LinkedIn</a>
+          to stay updated on our vacancies and professional development content.
+        </p>
+        <div class="mt-6 flex justify-end">
+          <button id="success-modal-close" type="button" class="rounded-lg bg-rose-500 px-5 py-2.5 font-semibold text-white hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300">
+            Close
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="validation.js"></script>
+</body>
+</html>

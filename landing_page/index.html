@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Nexova - Human resources consulting and talent acquisition firm. We build exceptional teams for growing companies." />
+  <title>Nexova | Human Resources Consulting</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes heroPan {
+      0% { background-position: 50% 40%; }
+      50% { background-position: 50% 55%; }
+      100% { background-position: 50% 40%; }
+    }
+
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes floatSoft {
+      0%,
+      100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pulseCta {
+      0%,
+      100% { box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25); }
+      50% { box-shadow: 0 16px 30px rgba(15, 23, 42, 0.45); }
+    }
+
+    .hero-motion {
+      animation: heroPan 18s ease-in-out infinite;
+    }
+
+    .rise-in {
+      opacity: 0;
+      animation: riseIn 800ms ease-out forwards;
+    }
+
+    .rise-in-delay-1 { animation-delay: 120ms; }
+    .rise-in-delay-2 { animation-delay: 260ms; }
+
+    .nav-link {
+      position: relative;
+      transition: color 250ms ease;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 250ms ease;
+    }
+
+    .nav-link:hover::after { transform: scaleX(1); }
+
+    .cta-pulse {
+      animation: pulseCta 2.8s ease-in-out infinite;
+      transition: transform 250ms ease;
+    }
+
+    .cta-pulse:hover {
+      transform: translateY(-2px) scale(1.02);
+      animation-play-state: paused;
+    }
+
+    .service-card {
+      transition: transform 320ms ease, box-shadow 320ms ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 22px 35px rgba(15, 23, 42, 0.2);
+    }
+
+    .service-image {
+      transition: transform 360ms ease;
+    }
+
+    .service-card:hover .service-image {
+      transform: scale(1.04);
+    }
+
+    .why-image {
+      animation: floatSoft 5s ease-in-out infinite;
+    }
+
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .reveal-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-motion,
+      .rise-in,
+      .cta-pulse,
+      .why-image {
+        animation: none !important;
+      }
+
+      .rise-in {
+        opacity: 1;
+        transform: none;
+      }
+
+      .service-card,
+      .service-image,
+      .nav-link::after,
+      .reveal-on-scroll {
+        transition: none !important;
+      }
+
+      .reveal-on-scroll {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+  <!-- Schema.org Organization Markup -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Nexova",
+    "description": "Human resources consulting and talent acquisition",
+    "url": "https://nexova.com",
+    "foundingDate": "2011",
+    "address": [
+      {
+        "@type": "PostalAddress",
+        "addressCountry": "ES",
+        "addressLocality": "Valencia",
+        "addressRegion": "Comunidad Valenciana"
+      },
+      {
+        "@type": "PostalAddress",
+        "addressCountry": "US",
+        "addressLocality": "Miami",
+        "addressRegion": "Florida"
+      }
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+34-960-123-456",
+      "contactType": "customer service",
+      "availableLanguage": ["Spanish", "English"]
+    },
+    "sameAs": [
+      "https://linkedin.com/company/nexova",
+      "https://instagram.com/nexova"
+    ]
+  }
+  </script>
+</head>
+<body class="bg-gradient-to-b from-amber-50 via-orange-50 to-rose-100 text-slate-800 font-sans">
+  <header class="w-full border-b border-orange-200 bg-orange-50/90 backdrop-blur sticky top-0 z-10">
+    <nav class="container mx-auto flex items-center justify-between py-4 px-6">
+      <span class="text-2xl font-bold tracking-tight">Nexova</span>
+      <ul class="flex space-x-6 text-lg text-orange-900">
+        <li><a href="#home" class="nav-link hover:text-rose-600">Home</a></li>
+        <li><a href="#services" class="nav-link hover:text-rose-600">Services</a></li>
+        <li><a href="#why" class="nav-link hover:text-rose-600">Talent</a></li>
+        <li><a href="#contact" class="nav-link hover:text-rose-600">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <!-- Hero Section -->
+    <section
+      id="home"
+      class="relative isolate overflow-hidden hero-motion"
+      style="background-image: url('assets/bphoto1.png'); background-size: cover; background-position: center;"
+      aria-label="Hero section"
+    >
+      <div class="absolute inset-0 bg-rose-950/45" aria-hidden="true"></div>
+      <div class="container mx-auto relative z-10 px-6 py-24 md:py-32 lg:py-40">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-white rise-in">We build exceptional teams for growing companies</h1>
+          <p class="text-lg md:text-xl mb-8 text-slate-100 rise-in rise-in-delay-1">Human resources consulting and talent acquisition firm with over 10 years helping technology, retail, and financial services companies find and develop the best talent.</p>
+          <div class="flex justify-center">
+            <a href="application.html" class="inline-block bg-rose-500 text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-rose-400 transition cta-pulse">Join our talent pool</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Services Section -->
+    <section id="services" class="container mx-auto py-16 px-6 reveal-on-scroll">
+      <h2 class="text-3xl font-bold text-center mb-10 text-orange-950">Our Services</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white/80 border border-orange-200 p-6 rounded-lg shadow flex flex-col items-center text-center service-card backdrop-blur-sm">
+          <img src="assets/bphoto2.jpg" alt="Executive Headhunting" class="w-full h-40 object-cover rounded-md mb-4 service-image" />
+          <h3 class="text-xl font-semibold mb-2 text-orange-900">Executive Headhunting</h3>
+          <ul class="text-orange-800">
+            <li>Search and selection of executive and mid-management profiles</li>
+            <li>Personalized process with replacement guarantee</li>
+          </ul>
+        </div>
+        <div class="bg-white/80 border border-orange-200 p-6 rounded-lg shadow flex flex-col items-center text-center service-card backdrop-blur-sm">
+          <img src="assets/bphoto3.jpg" alt="Customer Support Outsourcing" class="w-full h-40 object-cover rounded-md mb-4 service-image" />
+          <h3 class="text-xl font-semibold mb-2 text-orange-900">Customer Support Outsourcing</h3>
+          <ul class="text-orange-800">
+            <li>Specialized teams for technology companies</li>
+            <li>Continuous training and dedicated supervision</li>
+          </ul>
+        </div>
+        <div class="bg-white/80 border border-orange-200 p-6 rounded-lg shadow flex flex-col items-center text-center service-card backdrop-blur-sm">
+          <img src="assets/bphoto4.jpg" alt="Corporate Training" class="w-full h-40 object-cover rounded-md mb-4 service-image" />
+          <h3 class="text-xl font-semibold mb-2 text-orange-900">Corporate Training</h3>
+          <ul class="text-orange-800">
+            <li>Soft skills and leadership programs</li>
+            <li>In-person and online courses adapted to each organization</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <!-- Why Nexova Section -->
+    <section id="why" class="container mx-auto py-16 px-6 flex flex-col md:flex-row md:items-stretch gap-10 reveal-on-scroll">
+      <div class="w-full md:w-1/2 flex flex-col">
+        <h2 class="text-4xl font-bold mb-6 text-orange-950">Why Nexova?</h2>
+        <ul class="flex flex-col justify-around flex-1 text-xl md:text-2xl leading-relaxed text-orange-900">
+          <li><strong>12 years of experience</strong> in the Latin American market</li>
+          <li><strong>Regional presence:</strong> Spain and United States</li>
+          <li><strong>+500 successful selection processes</strong> completed</li>
+          <li><strong>Sector specialization</strong> in technology, retail, and finance</li>
+        </ul>
+      </div>
+      <div class="w-full md:w-1/2">
+        <img src="assets/bphoto5.jpg" alt="Nexova experience" class="rounded-lg shadow-lg w-full h-full object-cover" />
+      </div>
+    </section>
+    <!-- Contact Section -->
+    <section id="contact" class="container mx-auto py-16 px-6">
+      <h2 class="text-3xl font-bold text-center mb-8 text-orange-950">Contact</h2>
+      <div class="flex flex-col md:flex-row justify-center items-center gap-10">
+        <div class="flex items-center gap-4 text-orange-900">
+          <span aria-hidden="true" class="text-xl">Email:</span>
+          <a href="mailto:contacto@nexova.com" class="text-lg text-rose-600 hover:underline">contacto@nexova.com</a>
+        </div>
+        <div class="flex items-center gap-4 text-orange-900">
+          <span aria-hidden="true" class="text-xl">Valencia:</span>
+          <span class="text-lg">Valencia: +34 960 123 456</span>
+        </div>
+        <div class="flex items-center gap-4 text-orange-900">
+          <span aria-hidden="true" class="text-xl">Miami:</span>
+          <span class="text-lg">Miami: +1 305 555 0191</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-orange-50 py-6 mt-10 border-t border-orange-300/40">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-6">
+      <span>© 2025 Nexova. All rights reserved.</span>
+      <div class="flex space-x-6 mt-4 md:mt-0 text-amber-100">
+        <a href="https://linkedin.com/company/nexova" target="_blank" rel="noopener" class="hover:text-white">LinkedIn</a>
+        <a href="https://instagram.com/nexova" target="_blank" rel="noopener" class="hover:text-white">Instagram</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const revealItems = document.querySelectorAll('.reveal-on-scroll');
+
+      if (!('IntersectionObserver' in window)) {
+        revealItems.forEach(function (item) {
+          item.classList.add('is-visible');
+        });
+        return;
+      }
+
+      const observer = new IntersectionObserver(
+        function (entries, obs) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              obs.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.2,
+          rootMargin: '0px 0px -40px 0px'
+        }
+      );
+
+      revealItems.forEach(function (item) {
+        observer.observe(item);
+      });
+    });
+  </script>
+</body>
+</html>
