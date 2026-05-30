@@ -34,6 +34,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function clearAllErrors() {
+    [
+      'fullName',
+      'email',
+      'phone',
+      'country',
+      'experience',
+      'sector',
+      'english',
+      'availability',
+      'linkedin',
+      'comments',
+      'policy'
+    ].forEach(hideError);
+  }
+
   function validateFullName() {
     const fullName = fullNameField.value.trim();
     if (!/^\w+\s+\w+/.test(fullName)) {
@@ -214,6 +230,15 @@ document.addEventListener('DOMContentLoaded', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       closeSuccessModal();
+    }
+  });
+
+  form.addEventListener('reset', function () {
+    clearAllErrors();
+    closeSuccessModal();
+    if (commentsCounter) {
+      commentsCounter.textContent = '500 characters remaining';
+      commentsCounter.classList.remove('text-red-600');
     }
   });
 });

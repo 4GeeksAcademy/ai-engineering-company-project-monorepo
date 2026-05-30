@@ -116,7 +116,10 @@
         <label for="policy" class="font-medium">I accept the data policy <span class="text-red-600">*</span></label>
       </div>
       <p class="text-red-600 text-sm mb-2 hidden" id="error-policy"></p>
-      <button type="submit" class="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold shadow hover:bg-rose-400 transition">Submit Application</button>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button type="submit" class="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold shadow hover:bg-rose-400 transition">Submit Application</button>
+        <button type="reset" class="w-full bg-orange-100 text-orange-900 py-3 rounded-lg font-semibold border border-orange-300 hover:bg-orange-200 transition">Clear Form</button>
+      </div>
     </form>
   </main>
   <footer class="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-orange-50 py-6 mt-10 border-t border-orange-300/40">
