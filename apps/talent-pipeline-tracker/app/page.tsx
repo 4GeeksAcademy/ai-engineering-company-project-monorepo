@@ -53,7 +53,18 @@ export default function HomePage() {
       try {
         const data = await getCandidates();
         if (isMounted) {
-          setCandidates(data);
+          // Verificamos si la API devolvió un array directo
+          if (Array.isArray(data)) {
+            setCandidates(data);
+          }
+          // Si la API lo envuelve en un objeto (ej. { records: [...] } o { candidates: [...] })
+          else if (data && typeof data === 'object') {
+            setCandidates((data as any).records || (data as any).candidates || (data as any).data || []);
+          }
+          // Fallback de seguridad
+          else {
+            setCandidates([]);
+          }
         }
       } catch (fetchError) {
         if (isMounted) {
@@ -82,7 +93,7 @@ export default function HomePage() {
 
       const matchesSearch = normalizedSearch
         ? candidate.full_name.toLowerCase().includes(normalizedSearch) ||
-          candidate.email.toLowerCase().includes(normalizedSearch)
+        candidate.email.toLowerCase().includes(normalizedSearch)
         : true;
 
       return matchesStatus && matchesStage && matchesSearch;
@@ -109,6 +120,16 @@ export default function HomePage() {
 
   return (
     <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-900">Candidaturas</h2>
+        <Link
+          href="/candidates/new"
+          className="inline-flex items-center rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-800"
+        >
+          Nueva candidatura
+        </Link>
+      </div>
+
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="space-y-1">

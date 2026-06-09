@@ -1,6 +1,8 @@
 import type {
   Candidate,
   CandidatePayload,
+  CandidateStage,
+  CandidateStatus,
   Note,
   NotePayload,
 } from '../types/candidate';
@@ -10,6 +12,35 @@ const API_BASE_URL = 'https://playground.4geeks.com/tracker/api/v1';
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
 };
+
+function extractNotesList(payload: unknown): Note[] {
+  if (Array.isArray(payload)) {
+    return payload as Note[];
+  }
+
+  if (payload && typeof payload === 'object') {
+    const wrappedPayload = payload as {
+      data?: unknown;
+      results?: unknown;
+      items?: unknown;
+      notes?: unknown;
+    };
+
+    const possibleLists = [
+      wrappedPayload.data,
+      wrappedPayload.results,
+      wrappedPayload.items,
+      wrappedPayload.notes,
+    ];
+
+    const firstList = possibleLists.find((value) => Array.isArray(value));
+    if (Array.isArray(firstList)) {
+      return firstList as Note[];
+    }
+  }
+
+  return [];
+}
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -36,7 +67,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function getCandidates(): Promise<Candidate[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/candidates`);
+    // Corregido para apuntar directamente a /records
+    const response = await fetch(`${API_BASE_URL}/records`);
     return await handleResponse<Candidate[]>(response);
   } catch (error) {
     throw new Error(`Error fetching candidates: ${(error as Error).message}`);
@@ -45,7 +77,8 @@ export async function getCandidates(): Promise<Candidate[]> {
 
 export async function getCandidateById(candidateId: string): Promise<Candidate> {
   try {
-    const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}`);
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`);
     return await handleResponse<Candidate>(response);
   } catch (error) {
     throw new Error(`Error fetching candidate: ${(error as Error).message}`);
@@ -64,7 +97,8 @@ export async function createCandidate(payload: CandidatePayload): Promise<Candid
       experience_years: payload.experience_years,
     };
 
-    const response = await fetch(`${API_BASE_URL}/candidates`, {
+    // Reemplazado /candidates por /records
+    const response = await fetch(`${API_BASE_URL}/records`, {
       method: 'POST',
       headers: JSON_HEADERS,
       body: JSON.stringify(body),
@@ -91,7 +125,8 @@ export async function updateCandidate(
       experience_years: payload.experience_years,
     };
 
-    const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
       method: 'PUT',
       headers: JSON_HEADERS,
       body: JSON.stringify(body),
@@ -105,7 +140,8 @@ export async function updateCandidate(
 
 export async function deleteCandidate(candidateId: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
       method: 'DELETE',
     });
 
@@ -117,8 +153,10 @@ export async function deleteCandidate(candidateId: string): Promise<void> {
 
 export async function getCandidateNotes(candidateId: string): Promise<Note[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}/notes`);
-    return await handleResponse<Note[]>(response);
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes`);
+    const payload = await handleResponse<unknown>(response);
+    return extractNotesList(payload);
   } catch (error) {
     throw new Error(`Error fetching candidate notes: ${(error as Error).message}`);
   }
@@ -133,7 +171,8 @@ export async function createCandidateNote(
       content: payload.content,
     };
 
-    const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}/notes`, {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes`, {
       method: 'POST',
       headers: JSON_HEADERS,
       body: JSON.stringify(body),
@@ -142,5 +181,57 @@ export async function createCandidateNote(
     return await handleResponse<Note>(response);
   } catch (error) {
     throw new Error(`Error creating candidate note: ${(error as Error).message}`);
+  }
+}
+
+export async function updateCandidateStatus(
+  candidateId: string,
+  status: CandidateStatus,
+): Promise<Candidate> {
+  try {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+      method: 'PATCH',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ status }),
+    });
+
+    return await handleResponse<Candidate>(response);
+  } catch (error) {
+    throw new Error(`Error updating candidate status: ${(error as Error).message}`);
+  }
+}
+
+export async function updateCandidateStage(
+  candidateId: string,
+  stage: CandidateStage,
+): Promise<Candidate> {
+  try {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+      method: 'PATCH',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ stage }),
+    });
+
+    return await handleResponse<Candidate>(response);
+  } catch (error) {
+    throw new Error(`Error updating candidate stage: ${(error as Error).message}`);
+  }
+}
+
+export async function deleteCandidateNote(
+  candidateId: string,
+  noteId: string,
+): Promise<void> {
+  try {
+    // Reemplazado /candidates/ por /records/
+    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes/${noteId}`, {
+      method: 'DELETE',
+    });
+
+    await handleResponse<void>(response);
+  } catch (error) {
+    throw new Error(`Error deleting candidate note: ${(error as Error).message}`);
   }
 }
