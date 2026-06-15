@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paneles Administrativos | Nexova Solutions</title>
+    <meta
+      name="description"
+      content="Panel administrativo por departamento para Nexova Solutions: seleccion, formacion, soporte, ventas, marketing, RRHH, tecnologia y direccion ejecutiva."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-900 antialiased">
+    <header class="border-b border-slate-300 bg-blue-900 text-white">
+      <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <p class="text-xs uppercase tracking-widest text-blue-200">Nexova Solutions</p>
+        <h1 class="mt-1 text-2xl font-bold sm:text-3xl">Panel Administrativo por Departamentos</h1>
+        <p class="mt-2 max-w-3xl text-sm text-blue-100 sm:text-base">
+          Vista unificada de operaciones para los 8 departamentos clave. Datos y alertas orientadas a seguimiento diario.
+        </p>
+        <p class="mt-4">
+          <a href="index.html" class="inline-flex items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-900 transition hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            Volver al inicio
+          </a>
+        </p>
+      </section>
+    </header>
+
+    <main class="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[280px,1fr] lg:px-8">
+      <aside class="rounded-xl border border-blue-200 bg-white p-4 shadow-sm lg:sticky lg:top-6 lg:h-fit" aria-label="Navegador lateral de departamentos">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-blue-900">Departamentos</h2>
+        <nav class="mt-3">
+          <ul class="space-y-1 text-sm">
+            <li><a href="#operaciones-seleccion" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Scoring IA</a></li>
+            <li><a href="#formacion-corporativa" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Formacion Corporativa</a></li>
+            <li><a href="#soporte-cliente" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Soporte al Cliente</a></li>
+            <li><a href="#ventas-desarrollo" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Ventas y Desarrollo</a></li>
+            <li><a href="#marketing-comunicacion" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Marketing y Comunicacion</a></li>
+            <li><a href="#recursos-humanos" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Recursos Humanos</a></li>
+            <li><a href="#tecnologia-infraestructura" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Tecnologia e Infraestructura</a></li>
+            <li><a href="#direccion-ejecutiva" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Direccion Ejecutiva</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3" aria-label="Paneles departamentales">
+        <article id="operaciones-seleccion" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm md:col-span-2 xl:col-span-3">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Operaciones de Seleccion</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Javier Almeida</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Cribado manual de CVs y falta de visibilidad en tiempo real para clientes.</p>
+          <ul class="mt-4 space-y-2 text-sm md:max-w-md">
+            <li class="flex justify-between"><span>CVs en revision</span><strong>312</strong></li>
+            <li class="flex justify-between"><span>Score promedio IA</span><strong>71/100</strong></li>
+            <li class="flex justify-between"><span>Candidatos sin actualizar</span><strong class="text-rose-700">47</strong></li>
+          </ul>
+          <section class="mt-6">
+            <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 class="text-base font-semibold text-blue-950">Panel de Scoring IA</h3>
+                <p class="mt-1 text-sm text-slate-700">Ranking automatizado renderizado en este panel principal.</p>
+              </div>
+              <button
+                id="scoringToggleButton"
+                type="button"
+                class="inline-flex items-center rounded-md border border-emerald-300 bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-200"
+                aria-pressed="true"
+                aria-controls="scoringPanelContent"
+              >
+                Activado (se muestra el panel scoring)
+              </button>
+            </header>
+            <div id="scoringPanelContent" class="mt-4">
+              <div id="candidatesContainer" class="grid gap-4" aria-live="polite"></div>
+            </div>
+          </section>
+        </article>
+
+        <article id="formacion-corporativa" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Formacion Corporativa</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Elena Vargas</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Catalogo en PDF, inscripciones manuales y escasa trazabilidad de progreso.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Programas activos</span><strong>18</strong></li>
+            <li class="flex justify-between"><span>Inscripciones semanales</span><strong>94</strong></li>
+            <li class="flex justify-between"><span>Finalizacion de cursos</span><strong>58%</strong></li>
+          </ul>
+        </article>
+
+        <article id="soporte-cliente" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Soporte al Cliente Externalizado</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Roberto Diaz</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">SLA comprometido en 24h, promedio real en 48h y backlog con baja visibilidad.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Tickets abiertos</span><strong>286</strong></li>
+            <li class="flex justify-between"><span>Resolucion media</span><strong class="text-rose-700">48h</strong></li>
+            <li class="flex justify-between"><span>Meta automatizacion L1</span><strong>40%</strong></li>
+          </ul>
+        </article>
+
+        <article id="ventas-desarrollo" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Ventas y Desarrollo de Negocio</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Marcos Ibanez</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Uso inconsistente del CRM y perdida de deals por seguimiento manual.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Deals en pipeline</span><strong>73</strong></li>
+            <li class="flex justify-between"><span>CRM actualizado</span><strong class="text-amber-700">40%</strong></li>
+            <li class="flex justify-between"><span>Conversaciones sin actividad</span><strong>21</strong></li>
+          </ul>
+        </article>
+
+        <article id="marketing-comunicacion" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Marketing y Comunicacion</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Carmen Ruiz</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Web desactualizada, baja accesibilidad y poca visibilidad de conversion.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Visitas mensuales</span><strong>24.8k</strong></li>
+            <li class="flex justify-between"><span>Tasa de conversion</span><strong>1.7%</strong></li>
+            <li class="flex justify-between"><span>Contenido con trazabilidad</span><strong class="text-amber-700">Parcial</strong></li>
+          </ul>
+        </article>
+
+        <article id="recursos-humanos" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Recursos Humanos</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Patricia Solis</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Procesos internos por email y hojas de calculo, sin KPIs consolidados.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Solicitudes pendientes</span><strong>39</strong></li>
+            <li class="flex justify-between"><span>Onboarding en curso</span><strong>11</strong></li>
+            <li class="flex justify-between"><span>Evaluaciones revisadas</span><strong class="text-amber-700">32%</strong></li>
+          </ul>
+        </article>
+
+        <article id="tecnologia-infraestructura" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Tecnologia e Infraestructura</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Sergio Molina</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Stack desconectado, sin telemetria central y despliegues manuales.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Integraciones activas</span><strong>4/11</strong></li>
+            <li class="flex justify-between"><span>Servicios sin observabilidad</span><strong class="text-rose-700">6</strong></li>
+            <li class="flex justify-between"><span>Incidentes detectados por usuarios</span><strong>73%</strong></li>
+          </ul>
+        </article>
+
+        <article id="direccion-ejecutiva" class="scroll-mt-24 rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-lg font-semibold text-blue-950">Direccion Ejecutiva</h2>
+            <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-900">Laura Mendoza</span>
+          </header>
+          <p class="mt-2 text-sm text-slate-700">Decision estrategica basada en reportes manuales con una semana de retraso.</p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex justify-between"><span>Reportes semanales recibidos</span><strong>7/7</strong></li>
+            <li class="flex justify-between"><span>Tiempo de preparacion</span><strong class="text-rose-700">4-8h por manager</strong></li>
+            <li class="flex justify-between"><span>KPIs en tiempo real</span><strong class="text-amber-700">No disponible</strong></li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <footer class="border-t border-blue-800 bg-blue-900 text-white">
+      <section class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-sm sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <p>Nexova Solutions · Panel Interno de Gestion</p>
+        <p>Valencia (ES) · Miami (US)</p>
+      </section>
+    </footer>
+
+    <script src="admin/admin.js" defer></script>
+  </body>
+</html>
