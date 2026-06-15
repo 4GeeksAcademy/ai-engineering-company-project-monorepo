@@ -49,7 +49,19 @@
     <header class="border-b border-blue-200 bg-white">
       <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegacion principal">
         <a href="index.html" class="text-lg font-semibold tracking-wide text-blue-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Nexova Solutions</a>
-        <ul class="flex items-center gap-4 text-sm sm:gap-6">
+        <button
+          id="menuButton"
+          type="button"
+          class="inline-flex items-center justify-center rounded-md border border-blue-300 p-2 text-blue-900 transition hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900 md:hidden"
+          aria-expanded="false"
+          aria-controls="mobileMenu"
+          aria-label="Abrir menu principal"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="hidden items-center gap-4 text-sm md:flex lg:gap-6">
           <li><a href="#servicios" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Servicios</a></li>
           <li><a href="#impacto" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Impacto</a></li>
           <li><a href="#experiencia" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Experiencia</a></li>
@@ -57,11 +69,21 @@
           <li><a href="nexova-departamentos-panel.html#operaciones-seleccion" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Scoring IA</a></li>
         </ul>
       </nav>
+      <div id="mobileMenu" class="hidden border-t border-blue-200 bg-white md:hidden" aria-label="Menu principal movil">
+        <ul class="mx-auto max-w-6xl space-y-1 px-4 py-3 text-sm sm:px-6">
+          <li><a href="#servicios" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Servicios</a></li>
+          <li><a href="#impacto" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Impacto</a></li>
+          <li><a href="#experiencia" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Experiencia</a></li>
+          <li><a href="nexova-departamentos-panel.html" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Paneles</a></li>
+          <li><a href="nexova-departamentos-panel.html#operaciones-seleccion" class="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Scoring IA</a></li>
+          <li><a href="application.html" class="mt-2 block rounded-md bg-blue-900 px-3 py-2 text-center font-semibold text-white hover:bg-blue-800">Solicitar diagnostico</a></li>
+        </ul>
+      </div>
     </header>
 
     <main>
       <section class="relative overflow-hidden border-b border-blue-200">
-        <article class="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-2 md:items-center lg:px-8 lg:py-20">
+        <article class="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:gap-8 sm:px-6 sm:py-12 md:grid-cols-2 md:items-center lg:gap-10 lg:px-8 lg:py-20">
           <header class="space-y-5">
             <p class="inline-flex rounded-full border border-blue-300 bg-blue-100 px-3 py-1 text-xs font-medium uppercase tracking-wider text-blue-900">Consultora consolidada desde 2011</p>
             <h1 class="text-3xl font-bold leading-tight text-blue-950 sm:text-4xl lg:text-5xl">
@@ -70,10 +92,10 @@
             <p class="max-w-xl text-sm leading-7 text-blue-900 sm:text-base">
               Ayudamos a empresas medianas de tecnologia, retail y finanzas a reducir tareas manuales, mejorar tiempos de respuesta y tomar decisiones con datos en tiempo real.
             </p>
-            <section class="flex flex-col gap-3 sm:flex-row">
+            <section class="grid gap-3 sm:grid-cols-2 xl:flex">
               <a href="application.html" class="inline-flex items-center justify-center rounded-md bg-blue-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Solicitar diagnostico digital</a>
               <a href="nexova-departamentos-panel.html" class="inline-flex items-center justify-center rounded-md border border-blue-900 px-5 py-3 text-sm font-semibold text-blue-900 transition hover:bg-blue-900 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Ver paneles por departamento</a>
-              <a href="nexova-departamentos-panel.html#operaciones-seleccion" class="inline-flex items-center justify-center rounded-md border border-blue-900 px-5 py-3 text-sm font-semibold text-blue-900 transition hover:bg-blue-900 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Ir al panel de scoring IA</a>
+              <a href="nexova-departamentos-panel.html#operaciones-seleccion" class="inline-flex items-center justify-center rounded-md border border-blue-900 px-5 py-3 text-sm font-semibold text-blue-900 transition hover:bg-blue-900 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900 sm:col-span-2 xl:col-span-1">Ir al panel de scoring IA</a>
             </section>
           </header>
           <figure class="rounded-xl border border-blue-300 bg-blue-100 p-4 shadow-2xl shadow-blue-200/50">
@@ -163,5 +185,35 @@
         </article>
       </section>
     </footer>
+
+    <script>
+      const menuButton = document.getElementById("menuButton");
+      const mobileMenu = document.getElementById("mobileMenu");
+
+      if (menuButton && mobileMenu) {
+        const closeMenu = () => {
+          menuButton.setAttribute("aria-expanded", "false");
+          menuButton.setAttribute("aria-label", "Abrir menu principal");
+          mobileMenu.classList.add("hidden");
+        };
+
+        menuButton.addEventListener("click", () => {
+          const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+          menuButton.setAttribute("aria-expanded", String(!isOpen));
+          menuButton.setAttribute("aria-label", isOpen ? "Abrir menu principal" : "Cerrar menu principal");
+          mobileMenu.classList.toggle("hidden", isOpen);
+        });
+
+        mobileMenu.querySelectorAll("a").forEach((link) => {
+          link.addEventListener("click", closeMenu);
+        });
+
+        window.addEventListener("resize", () => {
+          if (window.innerWidth >= 768) {
+            closeMenu();
+          }
+        });
+      }
+    </script>
   </body>
 </html>
