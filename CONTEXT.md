@@ -21,6 +21,28 @@ El segundo departamento que me resulta interesante es el de atención al cliente
 - Se puede crear un chatbot que filtre el tipo de incidencia en el momento que el cliente se ponga en contacto con este servicio, y generar un sistema de ticketing donde el cliente también pueda exponer todos los problemas que tiene, el chatbot irá guiando al cliente a rellenar todos los puntos para capturar la mayor cantidad de información sobre el problema real, para que los agentes puedan analizar la gravedad y actuar lo antes posible con información de la situación de antemano.
 Si los problemas pueden ser resueltos por el chatbot, generariamos ese 40% de gestiones resueltas de manera automatizada, si el agente de IA necesitase escalar el problema, los agentes estarán más disponibles ya que no tienen que estar en asistencia con otras incidencias.
 
+## Estado Actual del Proyecto (Mejoras Implementadas)
+
+**Panel Unificado de Departamentos:** Se ha centralizado la operativa en `nexova-departamentos-panel.html`, que ahora funciona como un dashboard principal. Desde aquí, se gestiona la visualización de los distintos módulos de IA. La navegación es similar a una Single-Page Application (SPA), mostrando y ocultando dinámicamente los componentes de cada departamento sin recargar la página.
+
+**Módulo de Scoring IA (Selección):**
+- **Integración:** El panel de scoring de candidatos se renderiza directamente dentro de la sección "Operaciones de Selección" del dashboard principal.
+- **Funcionalidades:** Incluye un ranking de candidatos ordenado por `score_ia`, semaforización visual (rojo, amarillo, verde), un acordeón para ver el razonamiento de la IA y botones de contacto directo (Email, Llamada, WhatsApp) en cada tarjeta de candidato.
+- **Control:** Un botón permite activar o desactivar la visibilidad de este módulo dentro de su departamento.
+
+**Módulo de Triaje Inteligente (Atención al Cliente):**
+- **Integración:** El sistema dual de Chatbot y Panel de Agentes se renderiza dentro de la sección "Soporte al Cliente" del dashboard principal.
+- **Funcionalidades (Chatbot):** Simula un flujo de conversación para recopilar información del cliente (nombre, email, problema) y crea un ticket que se persiste en `localStorage`.
+- **Funcionalidades (Panel de Agentes):**
+  - Muestra un listado de tickets (Master) con métricas clave (activos, alta prioridad, resueltos).
+  - Al hacer clic en un ticket, se abre una vista de detalle (Detail) en un modal.
+  - La vista de detalle incluye la transcripción completa del chat, información del cliente y una botonera de acciones operativas (Contactar, Videollamada, Invitar Ingeniero).
+  - Permite continuar la conversación con el cliente desde un chat de seguimiento si el ticket está "Abierto".
+
+**Mejoras de UI/UX:**
+- Se ha implementado un menú de navegación responsivo (hamburguesa) en la página de inicio para mejorar la experiencia en dispositivos móviles.
+- Se han eliminado archivos HTML redundantes (`support.html`, `admin/tickets.html`, etc.) para consolidar las vistas en el panel principal, simplificando la estructura del proyecto.
+
 ## Milestone o reto
 Me gustaría poder ser capaz de crear dashboards o paneles administrativos que puedan tener todo el contenido necesario para los empleados y que puedan acceder a la información en tiempo real y automatizar tareas de manera eficiente. 
 
