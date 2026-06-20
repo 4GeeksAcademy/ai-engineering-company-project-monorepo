@@ -2,12 +2,6 @@
 
 ## Hito 1: Sitio Web Público de tu Empresa
 
-_These instructions are [available in English](./CONTEXT-nexova.md)._
-
-> Este documento describe tu empresa y la situación concreta para la que estás construyendo este hito. Léelo completo antes de escribir ningún código. Todo lo que construyas debe reflejar este contexto.
-
----
-
 ## Tu empresa
 
 **Nexova** es una consultora de recursos humanos y adquisición de talento fundada en 2011, con sede en Valencia, España, y una oficina de expansión en Miami, Florida. Opera en tres líneas de negocio: headhunting ejecutivo y de mandos medios, outsourcing de equipos de atención al cliente para empresas tecnológicas, y formación corporativa en soft skills y liderazgo. Tiene aproximadamente 120 empleados y genera 8 millones de dólares en facturación anual. Sus clientes son principalmente empresas medianas de tecnología, retail y servicios financieros.
