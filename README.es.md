@@ -64,6 +64,21 @@ ai-engineering-company-project-monorepo/
 
 ---
 
+## Ejecutar localmente (Codespaces + npx)
+
+Para levantar el proyecto como sitio estatico desde la raiz del repositorio:
+
+```bash
+npx serve -l 4173 .
+```
+
+Luego abre la URL publica/preview de Codespaces en el puerto 4173 y navega a:
+
+- `/index.html` para la landing page
+- `/application.html` para el formulario de aplicacion
+
+---
+
 ## Hitos (referencia)
 
 | Hito | Enfoque       | Entregables típicos                              |
