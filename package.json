@@ -4,7 +4,8 @@
   "description": "Hito 2 – Fundamentos de Programación · Brasaland Data Utilities",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "demo": "npx tsx src/demo.ts"
+    "demo": "npx tsx src/demo.ts",
+    "serve": "npx serve src -p 3000"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
