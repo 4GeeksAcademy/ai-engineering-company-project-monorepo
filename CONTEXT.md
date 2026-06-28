@@ -208,3 +208,21 @@ src/
 │   └── validations.ts     # Validaciones de negocio
 └── index.html             # Página de prueba (opcional)
 ```
+
+### Test interactivo
+
+```bash
+npx http-server . -p 3000 -a 0.0.0.0
+# → http://localhost:3000/test/
+```
+
+```
+test/
+└── index.html           # Página de prueba con Tailwind CSS
+```
+
+Incluye portabilidad completa de los módulos TS a JS plano en un solo archivo, usando los objetos literales de `models.ts` y datos extra para ejercitar:
+
+- Filtros y búsqueda por entidad (`filterShipments`, `filterInventory`, `filterReturns`, `filterTickets`, `filterCarrierPerformance`)
+- Transformaciones (`countByCategory`, `sumBy`, `averageBy`, `maxBy`, `minBy`)
+- Validaciones (`inNumericRange`, `matchesRule`)
