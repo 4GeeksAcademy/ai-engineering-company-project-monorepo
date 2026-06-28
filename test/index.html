@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrackFlow — Hito 2 Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans antialiased">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2">TrackFlow — Hito 2</h1>
+    <p class="text-gray-600 mb-8">
+      Test de modelos, filtros, transformaciones y validaciones usando objetos literales.
+    </p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-blue-500">
+        <h2 class="font-semibold text-blue-700 text-lg mb-2">&#x1F4E6; Warehouse</h2>
+        <pre id="output-warehouse" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-green-500">
+        <h2 class="font-semibold text-green-700 text-lg mb-2">&#x1F4CA; InventoryItem</h2>
+        <pre id="output-inventory" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-purple-500">
+        <h2 class="font-semibold text-purple-700 text-lg mb-2">&#x1F69A; CarrierPerformance</h2>
+        <pre id="output-carrier" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-yellow-500">
+        <h2 class="font-semibold text-yellow-700 text-lg mb-2">&#x1F4E6; Shipment</h2>
+        <pre id="output-shipment" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-red-500">
+        <h2 class="font-semibold text-red-700 text-lg mb-2">&#x1F504; ReturnRequest</h2>
+        <pre id="output-return" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-500">
+        <h2 class="font-semibold text-indigo-700 text-lg mb-2">&#x1F4AC; SupportTicket</h2>
+        <pre id="output-ticket" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto"></pre>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="font-semibold text-lg mb-3">&#x1F50D; Filtros / Búsqueda</h2>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button data-test="filter-shipments" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 cursor-pointer">Filter Shipments</button>
+          <button data-test="filter-inventory" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 cursor-pointer">Filter Inventory</button>
+          <button data-test="filter-returns" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 cursor-pointer">Filter Returns</button>
+          <button data-test="filter-tickets" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700 cursor-pointer">Filter Tickets</button>
+          <button data-test="filter-carriers" class="bg-purple-600 text-white px-3 py-1.5 rounded text-sm hover:bg-purple-700 cursor-pointer">Filter Carriers</button>
+        </div>
+        <pre id="output-filters" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto min-h-[120px] whitespace-pre-wrap"></pre>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="font-semibold text-lg mb-3">&#x1F4CA; Transformaciones</h2>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button data-test="transform-count" class="bg-teal-600 text-white px-3 py-1.5 rounded text-sm hover:bg-teal-700 cursor-pointer">Count by Status</button>
+          <button data-test="transform-sum" class="bg-teal-600 text-white px-3 py-1.5 rounded text-sm hover:bg-teal-700 cursor-pointer">Sum Weight (kg)</button>
+          <button data-test="transform-avg" class="bg-teal-600 text-white px-3 py-1.5 rounded text-sm hover:bg-teal-700 cursor-pointer">Avg Unit Cost</button>
+          <button data-test="transform-max" class="bg-teal-600 text-white px-3 py-1.5 rounded text-sm hover:bg-teal-700 cursor-pointer">Max Weight</button>
+          <button data-test="transform-min" class="bg-teal-600 text-white px-3 py-1.5 rounded text-sm hover:bg-teal-700 cursor-pointer">Min Weight</button>
+        </div>
+        <pre id="output-transforms" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto min-h-[120px] whitespace-pre-wrap"></pre>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 mb-10">
+      <h2 class="font-semibold text-lg mb-3">&#x2705; Validaciones</h2>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button data-test="validate-numeric" class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 cursor-pointer">inNumericRange tests</button>
+        <button data-test="validate-match" class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 cursor-pointer">matchesRule tests</button>
+      </div>
+      <pre id="output-validations" class="text-xs bg-gray-50 p-3 rounded overflow-x-auto min-h-[80px] whitespace-pre-wrap"></pre>
+    </div>
+
+    <footer class="text-center text-gray-400 text-xs border-t pt-6">
+      TrackFlow &mdash; AI Engineering &middot; 4Geeks Academy
+    </footer>
+  </div>
+
+  <script type="module">
+    // ============================================================
+    // 1. MODELOS — objetos literales (portados de models.ts)
+    // ============================================================
+
+    const warehouseLA = {
+      id: "wh_001",
+      code: "LA",
+      name: "Los Angeles Main Warehouse",
+      city: "Los Angeles",
+      country: "US",
+      capacityUnits: 120000,
+      active: true,
+      occupancyRate(currentUnits) {
+        return this.capacityUnits === 0 ? 0 : (currentUnits / this.capacityUnits) * 100;
+      }
+    };
+
+    const inventorySkuA100 = {
+      sku: "A100-BLACK-M",
+      warehouseCode: "ZGZ",
+      quantityAvailable: 35,
+      reorderPoint: 40,
+      unitCostEur: 18.5,
+      updatedAt: "2026-06-15T08:30:00.000Z",
+      inventoryValue() { return this.quantityAvailable * this.unitCostEur; },
+      isLowStock() { return this.quantityAvailable <= this.reorderPoint; }
+    };
+
+    const carrierSeurSpain = {
+      carrier: "SEUR",
+      country: "ES",
+      totalShipments: 1200,
+      onTimeShipments: 1110,
+      incidents: 36,
+      avgCostPerKgEur: 2.75,
+      onTimeRate() { return this.totalShipments === 0 ? 0 : this.onTimeShipments / this.totalShipments; },
+      incidentRate() { return this.totalShipments === 0 ? 0 : this.incidents / this.totalShipments; }
+    };
+
+    const shipmentExample = {
+      id: "shp_9001",
+      orderId: "ord_5521",
+      carrier: "MRW",
+      originWarehouse: "ZGZ",
+      destinationCountry: "ES",
+      weightKg: 2.4,
+      priority: "urgent",
+      shippedAt: "2026-06-12T11:00:00.000Z",
+      estimatedDeliveryAt: "2026-06-13T15:00:00.000Z",
+      status: "in_transit",
+      isLate(referenceDateISO) {
+        const ref = referenceDateISO ? new Date(referenceDateISO) : new Date();
+        return this.status !== "delivered" && ref.getTime() > new Date(this.estimatedDeliveryAt).getTime();
+      }
+    };
+
+    const returnExample = {
+      id: "ret_441",
+      orderId: "ord_5001",
+      customerId: "cust_89",
+      country: "US",
+      reason: "Size mismatch",
+      condition: "opened",
+      approved: false,
+      requestedAt: "2026-06-10T09:45:00.000Z",
+      autoApprovalEligible() {
+        return ["new", "opened"].includes(this.condition);
+      }
+    };
+
+    const ticketExample = {
+      id: "t_1002",
+      customerId: "cust_89",
+      channel: "whatsapp",
+      language: "es",
+      topic: "tracking",
+      priority: "medium",
+      firstResponseMinutes: 26,
+      createdAt: "2026-06-15T07:10:00.000Z",
+      isSlaBreached(maxMinutes) {
+        return this.firstResponseMinutes === undefined ? false : this.firstResponseMinutes > maxMinutes;
+      }
+    };
+
+    const sampleData = {
+      warehouses: [warehouseLA],
+      inventory: [inventorySkuA100],
+      carrierPerformance: [carrierSeurSpain],
+      shipments: [shipmentExample],
+      returns: [returnExample],
+      tickets: [ticketExample]
+    };
+
+    // ============================================================
+    // 2. COLLECTIONS — filterByCriteria
+    // ============================================================
+
+    function inNumericRange(value, range) {
+      if (range.min !== undefined && value < range.min) return false;
+      if (range.max !== undefined && value > range.max) return false;
+      return true;
+    }
+
+    function matchesRule(item, rule) {
+      if (rule.predicate && !rule.predicate(item)) return false;
+      if (rule.range) {
+        if (rule.resolver) return inNumericRange(rule.resolver(item), rule.range);
+        if (!rule.field) return false;
+        const val = item[rule.field];
+        if (typeof val !== "number") return false;
+        return inNumericRange(val, rule.range);
+      }
+      if (rule.field) {
+        const val = item[rule.field];
+        if (rule.equals !== undefined && val !== rule.equals) return false;
+        if (rule.in && !rule.in.includes(val)) return false;
+      }
+      return true;
+    }
+
+    function filterByCriteria(items, criteria) {
+      if (!criteria) return [...items];
+      const rules = Array.isArray(criteria) ? criteria : [criteria];
+      if (rules.length === 0) return [...items];
+      return items.filter(item => rules.every(rule => matchesRule(item, rule)));
+    }
+
+    // ============================================================
+    // 3. SEARCH — filtros específicos por entidad
+    // ============================================================
+
+    function filterShipments(items, filters = {}) {
+      const rules = [];
+      if (filters.carrier !== undefined) {
+        rules.push(Array.isArray(filters.carrier)
+          ? { field: "carrier", in: filters.carrier }
+          : { field: "carrier", equals: filters.carrier });
+      }
+      if (filters.status !== undefined) {
+        rules.push(Array.isArray(filters.status)
+          ? { field: "status", in: filters.status }
+          : { field: "status", equals: filters.status });
+      }
+      if (filters.destinationCountry !== undefined) {
+        rules.push(Array.isArray(filters.destinationCountry)
+          ? { field: "destinationCountry", in: filters.destinationCountry }
+          : { field: "destinationCountry", equals: filters.destinationCountry });
+      }
+      if (filters.priority !== undefined) {
+        rules.push(Array.isArray(filters.priority)
+          ? { field: "priority", in: filters.priority }
+          : { field: "priority", equals: filters.priority });
+      }
+      if (filters.weightKgRange) rules.push({ field: "weightKg", range: filters.weightKgRange });
+      return filterByCriteria(items, rules);
+    }
+
+    function filterInventory(items, filters = {}) {
+      const rules = [];
+      if (filters.warehouseCode !== undefined) {
+        rules.push(Array.isArray(filters.warehouseCode)
+          ? { field: "warehouseCode", in: filters.warehouseCode }
+          : { field: "warehouseCode", equals: filters.warehouseCode });
+      }
+      if (filters.sku !== undefined) {
+        rules.push(Array.isArray(filters.sku)
+          ? { field: "sku", in: filters.sku }
+          : { field: "sku", equals: filters.sku });
+      }
+      if (filters.unitCostRange) rules.push({ field: "unitCostEur", range: filters.unitCostRange });
+      if (filters.inventoryValueRange) {
+        rules.push({ range: filters.inventoryValueRange, resolver: item => item.inventoryValue() });
+      }
+      if (filters.quantityRange) rules.push({ field: "quantityAvailable", range: filters.quantityRange });
+      if (filters.lowStock !== undefined) {
+        rules.push({ predicate: item => item.isLowStock() === filters.lowStock });
+      }
+      return filterByCriteria(items, rules);
+    }
+
+    function filterReturns(items, filters = {}) {
+      const rules = [];
+      if (filters.country !== undefined) {
+        rules.push(Array.isArray(filters.country)
+          ? { field: "country", in: filters.country }
+          : { field: "country", equals: filters.country });
+      }
+      if (filters.condition !== undefined) {
+        rules.push(Array.isArray(filters.condition)
+          ? { field: "condition", in: filters.condition }
+          : { field: "condition", equals: filters.condition });
+      }
+      if (filters.approved !== undefined) rules.push({ field: "approved", equals: filters.approved });
+      if (filters.autoApprovalEligible !== undefined) {
+        rules.push({ predicate: item => item.autoApprovalEligible() === filters.autoApprovalEligible });
+      }
+      return filterByCriteria(items, rules);
+    }
+
+    function filterTickets(items, filters = {}) {
+      const rules = [];
+      if (filters.channel !== undefined) {
+        rules.push(Array.isArray(filters.channel)
+          ? { field: "channel", in: filters.channel }
+          : { field: "channel", equals: filters.channel });
+      }
+      if (filters.priority !== undefined) {
+        rules.push(Array.isArray(filters.priority)
+          ? { field: "priority", in: filters.priority }
+          : { field: "priority", equals: filters.priority });
+      }
+      if (filters.topic !== undefined) {
+        rules.push(Array.isArray(filters.topic)
+          ? { field: "topic", in: filters.topic }
+          : { field: "topic", equals: filters.topic });
+      }
+      if (filters.language !== undefined) {
+        rules.push(Array.isArray(filters.language)
+          ? { field: "language", in: filters.language }
+          : { field: "language", equals: filters.language });
+      }
+      if (filters.firstResponseMinutesRange) {
+        rules.push({
+          range: filters.firstResponseMinutesRange,
+          resolver: item => item.firstResponseMinutes ?? Number.NEGATIVE_INFINITY
+        });
+      }
+      if (filters.slaBreached) {
+        rules.push({
+          predicate: item => item.isSlaBreached(filters.slaBreached.maxMinutes) === filters.slaBreached.expected
+        });
+      }
+      return filterByCriteria(items, rules);
+    }
+
+    function filterCarrierPerformance(items, filters = {}) {
+      const rules = [];
+      if (filters.carrier !== undefined) {
+        rules.push(Array.isArray(filters.carrier)
+          ? { field: "carrier", in: filters.carrier }
+          : { field: "carrier", equals: filters.carrier });
+      }
+      if (filters.country !== undefined) {
+        rules.push(Array.isArray(filters.country)
+          ? { field: "country", in: filters.country }
+          : { field: "country", equals: filters.country });
+      }
+      if (filters.onTimeRateRange) {
+        rules.push({ range: filters.onTimeRateRange, resolver: item => item.onTimeRate() });
+      }
+      if (filters.incidentRateRange) {
+        rules.push({ range: filters.incidentRateRange, resolver: item => item.incidentRate() });
+      }
+      if (filters.avgCostPerKgRange) rules.push({ field: "avgCostPerKgEur", range: filters.avgCostPerKgRange });
+      return filterByCriteria(items, rules);
+    }
+
+    // ============================================================
+    // 4. TRANSFORMACIONES
+    // ============================================================
+
+    function countByCategory(items, getCategory) {
+      return items.reduce((acc, item) => {
+        const cat = getCategory(item);
+        acc[cat] = (acc[cat] ?? 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function sumBy(items, getValue) {
+      return items.reduce((total, item) => total + getValue(item), 0);
+    }
+
+    function averageBy(items, getValue) {
+      if (items.length === 0) return undefined;
+      return sumBy(items, getValue) / items.length;
+    }
+
+    function maxBy(items, getValue) {
+      if (items.length === 0) return undefined;
+      return items.slice(1).reduce((currentMax, item) => {
+        const value = getValue(item);
+        return value > currentMax.value ? { item, value } : currentMax;
+      }, { item: items[0], value: getValue(items[0]) });
+    }
+
+    function minBy(items, getValue) {
+      if (items.length === 0) return undefined;
+      return items.slice(1).reduce((currentMin, item) => {
+        const value = getValue(item);
+        return value < currentMin.value ? { item, value } : currentMin;
+      }, { item: items[0], value: getValue(items[0]) });
+    }
+
+    // ============================================================
+    // 5. RENDER — mostrar objetos literales
+    // ============================================================
+
+    function show(id, obj) {
+      document.getElementById(id).textContent = JSON.stringify(obj, null, 2);
+    }
+
+    show("output-warehouse", warehouseLA);
+    show("output-inventory", inventorySkuA100);
+    show("output-carrier", carrierSeurSpain);
+    show("output-shipment", shipmentExample);
+    show("output-return", returnExample);
+    show("output-ticket", ticketExample);
+
+    // ============================================================
+    // 6. TEST RUNNERS — helpers + más datos
+    // ============================================================
+
+    // Creamos más datos para que los tests tengan sentido
+    const extraShipments = [
+      { ...shipmentExample, id: "shp_9002", carrier: "DHL", weightKg: 5.1, status: "delivered", priority: "standard", shippedAt: "2026-06-10T09:00:00.000Z", estimatedDeliveryAt: "2026-06-12T15:00:00.000Z", isLate: shipmentExample.isLate },
+      { ...shipmentExample, id: "shp_9003", carrier: "UPS", weightKg: 1.2, destinationCountry: "US", originWarehouse: "LA", status: "pending", priority: "urgent", shippedAt: "2026-06-14T08:00:00.000Z", estimatedDeliveryAt: "2026-06-15T15:00:00.000Z", isLate: shipmentExample.isLate },
+      { ...shipmentExample, id: "shp_9004", carrier: "FEDEX", weightKg: 3.8, destinationCountry: "US", originWarehouse: "LA", status: "failed", priority: "standard", shippedAt: "2026-06-08T10:00:00.000Z", estimatedDeliveryAt: "2026-06-10T15:00:00.000Z", isLate: shipmentExample.isLate },
+    ];
+    const allShipments = [shipmentExample, ...extraShipments];
+
+    const extraInventory = [
+      { ...inventorySkuA100, sku: "B200-RED-L", warehouseCode: "LA", quantityAvailable: 120, reorderPoint: 30, unitCostEur: 22.0, updatedAt: "2026-06-14T10:00:00.000Z", inventoryValue: inventorySkuA100.inventoryValue, isLowStock: inventorySkuA100.isLowStock },
+      { ...inventorySkuA100, sku: "C300-BLUE-S", warehouseCode: "ZGZ", quantityAvailable: 5, reorderPoint: 20, unitCostEur: 15.0, updatedAt: "2026-06-13T12:00:00.000Z", inventoryValue: inventorySkuA100.inventoryValue, isLowStock: inventorySkuA100.isLowStock },
+    ];
+    const allInventory = [inventorySkuA100, ...extraInventory];
+
+    const extraReturns = [
+      { ...returnExample, id: "ret_442", country: "ES", condition: "damaged", approved: false, reason: "Broken during transit", autoApprovalEligible: returnExample.autoApprovalEligible },
+      { ...returnExample, id: "ret_443", country: "ES", condition: "new", approved: true, reason: "Wrong item sent", autoApprovalEligible: returnExample.autoApprovalEligible },
+      { ...returnExample, id: "ret_444", country: "US", condition: "unusable", approved: false, reason: "Defective product", autoApprovalEligible: returnExample.autoApprovalEligible },
+    ];
+    const allReturns = [returnExample, ...extraReturns];
+
+    const extraTickets = [
+      { ...ticketExample, id: "t_1003", channel: "email", topic: "returns", priority: "high", firstResponseMinutes: 5, createdAt: "2026-06-14T09:00:00.000Z", isSlaBreached: ticketExample.isSlaBreached },
+      { ...ticketExample, id: "t_1004", channel: "phone", topic: "billing", priority: "low", language: "en", firstResponseMinutes: 180, createdAt: "2026-06-13T14:00:00.000Z", isSlaBreached: ticketExample.isSlaBreached },
+      { ...ticketExample, id: "t_1005", channel: "whatsapp", topic: "tracking", priority: "medium", language: "en", firstResponseMinutes: 15, createdAt: "2026-06-15T08:00:00.000Z", isSlaBreached: ticketExample.isSlaBreached },
+    ];
+    const allTickets = [ticketExample, ...extraTickets];
+
+    const extraCarriers = [
+      { ...carrierSeurSpain, carrier: "UPS", country: "US", totalShipments: 2500, onTimeShipments: 2350, incidents: 45, avgCostPerKgEur: 3.5, onTimeRate: carrierSeurSpain.onTimeRate, incidentRate: carrierSeurSpain.incidentRate },
+      { ...carrierSeurSpain, carrier: "MRW", country: "ES", totalShipments: 800, onTimeShipments: 720, incidents: 30, avgCostPerKgEur: 2.3, onTimeRate: carrierSeurSpain.onTimeRate, incidentRate: carrierSeurSpain.incidentRate },
+      { ...carrierSeurSpain, carrier: "DHL", country: "ES", totalShipments: 1500, onTimeShipments: 1425, incidents: 22, avgCostPerKgEur: 2.9, onTimeRate: carrierSeurSpain.onTimeRate, incidentRate: carrierSeurSpain.incidentRate },
+    ];
+    const allCarriers = [carrierSeurSpain, ...extraCarriers];
+
+    // ============================================================
+    // 7. BINDING — conectar botones
+    // ============================================================
+
+    const outFilters = document.getElementById("output-filters");
+    const outTransforms = document.getElementById("output-transforms");
+    const outValidations = document.getElementById("output-validations");
+
+    const tests = {
+      "filter-shipments": () => {
+        const result = filterShipments(allShipments, { carrier: "MRW", status: "in_transit" });
+        return `filterShipments(allShipments, { carrier: "MRW", status: "in_transit" })\n→ ${JSON.stringify(result.map(s => ({ id: s.id, carrier: s.carrier, status: s.status })), null, 2)}`;
+      },
+      "filter-inventory": () => {
+        const result = filterInventory(allInventory, { lowStock: true });
+        return `filterInventory(allInventory, { lowStock: true })\n→ ${JSON.stringify(result.map(i => ({ sku: i.sku, quantityAvailable: i.quantityAvailable, reorderPoint: i.reorderPoint })), null, 2)}`;
+      },
+      "filter-returns": () => {
+        const result = filterReturns(allReturns, { autoApprovalEligible: true });
+        return `filterReturns(allReturns, { autoApprovalEligible: true })\n→ ${JSON.stringify(result.map(r => ({ id: r.id, condition: r.condition })), null, 2)}`;
+      },
+      "filter-tickets": () => {
+        const result = filterTickets(allTickets, { priority: "high" });
+        return `filterTickets(allTickets, { priority: "high" })\n→ ${JSON.stringify(result.map(t => ({ id: t.id, priority: t.priority, topic: t.topic })), null, 2)}`;
+      },
+      "filter-carriers": () => {
+        const result = filterCarrierPerformance(allCarriers, { country: "ES", onTimeRateRange: { min: 0.9 } });
+        return `filterCarrierPerformance(allCarriers, { country: "ES", onTimeRateRange: { min: 0.9 } })\n→ ${JSON.stringify(result.map(c => ({ carrier: c.carrier, country: c.country, onTimeRate: c.onTimeRate() })), null, 2)}`;
+      },
+      "transform-count": () => {
+        const byStatus = countByCategory(allShipments, s => s.status);
+        return `countByCategory(allShipments, s => s.status)\n→ ${JSON.stringify(byStatus, null, 2)}`;
+      },
+      "transform-sum": () => {
+        const total = sumBy(allShipments, s => s.weightKg);
+        return `sumBy(allShipments, s => s.weightKg)\n→ ${total} kg`;
+      },
+      "transform-avg": () => {
+        const avg = averageBy(allInventory, i => i.unitCostEur);
+        return `averageBy(allInventory, i => i.unitCostEur)\n→ ${avg?.toFixed(2)} €`;
+      },
+      "transform-max": () => {
+        const max = maxBy(allShipments, s => s.weightKg);
+        return `maxBy(allShipments, s => s.weightKg)\n→ { item: ${max?.item.id}, value: ${max?.value} kg }`;
+      },
+      "transform-min": () => {
+        const min = minBy(allShipments, s => s.weightKg);
+        return `minBy(allShipments, s => s.weightKg)\n→ { item: ${min?.item.id}, value: ${min?.value} kg }`;
+      },
+      "validate-numeric": () => {
+        const r1 = inNumericRange(5, { min: 0, max: 10 });
+        const r2 = inNumericRange(15, { min: 0, max: 10 });
+        const r3 = inNumericRange(-1, { min: 0 });
+        const r4 = inNumericRange(100, { max: 50 });
+        const r5 = inNumericRange(8, {});
+        return [
+          `inNumericRange(5, { min:0, max:10 })   → ${r1}`,
+          `inNumericRange(15, { min:0, max:10 })  → ${r2}`,
+          `inNumericRange(-1, { min:0 })          → ${r3}`,
+          `inNumericRange(100, { max:50 })         → ${r4}`,
+          `inNumericRange(8, {})                   → ${r5}`,
+        ].join("\n");
+      },
+      "validate-match": () => {
+        const r1 = matchesRule(inventorySkuA100, { field: "warehouseCode", equals: "ZGZ" });
+        const r2 = matchesRule(inventorySkuA100, { field: "warehouseCode", equals: "LA" });
+        const r3 = matchesRule(inventorySkuA100, { field: "warehouseCode", in: ["LA", "ZGZ"] });
+        const r4 = matchesRule(inventorySkuA100, { field: "quantityAvailable", range: { min: 30, max: 100 } });
+        const r5 = matchesRule(inventorySkuA100, { predicate: item => item.unitCostEur > 20 });
+        return [
+          `matchesRule(inventorySkuA100, { field:"warehouseCode", equals:"ZGZ" }) → ${r1}`,
+          `matchesRule(inventorySkuA100, { field:"warehouseCode", equals:"LA" })  → ${r2}`,
+          `matchesRule(inventorySkuA100, { field:"warehouseCode", in:["LA","ZGZ"] }) → ${r3}`,
+          `matchesRule(inventorySkuA100, { field:"quantityAvailable", range:{min:30,max:100} }) → ${r4}`,
+          `matchesRule(inventorySkuA100, { predicate: i => i.unitCostEur > 20 }) → ${r5}`,
+        ].join("\n");
+      },
+    };
+
+    document.querySelectorAll("[data-test]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.test;
+        const output = tests[key]();
+        const target = key.startsWith("filter") ? outFilters
+          : key.startsWith("transform") ? outTransforms
+          : outValidations;
+        target.textContent = output;
+      });
+    });
+
+    // Auto-run first filter test on load
+    tests["filter-shipments"]();
+    outFilters.textContent = tests["filter-shipments"]();
+  </script>
+</body>
+</html>
