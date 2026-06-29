@@ -34,7 +34,7 @@ export function ConfirmDialog({
     <dialog
       ref={dialogRef}
       onClose={onCancel}
-      className="w-full max-w-md mt-5 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-100 backdrop:bg-black/60"
+      className="w-full mx-auto max-w-md mt-5 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-100 backdrop:bg-black/60"
     >
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="mt-2 text-sm text-slate-300">{message}</p>
