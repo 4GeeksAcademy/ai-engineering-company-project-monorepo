@@ -38,7 +38,7 @@ export function CandidateForm({
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="w-full max-w-lg rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-100 backdrop:bg-black/60"
+      className="w-full max-w-lg mx-auto mt-5 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-100 backdrop:bg-black/60"
     >
       <h2 className="text-lg font-semibold">
         {candidate ? "Editar candidatura" : "Nueva candidatura"}
