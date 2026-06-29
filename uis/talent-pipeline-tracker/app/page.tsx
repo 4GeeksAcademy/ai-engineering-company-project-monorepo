@@ -1,65 +1,103 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useCallback, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCandidates } from "@/hooks/useCandidates";
+import { CandidateFilters } from "@/components/candidates/CandidateFilters";
+import { CandidateList } from "@/components/candidates/CandidateList";
+import { CandidateForm } from "@/components/candidates/CandidateForm";
+import type { CandidateStatus, CandidateStage } from "@/lib/types";
+import { CANDIDATE_STATUS_VALUES, CANDIDATE_STAGE_VALUES } from "@/lib/constants";
+
+function parseStatus(value: string | null): CandidateStatus | undefined {
+  if (value && CANDIDATE_STATUS_VALUES.includes(value as CandidateStatus)) {
+    return value as CandidateStatus;
+  }
+  return undefined;
+}
+
+function parseStage(value: string | null): CandidateStage | undefined {
+  if (value && CANDIDATE_STAGE_VALUES.includes(value as CandidateStage)) {
+    return value as CandidateStage;
+  }
+  return undefined;
+}
+
+export default function HomePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [formOpen, setFormOpen] = useState(false);
+
+  const status = parseStatus(searchParams.get("status"));
+  const stage = parseStage(searchParams.get("stage"));
+  const search = searchParams.get("search") ?? undefined;
+  const page = Number(searchParams.get("page") ?? "1");
+
+  const { candidates, total, page: currentPage, totalPages, loading, error, refetch } =
+    useCandidates({ status, stage, search, page, limit: 20 });
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      router.push(`/candidates/${id}?from=/&${searchParams.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", String(newPage));
+      router.push(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  const handleSaved = useCallback(
+    () => {
+      refetch();
+      setFormOpen(false);
+    },
+    [refetch],
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Talent Tracker</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Pipeline de reclutamiento — {total} candidaturas
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        <button
+          onClick={() => setFormOpen(true)}
+          className="rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400"
+        >
+          Nueva aplicación
+        </button>
+      </div>
+
+      <CandidateFilters />
+
+      <div className="mt-4">
+        <CandidateList
+          candidates={candidates}
+          total={total}
+          page={currentPage}
+          totalPages={totalPages}
+          loading={loading}
+          error={error}
+          onSelect={handleSelect}
+          onPageChange={handlePageChange}
+          onRetry={refetch}
+        />
+      </div>
+
+      <CandidateForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }
