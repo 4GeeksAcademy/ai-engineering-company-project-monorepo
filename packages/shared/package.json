@@ -5,7 +5,9 @@
   "description": "Shared types for AI Engineering transversal projects",
   "main": "index.ts",
   "types": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "keywords": [
     "types",
     "shared"

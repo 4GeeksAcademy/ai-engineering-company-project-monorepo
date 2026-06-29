@@ -58,6 +58,14 @@ ai-engineering-company-project-template/
 4. **Review** each top-level folder `README.md` to understand intended responsibilities (`apps/`, `data/`, `skills/`, etc.).
 5. **Start implementing** milestone deliverables in `apps/`, reusing `packages/shared/` and `data/` as needed.
 
+### TypeScript validation
+
+For TypeScript consistency checks in the shared package, run:
+
+- `npm run typecheck --prefix packages/shared`
+
+This executes `tsc --noEmit` and validates types without generating build artifacts.
+
 ---
 
 ## Milestones (reference)

@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrackFlow Lead Lab</title>
+    <meta
+      name="description"
+      content="Laboratorio visual para pruebas de funciones TypeScript de gestion de leads en TrackFlow."
+    />
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-stone-100 text-slate-900 antialiased">
+    <div class="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+      <header class="mb-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">TrackFlow Tech</p>
+        <h1 class="mt-2 text-3xl font-black tracking-tight text-slate-900">Laboratorio de Leads</h1>
+        <p class="mt-2 text-sm text-slate-600">
+          Interfaz de prueba para busqueda, filtrado, ordenamiento, agregaciones y validaciones.
+        </p>
+      </header>
+
+      <main class="grid gap-6 lg:grid-cols-[360px_1fr]">
+        <aside class="space-y-5">
+          <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Busqueda</h2>
+            <div class="mt-4 space-y-3">
+              <label class="block text-sm font-semibold text-slate-700" for="inputBusqueda">
+                Email o nombre de empresa
+              </label>
+              <input
+                id="inputBusqueda"
+                type="text"
+                placeholder="ej: ops@modavera.com o BellezaViva"
+                class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none ring-emerald-500 transition focus:ring"
+              />
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  id="btnBusquedaLineal"
+                  type="button"
+                  class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+                >
+                  Busqueda Lineal
+                </button>
+                <button
+                  id="btnBusquedaBinaria"
+                  type="button"
+                  class="rounded-lg bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800"
+                >
+                  Busqueda Binaria
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Filtrado</h2>
+            <div class="mt-4 space-y-3">
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-slate-700" for="filtroPais">Pais</label>
+                <select id="filtroPais" class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm">
+                  <option value="">Todos</option>
+                  <option>Estados Unidos</option>
+                  <option>España</option>
+                  <option>Ambos</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-slate-700" for="filtroProducto">Tipo de producto</label>
+                <select id="filtroProducto" class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm">
+                  <option value="">Todos</option>
+                  <option>Moda</option>
+                  <option>Electrónica</option>
+                  <option>Cosmética</option>
+                  <option>Alimentación</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <button
+                id="btnFiltrar"
+                type="button"
+                class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
+              >
+                Aplicar Filtro
+              </button>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Ordenamiento</h2>
+            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                id="btnOrdenAsc"
+                type="button"
+                class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-900 hover:bg-emerald-100"
+              >
+                Ascendente
+              </button>
+              <button
+                id="btnOrdenDesc"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-900 hover:bg-rose-100"
+              >
+                Descendente
+              </button>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Agregaciones</h2>
+            <div class="mt-4">
+              <button
+                id="btnReporte"
+                type="button"
+                class="w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800"
+              >
+                Generar Reporte
+              </button>
+            </div>
+            <div class="mt-2">
+              <button
+                id="btnValidar"
+                type="button"
+                class="w-full rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm font-bold text-violet-900 hover:bg-violet-100"
+              >
+                Validar Leads
+              </button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="space-y-4">
+          <div id="notificaciones" class="hidden rounded-xl border px-4 py-3 text-sm font-semibold"></div>
+
+          <div class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <h2 class="text-xl font-black tracking-tight text-slate-900">Resultados</h2>
+              <span id="contadorResultados" class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-slate-700">
+                0 leads
+              </span>
+            </div>
+
+            <div class="overflow-auto">
+              <table class="min-w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr class="border-b border-stone-200 text-xs uppercase tracking-wide text-slate-500">
+                    <th class="py-2 pr-3">Empresa</th>
+                    <th class="py-2 pr-3">Email</th>
+                    <th class="py-2 pr-3">Pais</th>
+                    <th class="py-2 pr-3">Producto</th>
+                    <th class="py-2 pr-3">Volumen</th>
+                    <th class="py-2 pr-3">Servicios</th>
+                  </tr>
+                </thead>
+                <tbody id="resultados" class="divide-y divide-stone-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Salida de Metricas</h3>
+            <pre id="salidaMetricas" class="mt-3 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">Presiona "Generar Reporte" para ver metricas.</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      /**
+       * Tipos para soporte del mock local.
+       * Si prefieres usar solo JS compilado, puedes borrar estos JSDoc.
+       */
+
+      /** @typedef {'Estados Unidos'|'España'|'Ambos'|'Otro'} PaisOperacion */
+      /** @typedef {'Moda'|'Electrónica'|'Cosmética'|'Alimentación'|'Otro'} TipoProducto */
+      /** @typedef {'0-100'|'101-500'|'501-2000'|'2000+'|'No estoy seguro'} VolumenMensual */
+      /** @typedef {'Almacenaje'|'Última milla'|'Logística inversa'} ServicioInteres */
+      /** @typedef {'Sí'|'No'|'Estoy evaluando opciones'} TrabajaCon3PL */
+
+      /**
+       * @typedef {Object} Lead
+       * @property {string} nombreEmpresa
+       * @property {string} personaContacto
+       * @property {string} emailCorporativo
+       * @property {string} telefono
+       * @property {string=} sitioWeb
+       * @property {PaisOperacion} paisOperacion
+       * @property {TipoProducto} tipoProducto
+       * @property {VolumenMensual} volumenMensual
+       * @property {ServicioInteres[]} serviciosInteres
+       * @property {TrabajaCon3PL} trabajaCon3PL
+       * @property {string=} comentarios
+       * @property {boolean} aceptaPrivacidad
+       */
+
+      // AQUÍ: Se intentan importar automaticamente funciones reales desde ./dist/utils/*.js.
+      // Si esos archivos no existen aun, se usan fallbacks locales para que puedas probar la UI.
+
+      /** @type {Lead[]} */
+      const leadsMock = [
+        {
+          nombreEmpresa: 'ModaVera',
+          personaContacto: 'Lucia Herrera',
+          emailCorporativo: 'ops@modavera.com',
+          telefono: '+1 213 555 1122',
+          sitioWeb: 'https://modavera.com',
+          paisOperacion: 'Estados Unidos',
+          tipoProducto: 'Moda',
+          volumenMensual: '101-500',
+          serviciosInteres: ['Almacenaje', 'Última milla'],
+          trabajaCon3PL: 'Sí',
+          comentarios: 'Buscamos consolidar fulfillment para temporada alta.',
+          aceptaPrivacidad: true,
+        },
+        {
+          nombreEmpresa: 'ElectroNube',
+          personaContacto: 'Carlos Mejia',
+          emailCorporativo: 'logistica@electronube.es',
+          telefono: '+34 976 222 900',
+          sitioWeb: 'https://electronube.es',
+          paisOperacion: 'España',
+          tipoProducto: 'Electrónica',
+          volumenMensual: '501-2000',
+          serviciosInteres: ['Almacenaje', 'Logística inversa'],
+          trabajaCon3PL: 'Estoy evaluando opciones',
+          comentarios: 'Necesitamos trazabilidad en devoluciones.',
+          aceptaPrivacidad: true,
+        },
+        {
+          nombreEmpresa: 'BellezaViva',
+          personaContacto: 'Ana Pardo',
+          emailCorporativo: 'supply@bellezaviva.com',
+          telefono: '+34 91 555 0101',
+          sitioWeb: 'https://bellezaviva.com',
+          paisOperacion: 'Ambos',
+          tipoProducto: 'Cosmética',
+          volumenMensual: '2000+',
+          serviciosInteres: ['Almacenaje', 'Última milla', 'Logística inversa'],
+          trabajaCon3PL: 'No',
+          comentarios: 'Operacion omnicanal entre US y ES.',
+          aceptaPrivacidad: true,
+        },
+        {
+          nombreEmpresa: 'FreshPocket',
+          personaContacto: 'Diego Cano',
+          emailCorporativo: 'contacto@freshpocket.co',
+          telefono: '+57 601 444 9988',
+          sitioWeb: 'https://freshpocket.co',
+          paisOperacion: 'Otro',
+          tipoProducto: 'Alimentación',
+          volumenMensual: '0-100',
+          serviciosInteres: ['Última milla'],
+          trabajaCon3PL: 'Sí',
+          comentarios: 'Piloto inicial para expansion internacional.',
+          aceptaPrivacidad: true,
+        },
+      ];
+
+      // Implementaciones fallback para que el laboratorio funcione al abrir el HTML.
+      // Si se detectan modulos JS compilados en ./dist/utils, se reemplazan automaticamente.
+      const fallbackApi = {
+        buscarLeadLineal: (leads, email) => leads.find((lead) => lead.emailCorporativo === email) ?? null,
+        buscarLeadBinario: (leadsOrdenados, nombreEmpresa) => {
+          let izquierda = 0;
+          let derecha = leadsOrdenados.length - 1;
+          while (izquierda <= derecha) {
+            const medio = Math.floor((izquierda + derecha) / 2);
+            const nombreActual = leadsOrdenados[medio].nombreEmpresa;
+            if (nombreActual === nombreEmpresa) return medio;
+            if (nombreActual < nombreEmpresa) izquierda = medio + 1;
+            else derecha = medio - 1;
+          }
+          return -1;
+        },
+        filtrarLeads: (leads, criterios) => {
+          const criteriosActivos = Object.entries(criterios).filter(([, valor]) => valor !== '');
+          if (criteriosActivos.length === 0) return [...leads];
+          return leads.filter((lead) =>
+            criteriosActivos.every(([campo, valor]) => lead[campo] === valor)
+          );
+        },
+        ordenarLeadsPorNombreEmpresa: (leads, direccion = 'asc') =>
+          [...leads].sort((leadA, leadB) => {
+            const comparacion = leadA.nombreEmpresa.localeCompare(leadB.nombreEmpresa, 'es', {
+              sensitivity: 'base',
+            });
+            return direccion === 'asc' ? comparacion : -comparacion;
+          }),
+        contarLeadsPorCategoria: (leads) =>
+          leads.reduce(
+            (acumulado, lead) => {
+              acumulado[lead.tipoProducto] = (acumulado[lead.tipoProducto] ?? 0) + 1;
+              return acumulado;
+            },
+            { Moda: 0, 'Electrónica': 0, 'Cosmética': 0, 'Alimentación': 0, Otro: 0 }
+          ),
+        contarLeadsPorPaisOperacion: (leads) =>
+          leads.reduce(
+            (acumulado, lead) => {
+              acumulado[lead.paisOperacion] = (acumulado[lead.paisOperacion] ?? 0) + 1;
+              return acumulado;
+            },
+            { 'Estados Unidos': 0, España: 0, Ambos: 0, Otro: 0 }
+          ),
+        calcularPorcentaje3PLActivo: (leads) =>
+          leads.length === 0
+            ? 0
+            : (leads.filter((lead) => lead.trabajaCon3PL === 'Sí').length / leads.length) * 100,
+        obtenerMaximosYMinimos: (leads) => {
+          if (leads.length === 0) return { maxServicios: 0, minServicios: 0 };
+          return leads.reduce(
+            (acumulado, lead) => ({
+              maxServicios: Math.max(acumulado.maxServicios, lead.serviciosInteres.length),
+              minServicios: Math.min(acumulado.minServicios, lead.serviciosInteres.length),
+            }),
+            { maxServicios: 0, minServicios: Number.POSITIVE_INFINITY }
+          );
+        },
+        validarLead: (lead) => {
+          const errores = {};
+
+          const nombreEmpresa = typeof lead.nombreEmpresa === 'string' ? lead.nombreEmpresa.trim() : '';
+          if (nombreEmpresa.length < 2) {
+            errores.nombreEmpresa = 'El nombre de la empresa debe tener al menos 2 caracteres';
+          }
+
+          const personaContacto = typeof lead.personaContacto === 'string' ? lead.personaContacto.trim() : '';
+          const tieneNombreYApellido = personaContacto.includes(' ') && personaContacto.split(' ').filter(Boolean).length >= 2;
+          if (!tieneNombreYApellido) {
+            errores.personaContacto = 'Ingresa nombre y apellido del contacto';
+          }
+
+          const emailCorporativo = typeof lead.emailCorporativo === 'string' ? lead.emailCorporativo.trim() : '';
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCorporativo)) {
+            errores.emailCorporativo = 'Ingresa un email corporativo válido (ejemplo: <nombre@empresa.com>)';
+          }
+
+          const telefono = typeof lead.telefono === 'string' ? lead.telefono.trim() : '';
+          if (!telefono.startsWith('+')) {
+            errores.telefono = 'El teléfono debe incluir código de país (ejemplo: +1 213 555 0147)';
+          }
+
+          if (lead.sitioWeb !== undefined && lead.sitioWeb !== '') {
+            const sitioWeb = typeof lead.sitioWeb === 'string' ? lead.sitioWeb.trim() : '';
+            if (!(sitioWeb.startsWith('http://') || sitioWeb.startsWith('https://'))) {
+              errores.sitioWeb = 'Si incluyes sitio web, debe ser una URL válida';
+            }
+          }
+
+          if (lead.comentarios !== undefined) {
+            const comentariosCrudos = typeof lead.comentarios === 'string' ? lead.comentarios : '';
+            if (comentariosCrudos.length > 500) {
+              const restantes = 500 - comentariosCrudos.length;
+              errores.comentarios = `Los comentarios no pueden exceder 500 caracteres (quedan ${restantes})`;
+            }
+          }
+
+          if (lead.aceptaPrivacidad !== true) {
+            errores.aceptaPrivacidad = 'Debes aceptar la política de privacidad para continuar';
+          }
+
+          return {
+            valido: Object.keys(errores).length === 0,
+            errores,
+          };
+        },
+        obtenerAdvertenciaVolumenBajo: (lead) =>
+          lead.volumenMensual === '0-100'
+            ? 'Para volúmenes menores a 100 envíos mensuales, nuestros servicios podrían no ser la solución más eficiente. ¿Seguro que quieres continuar?'
+            : null,
+      };
+
+      let api = { ...fallbackApi };
+      let origenApi = 'fallback local';
+
+      let estadoLeads = [...leadsMock];
+
+      async function conectarFuncionesCompiladas() {
+        try {
+          const [searchModule, collectionsModule, transformationsModule, validationsModule] = await Promise.all([
+            import('./src/utils/search.ts'),
+            import('./src/utils/collections.ts'),
+            import('./src/utils/transformations.ts'),
+            import('./src/utils/validations.ts'),
+          ]);
+
+          const funcionesConectadas = {
+            ...searchModule,
+            ...collectionsModule,
+            ...transformationsModule,
+            ...validationsModule,
+          };
+
+          api = { ...fallbackApi, ...funcionesConectadas };
+          origenApi = 'modulos reales en src';
+        } catch {
+          api = { ...fallbackApi };
+          origenApi = 'fallback local';
+        }
+      }
+
+      const resultadosElement = document.getElementById('resultados');
+      const notificacionesElement = document.getElementById('notificaciones');
+      const contadorResultadosElement = document.getElementById('contadorResultados');
+      const salidaMetricasElement = document.getElementById('salidaMetricas');
+
+      const inputBusqueda = document.getElementById('inputBusqueda');
+      const filtroPais = document.getElementById('filtroPais');
+      const filtroProducto = document.getElementById('filtroProducto');
+
+      const btnBusquedaLineal = document.getElementById('btnBusquedaLineal');
+      const btnBusquedaBinaria = document.getElementById('btnBusquedaBinaria');
+      const btnFiltrar = document.getElementById('btnFiltrar');
+      const btnOrdenAsc = document.getElementById('btnOrdenAsc');
+      const btnOrdenDesc = document.getElementById('btnOrdenDesc');
+      const btnReporte = document.getElementById('btnReporte');
+      const btnValidar = document.getElementById('btnValidar');
+
+      function notificar(tipo, mensaje) {
+        notificacionesElement.classList.remove('hidden', 'border-emerald-300', 'bg-emerald-50', 'text-emerald-800', 'border-rose-300', 'bg-rose-50', 'text-rose-800', 'border-amber-300', 'bg-amber-50', 'text-amber-800');
+        if (tipo === 'ok') {
+          notificacionesElement.classList.add('border-emerald-300', 'bg-emerald-50', 'text-emerald-800');
+        } else if (tipo === 'warn') {
+          notificacionesElement.classList.add('border-amber-300', 'bg-amber-50', 'text-amber-800');
+        } else {
+          notificacionesElement.classList.add('border-rose-300', 'bg-rose-50', 'text-rose-800');
+        }
+        notificacionesElement.textContent = mensaje;
+      }
+
+      function renderLeads(leads) {
+        resultadosElement.innerHTML = '';
+        contadorResultadosElement.textContent = `${leads.length} lead${leads.length === 1 ? '' : 's'}`;
+
+        if (leads.length === 0) {
+          resultadosElement.innerHTML =
+            '<tr><td colspan="6" class="py-6 text-center text-slate-500">No hay resultados para mostrar.</td></tr>';
+          return;
+        }
+
+        for (const lead of leads) {
+          const fila = document.createElement('tr');
+          fila.className = 'hover:bg-stone-50';
+          fila.innerHTML = `
+            <td class="py-3 pr-3 font-semibold">${lead.nombreEmpresa}</td>
+            <td class="py-3 pr-3">${lead.emailCorporativo}</td>
+            <td class="py-3 pr-3">${lead.paisOperacion}</td>
+            <td class="py-3 pr-3">${lead.tipoProducto}</td>
+            <td class="py-3 pr-3">${lead.volumenMensual}</td>
+            <td class="py-3 pr-3">${lead.serviciosInteres.join(', ')}</td>
+          `;
+          resultadosElement.appendChild(fila);
+        }
+      }
+
+      btnBusquedaLineal.addEventListener('click', () => {
+        const termino = inputBusqueda.value.trim();
+        if (!termino) {
+          notificar('error', 'Ingresa un email para ejecutar la búsqueda lineal.');
+          return;
+        }
+
+        const lead = api.buscarLeadLineal(leadsMock, termino);
+        if (!lead) {
+          notificar('error', `No se encontró lead con email exacto: ${termino}`);
+          renderLeads([]);
+          return;
+        }
+
+        const advertencia = api.obtenerAdvertenciaVolumenBajo(lead);
+        if (advertencia) notificar('warn', advertencia);
+        else notificar('ok', `Lead encontrado: ${lead.nombreEmpresa}`);
+        renderLeads([lead]);
+      });
+
+      btnBusquedaBinaria.addEventListener('click', () => {
+        const termino = inputBusqueda.value.trim();
+        if (!termino) {
+          notificar('error', 'Ingresa una empresa para ejecutar la búsqueda binaria.');
+          return;
+        }
+
+        const ordenados = api.ordenarLeadsPorNombreEmpresa(leadsMock, 'asc');
+        const indice = api.buscarLeadBinario(ordenados, termino);
+        if (indice === -1) {
+          notificar('error', `No se encontró empresa exacta: ${termino}`);
+          renderLeads([]);
+          return;
+        }
+
+        notificar('ok', `Empresa encontrada en índice ${indice} del array ordenado.`);
+        renderLeads([ordenados[indice]]);
+      });
+
+      btnFiltrar.addEventListener('click', () => {
+        const criterios = {
+          paisOperacion: filtroPais.value,
+          tipoProducto: filtroProducto.value,
+        };
+
+        estadoLeads = api.filtrarLeads(leadsMock, criterios);
+        if (estadoLeads.length === 0) {
+          notificar('error', 'El filtro no devolvió resultados.');
+        } else {
+          notificar('ok', `Filtro aplicado: ${estadoLeads.length} resultado(s).`);
+        }
+        renderLeads(estadoLeads);
+      });
+
+      btnOrdenAsc.addEventListener('click', () => {
+        estadoLeads = api.ordenarLeadsPorNombreEmpresa(estadoLeads.length ? estadoLeads : leadsMock, 'asc');
+        notificar('ok', 'Leads ordenados de forma ascendente por nombre de empresa.');
+        renderLeads(estadoLeads);
+      });
+
+      btnOrdenDesc.addEventListener('click', () => {
+        estadoLeads = api.ordenarLeadsPorNombreEmpresa(estadoLeads.length ? estadoLeads : leadsMock, 'desc');
+        notificar('ok', 'Leads ordenados de forma descendente por nombre de empresa.');
+        renderLeads(estadoLeads);
+      });
+
+      btnReporte.addEventListener('click', () => {
+        const base = estadoLeads.length ? estadoLeads : leadsMock;
+        const resumenValidacion = base.reduce(
+          (acumulado, lead) => {
+            const resultado = api.validarLead(lead);
+            if (resultado.valido) acumulado.validos += 1;
+            else {
+              acumulado.invalidos += 1;
+              acumulado.errores.push({ empresa: lead.nombreEmpresa, errores: resultado.errores });
+            }
+            return acumulado;
+          },
+          { validos: 0, invalidos: 0, errores: [] }
+        );
+
+        const metricas = {
+          origenFunciones: origenApi,
+          totalLeads: base.length,
+          porCategoria: api.contarLeadsPorCategoria(base),
+          porPaisOperacion: api.contarLeadsPorPaisOperacion(base),
+          porcentaje3PLActivo: `${api.calcularPorcentaje3PLActivo(base).toFixed(2)}%`,
+          extremosServicios: api.obtenerMaximosYMinimos(base),
+          validacion: resumenValidacion,
+        };
+
+        salidaMetricasElement.textContent = JSON.stringify(metricas, null, 2);
+        notificar('ok', 'Reporte generado correctamente.');
+      });
+
+      btnValidar.addEventListener('click', () => {
+        const base = estadoLeads.length ? estadoLeads : leadsMock;
+        const fallos = [];
+
+        for (const lead of base) {
+          const resultado = api.validarLead(lead);
+          if (!resultado.valido) {
+            fallos.push({ empresa: lead.nombreEmpresa, errores: resultado.errores });
+          }
+        }
+
+        if (fallos.length === 0) {
+          notificar('ok', `Validación completada: ${base.length} lead(s) validos.`);
+          salidaMetricasElement.textContent = JSON.stringify(
+            { origenFunciones: origenApi, validacion: { validos: base.length, invalidos: 0, errores: [] } },
+            null,
+            2
+          );
+        } else {
+          notificar('error', `Validación completada: ${fallos.length} lead(s) con errores.`);
+          salidaMetricasElement.textContent = JSON.stringify(
+            { origenFunciones: origenApi, validacion: { validos: base.length - fallos.length, invalidos: fallos.length, errores: fallos } },
+            null,
+            2
+          );
+        }
+      });
+
+      await conectarFuncionesCompiladas();
+      renderLeads(estadoLeads);
+      notificar('ok', `Laboratorio listo. Fuente de funciones activa: ${origenApi}.`);
+    </script>
+  </body>
+</html>
