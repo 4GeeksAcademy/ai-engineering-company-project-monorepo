@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type HeroProps = {
   ctaHref: string;
 };
@@ -31,11 +33,12 @@ export function Hero({ ctaHref }: HeroProps) {
         </div>
 
         <figure className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl shadow-cyan-900/30">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=80"
             alt="Centro logistico moderno con bandas de picking y cajas preparadas para ultima milla"
             className="h-full w-full object-cover"
-            loading="lazy"
+            width={1400}
+            height={900}
           />
         </figure>
       </div>
