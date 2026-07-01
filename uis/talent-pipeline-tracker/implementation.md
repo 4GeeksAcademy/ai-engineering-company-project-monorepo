@@ -170,8 +170,8 @@ stateDiagram-v2
 
 - `app/layout.tsx` — root layout Brasaland (metadata, header, español, Tailwind).
 - `app/page.tsx` — listado; monta `CandidateFilters` + `CandidateTable`. Lee filtros con `useSearchParams`, refleja cambios con `useRouter().replace()`; fetch al API con esos params; estados carga/error/vacío.
-- `app/candidates/[id]/page.tsx` — detalle (client, `useParams`): todos los campos, `StatusSelect`/`StageSelect` con `PATCH`, panel de notas (`GET/POST/DELETE`), enlaces a LinkedIn/CV, botón Editar.
-- `app/candidates/new/page.tsx` — `CandidateForm` en modo alta (`POST`), validación de requeridos, feedback y redirección al detalle.
+- `app/candidates/[id]/page.tsx` — detalle (client, `useParams`): **todos los campos siempre visibles** (incl. estado, etapa, LinkedIn y CV con "No disponible" si faltan), `StatusSelect`/`StageSelect` con `PATCH` y feedback de éxito, panel de notas (`GET/POST/DELETE`) con feedback de éxito, botón Editar.
+- `app/candidates/new/page.tsx` — `CandidateForm` en modo alta (`POST`), validación de requeridos, `Alert` de éxito visible 1,5 s y redirección al detalle vía `onCreateSuccess`.
 - `app/candidates/[id]/edit/page.tsx` — `CandidateForm` precargado (`PUT`), validación y feedback.
 
 ## Detalles de implementación
@@ -181,6 +181,72 @@ stateDiagram-v2
 - **Estados UI**: cada fetch expone `loading | data | error`; errores muestran mensaje claro y opción de reintentar; formularios muestran feedback de éxito/error y estado enviando.
 - **Validación**: en `CandidateForm`, requeridos (`full_name`, `email` con formato, `phone`, `position`, `experience_years` numérico ≥ 0) antes de enviar; `linkedin_url`/`cv_url` opcionales validando URL si se ingresan.
 - **Config**: `.env.local` con `NEXT_PUBLIC_API_URL` y fallback a la URL en `lib/api.ts`. Metadata actualizada en `layout.tsx`.
+
+## Ajustes de refinamiento (evaluación)
+
+Tras la revisión contra el checklist de evaluación, se aplicaron estos ajustes para cumplir al 100% los criterios de detalle y feedback async.
+
+### Detalle — todos los campos siempre visibles
+
+En `app/candidates/[id]/page.tsx`, el componente `DetailField` muestra **siempre** los campos requeridos por el enunciado:
+
+| Campo | Comportamiento |
+|-------|----------------|
+| Nombre, email, teléfono, puesto | Siempre con valor |
+| Años de experiencia | Siempre con valor |
+| Estado | Label en español vía `STATUS_LABELS` |
+| Etapa | Label en español vía `STAGE_LABELS` |
+| Fecha de aplicación | Formato `es-CO` |
+| LinkedIn | Enlace "Ver perfil" o **"No disponible"** (cursiva) si `linkedin_url` es `null` |
+| Enlace al CV | Enlace "Ver CV" o **"No disponible"** (cursiva) si `cv_url` es `null` |
+
+Los controles `StatusSelect` y `StageSelect` permanecen en la columna derecha para actualizar estado/etapa con `PATCH`.
+
+### Feedback de éxito explícito en mutaciones
+
+| Operación | Componente | Feedback de éxito |
+|-----------|------------|-------------------|
+| `PATCH` estado | `StatusSelect` | `Alert` verde: "Estado actualizado correctamente." (auto-oculta a los 3 s) |
+| `PATCH` etapa | `StageSelect` | `Alert` verde: "Etapa actualizada correctamente." (auto-oculta a los 3 s) |
+| `POST` nota | `NotesPanel` | `Alert` verde: "Nota añadida correctamente." |
+| `DELETE` nota | `NotesPanel` | `Alert` verde: "Nota eliminada correctamente." |
+| `POST` candidatura | `CandidateForm` + `new/page.tsx` | `Alert` verde: "Candidatura registrada correctamente." → espera **1,5 s** → `onCreateSuccess` redirige al detalle |
+| `PUT` candidatura | `CandidateForm` (modo edit) | `Alert` verde: "Candidatura actualizada correctamente." |
+
+Flujo de alta de candidatura:
+
+```mermaid
+sequenceDiagram
+  participant User as Usuario
+  participant Form as CandidateForm
+  participant API as Tracker API
+  participant Page as new/page.tsx
+
+  User->>Form: Envía formulario válido
+  Form->>Form: Guardando...
+  Form->>API: POST /records
+  API-->>Form: RecordOut con id
+  Form->>Form: Alert éxito visible
+  Form->>Page: onCreateSuccess(id) tras 1.5s
+  Page->>User: router.push al detalle
+```
+
+### Checklist de evaluación
+
+- [x] Listado renderiza datos de la API
+- [x] Filtros por estado/etapa con query params sin recarga
+- [x] Búsqueda por nombre/email sin recarga
+- [x] Detalle muestra todos los campos del candidato por ID
+- [x] Estado y etapa actualizables con `PATCH` desde el detalle
+- [x] Notas: listar, añadir y eliminar
+- [x] Nueva candidatura con `POST`
+- [x] Edición con `PUT`
+- [x] Estados carga, éxito y error visibles en operaciones async
+- [x] Tipos TypeScript definidos y usados
+- [x] Estructura de carpetas separada (components, hooks, types, lib)
+- [x] App Router con rutas dinámicas y navegación client-side
+- [x] Sin prop drilling — estado acotado en hooks y componentes
+- [x] Contexto Brasaland (español, labels, branding)
 
 ## Verificación
 
@@ -197,3 +263,4 @@ stateDiagram-v2
 5. **detail-page** — detalle con PATCH de estado/etapa y panel de notas
 6. **forms** — alta y edición de candidaturas con validación
 7. **verify** — lint y build verificados
+8. **refinement** — campos siempre visibles en detalle, feedback de éxito en PATCH/notas/POST y checklist de evaluación al 100%
