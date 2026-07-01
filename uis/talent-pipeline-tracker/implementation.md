@@ -1,4 +1,4 @@
-# Talent Pipeline Tracker — Plan de implementación
+# Talent Pipeline Tracker — Implementación
 
 Documentación del Hito 3: frontend del pipeline de candidaturas para el equipo de **People & Talent de Brasaland**.
 
@@ -28,6 +28,8 @@ Base `NEXT_PUBLIC_API_URL=https://playground.4geeks.com/tracker/api/v1`.
 
 Enfoque **client-side fetching** (cumple `async/await` + estados carga/éxito/error y actualización sin recarga). Páginas delgadas que montan componentes cliente; los filtros del listado viven en la URL vía `useSearchParams` y se envían como query params al API.
 
+### Navegación entre rutas
+
 ```mermaid
 flowchart LR
   List["/ (listado)"] -->|Link| Detail["/candidates/[id]"]
@@ -37,6 +39,123 @@ flowchart LR
   Detail -.->|"PATCH/notes"| API
   New -.->|POST| API
   Edit -.->|PUT| API
+```
+
+### Capas del frontend
+
+```mermaid
+flowchart TB
+  subgraph appLayer [App Router]
+    PageList["app/page.tsx"]
+    PageDetail["app/candidates/[id]/page.tsx"]
+    PageNew["app/candidates/new/page.tsx"]
+    PageEdit["app/candidates/[id]/edit/page.tsx"]
+  end
+
+  subgraph componentsLayer [Components]
+    Filters["CandidateFilters"]
+    Table["CandidateTable"]
+    Form["CandidateForm"]
+    Notes["NotesPanel"]
+    Selects["StatusSelect / StageSelect"]
+  end
+
+  subgraph hooksLayer [Hooks]
+    useCandidates["useCandidates"]
+    useCandidate["useCandidate"]
+    useNotes["useNotes"]
+  end
+
+  subgraph libLayer [Lib]
+    ApiClient["lib/api.ts"]
+    Constants["lib/constants.ts"]
+    Types["types/index.ts"]
+  end
+
+  API[(Tracker API REST)]
+
+  PageList --> Filters
+  PageList --> Table
+  PageDetail --> Selects
+  PageDetail --> Notes
+  PageNew --> Form
+  PageEdit --> Form
+
+  Filters --> useCandidates
+  Table --> useCandidates
+  PageDetail --> useCandidate
+  Notes --> useNotes
+  Selects --> ApiClient
+  Form --> ApiClient
+
+  useCandidates --> ApiClient
+  useCandidate --> ApiClient
+  useNotes --> ApiClient
+
+  ApiClient --> Types
+  ApiClient --> API
+  Filters --> Constants
+  Table --> Constants
+  Selects --> Constants
+```
+
+### Flujo de datos del listado
+
+```mermaid
+sequenceDiagram
+  participant User as Usuario
+  participant URL as URL query params
+  participant Filters as CandidateFilters
+  participant Hook as useCandidates
+  participant API as Tracker API
+  participant UI as CandidateTable
+
+  User->>Filters: Cambia estado, etapa o búsqueda
+  Filters->>URL: router.replace con status, stage, search
+  URL->>Hook: useSearchParams detecta cambio
+  Hook->>Hook: status = loading
+  Hook->>API: GET /records?status&stage&search&limit=100
+  alt Petición exitosa
+    API-->>Hook: PaginatedRecords
+    Hook->>UI: status = success, render tabla
+  else Petición fallida
+    API-->>Hook: ApiError
+    Hook->>UI: status = error, mensaje + reintentar
+  end
+```
+
+### Flujo de mutaciones sin recarga
+
+```mermaid
+sequenceDiagram
+  participant User as Usuario
+  participant UI as Componente UI
+  participant API as Tracker API
+  participant State as Estado local
+
+  User->>UI: Cambia estado/etapa, envía formulario o nota
+  UI->>UI: Muestra estado enviando
+  UI->>API: PATCH / PUT / POST / DELETE
+  alt Mutación exitosa
+    API-->>UI: RecordOut o Note actualizado
+    UI->>State: Actualiza sin router.refresh
+    UI->>User: Feedback de éxito
+  else Mutación fallida
+    API-->>UI: ApiError
+    UI->>User: Mensaje de error claro
+  end
+```
+
+### Estados async en la UI
+
+```mermaid
+stateDiagram-v2
+  [*] --> Loading: Inicia fetch o mutación
+  Loading --> Success: Respuesta OK
+  Loading --> Error: ApiError o red
+  Error --> Loading: Usuario reintenta
+  Success --> Loading: Cambio de filtros o refetch
+  Success --> Success: Mutación local sin recarga
 ```
 
 ## Estructura de carpetas

@@ -10,8 +10,11 @@ export default function NewCandidatePage() {
   const router = useRouter();
 
   const handleSubmit = async (data: RecordCreate) => {
-    const created = await createRecord(data);
-    router.push(`/candidates/${created.id}`);
+    return await createRecord(data);
+  };
+
+  const handleCreateSuccess = (id: string) => {
+    router.push(`/candidates/${id}`);
   };
 
   return (
@@ -32,7 +35,11 @@ export default function NewCandidatePage() {
         </p>
       </div>
 
-      <CandidateForm mode="create" onSubmit={handleSubmit} />
+      <CandidateForm
+        mode="create"
+        onSubmit={handleSubmit}
+        onCreateSuccess={handleCreateSuccess}
+      />
     </div>
   );
 }

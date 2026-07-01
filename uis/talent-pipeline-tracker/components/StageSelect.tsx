@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Alert from "@/components/Alert";
 import { patchRecord } from "@/lib/api";
 import { STAGE_OPTIONS } from "@/lib/constants";
 import type { RecordOut, Stage } from "@/types";
@@ -14,14 +15,23 @@ export default function StageSelect({
 }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeout = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [successMessage]);
 
   const handleChange = async (stage: Stage) => {
     if (stage === candidate.stage) return;
     setIsUpdating(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       const updated = await patchRecord(candidate.id, { stage });
       onUpdated(updated);
+      setSuccessMessage("Etapa actualizada correctamente.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo actualizar la etapa.",
@@ -37,7 +47,7 @@ export default function StageSelect({
         htmlFor="stage-select"
         className="mb-1 block text-sm font-medium text-stone-700"
       >
-        Etapa
+        Actualizar etapa
       </label>
       <select
         id="stage-select"
@@ -55,7 +65,16 @@ export default function StageSelect({
       {isUpdating && (
         <p className="mt-1 text-xs text-stone-500">Actualizando etapa...</p>
       )}
-      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+      {successMessage && (
+        <div className="mt-2">
+          <Alert variant="success" message={successMessage} />
+        </div>
+      )}
+      {error && (
+        <div className="mt-2">
+          <Alert variant="error" message={error} />
+        </div>
+      )}
     </div>
   );
 }

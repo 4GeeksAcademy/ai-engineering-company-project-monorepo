@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Alert from "@/components/Alert";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
@@ -19,21 +19,34 @@ export default function NotesPanel({ recordId }: { recordId: string }) {
     useNotes(recordId);
   const [content, setContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeout = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [successMessage]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!content.trim()) return;
 
+    setSuccessMessage(null);
     const success = await createNote(content.trim());
     if (success) {
       setContent("");
+      setSuccessMessage("Nota añadida correctamente.");
     }
   };
 
   const handleDelete = async (noteId: string) => {
     setDeletingId(noteId);
-    await removeNote(noteId);
+    setSuccessMessage(null);
+    const success = await removeNote(noteId);
     setDeletingId(null);
+    if (success) {
+      setSuccessMessage("Nota eliminada correctamente.");
+    }
   };
 
   return (
@@ -67,6 +80,11 @@ export default function NotesPanel({ recordId }: { recordId: string }) {
       {actionError && (
         <div className="mt-4">
           <Alert variant="error" message={actionError} />
+        </div>
+      )}
+      {successMessage && (
+        <div className="mt-4">
+          <Alert variant="success" message={successMessage} />
         </div>
       )}
 

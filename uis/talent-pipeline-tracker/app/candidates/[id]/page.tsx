@@ -10,6 +10,7 @@ import StageSelect from "@/components/StageSelect";
 import StatusBadge from "@/components/StatusBadge";
 import StatusSelect from "@/components/StatusSelect";
 import { useCandidate } from "@/hooks/useCandidate";
+import { STAGE_LABELS, STATUS_LABELS } from "@/lib/constants";
 
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("es-CO", {
@@ -22,18 +23,22 @@ function DetailField({
   label,
   value,
   href,
+  empty = false,
 }: {
   label: string;
   value: string;
   href?: string;
+  empty?: boolean;
 }) {
   return (
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">
         {label}
       </dt>
-      <dd className="mt-1 text-sm text-stone-900">
-        {href ? (
+      <dd
+        className={`mt-1 text-sm ${empty ? "text-stone-400 italic" : "text-stone-900"}`}
+      >
+        {href && !empty ? (
           <a
             href={href}
             target="_blank"
@@ -106,19 +111,26 @@ export default function CandidateDetailPage({
             value={String(candidate.experience_years)}
           />
           <DetailField
+            label="Estado"
+            value={STATUS_LABELS[candidate.status]}
+          />
+          <DetailField label="Etapa" value={STAGE_LABELS[candidate.stage]} />
+          <DetailField
             label="Fecha de aplicación"
             value={formatDate(candidate.applied_at)}
           />
-          {candidate.linkedin_url && (
-            <DetailField
-              label="LinkedIn"
-              value="Ver perfil"
-              href={candidate.linkedin_url}
-            />
-          )}
-          {candidate.cv_url && (
-            <DetailField label="CV" value="Ver CV" href={candidate.cv_url} />
-          )}
+          <DetailField
+            label="LinkedIn"
+            value={candidate.linkedin_url ? "Ver perfil" : "No disponible"}
+            href={candidate.linkedin_url ?? undefined}
+            empty={!candidate.linkedin_url}
+          />
+          <DetailField
+            label="Enlace al CV"
+            value={candidate.cv_url ? "Ver CV" : "No disponible"}
+            href={candidate.cv_url ?? undefined}
+            empty={!candidate.cv_url}
+          />
         </dl>
 
         <div className="space-y-4">

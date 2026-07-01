@@ -78,10 +78,12 @@ export default function CandidateForm({
   mode,
   initialData,
   onSubmit,
+  onCreateSuccess,
 }: {
   mode: "create" | "edit";
   initialData?: RecordOut;
-  onSubmit: (data: RecordCreate) => Promise<void>;
+  onSubmit: (data: RecordCreate) => Promise<void | RecordOut>;
+  onCreateSuccess?: (id: string) => void;
 }) {
   const [values, setValues] = useState<RecordCreate>(() =>
     toFormValues(initialData),
@@ -125,12 +127,15 @@ export default function CandidateForm({
     setSuccessMessage(null);
 
     try {
-      await onSubmit(payload);
+      const result = await onSubmit(payload);
       setSuccessMessage(
         mode === "create"
           ? "Candidatura registrada correctamente."
           : "Candidatura actualizada correctamente.",
       );
+      if (mode === "create" && result?.id && onCreateSuccess) {
+        setTimeout(() => onCreateSuccess(result.id), 1500);
+      }
     } catch (error) {
       setSubmitError(
         error instanceof Error

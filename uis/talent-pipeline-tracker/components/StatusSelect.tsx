@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Alert from "@/components/Alert";
 import { patchRecord } from "@/lib/api";
 import { STATUS_OPTIONS } from "@/lib/constants";
 import type { RecordOut, Status } from "@/types";
@@ -14,14 +15,23 @@ export default function StatusSelect({
 }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeout = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [successMessage]);
 
   const handleChange = async (status: Status) => {
     if (status === candidate.status) return;
     setIsUpdating(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       const updated = await patchRecord(candidate.id, { status });
       onUpdated(updated);
+      setSuccessMessage("Estado actualizado correctamente.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo actualizar el estado.",
@@ -37,7 +47,7 @@ export default function StatusSelect({
         htmlFor="status-select"
         className="mb-1 block text-sm font-medium text-stone-700"
       >
-        Estado
+        Actualizar estado
       </label>
       <select
         id="status-select"
@@ -55,7 +65,16 @@ export default function StatusSelect({
       {isUpdating && (
         <p className="mt-1 text-xs text-stone-500">Actualizando estado...</p>
       )}
-      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+      {successMessage && (
+        <div className="mt-2">
+          <Alert variant="success" message={successMessage} />
+        </div>
+      )}
+      {error && (
+        <div className="mt-2">
+          <Alert variant="error" message={error} />
+        </div>
+      )}
     </div>
   );
 }
