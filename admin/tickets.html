@@ -3,156 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Tickets | Nexova</title>
-    <meta
-      name="description"
-      content="Panel de agentes para tickets escalados por el chatbot de triaje inteligente."
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Nexova | Tickets</title>
+    <meta http-equiv="refresh" content="0; url=../uis/nexova/soporte-cliente/tickets.html" />
   </head>
-  <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
-    <header class="border-b border-blue-900 bg-blue-950 text-white">
-      <section class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <div>
-          <p class="text-xs uppercase tracking-widest text-blue-200">Nexova / Admin</p>
-          <h1 class="text-2xl font-bold">Panel de Agentes - Tickets Escalados</h1>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 text-sm">
-          <a href="../support.html" class="rounded-md border border-blue-300 px-3 py-2 text-blue-100 hover:bg-blue-900">Chatbot soporte</a>
-          <a href="../index.html" class="rounded-md border border-blue-300 px-3 py-2 text-blue-100 hover:bg-blue-900">Inicio</a>
-        </div>
-      </section>
-    </header>
-
-    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <section class="grid gap-4 sm:grid-cols-3" aria-label="Resumen de tickets">
-        <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-sm font-semibold text-slate-600">Tickets activos</h2>
-          <p id="metricActive" class="mt-2 text-3xl font-bold text-blue-950">0</p>
-        </article>
-        <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-sm font-semibold text-slate-600">Alta prioridad</h2>
-          <p id="metricHigh" class="mt-2 text-3xl font-bold text-rose-700">0</p>
-        </article>
-        <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-sm font-semibold text-slate-600">Resueltos</h2>
-          <p id="metricResolved" class="mt-2 text-3xl font-bold text-emerald-700">0</p>
-        </article>
-      </section>
-
-      <section class="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label="Listado de tickets">
-        <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 class="text-lg font-semibold text-blue-950">Tickets en seguimiento</h2>
-          <button id="refreshTickets" type="button" class="inline-flex items-center justify-center rounded-md border border-blue-300 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
-            Actualizar listado
-          </button>
-        </header>
-
-        <div class="mt-4 flex items-center justify-between border-b border-slate-200 pb-2">
-          <h4 class="text-sm font-semibold text-slate-700">Listado Activo</h4>
-          <div class="flex items-center gap-2">
-            <label for="sortTickets" class="text-xs font-medium text-slate-600">Ordenar por:</label>
-            <select id="sortTickets" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="desc">Mayor gravedad primero</option>
-              <option value="asc">Menor gravedad primero</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Encabezados de referencia para la lista -->
-        <header class="hidden sm:flex items-center px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-          <div class="sm:w-1/4">ID / Cliente</div>
-          <div class="sm:w-1/4 px-2">Asignado a</div>
-          <div class="flex-1 px-4">Descripción de la incidencia</div>
-          <div class="w-[160px] text-right pr-2">Fecha y Gravedad</div>
-        </header>
-
-        <div id="ticketsBoard" class="mt-2 flex flex-col gap-3"></div>
-      </section>
-
-      <section
-        id="ticketDetailOverlay"
-        class="fixed inset-0 z-40 hidden bg-slate-900/50 p-4 sm:p-6"
-        aria-label="Detalle de ticket"
-      >
-        <article class="mx-auto max-h-[90vh] max-w-4xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
-          <header class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Detalle de ticket</p>
-              <h2 id="detailTicketId" class="mt-1 text-2xl font-bold text-blue-950">TK-XXXXXX</h2>
-            </div>
-            <button id="closeTicketDetail" type="button" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
-              Cerrar
-            </button>
-          </header>
-
-          <section class="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
-            <article>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Cliente</h3>
-              <p id="detailClientName" class="mt-1 text-sm font-semibold text-slate-900">-</p>
-              <p id="detailClientEmail" class="text-sm text-slate-700">-</p>
-            </article>
-            <article>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Estado</h3>
-              <div class="mt-1 flex items-center gap-2">
-                <span id="detailSeverity" class="rounded-md border px-2 py-1 text-xs font-semibold">-</span>
-                <span id="detailStatus" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700">-</span>
-              </div>
-            </article>
-          </section>
-
-          <section class="mt-5">
-            <h3 class="text-sm font-semibold text-blue-950">Resumen del problema</h3>
-            <p id="detailSummary" class="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">-</p>
-          </section>
-
-          <section class="mt-5">
-            <h3 class="text-sm font-semibold text-blue-950">Historial de transcripcion</h3>
-            <div id="detailTranscript" class="mt-2 max-h-48 overflow-y-auto grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3"></div>
-          </section>
-
-          <section id="detailChatComposer" class="mt-5 rounded-md border border-blue-200 bg-blue-50 p-4">
-            <h3 class="text-sm font-semibold text-blue-950">Canal de seguimiento con cliente</h3>
-            <p id="detailChatHint" class="mt-1 text-xs text-blue-800">Puedes enviar mensajes mientras el ticket este abierto.</p>
-            <form id="detailChatForm" class="mt-3">
-              <label for="detailChatInput" class="sr-only">Escribe un mensaje al cliente</label>
-              <div class="flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="detailChatInput"
-                  name="detailChatInput"
-                  type="text"
-                  placeholder="Escribe una actualizacion para el cliente..."
-                  class="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
-                />
-                <button
-                  id="detailChatSend"
-                  type="submit"
-                  class="inline-flex items-center justify-center rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-                >
-                  Enviar mensaje
-                </button>
-              </div>
-            </form>
-          </section>
-
-          <section class="mt-5 rounded-md border border-blue-200 bg-blue-50 p-4">
-            <h3 class="text-sm font-semibold text-blue-950">Acciones operativas</h3>
-            <div class="mt-3 grid gap-2 sm:grid-cols-3">
-              <button id="actionContactClient" type="button" class="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
-                Contactar Cliente
-              </button>
-              <button id="actionVideoCall" type="button" class="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
-                Videollamada
-              </button>
-              <button id="actionInviteEngineer" type="button" class="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
-                Invitar Ingeniero
-              </button>
-            </div>
-          </section>
-        </article>
-      </section>
+  <body>
+    <main>
+      <p>Redireccionando al panel de tickets...</p>
+      <p>
+        Si no redirige automaticamente, abre
+        <a href="../uis/nexova/soporte-cliente/tickets.html">el panel de tickets</a>.
+      </p>
     </main>
-
-    <script src="tickets.js" defer></script>
   </body>
 </html>

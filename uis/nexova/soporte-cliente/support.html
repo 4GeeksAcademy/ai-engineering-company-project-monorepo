@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soporte | Triaje Inteligente Nexova</title>
+    <meta
+      name="description"
+      content="Canal de atencion al cliente con chatbot de triaje inteligente para generar tickets escalados."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
+    <header class="border-b border-blue-200 bg-white">
+      <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegacion principal">
+        <a href="../marketing-comunicacion/index.html" class="text-lg font-semibold tracking-wide text-blue-900">Nexova Solutions</a>
+        <div class="flex items-center gap-3 text-sm">
+          <a href="../marketing-comunicacion/index.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Inicio</a>
+          <a href="tickets.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Panel de tickets</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <section class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm sm:p-6">
+        <header>
+          <h1 class="text-2xl font-bold text-blue-950">Atencion al Cliente y Triaje Inteligente</h1>
+          <p class="mt-2 text-sm text-slate-700">
+            El asistente realiza filtrado inicial, intenta resolver y, si es necesario, escala automaticamente a ticket para agentes.
+          </p>
+        </header>
+
+        <section class="mt-5 rounded-xl border border-slate-200 bg-slate-50">
+          <div id="chatMessages" class="h-[420px] overflow-y-auto p-4" aria-live="polite" aria-label="Conversacion de soporte"></div>
+
+          <p id="chatStatus" class="px-4 pb-2 text-xs font-medium text-blue-700" aria-live="polite"></p>
+
+          <form id="chatForm" class="border-t border-slate-200 bg-white p-3 sm:p-4">
+            <label for="chatInput" class="sr-only">Escribe tu mensaje</label>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <input
+                id="chatInput"
+                name="chatInput"
+                type="text"
+                required
+                placeholder="Describe tu incidencia..."
+                class="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
+              />
+              <button
+                id="chatSendButton"
+                type="submit"
+                class="inline-flex items-center justify-center rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+              >
+                Enviar
+              </button>
+            </div>
+          </form>
+
+          <section id="ticketSuccess" class="hidden border-t border-emerald-200 bg-emerald-50 px-4 py-4" aria-live="polite">
+            <h2 class="text-sm font-semibold text-emerald-800">Ticket escalado correctamente</h2>
+            <p id="ticketSuccessText" class="mt-1 text-sm text-emerald-700"></p>
+            <a href="tickets.html" class="mt-3 inline-flex rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
+              Ver panel de agentes
+            </a>
+          </section>
+        </section>
+      </section>
+
+      <section class="mt-8 rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Laboratorio de utilidades del Hito 2">
+        <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-indigo-950">Laboratorio de Utilidades TypeScript</h2>
+            <p class="text-sm text-slate-700">Simula en UI las funciones de colecciones, búsqueda, scoring, agregaciones y validaciones del Hito 2.</p>
+          </div>
+          <span class="inline-flex w-fit items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">Base funcional de src + tests</span>
+        </header>
+
+        <section class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Controles</h3>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label for="labSkills" class="mb-1 block text-xs font-semibold text-slate-600">Skills (coma)</label>
+              <input id="labSkills" type="text" placeholder="TypeScript, React" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="labSeniority" class="mb-1 block text-xs font-semibold text-slate-600">Seniority</label>
+              <select id="labSeniority" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option value="all">Todos</option>
+                <option value="Junior">Junior</option>
+                <option value="Semi-Senior">Semi-Senior</option>
+                <option value="Senior">Senior</option>
+                <option value="Lead">Lead</option>
+                <option value="Executive">Executive</option>
+              </select>
+            </div>
+            <div>
+              <label for="labAvailability" class="mb-1 block text-xs font-semibold text-slate-600">Disponibilidad</label>
+              <select id="labAvailability" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option value="all">Todas</option>
+                <option value="Immediate">Immediate</option>
+                <option value="2 weeks">2 weeks</option>
+                <option value="1 month">1 month</option>
+                <option value="Not available">Not available</option>
+              </select>
+            </div>
+            <div>
+              <label for="labSortOrder" class="mb-1 block text-xs font-semibold text-slate-600">Orden salario</label>
+              <select id="labSortOrder" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option value="desc">Desc</option>
+                <option value="asc">Asc</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label for="labFindId" class="mb-1 block text-xs font-semibold text-slate-600">Buscar por ID</label>
+              <input id="labFindId" type="text" placeholder="C-2024-0451" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="labFindEmail" class="mb-1 block text-xs font-semibold text-slate-600">Buscar por Email</label>
+              <input id="labFindEmail" type="text" placeholder="maria@email.com" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="labBinarySalary" class="mb-1 block text-xs font-semibold text-slate-600">Búsqueda binaria salario</label>
+              <input id="labBinarySalary" type="number" min="0" step="100" placeholder="4200" class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div class="flex items-end gap-2">
+              <button id="labRun" type="button" class="w-full rounded-md bg-indigo-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-indigo-600">Aplicar</button>
+              <button id="labReset" type="button" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Métricas del laboratorio">
+          <article class="rounded-lg border border-slate-200 bg-white p-3">
+            <p class="text-[11px] uppercase tracking-wide text-slate-500">Visibles</p>
+            <p id="labMetricVisible" class="mt-1 text-xl font-bold text-slate-900">0</p>
+          </article>
+          <article class="rounded-lg border border-slate-200 bg-white p-3">
+            <p class="text-[11px] uppercase tracking-wide text-slate-500">Promedio salarial</p>
+            <p id="labMetricAvgSalary" class="mt-1 text-xl font-bold text-slate-900">$0</p>
+          </article>
+          <article class="rounded-lg border border-slate-200 bg-white p-3">
+            <p class="text-[11px] uppercase tracking-wide text-slate-500">Fill Rate</p>
+            <p id="labMetricFillRate" class="mt-1 text-xl font-bold text-slate-900">0%</p>
+          </article>
+          <article class="rounded-lg border border-slate-200 bg-white p-3">
+            <p class="text-[11px] uppercase tracking-wide text-slate-500">Top Skill</p>
+            <p id="labMetricTopSkill" class="mt-1 text-sm font-bold text-slate-900">-</p>
+          </article>
+        </section>
+
+        <section class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <h3 class="text-sm font-semibold text-slate-800">Resultados de búsqueda y validaciones</h3>
+          <p id="labSearchResults" class="mt-2 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">Sin ejecutar.</p>
+          <p id="labValidationResults" class="mt-2 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">Sin validar.</p>
+        </section>
+
+        <section class="mt-4 overflow-x-auto rounded-xl border border-slate-200" aria-label="Ranking de candidatos">
+          <table class="min-w-full divide-y divide-slate-200 bg-white text-xs">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-3 py-2 text-left font-semibold text-slate-600">ID</th>
+                <th class="px-3 py-2 text-left font-semibold text-slate-600">Nombre</th>
+                <th class="px-3 py-2 text-left font-semibold text-slate-600">Seniority</th>
+                <th class="px-3 py-2 text-left font-semibold text-slate-600">Disponibilidad</th>
+                <th class="px-3 py-2 text-right font-semibold text-slate-600">Score</th>
+                <th class="px-3 py-2 text-right font-semibold text-slate-600">Salario</th>
+              </tr>
+            </thead>
+            <tbody id="labCandidatesTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+
+    <script src="../../../admin/tickets.js" defer></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const sampleCandidates = [
+          {
+            id: "C-2024-0451",
+            fullName: "Maria Gonzalez",
+            email: "maria.gonzalez@email.com",
+            phone: "+56912345678",
+            yearsOfExperience: 5,
+            skills: ["TypeScript", "React", "Node.js", "PostgreSQL"],
+            englishLevel: "B2",
+            seniority: "Semi-Senior",
+            currentSalary: 3500,
+            expectedSalary: 4200,
+            availability: "1 month",
+            location: "Valencia, Espana",
+            remoteOnly: false,
+            status: "Active",
+          },
+          {
+            id: "C-2024-0452",
+            fullName: "Juan Perez",
+            email: "juan.perez@email.com",
+            phone: "+56987654321",
+            yearsOfExperience: 3,
+            skills: ["JavaScript", "React", "CSS", "HTML"],
+            englishLevel: "B1",
+            seniority: "Junior",
+            currentSalary: 2200,
+            expectedSalary: 2800,
+            availability: "Immediate",
+            location: "Miami, Florida, Estados Unidos",
+            remoteOnly: true,
+            status: "Active",
+          },
+          {
+            id: "C-2024-0453",
+            fullName: "Carolina Silva",
+            email: "carolina.silva@email.com",
+            phone: "+56911223344",
+            yearsOfExperience: 8,
+            skills: ["TypeScript", "Node.js", "PostgreSQL", "Docker", "AWS"],
+            englishLevel: "C1",
+            seniority: "Senior",
+            currentSalary: 5500,
+            expectedSalary: 6500,
+            availability: "2 weeks",
+            location: "Valencia, Espana",
+            remoteOnly: false,
+            status: "In process",
+          },
+          {
+            id: "C-2024-0454",
+            fullName: "Diego Torres",
+            email: "diego.torres@email.com",
+            phone: "+34610000001",
+            yearsOfExperience: 10,
+            skills: ["TypeScript", "React", "Node.js", "Docker", "PostgreSQL"],
+            englishLevel: "C1",
+            seniority: "Lead",
+            currentSalary: 6200,
+            expectedSalary: 7200,
+            availability: "Immediate",
+            location: "Valencia, Espana",
+            remoteOnly: true,
+            status: "Active",
+          },
+          {
+            id: "C-2024-0455",
+            fullName: "Lucia Herrera",
+            email: "lucia.herrera@email.com",
+            phone: "+34610000002",
+            yearsOfExperience: 4,
+            skills: ["TypeScript", "React", "Node.js"],
+            englishLevel: "B2",
+            seniority: "Semi-Senior",
+            currentSalary: 3900,
+            expectedSalary: 5000,
+            availability: "Not available",
+            location: "Madrid, Espana",
+            remoteOnly: false,
+            status: "Inactive",
+          },
+        ];
+
+        const sampleVacancy = {
+          id: "V-2024-0892",
+          title: "Senior Full-Stack Developer",
+          companyName: "TechCorp Solutions",
+          requiredSkills: ["TypeScript", "React", "Node.js"],
+          preferredSkills: ["PostgreSQL", "Docker"],
+          minYearsExperience: 4,
+          maxYearsExperience: 8,
+          requiredEnglishLevel: "B2",
+          requiredSeniority: "Senior",
+          salaryRangeMin: 5000,
+          salaryRangeMax: 7000,
+          isRemote: true,
+          location: "Remote",
+          status: "Open",
+        };
+
+        const sampleProcesses = [
+          { id: "SP-1", stage: "Hired" },
+          { id: "SP-2", stage: "Interview" },
+          { id: "SP-3", stage: "Rejected" },
+        ];
+
+        const englishOrder = ["A1", "A2", "B1", "B2", "C1", "C2", "Native"];
+        const seniorityOrder = ["Junior", "Semi-Senior", "Senior", "Lead", "Executive"];
+        const roundTo2 = (value) => Math.round(value * 100) / 100;
+        const normalize = (text) => text.trim().toLowerCase();
+
+        function filterCandidatesBySkills(candidates, requiredSkills) {
+          const normalizedRequired = requiredSkills.map((skill) => normalize(skill));
+          return candidates.filter((candidate) => {
+            const candidateSkills = new Set(candidate.skills.map((skill) => normalize(skill)));
+            return normalizedRequired.every((required) => candidateSkills.has(required));
+          });
+        }
+
+        function filterCandidatesBySeniority(candidates, seniority) {
+          return candidates.filter((candidate) => candidate.seniority === seniority);
+        }
+
+        function filterCandidatesByAvailability(candidates, availabilityList) {
+          const allowed = new Set(availabilityList);
+          return candidates.filter((candidate) => allowed.has(candidate.availability));
+        }
+
+        function sortCandidatesBySalary(candidates, order) {
+          const multiplier = order === "asc" ? 1 : -1;
+          return [...candidates].sort((a, b) => (a.expectedSalary - b.expectedSalary) * multiplier);
+        }
+
+        function findCandidateById(candidates, id) {
+          for (const candidate of candidates) {
+            if (candidate.id === id) return candidate;
+          }
+          return null;
+        }
+
+        function findCandidateByEmail(candidates, email) {
+          const normalizedEmail = normalize(email);
+          for (const candidate of candidates) {
+            if (normalize(candidate.email) === normalizedEmail) return candidate;
+          }
+          return null;
+        }
+
+        function binarySearchCandidateBySalary(sortedCandidates, targetSalary) {
+          let left = 0;
+          let right = sortedCandidates.length - 1;
+
+          while (left <= right) {
+            const middle = Math.floor((left + right) / 2);
+            const middleSalary = sortedCandidates[middle].expectedSalary;
+            if (middleSalary === targetSalary) return middle;
+            if (middleSalary < targetSalary) left = middle + 1;
+            else right = middle - 1;
+          }
+
+          return -1;
+        }
+
+        function calculateCandidateScore(candidate, vacancy) {
+          const candidateSkills = new Set(candidate.skills.map((skill) => normalize(skill)));
+          const requiredSkills = [...new Set(vacancy.requiredSkills.map((skill) => normalize(skill)))];
+          const preferredSkills = [...new Set(vacancy.preferredSkills.map((skill) => normalize(skill)))];
+
+          let score = 0;
+
+          const matchedRequired = requiredSkills.filter((skill) => candidateSkills.has(skill)).length;
+          if (requiredSkills.length > 0 && matchedRequired === requiredSkills.length) score += 40;
+          else if (requiredSkills.length > 0 && matchedRequired / requiredSkills.length >= 0.5) score += 20;
+
+          const matchedPreferred = preferredSkills.filter((skill) => candidateSkills.has(skill)).length;
+          score += Math.min(matchedPreferred * 10, 20);
+
+          if (candidate.yearsOfExperience >= vacancy.minYearsExperience && candidate.yearsOfExperience <= vacancy.maxYearsExperience) {
+            score += 20;
+          } else {
+            const distance = candidate.yearsOfExperience < vacancy.minYearsExperience
+              ? vacancy.minYearsExperience - candidate.yearsOfExperience
+              : candidate.yearsOfExperience - vacancy.maxYearsExperience;
+            if (distance <= 2) score += 10;
+          }
+
+          if (candidate.seniority === vacancy.requiredSeniority) {
+            score += 15;
+          } else {
+            const candIdx = seniorityOrder.indexOf(candidate.seniority);
+            const reqIdx = seniorityOrder.indexOf(vacancy.requiredSeniority);
+            if (Math.abs(candIdx - reqIdx) === 1) score += 7;
+          }
+
+          const englishIdx = englishOrder.indexOf(candidate.englishLevel);
+          const requiredEnglishIdx = englishOrder.indexOf(vacancy.requiredEnglishLevel);
+          if (englishIdx >= requiredEnglishIdx) score += 15;
+
+          if (candidate.expectedSalary >= vacancy.salaryRangeMin && candidate.expectedSalary <= vacancy.salaryRangeMax) {
+            score += 10;
+          } else if (candidate.expectedSalary > vacancy.salaryRangeMax && candidate.expectedSalary <= vacancy.salaryRangeMax * 1.2) {
+            score += 5;
+          }
+
+          return Math.max(0, Math.min(100, score));
+        }
+
+        function rankCandidatesForVacancy(candidates, vacancy) {
+          return candidates
+            .map((candidate) => ({ candidate, score: calculateCandidateScore(candidate, vacancy) }))
+            .sort((a, b) => b.score - a.score);
+        }
+
+        function countCandidatesByStatus(candidates) {
+          const counts = { Active: 0, "In process": 0, Hired: 0, Inactive: 0 };
+          for (const candidate of candidates) {
+            counts[candidate.status] += 1;
+          }
+          return counts;
+        }
+
+        function calculateAverageSalary(candidates) {
+          if (candidates.length === 0) return 0;
+          const total = candidates.reduce((acc, candidate) => acc + candidate.expectedSalary, 0);
+          return roundTo2(total / candidates.length);
+        }
+
+        function findTopSkills(candidates, topN) {
+          const skillCount = new Map();
+          for (const candidate of candidates) {
+            const uniqueSkills = new Set(candidate.skills.map((skill) => normalize(skill)));
+            for (const skill of uniqueSkills) {
+              skillCount.set(skill, (skillCount.get(skill) || 0) + 1);
+            }
+          }
+
+          return [...skillCount.entries()]
+            .map(([skill, count]) => ({ skill, count }))
+            .sort((a, b) => b.count - a.count || a.skill.localeCompare(b.skill))
+            .slice(0, Math.max(0, topN));
+        }
+
+        function calculateVacancyFillRate(processes) {
+          if (processes.length === 0) return 0;
+          const hiredCount = processes.filter((process) => process.stage === "Hired").length;
+          return roundTo2((hiredCount / processes.length) * 100);
+        }
+
+        function isValidEmail(email) {
+          const normalized = email.trim();
+          const atIndex = normalized.indexOf("@");
+          const dotIndex = normalized.lastIndexOf(".");
+          const hasSingleAt = normalized.split("@").length === 2;
+          return hasSingleAt && atIndex > 0 && dotIndex > atIndex + 1 && dotIndex < normalized.length - 1;
+        }
+
+        function validateCandidate(candidate) {
+          const errors = [];
+          if (candidate.yearsOfExperience < 0 || candidate.yearsOfExperience > 50) errors.push("yearsOfExperience fuera de rango");
+          if (candidate.currentSalary <= 0) errors.push("currentSalary invalido");
+          if (candidate.expectedSalary <= 0) errors.push("expectedSalary invalido");
+          if (candidate.skills.filter((skill) => skill.trim().length > 0).length < 1) errors.push("skills vacias");
+          if (!isValidEmail(candidate.email)) errors.push("email invalido");
+          if (candidate.phone.trim().length === 0) errors.push("phone vacio");
+          return { valid: errors.length === 0, errors };
+        }
+
+        function validateVacancy(vacancy) {
+          const errors = [];
+          if (vacancy.requiredSkills.filter((skill) => skill.trim().length > 0).length < 1) errors.push("requiredSkills vacias");
+          if (vacancy.minYearsExperience < 0) errors.push("minYearsExperience invalido");
+          if (vacancy.maxYearsExperience < vacancy.minYearsExperience) errors.push("maxYearsExperience invalido");
+          if (vacancy.salaryRangeMin <= 0 || vacancy.salaryRangeMax <= 0) errors.push("salary range invalido");
+          if (vacancy.salaryRangeMax < vacancy.salaryRangeMin) errors.push("salary max < salary min");
+          return { valid: errors.length === 0, errors };
+        }
+
+        const labElements = {
+          skills: document.getElementById("labSkills"),
+          seniority: document.getElementById("labSeniority"),
+          availability: document.getElementById("labAvailability"),
+          sortOrder: document.getElementById("labSortOrder"),
+          run: document.getElementById("labRun"),
+          reset: document.getElementById("labReset"),
+          findId: document.getElementById("labFindId"),
+          findEmail: document.getElementById("labFindEmail"),
+          binarySalary: document.getElementById("labBinarySalary"),
+          tableBody: document.getElementById("labCandidatesTableBody"),
+          metricVisible: document.getElementById("labMetricVisible"),
+          metricAvgSalary: document.getElementById("labMetricAvgSalary"),
+          metricFillRate: document.getElementById("labMetricFillRate"),
+          metricTopSkill: document.getElementById("labMetricTopSkill"),
+          searchResults: document.getElementById("labSearchResults"),
+          validationResults: document.getElementById("labValidationResults"),
+        };
+
+        function renderLab() {
+          const requiredSkills = labElements.skills.value
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter((skill) => skill.length > 0);
+          const selectedSeniority = labElements.seniority.value;
+          const selectedAvailability = labElements.availability.value;
+          const sortOrder = labElements.sortOrder.value;
+
+          let working = [...sampleCandidates];
+
+          if (requiredSkills.length > 0) {
+            working = filterCandidatesBySkills(working, requiredSkills);
+          }
+
+          if (selectedSeniority !== "all") {
+            working = filterCandidatesBySeniority(working, selectedSeniority);
+          }
+
+          if (selectedAvailability !== "all") {
+            working = filterCandidatesByAvailability(working, [selectedAvailability]);
+          }
+
+          const sortedBySalary = sortCandidatesBySalary(working, sortOrder);
+          const ranked = rankCandidatesForVacancy(sortedBySalary, sampleVacancy);
+
+          labElements.tableBody.innerHTML = ranked.length
+            ? ranked
+                .map(({ candidate, score }) => `
+                  <tr>
+                    <td class="px-3 py-2 font-medium text-slate-800">${candidate.id}</td>
+                    <td class="px-3 py-2 text-slate-700">${candidate.fullName}</td>
+                    <td class="px-3 py-2 text-slate-700">${candidate.seniority}</td>
+                    <td class="px-3 py-2 text-slate-700">${candidate.availability}</td>
+                    <td class="px-3 py-2 text-right font-semibold text-indigo-700">${score}</td>
+                    <td class="px-3 py-2 text-right text-slate-700">$${candidate.expectedSalary}</td>
+                  </tr>
+                `)
+                .join("")
+            : `<tr><td colspan="6" class="px-3 py-3 text-center text-slate-500">Sin resultados con los filtros actuales</td></tr>`;
+
+          const avgSalary = calculateAverageSalary(working);
+          const fillRate = calculateVacancyFillRate(sampleProcesses);
+          const topSkill = findTopSkills(working, 1)[0];
+          const counts = countCandidatesByStatus(working);
+
+          labElements.metricVisible.textContent = `${working.length} (${counts["In process"]} en proceso)`;
+          labElements.metricAvgSalary.textContent = `$${avgSalary.toLocaleString("es-ES")}`;
+          labElements.metricFillRate.textContent = `${fillRate}%`;
+          labElements.metricTopSkill.textContent = topSkill ? `${topSkill.skill} (${topSkill.count})` : "-";
+
+          const idQuery = labElements.findId.value.trim();
+          const emailQuery = labElements.findEmail.value.trim();
+          const salaryQuery = Number(labElements.binarySalary.value || "0");
+          const sortedForBinary = sortCandidatesBySalary([...sampleCandidates], "asc");
+
+          const byId = idQuery ? findCandidateById(sampleCandidates, idQuery) : null;
+          const byEmail = emailQuery ? findCandidateByEmail(sampleCandidates, emailQuery) : null;
+          const salaryIndex = salaryQuery > 0 ? binarySearchCandidateBySalary(sortedForBinary, salaryQuery) : -1;
+          const salaryResult = salaryIndex >= 0 ? sortedForBinary[salaryIndex].fullName : "No encontrado";
+
+          labElements.searchResults.textContent =
+            `ID: ${byId ? byId.fullName : "No encontrado"} | ` +
+            `Email: ${byEmail ? byEmail.fullName : "No encontrado"} | ` +
+            `Binaria salario: ${salaryQuery > 0 ? salaryResult : "Sin valor"}`;
+
+          const candidateValidation = validateCandidate(sampleCandidates[0]);
+          const vacancyValidation = validateVacancy(sampleVacancy);
+          labElements.validationResults.textContent =
+            `validateCandidate: ${candidateValidation.valid ? "OK" : candidateValidation.errors.join(", ")} | ` +
+            `validateVacancy: ${vacancyValidation.valid ? "OK" : vacancyValidation.errors.join(", ")}`;
+        }
+
+        labElements.run.addEventListener("click", renderLab);
+        labElements.reset.addEventListener("click", () => {
+          labElements.skills.value = "";
+          labElements.seniority.value = "all";
+          labElements.availability.value = "all";
+          labElements.sortOrder.value = "desc";
+          labElements.findId.value = "";
+          labElements.findEmail.value = "";
+          labElements.binarySalary.value = "";
+          renderLab();
+        });
+
+        renderLab();
+      });
+    </script>
+  </body>
+</html>

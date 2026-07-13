@@ -3,70 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Soporte | Triaje Inteligente Nexova</title>
-    <meta
-      name="description"
-      content="Canal de atencion al cliente con chatbot de triaje inteligente para generar tickets escalados."
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Nexova | Soporte</title>
+    <meta http-equiv="refresh" content="0; url=uis/nexova/soporte-cliente/support.html" />
   </head>
-  <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
-    <header class="border-b border-blue-200 bg-white">
-      <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegacion principal">
-        <a href="index.html" class="text-lg font-semibold tracking-wide text-blue-900">Nexova Solutions</a>
-        <div class="flex items-center gap-3 text-sm">
-          <a href="index.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Inicio</a>
-          <a href="admin/tickets.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Panel de tickets</a>
-        </div>
-      </nav>
-    </header>
-
-    <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <section class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm sm:p-6">
-        <header>
-          <h1 class="text-2xl font-bold text-blue-950">Atencion al Cliente y Triaje Inteligente</h1>
-          <p class="mt-2 text-sm text-slate-700">
-            El asistente realiza filtrado inicial, intenta resolver y, si es necesario, escala automaticamente a ticket para agentes.
-          </p>
-        </header>
-
-        <section class="mt-5 rounded-xl border border-slate-200 bg-slate-50">
-          <div id="chatMessages" class="h-[420px] overflow-y-auto p-4" aria-live="polite" aria-label="Conversacion de soporte"></div>
-
-          <p id="chatStatus" class="px-4 pb-2 text-xs font-medium text-blue-700" aria-live="polite"></p>
-
-          <form id="chatForm" class="border-t border-slate-200 bg-white p-3 sm:p-4">
-            <label for="chatInput" class="sr-only">Escribe tu mensaje</label>
-            <div class="flex flex-col gap-3 sm:flex-row">
-              <input
-                id="chatInput"
-                name="chatInput"
-                type="text"
-                required
-                placeholder="Describe tu incidencia..."
-                class="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
-              />
-              <button
-                id="chatSendButton"
-                type="submit"
-                class="inline-flex items-center justify-center rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-              >
-                Enviar
-              </button>
-            </div>
-          </form>
-
-          <section id="ticketSuccess" class="hidden border-t border-emerald-200 bg-emerald-50 px-4 py-4" aria-live="polite">
-            <h2 class="text-sm font-semibold text-emerald-800">Ticket escalado correctamente</h2>
-            <p id="ticketSuccessText" class="mt-1 text-sm text-emerald-700"></p>
-            <a href="admin/tickets.html" class="mt-3 inline-flex rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
-              Ver panel de agentes
-            </a>
-          </section>
-        </section>
-      </section>
+  <body>
+    <main>
+      <p>Redireccionando al soporte...</p>
+      <p>
+        Si no redirige automaticamente, abre
+        <a href="uis/nexova/soporte-cliente/support.html">el modulo de soporte</a>.
+      </p>
     </main>
-
-    <script src="admin/tickets.js" defer></script>
   </body>
 </html>
