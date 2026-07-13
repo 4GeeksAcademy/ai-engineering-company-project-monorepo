@@ -1,84 +1,23 @@
-#                                                     EMPRESA ELEGIDA TRACKFLOW
+# EMPRESA ESCOGIDA  :    NEXOVA 
+## Elijo Nexova porque es una empresa que necesita exactamente lo que yo estoy aprendiendo: programación e inteligencia artificial. Tiene muchos procesos manuales, falta de automatización y problemas reales que se pueden resolver con código. Eso me permite practicar, aprender y crear proyectos con impacto, trabajando en dashboards, chatbots, scoring de CVs, portales internos y herramientas inteligentes. Además, la IA es el centro del negocio, así que todo lo que programe será útil y visible.
+# Mi elección de departamentos para el curso:
+## He decidido trabajar con Operaciones de Selección y Atención al Cliente, porque son los que me permiten usar HTML, CSS y JavaScript al máximo y no quedarme solo en cosas fáciles.
+# Operaciones de Selección
+## Aquí quiero construir un sistema donde se puedan subir CVs, filtrarlos y rankearlos automáticamente con JavaScript. También quiero hacer un buscador de candidatos con filtros, un portal donde el candidato pueda ver su estado en tiempo real y un dashboard para los consultores. Es el área principal del negocio y me da la oportunidad de practicar lógica, interactividad y visualización de datos.
+# Atención al Cliente 
+## En este departamento quiero crear un chatbot de soporte que responda preguntas básicas, un sistema de tickets con formularios y un dashboard en tiempo real para ver la carga de trabajo. También puedo añadir un análisis de sentimiento sencillo con JavaScript para detectar clientes insatisfechos. Esto me permite practicar mucho la parte dinámica de la programación y simular cómo se gestionan incidencias reales.
+# Mi idea de agente de IA para Nexova
+## Quiero crear un Agente Inteligente de Selección y Soporte que combine las necesidades de dos departamentos clave: Operaciones de Selección y Atención al Cliente.
+## Este agente tendrá dos funciones principales:
+# Automatización del proceso de selección de candidatos:
+## Leer y analizar CVs automáticamente con un sistema de scoring.
+## Mostrar un ranking de candidatos en un dashboard interactivo.
+## Permitir búsquedas con filtros (ejemplo: “ventas B2B + inglés C1”).
+## Enviar correos automáticos de seguimiento a los candidatos.
+# Soporte inteligente para clientes:
+## Chatbot de primera línea que resuelva preguntas frecuentes.
+## Base de conocimiento centralizada con búsqueda semántica.
+## Dashboard en tiempo real para supervisores con tickets abiertos y SLA.
+## Detección de clientes insatisfechos mediante análisis de sentimiento básico.
 
-## MOTIVO DE LA ELECCIÓN
-
-Me pareció muy interesante desde un principio porque tengo experiencia real en almacén. Trabajé 8 años en Reino Unido: 5 años en XPO y 3 años en DHL. Durante ese tiempo pasé por todos los departamentos, como packing, picking, returns, goods-in, trainer, control quality y también Inventory Clerk.
-A lo largo de esos años, muchas veces tuve la curiosidad de mejorar ciertos procesos para que el trabajo fuera más fácil y eficiente. Gracias a haber trabajado en todas esas áreas, me di cuenta de que hay aspectos que pueden optimizarse dentro de los almacenes. Por eso elegí esta empresa y estos departamentos: porque conozco sus problemas y sé qué cosas se pueden mejorar.
-
-## DEPARTAMENTOS QUE ME INTERESAN PARA TRABAJAR
-
-**ATENCIÓN AL CLIENTE**
-
-- Crear un FAQ dinámico para reducir preguntas repetitivas.
-
-- Crear un buscador de pedidos, donde el cliente introduce su número y ve el estado.
-
-- Crear un panel interno para que los agentes vean consultas y respondan más rápido.
-
-- Crear un chatbot básico para preguntas frecuentes.
-
-**LOGÍSTICA INVERSA (DEVOLUCIONES)**
-
-- Crear un formulario web de devoluciones para clientes.
-
-- Crear un panel interno donde el equipo pueda decidir:
-
-. Aprobar
-
-. Rechazar
-
-. Recoger
-
-. Reacondicionar
-
-. Desechar
-
-- Crear un historial de devoluciones por cliente o por producto.
-
-- Crear un sistema de reglas automáticas (por ejemplo: si el producto cuesta menos de X, aprobar automáticamente).
-
-# MI IDEA DE AGENTE DE IA PARA ESTA EMPRESA
-
-Mi propuesta es desarrollar un agente de IA sencillo, enfocado en Atención al Cliente y Logística Inversa, que automatice tareas básicas pero muy útiles para la empresa.
-
-**Respuestas automáticas a preguntas frecuentes**
-
---El agente respondería automáticamente las dudas más repetidas de los clientes, como:
-
---Estado del pedido
-
---Cómo devolver un producto
-
---Tiempos de entrega
-
-Esto reduciría gran parte del trabajo manual del equipo.
-
-**Consultar el estado del pedido con un número**
-
-Puedo crear una función donde el cliente escribe su número de pedido y el sistema devuelve un estado básico (simulado o guardado en una tabla).
-
-**Mostrar el estado de una devolución**
-
-El agente puede mostrar si una devolución está:
-
---Pendiente
-
---Aprobada
-
---Rechazada
-
-Usando datos guardados en una tabla simple.
-
-**Clasificar mensajes automáticamente**
-
-El agente puede detectar si el cliente habla de:
-
---Envíos
-
---Devoluciones
-
---Dirección incorrecta
-
---Incidencias
-
-Esto ayuda a organizar mejor las consultas y enviarlas al equipo adecuado.
+## NOTA : Espero terminar este proyecto de Nexova de la mejor manera posible, aplicando todo lo que estoy aprendiendo en programación e inteligencia artificial. Mi objetivo es no solo completar las tareas, sino también demostrar que puedo crear soluciones reales con impacto. Sé que será un reto, pero confío en que con esfuerzo y práctica lograré finalizarlo bien y dejar un trabajo sólido que refleje mi progreso y dedicación.
