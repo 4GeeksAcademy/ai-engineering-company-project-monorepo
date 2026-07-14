@@ -79,6 +79,20 @@ Then open:
 
 This command is Codespaces-compatible and needs no extra setup.
 
+## TypeScript validation for milestone 2
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run strict typecheck for the data utilities:
+
+```bash
+npm run typecheck
+```
+
 ---
 
 ## Milestones (reference)

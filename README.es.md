@@ -79,6 +79,20 @@ Luego abre:
 
 Este comando es compatible con Codespaces y no requiere configuración adicional.
 
+## Validación TypeScript para el hito 2
+
+Instala dependencias:
+
+```bash
+npm install
+```
+
+Ejecuta el typecheck estricto de utilidades de datos:
+
+```bash
+npm run typecheck
+```
+
 ---
 
 ## Hitos (referencia)
