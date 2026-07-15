@@ -9,11 +9,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2020", "DOM"],
-    "baseUrl": ".",
-    "paths": {
-      "../types/*": ["src/types/*"],
-      "../utils/*": ["src/utils/*"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

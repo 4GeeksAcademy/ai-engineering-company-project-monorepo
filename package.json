@@ -1,11 +1,22 @@
 {
   "name": "brasaland-hito-2",
   "version": "1.0.0",
+  "private": true,
   "description": "Hito 2 – Fundamentos de Programación · Brasaland Data Utilities",
+  "workspaces": [
+    "uis/*",
+    "packages/*"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "demo": "npx tsx src/demo.ts",
-    "serve": "npx serve src -p 3000"
+    "serve": "npx serve src -p 3000",
+    "dev:website": "npm run dev --workspace uis/website",
+    "dev:backoffice": "npm run dev --workspace uis/backoffice",
+    "dev:loyalty": "npm run dev --workspace uis/loyalty-app",
+    "dev:operations": "npm run dev --workspace uis/operations-ui",
+    "build:uis": "npm run build --workspace uis/website && npm run build --workspace uis/backoffice && npm run build --workspace uis/loyalty-app && npm run build --workspace uis/operations-ui",
+    "typecheck:uis": "npm run typecheck --workspace uis/website && npm run typecheck --workspace uis/backoffice && npm run typecheck --workspace uis/loyalty-app && npm run typecheck --workspace uis/operations-ui"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
