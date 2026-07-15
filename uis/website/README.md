@@ -5,6 +5,7 @@ Public-facing website for Brasaland with:
 - Landing page (`index.html`)
 - Application/sign-up page (`application.html`)
 - Client-side validation logic (`validation.js`)
+- Manual function tester page (`testing.html`, `testing.js`)
 
 ## Requirements Covered
 
@@ -22,10 +23,16 @@ From this folder:
 
 ```bash
 cd uis/website
-npx serve .
+npx http-server . -p 3000 -a 0.0.0.0
 ```
 
-Then open the URL shown by `serve`.
+Then open the URL shown by `http-server`.
+
+Pages:
+
+- `http://localhost:3000/index.html`
+- `http://localhost:3000/application.html`
+- `http://localhost:3000/testing.html`
 
 ## Notes
 
