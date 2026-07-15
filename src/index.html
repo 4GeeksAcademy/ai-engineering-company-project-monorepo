@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brasaland · Dashboard Hito 2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: {
+            brasa: {
+              50:  '#fff8f0',
+              100: '#ffe8cc',
+              200: '#ffc980',
+              300: '#ffaa33',
+              400: '#ff8c00',
+              500: '#e67a00',
+              600: '#b85f00',
+              700: '#8a4600',
+              800: '#5c2e00',
+              900: '#2e1700',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+    }
+    .card {
+      background: rgba(17,17,34,0.85);
+      border: 1px solid rgba(255,140,0,0.18);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(255,140,0,0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255,140,0,0.12);
+    }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #ff8c00, #e67a00);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(255,140,0,0.35);
+    }
+    .badge-ok   { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .badge-fail { background: rgba(239,68,68,0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-warn { background: rgba(251,191,36,0.15);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .badge-info { background: rgba(96,165,250,0.15);  color: #93c5fd; border: 1px solid rgba(96,165,250,0.3); }
+    .result-row { border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .result-row:last-child { border-bottom: none; }
+    .search-input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,140,0,0.25);
+      color: #e2e8f0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #ff8c00;
+      box-shadow: 0 0 0 3px rgba(255,140,0,0.15);
+    }
+    .select-input {
+      background: rgba(17,17,34,0.9);
+      border: 1px solid rgba(255,140,0,0.25);
+      color: #e2e8f0;
+    }
+    .alert-bar {
+      background: linear-gradient(90deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+      border-left: 3px solid #ef4444;
+      animation: pulse-border 2s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+      0%, 100% { border-left-color: #ef4444; }
+      50% { border-left-color: #fca5a5; }
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ff8c00, #ffaa33);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .progress-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #ff8c00, #ffaa33);
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,140,0,0.35); border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-[#080818] text-slate-200 min-h-screen">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 glass border-b border-brasa-400/20">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brasa-400 to-brasa-600 flex items-center justify-center text-xl shadow-lg shadow-brasa-400/30">
+          🍖
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white leading-tight">Brasaland Digital</h1>
+          <p class="text-xs text-slate-400">Hito 2 · Fundamentos de Programación</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-xs text-slate-400">14 locales · 2 países</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- KPIs -->
+    <section id="kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="card rounded-2xl p-5">
+        <p class="text-xs text-slate-500 mb-1">Locales activos</p>
+        <div class="stat-number" id="kpi-locales">4</div>
+        <p class="text-xs text-slate-500 mt-1">de 5 totales</p>
+      </div>
+      <div class="card rounded-2xl p-5">
+        <p class="text-xs text-slate-500 mb-1">Ventas COP (período)</p>
+        <div class="stat-number text-2xl" id="kpi-cop">$11.8M</div>
+        <p class="text-xs text-slate-500 mt-1">2 días · MED-001</p>
+      </div>
+      <div class="card rounded-2xl p-5">
+        <p class="text-xs text-slate-500 mb-1">Ventas USD (período)</p>
+        <div class="stat-number text-2xl" id="kpi-usd">$1,449</div>
+        <p class="text-xs text-slate-500 mt-1">2 días · MIA-001</p>
+      </div>
+      <div class="card rounded-2xl p-5">
+        <p class="text-xs text-slate-500 mb-1">Alertas stock crítico</p>
+        <div class="stat-number" id="kpi-alertas" style="background:linear-gradient(135deg,#ef4444,#f87171);-webkit-background-clip:text">3</div>
+        <p class="text-xs text-red-400 mt-1">⚠ Acción requerida</p>
+      </div>
+    </section>
+
+    <!-- Tab nav -->
+    <nav class="flex flex-wrap gap-2">
+      <button onclick="showTab('collections')" id="tab-collections" class="tab-btn active px-4 py-2 rounded-xl text-sm font-medium">🔍 Colecciones</button>
+      <button onclick="showTab('search')"      id="tab-search"      class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">🔎 Búsquedas</button>
+      <button onclick="showTab('transforms')"  id="tab-transforms"  class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">📊 Transformaciones</button>
+      <button onclick="showTab('validations')" id="tab-validations" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">✅ Validaciones</button>
+      <button onclick="showTab('alerts')"      id="tab-alerts"      class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">🚨 Stock Crítico</button>
+    </nav>
+
+    <!-- ── TAB: COLECCIONES ────────────────────────────────── -->
+    <section id="tab-collections-content" class="space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Locales -->
+        <div class="card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-white">🏪 Locales</h2>
+            <div class="flex gap-2">
+              <select id="filtro-pais" onchange="renderLocales()" class="select-input text-xs rounded-lg px-2 py-1">
+                <option value="">Todos los países</option>
+                <option value="Colombia">Colombia</option>
+                <option value="USA">USA</option>
+              </select>
+              <select id="filtro-activo" onchange="renderLocales()" class="select-input text-xs rounded-lg px-2 py-1">
+                <option value="">Todos</option>
+                <option value="activo">Activos</option>
+                <option value="inactivo">Inactivos</option>
+              </select>
+              <select id="orden-local" onchange="renderLocales()" class="select-input text-xs rounded-lg px-2 py-1">
+                <option value="nombre-asc">Nombre A→Z</option>
+                <option value="nombre-desc">Nombre Z→A</option>
+              </select>
+            </div>
+          </div>
+          <div id="locales-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-white">🥩 Ingredientes</h2>
+            <select id="filtro-categoria" onchange="renderIngredientes()" class="select-input text-xs rounded-lg px-2 py-1">
+              <option value="">Todas las categorías</option>
+              <option value="carne">Carne</option>
+              <option value="verdura">Verdura</option>
+              <option value="salsa">Salsa</option>
+              <option value="bebida">Bebida</option>
+              <option value="empaque">Empaque</option>
+            </select>
+          </div>
+          <div id="ingredientes-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Empleados -->
+        <div class="card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-white">👥 Empleados</h2>
+            <select id="filtro-rol" onchange="renderEmpleados()" class="select-input text-xs rounded-lg px-2 py-1">
+              <option value="">Todos los roles</option>
+              <option value="cocinero">Cocinero</option>
+              <option value="mesero">Mesero</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="gerente_local">Gerente local</option>
+            </select>
+          </div>
+          <div id="empleados-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Órdenes de compra -->
+        <div class="card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-white">📦 Órdenes de compra</h2>
+            <select id="filtro-estado" onchange="renderOrdenes()" class="select-input text-xs rounded-lg px-2 py-1">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobada</option>
+              <option value="enviada">Enviada</option>
+            </select>
+          </div>
+          <div id="ordenes-list" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── TAB: BÚSQUEDAS ─────────────────────────────────── -->
+    <section id="tab-search-content" class="hidden space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Búsqueda lineal -->
+        <div class="card rounded-2xl p-6 space-y-4">
+          <h2 class="font-semibold text-white">🔍 Búsqueda Lineal <span class="text-xs text-slate-500 font-normal">O(n)</span></h2>
+          <p class="text-xs text-slate-500">Recorre el array elemento por elemento hasta encontrar la coincidencia.</p>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar local por ID</label>
+            <div class="flex gap-2">
+              <input id="search-local-id" type="text" placeholder="MED-001, MIA-001…"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarLocalLineal()" class="px-4 py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-local-lineal" class="mt-2 text-sm"></div>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar cliente por email</label>
+            <div class="flex gap-2">
+              <input id="search-cliente-email" type="text" placeholder="j.smith@outlook.com…"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarClienteEmail()" class="px-4 py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-cliente-email" class="mt-2 text-sm"></div>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar receta por nombre (parcial)</label>
+            <div class="flex gap-2">
+              <input id="search-receta-nombre" type="text" placeholder="brasa, pollo…"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarRecetaNombre()" class="px-4 py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-receta-nombre" class="mt-2 text-sm space-y-1"></div>
+          </div>
+        </div>
+
+        <!-- Búsqueda binaria -->
+        <div class="card rounded-2xl p-6 space-y-4">
+          <h2 class="font-semibold text-white">⚡ Búsqueda Binaria <span class="text-xs text-slate-500 font-normal">O(log n)</span></h2>
+          <p class="text-xs text-slate-500">El array <strong class="text-slate-400">debe estar ordenado</strong>. Divide el espacio de búsqueda a la mitad en cada paso.</p>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar local por ID (array ordenado)</label>
+            <div class="flex gap-2">
+              <input id="search-local-bin" type="text" placeholder="BOG-001, MED-002…"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarLocalBinario()" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-local-bin" class="mt-2 text-sm"></div>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar venta por fecha (array ordenado)</label>
+            <div class="flex gap-2">
+              <input id="search-venta-fecha" type="date" value="2024-06-18"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarVentaFecha()" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-venta-fecha" class="mt-2 text-sm"></div>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-400 mb-1 block">Buscar ingrediente por ID (array ordenado)</label>
+            <div class="flex gap-2">
+              <input id="search-ing-bin" type="text" placeholder="ING-001 … ING-007"
+                class="search-input flex-1 rounded-xl px-3 py-2 text-sm" />
+              <button onclick="buscarIngBinario()" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">Buscar</button>
+            </div>
+            <div id="res-ing-bin" class="mt-2 text-sm"></div>
+          </div>
+
+          <div id="binary-steps" class="hidden mt-4 p-3 rounded-xl bg-violet-900/20 border border-violet-500/20">
+            <p class="text-xs text-violet-300 font-medium mb-2">⚡ Pasos de búsqueda binaria (simulación):</p>
+            <div id="binary-steps-list" class="space-y-1 text-xs text-slate-400 font-mono"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── TAB: TRANSFORMACIONES ──────────────────────────── -->
+    <section id="tab-transforms-content" class="hidden space-y-6">
+      <div class="grid md:grid-cols-3 gap-4 mb-2">
+        <div class="card rounded-2xl p-5">
+          <p class="text-xs text-slate-500 mb-1">Platillo más vendido</p>
+          <p class="text-lg font-bold text-white" id="t-platillo">Hamburguesa Brasaland</p>
+          <p class="text-xs text-slate-500">REC-003 · 185 unidades</p>
+        </div>
+        <div class="card rounded-2xl p-5">
+          <p class="text-xs text-slate-500 mb-1">Ticket promedio MED-001</p>
+          <p class="text-lg font-bold text-white">COP 44,585</p>
+          <p class="text-xs text-slate-500">265 covers</p>
+        </div>
+        <div class="card rounded-2xl p-5">
+          <p class="text-xs text-slate-500 mb-1">Brasa Points totales</p>
+          <p class="text-lg font-bold text-white">4,400 pts</p>
+          <p class="text-xs text-slate-500">Promedio: 1,100 pts/cliente</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Ventas por local -->
+        <div class="card rounded-2xl p-6">
+          <h2 class="font-semibold text-white mb-4">📈 Ventas por Local</h2>
+          <div id="ventas-por-local" class="space-y-3"></div>
+        </div>
+
+        <!-- Empleados por rol -->
+        <div class="card rounded-2xl p-6">
+          <h2 class="font-semibold text-white mb-4">👤 Empleados por Rol</h2>
+          <div id="empleados-por-rol" class="space-y-3"></div>
+        </div>
+
+        <!-- Reporte semanal -->
+        <div class="card rounded-2xl p-6">
+          <h2 class="font-semibold text-white mb-4">📅 Reporte Semanal MED-001 · 2024-W25</h2>
+          <div id="reporte-semanal" class="space-y-2 text-sm"></div>
+        </div>
+
+        <!-- Reporte consolidado -->
+        <div class="card rounded-2xl p-6">
+          <h2 class="font-semibold text-white mb-4">🌐 Reporte Consolidado Cadena</h2>
+          <div id="reporte-consolidado" class="space-y-2 text-sm"></div>
+        </div>
+
+        <!-- Resumen clientes -->
+        <div class="card rounded-2xl p-6 md:col-span-2">
+          <h2 class="font-semibold text-white mb-4">💎 Resumen Brasa Points · CRM</h2>
+          <div id="resumen-clientes" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── TAB: VALIDACIONES ──────────────────────────────── -->
+    <section id="tab-validations-content" class="hidden space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Validar local -->
+        <div class="card rounded-2xl p-6 space-y-3">
+          <h2 class="font-semibold text-white">🏪 Validar Local</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">ID</label>
+              <input id="v-local-id" type="text" value="MED-001" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Nombre</label>
+              <input id="v-local-nombre" type="text" value="Brasaland El Poblado" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">País</label>
+              <select id="v-local-pais" class="select-input w-full rounded-lg px-2 py-1 text-sm mt-1">
+                <option value="Colombia">Colombia</option>
+                <option value="USA">USA</option>
+                <option value="Mexico">México (inválido)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Moneda</label>
+              <select id="v-local-moneda" class="select-input w-full rounded-lg px-2 py-1 text-sm mt-1">
+                <option value="COP">COP</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Fecha apertura</label>
+              <input id="v-local-fecha" type="date" value="2015-03-10" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Ciudad</label>
+              <input id="v-local-ciudad" type="text" value="Medellín" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+          </div>
+          <button onclick="validarLocalWeb()" class="w-full py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Validar Local</button>
+          <div id="res-validar-local"></div>
+        </div>
+
+        <!-- Validar empleado -->
+        <div class="card rounded-2xl p-6 space-y-3">
+          <h2 class="font-semibold text-white">👤 Validar Empleado</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">Nombre</label>
+              <input id="v-emp-nombre" type="text" value="Carlos" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Email</label>
+              <input id="v-emp-email" type="text" value="carlos@brasaland.co" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">País</label>
+              <select id="v-emp-pais" class="select-input w-full rounded-lg px-2 py-1 text-sm mt-1">
+                <option value="Colombia">Colombia</option>
+                <option value="USA">USA</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Moneda salario</label>
+              <select id="v-emp-moneda" class="select-input w-full rounded-lg px-2 py-1 text-sm mt-1">
+                <option value="COP">COP</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Salario</label>
+              <input id="v-emp-salario" type="number" value="1500000" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Fecha ingreso</label>
+              <input id="v-emp-fecha" type="date" value="2020-03-01" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+          </div>
+          <button onclick="validarEmpleadoWeb()" class="w-full py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Validar Empleado</button>
+          <div id="res-validar-empleado"></div>
+        </div>
+
+        <!-- Validar cliente -->
+        <div class="card rounded-2xl p-6 space-y-3">
+          <h2 class="font-semibold text-white">💎 Validar Cliente (Brasa Points)</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">Email</label>
+              <input id="v-cli-email" type="text" value="sofia@gmail.com" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Brasa Points</label>
+              <input id="v-cli-puntos" type="number" value="1200" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Fecha registro</label>
+              <input id="v-cli-registro" type="date" value="2022-04-10" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Última visita</label>
+              <input id="v-cli-visita" type="date" value="2024-06-15" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Gasto total USD</label>
+              <input id="v-cli-gasto" type="number" value="380.50" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Nombre</label>
+              <input id="v-cli-nombre" type="text" value="Sofía Martínez" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+          </div>
+          <button onclick="validarClienteWeb()" class="w-full py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Validar Cliente</button>
+          <div id="res-validar-cliente"></div>
+        </div>
+
+        <!-- Validar orden de compra -->
+        <div class="card rounded-2xl p-6 space-y-3">
+          <h2 class="font-semibold text-white">📦 Validar Orden de Compra</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">ID Orden</label>
+              <input id="v-oc-id" type="text" value="OC-2024-001" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Estado</label>
+              <select id="v-oc-estado" class="select-input w-full rounded-lg px-2 py-1 text-sm mt-1">
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobada" selected>Aprobada</option>
+                <option value="enviada">Enviada</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Cantidad</label>
+              <input id="v-oc-cantidad" type="number" value="50" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Precio unitario</label>
+              <input id="v-oc-precio" type="number" value="28000" class="search-input w-full rounded-lg px-2 py-1 text-sm mt-1" />
+            </div>
+          </div>
+          <p class="text-xs text-slate-500">El subtotal y total se calculan automáticamente.</p>
+          <button onclick="validarOrdenWeb()" class="w-full py-2 rounded-xl bg-brasa-500 hover:bg-brasa-400 text-white text-sm font-medium transition-colors">Validar Orden</button>
+          <div id="res-validar-orden"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── TAB: ALERTAS DE STOCK ──────────────────────────── -->
+    <section id="tab-alerts-content" class="hidden space-y-6">
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-semibold text-white text-lg">🚨 Alertas de Stock Crítico</h2>
+          <span class="badge-fail px-3 py-1 rounded-full text-xs font-medium">3 alertas activas</span>
+        </div>
+        <div id="alertas-list" class="space-y-3"></div>
+      </div>
+
+      <div class="card rounded-2xl p-6">
+        <h2 class="font-semibold text-white mb-4">📋 Inventario completo</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-slate-500 text-xs border-b border-white/10">
+                <th class="pb-3 pr-4">Local</th>
+                <th class="pb-3 pr-4">Ingrediente</th>
+                <th class="pb-3 pr-4 text-right">Actual</th>
+                <th class="pb-3 pr-4 text-right">Mínimo</th>
+                <th class="pb-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="inventario-table" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="text-center py-6 text-xs text-slate-600 mt-8">
+    Brasaland Digital · Hito 2 Fundamentos de Programación · 4Geeks Academy AI Engineering
+  </footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATOS DE MUESTRA (equivalente a demo.ts)
+// ═══════════════════════════════════════════════════════════
+const locales = [
+  { id:'MED-001', nombre:'Brasaland El Poblado',   ciudad:'Medellín', pais:'Colombia', monedaLocal:'COP', direccion:'Calle 10 # 43D-45', telefono:'+57 4 3101234', supervisorId:'EMP-SUP-001', activo:true,  fechaApertura:'2015-03-10' },
+  { id:'MED-002', nombre:'Brasaland Centro',        ciudad:'Medellín', pais:'Colombia', monedaLocal:'COP', direccion:'Carrera 52 # 45-20', telefono:'+57 4 3112345', supervisorId:'EMP-SUP-001', activo:true,  fechaApertura:'2017-07-22' },
+  { id:'BOG-001', nombre:'Brasaland Chapinero',     ciudad:'Bogotá',   pais:'Colombia', monedaLocal:'COP', direccion:'Cra 7 # 52-10', telefono:'+57 1 7891234', supervisorId:'EMP-SUP-002', activo:true,  fechaApertura:'2019-01-15' },
+  { id:'MIA-001', nombre:'Brasaland Miami Downtown',ciudad:'Miami',    pais:'USA',      monedaLocal:'USD', direccion:'100 Brickell Ave', telefono:'+1 305 5551234', supervisorId:'EMP-SUP-003', activo:true,  fechaApertura:'2021-06-01' },
+  { id:'ORL-001', nombre:'Brasaland Orlando',       ciudad:'Orlando',  pais:'USA',      monedaLocal:'USD', direccion:'8400 International Dr', telefono:'+1 407 5559876', supervisorId:'EMP-SUP-003', activo:false, fechaApertura:'2022-11-10' },
+];
+
+const ingredientes = [
+  { id:'ING-001', nombre:'Carne de Res (kg)',       categoria:'carne',   unidadMedida:'kg',       stockMinimo:20,  perecedero:true },
+  { id:'ING-002', nombre:'Pollo Entero (kg)',        categoria:'carne',   unidadMedida:'kg',       stockMinimo:15,  perecedero:true },
+  { id:'ING-003', nombre:'Tomate (kg)',              categoria:'verdura', unidadMedida:'kg',       stockMinimo:10,  perecedero:true },
+  { id:'ING-004', nombre:'Lechuga (unidad)',         categoria:'verdura', unidadMedida:'unidades', stockMinimo:30,  perecedero:true },
+  { id:'ING-005', nombre:'Salsa Chimichurri (L)',    categoria:'salsa',   unidadMedida:'litros',   stockMinimo:5,   perecedero:false },
+  { id:'ING-006', nombre:'Gaseosa Cola (L)',         categoria:'bebida',  unidadMedida:'litros',   stockMinimo:50,  perecedero:false },
+  { id:'ING-007', nombre:'Caja de Empaque',          categoria:'empaque', unidadMedida:'unidades', stockMinimo:200, perecedero:false },
+];
+
+const inventarios = [
+  { localId:'MED-001', ingredienteId:'ING-001', cantidadActual:8,   fechaUltimaActualizacion:'2024-06-20' },
+  { localId:'MED-001', ingredienteId:'ING-002', cantidadActual:25,  fechaUltimaActualizacion:'2024-06-20' },
+  { localId:'MED-001', ingredienteId:'ING-003', cantidadActual:3,   fechaUltimaActualizacion:'2024-06-20' },
+  { localId:'MIA-001', ingredienteId:'ING-001', cantidadActual:45,  fechaUltimaActualizacion:'2024-06-21' },
+  { localId:'MIA-001', ingredienteId:'ING-006', cantidadActual:10,  fechaUltimaActualizacion:'2024-06-21' },
+];
+
+const recetas = [
+  { id:'REC-001', nombrePlatillo:'Bandeja Brasaland',     precioBase:14.99, disponible:true },
+  { id:'REC-002', nombrePlatillo:'Pollo a la Brasa',      precioBase:12.50, disponible:true },
+  { id:'REC-003', nombrePlatillo:'Hamburguesa Brasaland', precioBase:9.99,  disponible:true },
+];
+
+const proveedores = [
+  { id:'PROV-001', nombre:'Carnes Premium Colombia',    pais:'Colombia', activo:true },
+  { id:'PROV-002', nombre:'Florida Meat Distributors',  pais:'USA',      activo:true },
+  { id:'PROV-003', nombre:'Verduras del Campo Ltda.',   pais:'Colombia', activo:true },
+];
+
+const ordenes = [
+  { id:'OC-2024-001', localId:'MED-001', proveedorId:'PROV-001', estado:'aprobada', lineas:[{ingredienteId:'ING-001',cantidadSolicitada:50,precioUnitario:28000,subtotal:1400000}], totalOrden:1400000, moneda:'COP', fechaCreacion:'2024-06-18', fechaAprobacion:'2024-06-18', aprobadoPor:'EMP-SUP-001', notas:'Urgente — stock bajo.' },
+  { id:'OC-2024-002', localId:'MIA-001', proveedorId:'PROV-002', estado:'pendiente', lineas:[{ingredienteId:'ING-001',cantidadSolicitada:30,precioUnitario:8.5,subtotal:255},{ingredienteId:'ING-006',cantidadSolicitada:100,precioUnitario:1.2,subtotal:120}], totalOrden:375, moneda:'USD', fechaCreacion:'2024-06-21', fechaAprobacion:null, aprobadoPor:null, notas:'' },
+];
+
+const ventas = [
+  { id:'VTA-2024-001', localId:'MED-001', fecha:'2024-06-17', lineas:[{recetaId:'REC-001',cantidad:40,precioUnitario:56000,subtotal:2240000},{recetaId:'REC-002',cantidad:25,precioUnitario:47000,subtotal:1175000},{recetaId:'REC-003',cantidad:60,precioUnitario:38000,subtotal:2280000}], totalVenta:5695000, moneda:'COP', totalCovers:120 },
+  { id:'VTA-2024-002', localId:'MED-001', fecha:'2024-06-18', lineas:[{recetaId:'REC-001',cantidad:55,precioUnitario:56000,subtotal:3080000},{recetaId:'REC-003',cantidad:80,precioUnitario:38000,subtotal:3040000}], totalVenta:6120000, moneda:'COP', totalCovers:145 },
+  { id:'VTA-2024-003', localId:'MIA-001', fecha:'2024-06-17', lineas:[{recetaId:'REC-001',cantidad:30,precioUnitario:14.99,subtotal:449.7},{recetaId:'REC-002',cantidad:20,precioUnitario:12.5,subtotal:250}], totalVenta:699.7, moneda:'USD', totalCovers:48 },
+  { id:'VTA-2024-004', localId:'MIA-001', fecha:'2024-06-18', lineas:[{recetaId:'REC-003',cantidad:45,precioUnitario:9.99,subtotal:449.55},{recetaId:'REC-001',cantidad:20,precioUnitario:14.99,subtotal:299.8}], totalVenta:749.35, moneda:'USD', totalCovers:62 },
+];
+
+const empleados = [
+  { id:'EMP-001',     nombre:'Carlos',  apellido:'Restrepo', email:'carlos.restrepo@brasaland.co',  rol:'cocinero',      localId:'MED-001', pais:'Colombia', fechaIngreso:'2020-03-01', salario:1500000, monedaSalario:'COP', estado:'activo' },
+  { id:'EMP-002',     nombre:'Diana',   apellido:'López',    email:'diana.lopez@brasaland.co',       rol:'mesero',        localId:'MED-001', pais:'Colombia', fechaIngreso:'2021-08-15', salario:1400000, monedaSalario:'COP', estado:'activo' },
+  { id:'EMP-SUP-001', nombre:'Felipe',  apellido:'Guerrero', email:'f.guerrero@brasaland.co',        rol:'supervisor',    localId:'MED-001', pais:'Colombia', fechaIngreso:'2015-01-10', salario:4500000, monedaSalario:'COP', estado:'activo' },
+  { id:'EMP-SUP-003', nombre:'Ashley',  apellido:'Turner',   email:'a.turner@brasaland.com',         rol:'gerente_local', localId:'MIA-001', pais:'USA',      fechaIngreso:'2021-05-20', salario:5000,    monedaSalario:'USD', estado:'activo' },
+];
+
+const clientes = [
+  { id:'CLI-001', nombre:'Sofía',    apellido:'Martínez', email:'sofia.martinez@gmail.com',   telefono:'+57 311 2223344', brasaPoints:1200, localFrecuente:'MED-001', fechaRegistro:'2022-04-10', ultimaVisita:'2024-06-15', totalGastado:380.5,  activo:true },
+  { id:'CLI-002', nombre:'Miguel',   apellido:'Torres',   email:'miguel.torres@hotmail.com',  telefono:'+57 312 9876543', brasaPoints:350,  localFrecuente:'BOG-001', fechaRegistro:'2023-01-20', ultimaVisita:'2024-05-30', totalGastado:95.0,   activo:true },
+  { id:'CLI-003', nombre:'Jennifer', apellido:'Smith',    email:'j.smith@outlook.com',        telefono:'+1 305 4443322',  brasaPoints:2800, localFrecuente:'MIA-001', fechaRegistro:'2021-08-05', ultimaVisita:'2024-06-20', totalGastado:920.75, activo:true },
+  { id:'CLI-004', nombre:'Ramón',    apellido:'Díaz',     email:'ramon.diaz@yahoo.com',       telefono:'+57 315 6677889', brasaPoints:50,   localFrecuente:'MED-002', fechaRegistro:'2023-11-01', ultimaVisita:'2024-01-10', totalGastado:22.0,   activo:true },
+];
+
+// ═══════════════════════════════════════════════════════════
+// UTILIDADES (equivalente a los .ts)
+// ═══════════════════════════════════════════════════════════
+
+// ── collections ──
+const filtrarPorPais   = (arr, pais)   => arr.filter(x => x.pais === pais);
+const filtrarActivos   = (arr)         => arr.filter(x => x.activo);
+const filtrarPorCat    = (arr, cat)    => arr.filter(x => x.categoria === cat);
+const filtrarPorEstado = (arr, est)    => arr.filter(x => x.estado === est);
+const filtrarPorRol    = (arr, rol)    => arr.filter(x => x.rol === rol);
+const ordenarPorNombre = (arr, asc=true) => [...arr].sort((a,b) => asc ? a.nombre.localeCompare(b.nombre) : b.nombre.localeCompare(a.nombre));
+
+// ── search lineal ──
+const buscarPorId    = (arr, id)    => arr.find(x => x.id === id) || null;
+const buscarPorEmail = (arr, email) => arr.find(x => x.email.toLowerCase() === email.toLowerCase().trim()) || null;
+const buscarRecetasPorNombre = (arr, term) => arr.filter(r => r.nombrePlatillo.toLowerCase().includes(term.toLowerCase().trim()));
+
+// ── search binaria ──
+function buscarBinarioPorId(arr, id) {
+  if (!arr.length) return { result: null, steps: [] };
+  const sorted = [...arr].sort((a,b) => a.id.localeCompare(b.id));
+  let iz = 0, der = sorted.length - 1, steps = [];
+  while (iz <= der) {
+    const mid = Math.floor((iz + der) / 2);
+    const cmp = sorted[mid].id.localeCompare(id);
+    steps.push({ iz, mid, der, val: sorted[mid].id, cmp });
+    if (cmp === 0) return { result: sorted[mid], steps };
+    if (cmp < 0) iz = mid + 1; else der = mid - 1;
+  }
+  return { result: null, steps };
+}
+
+function buscarBinarioPorFecha(arr, fecha) {
+  if (!arr.length) return { result: null, steps: [] };
+  const sorted = [...arr].sort((a,b) => a.fecha.localeCompare(b.fecha));
+  let iz = 0, der = sorted.length - 1, steps = [];
+  while (iz <= der) {
+    const mid = Math.floor((iz + der) / 2);
+    const cmp = sorted[mid].fecha.localeCompare(fecha);
+    steps.push({ iz, mid, der, val: sorted[mid].fecha, cmp });
+    if (cmp === 0) return { result: sorted[mid], steps };
+    if (cmp < 0) iz = mid + 1; else der = mid - 1;
+  }
+  return { result: null, steps };
+}
+
+// ── transformations ──
+const sumarTotal = (arr) => arr.reduce((s,x) => s + x.totalVenta, 0);
+const sumarCovers = (arr) => arr.reduce((s,x) => s + x.totalCovers, 0);
+
+function contarPorCampo(arr, campo) {
+  return arr.reduce((acc,x) => { acc[x[campo]] = (acc[x[campo]]||0)+1; return acc; }, {});
+}
+function sumarVentasPorLocal(ventas) {
+  return ventas.reduce((acc,v) => { acc[v.localId] = (acc[v.localId]||0)+v.totalVenta; return acc; }, {});
+}
+function platilloMasVendido(ventas) {
+  const conteo = ventas.reduce((acc,v) => { v.lineas.forEach(l => { acc[l.recetaId]=(acc[l.recetaId]||0)+l.cantidad; }); return acc; }, {});
+  return Object.entries(conteo).reduce((max,e) => e[1]>max[1]?e:max, ['',0]);
+}
+function generarAlertasStock(inventarios, ingredientes, locales) {
+  return inventarios.filter(inv => {
+    const ing = ingredientes.find(i => i.id === inv.ingredienteId);
+    return ing && inv.cantidadActual < ing.stockMinimo;
+  }).map(inv => {
+    const ing = ingredientes.find(i => i.id === inv.ingredienteId);
+    const loc = locales.find(l => l.id === inv.localId);
+    return { localId:inv.localId, nombreLocal:loc?.nombre, ingredienteId:inv.ingredienteId, nombreIngrediente:ing?.nombre, cantidadActual:inv.cantidadActual, stockMinimo:ing?.stockMinimo, deficit: ing.stockMinimo - inv.cantidadActual };
+  });
+}
+
+// ── validations ──
+const esEmailValido = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const noVacio = s => s && s.trim().length > 0;
+const esFechaValida = f => { if(!/^\d{4}-\d{2}-\d{2}$/.test(f)) return false; return !isNaN(new Date(f).getTime()); };
+const noEsFutura = f => f <= new Date().toISOString().split('T')[0];
+
+function validarLocal(d) {
+  const err = [];
+  if (!noVacio(d.id))           err.push('ID es obligatorio');
+  if (!noVacio(d.nombre))       err.push('Nombre es obligatorio');
+  if (!noVacio(d.ciudad))       err.push('Ciudad es obligatoria');
+  if (!['Colombia','USA'].includes(d.pais)) err.push('País debe ser Colombia o USA');
+  if (!['COP','USD'].includes(d.monedaLocal)) err.push('Moneda inválida');
+  if (d.pais==='Colombia' && d.monedaLocal!=='COP') err.push('Colombia debe usar COP');
+  if (d.pais==='USA'      && d.monedaLocal!=='USD') err.push('USA debe usar USD');
+  if (!esFechaValida(d.fechaApertura)) err.push('Fecha de apertura inválida (YYYY-MM-DD)');
+  else if (!noEsFutura(d.fechaApertura)) err.push('Fecha de apertura no puede ser futura');
+  return { valido: err.length===0, errores: err };
+}
+
+function validarEmpleado(d) {
+  const err = [];
+  if (!noVacio(d.nombre))       err.push('Nombre es obligatorio');
+  if (!esEmailValido(d.email))  err.push('Email inválido');
+  if (!['Colombia','USA'].includes(d.pais)) err.push('País debe ser Colombia o USA');
+  if (!['COP','USD'].includes(d.monedaSalario)) err.push('Moneda de salario inválida');
+  if (d.pais==='Colombia' && d.monedaSalario!=='COP') err.push('Empleados en Colombia deben cobrar en COP');
+  if (d.pais==='USA'      && d.monedaSalario!=='USD') err.push('Empleados en USA deben cobrar en USD');
+  if (d.salario <= 0) err.push('Salario debe ser mayor a 0');
+  if (d.pais==='Colombia' && d.salario < 1300000) err.push('Salario mínimo Colombia: COP 1,300,000');
+  if (d.pais==='USA'      && d.salario < 1800)    err.push('Salario mínimo USA: USD 1,800/mes');
+  if (!esFechaValida(d.fechaIngreso)) err.push('Fecha de ingreso inválida');
+  else if (!noEsFutura(d.fechaIngreso)) err.push('Fecha de ingreso no puede ser futura');
+  return { valido: err.length===0, errores: err };
+}
+
+function validarCliente(d) {
+  const err = [];
+  if (!noVacio(d.nombre))        err.push('Nombre es obligatorio');
+  if (!esEmailValido(d.email))   err.push('Email inválido');
+  if (d.brasaPoints < 0)         err.push('Brasa Points no pueden ser negativos');
+  if (!esFechaValida(d.fechaRegistro))  err.push('Fecha de registro inválida');
+  else if (!noEsFutura(d.fechaRegistro)) err.push('Fecha de registro no puede ser futura');
+  if (!esFechaValida(d.ultimaVisita))   err.push('Última visita inválida');
+  else if (!noEsFutura(d.ultimaVisita)) err.push('Última visita no puede ser futura');
+  if (esFechaValida(d.fechaRegistro) && esFechaValida(d.ultimaVisita) && d.ultimaVisita < d.fechaRegistro)
+    err.push('Última visita no puede ser anterior al registro');
+  if (d.totalGastado < 0)        err.push('Gasto total no puede ser negativo');
+  return { valido: err.length===0, errores: err };
+}
+
+function validarOrden(d) {
+  const err = [];
+  if (!noVacio(d.id))          err.push('ID de orden es obligatorio');
+  if (!['COP','USD'].includes(d.moneda)) err.push('Moneda inválida');
+  if (d.lineas.length===0)     err.push('La orden debe tener al menos una línea');
+  d.lineas.forEach((l,i) => {
+    if (l.cantidadSolicitada <= 0) err.push(`Línea ${i+1}: cantidad debe ser > 0`);
+    if (l.precioUnitario <= 0)     err.push(`Línea ${i+1}: precio debe ser > 0`);
+    const esperado = Math.round(l.cantidadSolicitada * l.precioUnitario * 100)/100;
+    if (Math.abs(l.subtotal - esperado) > 0.01) err.push(`Línea ${i+1}: subtotal incorrecto (${l.subtotal} ≠ ${esperado})`);
+  });
+  const totalEsperado = Math.round(d.lineas.reduce((s,l)=>s+l.subtotal,0)*100)/100;
+  if (Math.abs(d.totalOrden - totalEsperado) > 0.01) err.push('Total de la orden no coincide con suma de subtotales');
+  if (['aprobada','enviada'].includes(d.estado)) {
+    if (!d.fechaAprobacion) err.push('Orden aprobada/enviada requiere fecha de aprobación');
+    if (!d.aprobadoPor)     err.push('Orden aprobada/enviada requiere aprobador');
+  }
+  return { valido: err.length===0, errores: err };
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS DE RENDER
+// ═══════════════════════════════════════════════════════════
+
+function validacionBadge(resultado) {
+  if (resultado.valido) {
+    return `<div class="badge-ok px-3 py-2 rounded-xl text-xs flex items-center gap-2 mt-2">
+      <span class="text-base">✅</span> <span class="font-medium">Válido — sin errores</span>
+    </div>`;
+  }
+  return `<div class="badge-fail px-3 py-2 rounded-xl text-xs mt-2">
+    <p class="font-medium mb-1">❌ ${resultado.errores.length} error(es):</p>
+    <ul class="list-disc list-inside space-y-0.5">${resultado.errores.map(e=>`<li>${e}</li>`).join('')}</ul>
+  </div>`;
+}
+
+function renderSearchResult(contenedor, resultado, renderFn) {
+  const el = document.getElementById(contenedor);
+  if (!resultado) {
+    el.innerHTML = `<span class="badge-fail px-2 py-1 rounded-lg text-xs">❌ No encontrado</span>`;
+  } else {
+    el.innerHTML = `<div class="badge-ok px-3 py-2 rounded-xl text-xs mt-1">${renderFn(resultado)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+
+const tabIds = ['collections','search','transforms','validations','alerts'];
+
+function showTab(id) {
+  tabIds.forEach(t => {
+    document.getElementById(`tab-${t}-content`).classList.add('hidden');
+    const btn = document.getElementById(`tab-${t}`);
+    btn.classList.remove('active');
+    btn.classList.add('text-slate-400');
+  });
+  document.getElementById(`tab-${id}-content`).classList.remove('hidden');
+  const activeBtn = document.getElementById(`tab-${id}`);
+  activeBtn.classList.add('active');
+  activeBtn.classList.remove('text-slate-400');
+}
+
+// ═══════════════════════════════════════════════════════════
+// COLECCIONES
+// ═══════════════════════════════════════════════════════════
+
+function renderLocales() {
+  const pais   = document.getElementById('filtro-pais').value;
+  const activo = document.getElementById('filtro-activo').value;
+  const orden  = document.getElementById('orden-local').value;
+
+  let result = [...locales];
+  if (pais)   result = result.filter(l => l.pais === pais);
+  if (activo === 'activo')   result = result.filter(l => l.activo);
+  if (activo === 'inactivo') result = result.filter(l => !l.activo);
+  if (orden === 'nombre-asc')  result.sort((a,b) => a.nombre.localeCompare(b.nombre));
+  if (orden === 'nombre-desc') result.sort((a,b) => b.nombre.localeCompare(a.nombre));
+
+  const flagPais = p => p==='Colombia'?'🇨🇴':'🇺🇸';
+  document.getElementById('locales-list').innerHTML = result.length
+    ? result.map(l => `
+      <div class="result-row flex items-center justify-between py-2">
+        <div class="flex items-center gap-2">
+          <span>${flagPais(l.pais)}</span>
+          <div>
+            <p class="text-sm font-medium text-white">${l.nombre}</p>
+            <p class="text-xs text-slate-500">${l.ciudad} · ${l.id}</p>
+          </div>
+        </div>
+        <span class="${l.activo?'badge-ok':'badge-fail'} px-2 py-0.5 rounded-full text-xs">${l.activo?'Activo':'Inactivo'}</span>
+      </div>`).join('')
+    : `<p class="text-slate-500 text-sm text-center py-4">Sin resultados</p>`;
+}
+
+function renderIngredientes() {
+  const cat = document.getElementById('filtro-categoria').value;
+  let result = cat ? filtrarPorCat(ingredientes, cat) : [...ingredientes];
+  const catColor = { carne:'bg-red-900/30 text-red-300', verdura:'bg-green-900/30 text-green-300', salsa:'bg-yellow-900/30 text-yellow-300', bebida:'bg-blue-900/30 text-blue-300', empaque:'bg-slate-700 text-slate-300', limpieza:'bg-purple-900/30 text-purple-300' };
+  document.getElementById('ingredientes-list').innerHTML = result.map(i => `
+    <div class="result-row flex items-center justify-between py-2">
+      <div>
+        <p class="text-sm font-medium text-white">${i.nombre}</p>
+        <p class="text-xs text-slate-500">Stock mínimo: ${i.stockMinimo} ${i.unidadMedida}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        ${i.perecedero?'<span class="text-xs text-amber-400">⏱ Perecedero</span>':''}
+        <span class="px-2 py-0.5 rounded-full text-xs ${catColor[i.categoria]||'bg-slate-700 text-slate-300'}">${i.categoria}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderEmpleados() {
+  const rol = document.getElementById('filtro-rol').value;
+  let result = rol ? filtrarPorRol(empleados, rol) : [...empleados];
+  const rolColor = { cocinero:'badge-info', mesero:'bg-green-900/20 text-green-300 border border-green-800/30', supervisor:'bg-amber-900/20 text-amber-300 border border-amber-800/30', gerente_local:'bg-violet-900/20 text-violet-300 border border-violet-800/30' };
+  document.getElementById('empleados-list').innerHTML = result.length
+    ? result.map(e => `
+      <div class="result-row flex items-center justify-between py-2">
+        <div>
+          <p class="text-sm font-medium text-white">${e.nombre} ${e.apellido}</p>
+          <p class="text-xs text-slate-500">${e.email}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500">${e.pais==='Colombia'?'🇨🇴':'🇺🇸'}</span>
+          <span class="px-2 py-0.5 rounded-full text-xs ${rolColor[e.rol]||'badge-info'}">${e.rol}</span>
+        </div>
+      </div>`).join('')
+    : `<p class="text-slate-500 text-sm text-center py-4">Sin resultados</p>`;
+}
+
+function renderOrdenes() {
+  const est = document.getElementById('filtro-estado').value;
+  let result = est ? filtrarPorEstado(ordenes, est) : [...ordenes];
+  const estColor = { pendiente:'badge-warn', aprobada:'badge-ok', enviada:'badge-info', recibida:'bg-emerald-900/20 text-emerald-400', cancelada:'badge-fail' };
+  document.getElementById('ordenes-list').innerHTML = result.length
+    ? result.map(o => {
+        const prov = proveedores.find(p=>p.id===o.proveedorId)?.nombre || o.proveedorId;
+        return `<div class="result-row py-2">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-sm font-medium text-white">${o.id}</p>
+            <span class="px-2 py-0.5 rounded-full text-xs ${estColor[o.estado]||'badge-info'}">${o.estado}</span>
+          </div>
+          <p class="text-xs text-slate-500">${prov} · ${o.totalOrden.toLocaleString()} ${o.moneda}</p>
+          <p class="text-xs text-slate-600">${o.notas || ''}</p>
+        </div>`;
+      }).join('')
+    : `<p class="text-slate-500 text-sm text-center py-4">Sin resultados</p>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// BÚSQUEDAS
+// ═══════════════════════════════════════════════════════════
+
+function buscarLocalLineal() {
+  const id = document.getElementById('search-local-id').value;
+  renderSearchResult('res-local-lineal', buscarPorId(locales, id),
+    l => `✅ <strong>${l.nombre}</strong> · ${l.ciudad}, ${l.pais}`);
+}
+
+function buscarClienteEmail() {
+  const email = document.getElementById('search-cliente-email').value;
+  renderSearchResult('res-cliente-email', buscarPorEmail(clientes, email),
+    c => `✅ <strong>${c.nombre} ${c.apellido}</strong> · ${c.brasaPoints} Brasa Points`);
+}
+
+function buscarRecetaNombre() {
+  const term = document.getElementById('search-receta-nombre').value;
+  const result = buscarRecetasPorNombre(recetas, term);
+  const el = document.getElementById('res-receta-nombre');
+  if (!result.length) { el.innerHTML=`<span class="badge-fail px-2 py-1 rounded-lg text-xs">❌ Sin coincidencias</span>`; return; }
+  el.innerHTML = result.map(r => `<div class="badge-ok px-3 py-1 rounded-lg text-xs">✅ <strong>${r.nombrePlatillo}</strong> · $${r.precioBase} USD</div>`).join('');
+}
+
+function buscarLocalBinario() {
+  const id = document.getElementById('search-local-bin').value;
+  const { result, steps } = buscarBinarioPorId(locales, id);
+  renderSearchResult('res-local-bin', result,
+    l => `✅ <strong>${l.nombre}</strong> · ${l.ciudad} (encontrado en ${steps.length} paso${steps.length!==1?'s':''})`);
+  mostrarPasosBinarios(steps, id);
+}
+
+function buscarVentaFecha() {
+  const fecha = document.getElementById('search-venta-fecha').value;
+  const { result, steps } = buscarBinarioPorFecha(ventas, fecha);
+  renderSearchResult('res-venta-fecha', result,
+    v => `✅ <strong>${v.id}</strong> (${v.localId}) · ${v.totalVenta.toLocaleString()} ${v.moneda} (encontrado en ${steps.length} paso${steps.length!==1?'s':''})`);
+  mostrarPasosBinarios(steps, fecha);
+}
+
+function buscarIngBinario() {
+  const id = document.getElementById('search-ing-bin').value;
+  const { result, steps } = buscarBinarioPorId(ingredientes, id);
+  renderSearchResult('res-ing-bin', result,
+    i => `✅ <strong>${i.nombre}</strong> · stock min ${i.stockMinimo} (encontrado en ${steps.length} paso${steps.length!==1?'s':''})`);
+  mostrarPasosBinarios(steps, id);
+}
+
+function mostrarPasosBinarios(steps, objetivo) {
+  const cont = document.getElementById('binary-steps');
+  const lista = document.getElementById('binary-steps-list');
+  if (!steps.length) { cont.classList.add('hidden'); return; }
+  cont.classList.remove('hidden');
+  lista.innerHTML = steps.map((s,i) => {
+    const encontrado = s.cmp === 0;
+    const dir = s.cmp < 0 ? '→ buscar derecha' : s.cmp > 0 ? '← buscar izquierda' : '✅ encontrado!';
+    return `<div class="${encontrado?'text-emerald-400':'text-slate-400'}">Paso ${i+1}: mid=${s.mid} → "${s.val}" ${dir}</div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TRANSFORMACIONES
+// ═══════════════════════════════════════════════════════════
+
+function renderTransformaciones() {
+  // Ventas por local
+  const vpl = sumarVentasPorLocal(ventas);
+  const maxV = Math.max(...Object.values(vpl));
+  document.getElementById('ventas-por-local').innerHTML = Object.entries(vpl).map(([lid, total]) => {
+    const loc = locales.find(l=>l.id===lid);
+    const pct = Math.round(total/maxV*100);
+    const vMoneda = ventas.find(v=>v.localId===lid)?.moneda||'COP';
+    return `<div>
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-slate-300">${loc?.nombre||lid}</span>
+        <span class="text-slate-400 font-mono">${vMoneda==='COP'?'$'+Math.round(total/1000)+'K COP':'$'+total.toLocaleString()+' USD'}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // Empleados por rol
+  const epr = contarPorCampo(empleados, 'rol');
+  const maxE = Math.max(...Object.values(epr));
+  document.getElementById('empleados-por-rol').innerHTML = Object.entries(epr).map(([rol, count]) => `
+    <div>
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-slate-300 capitalize">${rol.replace('_',' ')}</span>
+        <span class="text-slate-400">${count} empleado${count!==1?'s':''}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(count/maxE*100)}%"></div></div>
+    </div>`).join('');
+
+  // Reporte semanal
+  const ventasMed = ventas.filter(v=>v.localId==='MED-001');
+  const totalMed  = sumarTotal(ventasMed);
+  const covers    = sumarCovers(ventasMed);
+  const [platId, platCant] = platilloMasVendido(ventas);
+  const platNombre = recetas.find(r=>r.id===platId)?.nombrePlatillo || platId;
+  document.getElementById('reporte-semanal').innerHTML = [
+    ['Local','Brasaland El Poblado'],
+    ['Semana','2024-W25'],
+    ['Total ventas',`COP ${totalMed.toLocaleString('es-CO')}`],
+    ['Total covers', covers],
+    ['Ticket promedio',`COP ${Math.round(totalMed/covers).toLocaleString('es-CO')}`],
+    ['Platillo más vendido', platNombre],
+  ].map(([k,v]) => `
+    <div class="result-row flex justify-between py-2">
+      <span class="text-slate-500">${k}</span>
+      <span class="text-white font-medium">${v}</span>
+    </div>`).join('');
+
+  // Reporte consolidado
+  const ventasCOP = ventas.filter(v=>v.moneda==='COP').reduce((s,v)=>s+v.totalVenta,0);
+  const ventasUSD = ventas.filter(v=>v.moneda==='USD').reduce((s,v)=>s+v.totalVenta,0);
+  const alertas = generarAlertasStock(inventarios, ingredientes, locales);
+  document.getElementById('reporte-consolidado').innerHTML = [
+    ['Semana','2024-W25'],
+    ['Total ventas COP',`$${ventasCOP.toLocaleString('es-CO')}`],
+    ['Total ventas USD',`$${ventasUSD.toFixed(2)}`],
+    ['Total covers cadena', sumarCovers(ventas)],
+    ['Locales activos', locales.filter(l=>l.activo).length],
+    ['Órdenes emitidas', ordenes.length],
+    ['Alertas stock crítico', alertas.length],
+  ].map(([k,v]) => `
+    <div class="result-row flex justify-between py-2">
+      <span class="text-slate-500">${k}</span>
+      <span class="text-white font-medium">${v}</span>
+    </div>`).join('');
+
+  // Resumen clientes
+  const totalPts = clientes.reduce((s,c)=>s+c.brasaPoints,0);
+  const gastoTotal = clientes.reduce((s,c)=>s+c.totalGastado,0);
+  document.getElementById('resumen-clientes').innerHTML = [
+    ['Total clientes', clientes.length, '👥'],
+    ['Clientes activos', clientes.filter(c=>c.activo).length, '✅'],
+    ['Total Brasa Points', totalPts.toLocaleString(), '⭐'],
+    ['Promedio pts/cliente', Math.round(totalPts/clientes.length), '📊'],
+    ['Gasto total hist.', `$${gastoTotal.toFixed(2)} USD`, '💵'],
+    ['Gasto promedio', `$${(gastoTotal/clientes.length).toFixed(2)} USD`, '📈'],
+  ].map(([k,v,icon]) => `
+    <div class="card rounded-xl p-3 text-center">
+      <p class="text-2xl mb-1">${icon}</p>
+      <p class="text-white font-bold text-sm">${v}</p>
+      <p class="text-slate-500 text-xs">${k}</p>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ALERTAS DE STOCK
+// ═══════════════════════════════════════════════════════════
+
+function renderAlertas() {
+  const alertas = generarAlertasStock(inventarios, ingredientes, locales);
+  document.getElementById('alertas-list').innerHTML = alertas.map(a => {
+    const pct = Math.round(a.cantidadActual / a.stockMinimo * 100);
+    return `<div class="alert-bar rounded-xl p-4">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <p class="text-white font-semibold">⚠️ ${a.nombreIngrediente}</p>
+          <p class="text-xs text-slate-400">${a.nombreLocal} · ${a.localId}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-red-400 font-bold text-sm">Déficit: ${a.deficit} uds.</p>
+          <p class="text-xs text-slate-500">${a.cantidadActual} / ${a.stockMinimo} mínimo</p>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div style="width:${pct}%;height:100%;border-radius:3px;background:linear-gradient(90deg,#ef4444,#f87171);transition:width 0.8s"></div>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">${pct}% del stock mínimo requerido</p>
+    </div>`;
+  }).join('');
+
+  // Tabla de inventario completo
+  document.getElementById('inventario-table').innerHTML = inventarios.map(inv => {
+    const ing = ingredientes.find(i=>i.id===inv.ingredienteId);
+    const loc = locales.find(l=>l.id===inv.localId);
+    const ok  = inv.cantidadActual >= (ing?.stockMinimo||0);
+    return `<tr class="text-sm result-row">
+      <td class="py-2 pr-4 text-slate-300">${loc?.nombre||inv.localId}</td>
+      <td class="py-2 pr-4 text-slate-300">${ing?.nombre||inv.ingredienteId}</td>
+      <td class="py-2 pr-4 text-right font-mono ${ok?'text-emerald-400':'text-red-400'}">${inv.cantidadActual}</td>
+      <td class="py-2 pr-4 text-right font-mono text-slate-500">${ing?.stockMinimo||'-'}</td>
+      <td class="py-2"><span class="${ok?'badge-ok':'badge-fail'} px-2 py-0.5 rounded-full text-xs">${ok?'OK':'CRÍTICO'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// VALIDACIONES INTERACTIVAS
+// ═══════════════════════════════════════════════════════════
+
+function validarLocalWeb() {
+  const d = {
+    id: document.getElementById('v-local-id').value,
+    nombre: document.getElementById('v-local-nombre').value,
+    ciudad: document.getElementById('v-local-ciudad').value,
+    pais: document.getElementById('v-local-pais').value,
+    monedaLocal: document.getElementById('v-local-moneda').value,
+    fechaApertura: document.getElementById('v-local-fecha').value,
+    direccion: 'test', telefono: 'test', supervisorId: 'test', activo: true,
+  };
+  document.getElementById('res-validar-local').innerHTML = validacionBadge(validarLocal(d));
+}
+
+function validarEmpleadoWeb() {
+  const d = {
+    id: 'EMP-TEST',
+    nombre: document.getElementById('v-emp-nombre').value,
+    apellido: 'Test',
+    email: document.getElementById('v-emp-email').value,
+    rol: 'cocinero',
+    localId: 'MED-001',
+    pais: document.getElementById('v-emp-pais').value,
+    fechaIngreso: document.getElementById('v-emp-fecha').value,
+    salario: parseFloat(document.getElementById('v-emp-salario').value),
+    monedaSalario: document.getElementById('v-emp-moneda').value,
+    estado: 'activo',
+  };
+  document.getElementById('res-validar-empleado').innerHTML = validacionBadge(validarEmpleado(d));
+}
+
+function validarClienteWeb() {
+  const nombreCompleto = document.getElementById('v-cli-nombre').value.split(' ');
+  const d = {
+    id: 'CLI-TEST',
+    nombre: nombreCompleto[0]||'Test',
+    apellido: nombreCompleto.slice(1).join(' ')||'Test',
+    email: document.getElementById('v-cli-email').value,
+    telefono: '+57 300 0000000',
+    brasaPoints: parseInt(document.getElementById('v-cli-puntos').value)||0,
+    localFrecuente: 'MED-001',
+    fechaRegistro: document.getElementById('v-cli-registro').value,
+    ultimaVisita: document.getElementById('v-cli-visita').value,
+    totalGastado: parseFloat(document.getElementById('v-cli-gasto').value)||0,
+    activo: true,
+  };
+  document.getElementById('res-validar-cliente').innerHTML = validacionBadge(validarCliente(d));
+}
+
+function validarOrdenWeb() {
+  const cant  = parseFloat(document.getElementById('v-oc-cantidad').value)||0;
+  const prec  = parseFloat(document.getElementById('v-oc-precio').value)||0;
+  const sub   = Math.round(cant * prec * 100)/100;
+  const est   = document.getElementById('v-oc-estado').value;
+  const d = {
+    id: document.getElementById('v-oc-id').value,
+    localId: 'MED-001', proveedorId: 'PROV-001',
+    estado: est,
+    lineas: [{ ingredienteId:'ING-001', cantidadSolicitada:cant, precioUnitario:prec, subtotal:sub }],
+    totalOrden: sub,
+    moneda: 'COP',
+    fechaCreacion: '2024-06-18',
+    fechaAprobacion: est==='aprobada' ? '2024-06-18' : null,
+    aprobadoPor: est==='aprobada' ? 'EMP-SUP-001' : null,
+    notas: '',
+  };
+  document.getElementById('res-validar-orden').innerHTML = validacionBadge(validarOrden(d));
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderLocales();
+renderIngredientes();
+renderEmpleados();
+renderOrdenes();
+renderTransformaciones();
+renderAlertas();
+</script>
+</body>
+</html>

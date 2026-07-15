@@ -95,3 +95,16 @@ Abre app → ve sus puntos → pide en 1 clic
 ---
 
 **El resultado:** Brasaland pasa de saber **cero** sobre sus clientes a tener un perfil completo de cada uno — y actuar sobre eso automáticamente.
+
+---
+
+## Resumen Hito 2: Fundamentos de Programación y Lógica de Datos
+
+Durante el desarrollo de este hito, nos enfocamos en la capa lógica interna del negocio, creando herramientas robustas para la manipulación de datos sin depender de frameworks complejos:
+
+1. **Modelado de Datos (TypeScript)**: Se definieron interfaces tipadas para todas las entidades clave (Locales, Ingredientes, Órdenes, Empleados, Clientes, etc.) para garantizar consistencia.
+2. **Gestión de Colecciones**: Se crearon utilidades funcionales para filtrar y ordenar datos según necesidades específicas (ej. locales activos, ingredientes por categoría, ordenes por estado).
+3. **Algoritmos de Búsqueda**: Se implementaron búsquedas lineales $O(n)$ para datos no ordenados y búsquedas binarias $O(\log n)$ optimizadas para datos ordenados (ej. buscar local por ID o venta por fecha).
+4. **Transformaciones y Agregaciones**: Se desarrollaron funciones para calcular KPIs esenciales (ticket promedio, platillo más vendido, alertas de stock crítico, reportes semanales y consolidados).
+5. **Validaciones de Negocio**: Se establecieron reglas estrictas (ej. salarios mínimos según país, coherencia de fechas, control de divisas COP/USD, exactitud en subtotales de órdenes).
+6. **Dashboard Interactivo**: Se construyó una interfaz web completa (`index.html`) con **Tailwind CSS** que integra y demuestra todas las utilidades en tiempo real (colecciones, búsquedas, transformaciones, validaciones y alertas de stock), servida localmente.
