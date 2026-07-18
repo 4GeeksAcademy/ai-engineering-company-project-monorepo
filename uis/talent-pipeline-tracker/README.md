@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nexova Talent Pipeline Tracker
 
-## Getting Started
+Internal People and Talent interface for managing candidate records and hiring progress.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router)
+- React
+- TypeScript
+
+## Environment variables
+
+Create a `.env` file in this project root with:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+PROJECT_API_URL=https://playground.4geeks.com/tracker/api/v1
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+An example file is included in `.env.example`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open http://localhost:3000.
 
-To learn more about Next.js, take a look at the following resources:
+## Available routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/` candidate list (filters by status/stage query params + search)
+- `/candidates/new` register candidate
+- `/candidates/[id]` candidate profile, status/stage updates, internal notes
+- `/candidates/[id]/edit` edit candidate data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Implemented milestone features
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Candidate list from `GET /records`
+- Candidate detail from `GET /records/{id}`
+- Status/stage patch via `PATCH /records/{id}`
+- Notes list/add/delete via `/records/{id}/notes`
+- Candidate create via `POST /records`
+- Candidate edit via `PUT /records/{id}`
+- Async loading/error/success feedback in key flows
+- Company-specific labels for status/stage terminology
