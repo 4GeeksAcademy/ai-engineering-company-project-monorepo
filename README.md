@@ -11,21 +11,21 @@ _Base template for transversal projects in the AI Engineering Career Program —
 
 ## Purpose
 
-This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
+This repository is the **active workspace** for the HealthCore transversal project, with deliverables mapped to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
 
-- Create a template from this repository.
-- Replace the placeholder `CONTEXT.md` with your assigned company context.
+- Use `CONTEXT.md` for milestone 1 (public website scope).
+- Use `CONTEXT-healthcore.es .md` for milestone 2 (TypeScript business logic scope).
 - Use `skills/` and the directory-level `README.md` files as working guidance.
 
 ---
 
-## Current status of the template
+## Current repository status
 
-The repository currently provides a **base folder structure and documentation skeleton**. It does not include runnable apps or global scripts yet.
+The repository contains the base monorepo structure plus project-specific documentation for HealthCore.
 
-- `CONTEXT.md` is a placeholder and must be replaced with your assigned company context.
-- There is no root `AGENTS.md` yet.
-- Shared package metadata exists in `packages/shared/package.json` (`@repo/shared-types`), but no workspace runner is configured at root.
+- `CONTEXT.md` is already project-specific (HealthCore, milestone 1).
+- `CONTEXT-healthcore.es .md` defines milestone 2 requirements for TypeScript logic.
+- Shared package metadata exists in `packages/shared/package.json` (`@repo/shared-types`).
 
 ---
 
@@ -35,7 +35,7 @@ The repository currently provides a **base folder structure and documentation sk
 ai-engineering-company-project-monorepo/
 ├── README.md
 ├── README.es.md
-├── CONTEXT.md                # Placeholder to be replaced with assigned context
+├── CONTEXT.md                # HealthCore context (milestone 1)
 ├── agents/                   # Agent patterns/templates and tools docs
 ├── data/                     # raw, process, pipelines, eval
 ├── docs/                     # Project and architecture documentation
@@ -58,7 +58,7 @@ ai-engineering-company-project-monorepo/
 
 1. **Use this repository as a template** and create your own project repo.
 2. **Clone** your repository (or open it in Codespaces).
-3. **Replace** `CONTEXT.md` with the full context for your assigned company.
+3. **Read** `CONTEXT.md` and `CONTEXT-healthcore.es .md` before implementing features.
 4. **Review** each top-level folder `README.md` to understand intended responsibilities (`uis/`, `services/`, `data/`, `skills/`, etc.).
 5. **Start implementing** milestone deliverables in `uis/` and `services/`, reusing `packages/shared/` and `data/` as needed.
 

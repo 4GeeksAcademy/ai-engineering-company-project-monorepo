@@ -11,21 +11,21 @@ _Las instrucciones están [disponibles en inglés](./README.md)._
 
 ## Propósito
 
-Este repositorio es la **plantilla de inicio** para los proyectos transversales. Trabajarás con escenarios de empresas reales (Brasaland, TrackFlow, Nexova) construyendo entregables que se corresponden con los hitos del curso (Web, Programación, Backend, Telemetría, RAG, Agentes, Workflows, Tiempo real).
+Este repositorio es el **workspace activo** del proyecto transversal de HealthCore, con entregables que se corresponden con los hitos del curso (Web, Programación, Backend, Telemetría, RAG, Agentes, Workflows, Tiempo real).
 
-- Crea una plantilla a partir de este repositorio.
-- Reemplaza el `CONTEXT.md` placeholder por el contexto de tu empresa asignada.
+- Usa `CONTEXT.md` para el hito 1 (sitio web público).
+- Usa `CONTEXT-healthcore.es .md` para el hito 2 (lógica de negocio en TypeScript).
 - Usa `skills/` y los `README.md` por carpeta como guía de trabajo.
 
 ---
 
-## Estado actual de la plantilla
+## Estado actual del repositorio
 
-Actualmente el repositorio ofrece una **estructura base de carpetas y documentación**, pero todavía no incluye aplicaciones ejecutables ni scripts globales en la raíz.
+Actualmente el repositorio ofrece la estructura base del monorepo y documentación específica del proyecto HealthCore.
 
-- `CONTEXT.md` es un placeholder y debe sustituirse por el contexto de la empresa asignada.
-- No existe todavía un `AGENTS.md` en la raíz.
-- Existe metadata del paquete compartido en `packages/shared/package.json` (`@repo/shared-types`), pero aún no hay runner de workspace en raíz.
+- `CONTEXT.md` ya contiene contexto real del proyecto (HealthCore, hito 1).
+- `CONTEXT-healthcore.es .md` define los requisitos del hito 2 para TypeScript.
+- Existe metadata del paquete compartido en `packages/shared/package.json` (`@repo/shared-types`).
 
 ---
 
@@ -35,7 +35,7 @@ Actualmente el repositorio ofrece una **estructura base de carpetas y documentac
 ai-engineering-company-project-monorepo/
 ├── README.md
 ├── README.es.md
-├── CONTEXT.md                # Placeholder a reemplazar con el contexto asignado
+├── CONTEXT.md                # Contexto de HealthCore (hito 1)
 ├── agents/                   # Patrones/plantillas de agentes y documentación de tools
 ├── data/                     # raw, process, pipelines, eval
 ├── docs/                     # Documentación de proyecto y arquitectura
@@ -58,7 +58,7 @@ ai-engineering-company-project-monorepo/
 
 1. **Usa este repositorio como plantilla** y crea tu propio repo de proyecto.
 2. **Clona** tu repositorio (o ábrelo en Codespaces).
-3. **Reemplaza** `CONTEXT.md` con el contexto completo de tu empresa asignada.
+3. **Revisa** `CONTEXT.md` y `CONTEXT-healthcore.es .md` antes de implementar funcionalidades.
 4. **Revisa** los `README.md` de cada carpeta raíz para entender responsabilidades (`uis/`, `services/`, `data/`, `skills/`, etc.).
 5. **Empieza a implementar** entregables por hito en `uis/` y `services/`, reutilizando `packages/shared/` y `data/` según corresponda.
 
