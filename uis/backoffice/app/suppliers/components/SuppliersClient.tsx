@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { Supplier, VALID_CATEGORIES } from "../types";
 
-const API_BASE_URL = "http://localhost:8000/suppliers";
+// Usamos ruta relativa para que Next.js proxy (next.config.ts) redirija
+// al backend FastAPI. En codespace el navegador no puede acceder
+// directamente a localhost:8000, pero el proxy del server sí.
+const API_BASE_URL = "/suppliers";
 
 export default function SuppliersClient() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -17,7 +20,7 @@ export default function SuppliersClient() {
   // Estado del formulario
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  
+
   const fetchSuppliers = async () => {
     setLoading(true);
     setError(null);
@@ -25,7 +28,7 @@ export default function SuppliersClient() {
       const params = new URLSearchParams();
       if (filterCountry) params.append("country", filterCountry);
       if (filterCategory) params.append("category", filterCategory);
-      
+
       const res = await fetch(`${API_BASE_URL}/?${params.toString()}`);
       if (!res.ok) throw new Error("Error al obtener los proveedores");
       const data = await res.json();
@@ -51,8 +54,7 @@ export default function SuppliersClient() {
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error("Error al cambiar estado");
-      // Actualizar estado local
-      setSuppliers(suppliers.map(s => s.id === id ? { ...s, status: newStatus } : s));
+      setSuppliers(suppliers.map(s => s.id === id ? { ...s, status: newStatus as "active" | "suspended" } : s));
     } catch (err) {
       alert("No se pudo actualizar el estado.");
     }
@@ -61,7 +63,7 @@ export default function SuppliersClient() {
   const updateRate = async (id: number, currentRate: number) => {
     const promptValue = prompt("Ingresa la nueva tarifa (debe ser mayor a 0):", currentRate.toString());
     if (!promptValue) return;
-    
+
     const newRate = parseFloat(promptValue);
     if (isNaN(newRate) || newRate <= 0) {
       alert("Tarifa inválida. Debe ser un número mayor a 0.");
@@ -89,10 +91,10 @@ export default function SuppliersClient() {
     e.preventDefault();
     setFormError(null);
     const formData = new FormData(e.currentTarget);
-    
+
     const country = formData.get("country") as string;
     const currency = country === "USA" ? "USD" : "EUR";
-    
+
     const payload = {
       name: formData.get("name"),
       country,
@@ -110,13 +112,12 @@ export default function SuppliersClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      
+
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.detail?.[0]?.msg || JSON.stringify(errData.detail) || "Error de validación en la API");
       }
-      
-      // Añadir el nuevo a la lista y cerrar modal
+
       const newSupplier = await res.json();
       setSuppliers([...suppliers, newSupplier]);
       setShowForm(false);
@@ -130,7 +131,7 @@ export default function SuppliersClient() {
       {/* Controles y Filtros */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-4">
-          <select 
+          <select
             className="rounded-lg border-slate-300 bg-slate-50 text-sm font-medium focus:border-indigo-500 focus:ring-indigo-500"
             value={filterCountry}
             onChange={(e) => setFilterCountry(e.target.value)}
@@ -140,7 +141,7 @@ export default function SuppliersClient() {
             <option value="Spain">España</option>
           </select>
 
-          <select 
+          <select
             className="rounded-lg border-slate-300 bg-slate-50 text-sm font-medium focus:border-indigo-500 focus:ring-indigo-500"
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -151,8 +152,8 @@ export default function SuppliersClient() {
             ))}
           </select>
         </div>
-        
-        <button 
+
+        <button
           onClick={() => setShowForm(!showForm)}
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 transition"
         >
@@ -266,11 +267,11 @@ export default function SuppliersClient() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <button 
+                      <button
                         onClick={() => toggleStatus(supplier.id, supplier.status)}
                         className={`text-xs px-3 py-1 rounded-md border ${
-                          supplier.status === 'active' 
-                            ? 'border-orange-200 text-orange-700 hover:bg-orange-50' 
+                          supplier.status === 'active'
+                            ? 'border-orange-200 text-orange-700 hover:bg-orange-50'
                             : 'border-green-200 text-green-700 hover:bg-green-50'
                         }`}
                       >

@@ -25,7 +25,9 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@trackflow/logic": ["../../packages/logic/src/index.ts"],
+      "@trackflow/logic/*": ["../../packages/logic/src/*"]
     }
   },
   "include": [
@@ -40,3 +42,4 @@
     "node_modules"
   ]
 }
+

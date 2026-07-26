@@ -41,6 +41,20 @@ app.include_router(suppliers_router)
 _last_analysis: dict | None = None
 
 
+@app.get("/")
+def root() -> dict:
+    return {
+        "app": settings.app_name,
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": {
+            "suppliers": "/suppliers/",
+            "incidents_analyze": "/api/incidents/analyze",
+            "incidents_export": "/api/incidents/results/export",
+        },
+    }
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
