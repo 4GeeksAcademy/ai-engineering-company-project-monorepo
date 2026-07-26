@@ -1,0 +1,6 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+python-multipart==0.0.20
+pydantic-settings==2.10.1
+python-dotenv==1.1.1
+tinydb==4.8.2

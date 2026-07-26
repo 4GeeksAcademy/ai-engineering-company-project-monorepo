@@ -20,3 +20,6 @@ export * from "./transformations";
 
 // Validaciones
 export * from "./validations";
+
+// Script de pruebas de fuego reutilizable
+export * from "./smokeReport";
