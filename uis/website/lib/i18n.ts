@@ -10,7 +10,17 @@ export const translations = {
       applicationDescription:
         "Submit your HealthCore patient enquiry with structured details so our front desk can contact you within one business day.",
     },
-    nav: { home: "Home", application: "Application", services: "Services", locations: "Locations", contact: "Contact" },
+    nav: {
+      home: "Home",
+      application: "Application",
+      services: "Services",
+      locations: "Locations",
+      contact: "Contact",
+      utilities: "Utilities",
+      tracker: "Talent pipeline",
+      menu: "Menu",
+      closeMenu: "Close",
+    },
     hero: {
       headline: "Healthcare that fits your life",
       subheadline:
@@ -153,7 +163,17 @@ export const translations = {
       applicationDescription:
         "Envia tu consulta de paciente a HealthCore con datos estructurados para que recepcion te contacte en un dia habil.",
     },
-    nav: { home: "Inicio", application: "Formulario", services: "Servicios", locations: "Ubicaciones", contact: "Contacto" },
+    nav: {
+      home: "Inicio",
+      application: "Formulario",
+      services: "Servicios",
+      locations: "Ubicaciones",
+      contact: "Contacto",
+      utilities: "Utilidades",
+      tracker: "Pipeline de talento",
+      menu: "Menu",
+      closeMenu: "Cerrar",
+    },
     hero: {
       headline: "Atencion medica que se adapta a tu vida",
       subheadline:

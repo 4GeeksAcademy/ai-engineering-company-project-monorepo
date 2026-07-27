@@ -2,175 +2,81 @@
 
 HealthCore project workspace containing:
 
-- Public multipage website (`index.html`, `application.html`, `utility-test.html`)
-- Frontend language toggling (English/Spanish)
-- TypeScript utility modules in `src/utils`
-- Unit tests and fixtures in `tests/utils`
-- Manual utility function tester UI (`utility-test.html`)
-- Talent Pipeline Tracker UI (`uis/talent-pipeline-tracker`)
-- Public website Next.js app (`uis/website`)
-- Internal operations backoffice (`uis/backoffice`)
+- **Next.js applications** under `uis/` (public website, operations backoffice, talent pipeline tracker)
+- TypeScript business logic in `src/utils`
 - Agent infrastructure (`memory-bank/`, `AGENTS.md`, `.agents/`, `skills/`)
+- Vitest unit tests in `tests/utils`
 
-## Quick Start
+## Quick Start — All applications
 
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Build frontend assets:
-
-```bash
-npm run build:css
-npm run build:utility-test
-```
-
-3. Run local static server:
-
-```bash
-npm run start
-```
-
-Default local URL: `http://localhost:4173`
-
-## Talent Pipeline Tracker
-
-The Executive Assistant recruitment pipeline UI lives in `uis/talent-pipeline-tracker`. It is a separate Next.js app and runs independently from the static site above.
-
-1. Go to the app directory:
-
-```bash
-cd uis/talent-pipeline-tracker
-```
-
-2. Configure the API URL:
-
-```bash
-cp .env.example .env.local
-```
-
-Set `NEXT_PUBLIC_API_URL` in `.env.local` (default: `https://playground.4geeks.com/tracker/api/v1`).
-
-3. Install dependencies and start the dev server:
+From the repository root:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Default local URL: `http://localhost:3000`
+This starts every frontend concurrently:
 
-See `uis/talent-pipeline-tracker/README.md` for app-specific details.
+| Service | URL | Purpose |
+| --- | --- | --- |
+| Application hub | http://localhost:4173 | Links to all apps |
+| Public website | http://localhost:3000 | Bilingual corporate site + patient enquiry |
+| Operations backoffice | http://localhost:3001 | Billing, clinical, CME dashboards |
+| Utility tester | http://localhost:3001/utilities | M2 function manual runner |
+| Talent pipeline tracker | http://localhost:3002 | Recruitment pipeline (M3) |
 
-## Public Website (Next.js)
+Copy `.env.example` to `.env.local` in each `uis/*` app if you need custom cross-app URLs.
 
-Milestone 1 corporate site migrated to `uis/website`.
-
-```bash
-cd uis/website
-npm install
-npm run dev
-```
-
-Routes: `/` (landing), `/application` (patient enquiry form). EN/ES language toggle supported.
-
-## Operations Backoffice
-
-Internal dashboard importing Milestone 2 utilities from `src/utils`.
+### Individual apps
 
 ```bash
-cd uis/backoffice
-npm install
-npm run dev -- -p 3001
+npm run dev:website      # port 3000
+npm run dev:backoffice   # port 3001
+npm run dev:tracker      # port 3002
+npm run dev:hub          # port 4173 (links only)
 ```
 
-Use port `3001` if another Next.js app is already on `3000`.
-
-## Development Workflow
-
-- Rebuild Tailwind output after UI changes:
+## Production
 
 ```bash
-npm run build:css
+npm run build
+npm start
 ```
 
-- Rebundle utility tester after edits to `src/utility-test.ts` or `src/utils/*`:
+Builds all three Next.js apps, then serves them on ports 3000–3002.
 
-```bash
-npm run build:utility-test
-```
-
-- Type-check TypeScript:
+## TypeScript utilities (Milestone 2)
 
 ```bash
 npm run typecheck
-```
-
-- Run tests:
-
-```bash
 npm test
-```
-
-- Run utility playground script:
-
-```bash
 npm run utils:playground
 ```
 
-## Key Scripts
+Business logic lives in `src/utils/` and is imported by `uis/backoffice` — never duplicated.
 
-- `npm run start`: Serve repository as static site on port 4173
-- `npm run build:css`: Compile `styles/tailwind.css` to `assets/css/tailwind.css`
-- `npm run build:css:watch`: Watch mode for Tailwind CSS
-- `npm run build:utility-test`: Bundle `src/utility-test.ts` to `assets/js/utility-test.js`
-- `npm run typecheck`: Run TypeScript checks
-- `npm test`: Execute Vitest suite
+## Development Workflow
 
-## Deployment
-
-This project deploys as a static site.
-
-### Build Step (required)
-
-Run this before every deployment:
-
-```bash
-npm install
-npm run build:css
-npm run build:utility-test
-```
-
-### Deploy Artifacts
-
-Deploy the repository root as static files, including generated assets:
-
-- HTML pages (`index.html`, `application.html`, `utility-test.html`)
-- `assets/css/tailwind.css`
-- `assets/js/utility-test.js`
-- `language-toggle.js`
-- `validation.js`
-- Any referenced files under `assets/`
-
-### Platform Notes
-
-- Netlify: publish directory `.` (repository root)
-- Vercel static: configure output directory as `.`
-- GitHub Pages: publish built branch contents with generated asset files committed or built in CI
+- Root quality gates: `npm run typecheck`, `npm test`
+- All apps: `npm run lint:apps`
+- Single app: `cd uis/<app> && npm run lint && npm run build`
 
 ## Repository Areas
 
-- `src/`: TypeScript source modules and utility tester source
-- `tests/`: Vitest test suites and fixtures
-- `assets/`: Built frontend assets and static resources
-- `styles/`: Tailwind source stylesheet
-- `uis/talent-pipeline-tracker/`: Next.js recruitment pipeline tracker
-- `uis/website/`: Next.js public corporate website
-- `uis/backoffice/`: Next.js internal operations dashboard
-- `memory-bank/`: Agent session context for HealthCore Digital
+- `memory-bank/` — Agent session context
+- `src/` — M2 TypeScript utilities
+- `tests/` — Vitest suites and fixtures
+- `uis/website/` — Public Next.js site (M1 migration)
+- `uis/backoffice/` — Internal operations dashboard (M4)
+- `uis/talent-pipeline-tracker/` — Recruitment UI (M3)
+- `context/` — Milestone company scenarios (programme-assigned)
+- `public/index.html` — Local dev application hub
 
-## Language Support
+## Agent infrastructure
 
-The public pages and utility tester support English and Spanish via data attributes and `language-toggle.js`.
+See root `AGENTS.md` for session startup files, pre-commit workflow, and protected paths.
+
+## Legacy note
+
+The original static HTML site (`index.html`, `application.html`, `utility-test.html`) has been migrated to Next.js apps under `uis/`. The `assets/` folder remains for reference artifacts; Tailwind v3 build scripts are retained for historical compatibility only.

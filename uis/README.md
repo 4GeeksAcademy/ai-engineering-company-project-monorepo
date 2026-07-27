@@ -1,10 +1,27 @@
 # `uis` folder
 
-This folder contains **all the user interfaces** related to the company for the cross-functional AI Engineering project (for example: web applications, internal dashboards, customer portals, Streamlit/Gradio apps, etc.).
+All HealthCore frontend applications live here as independent Next.js apps.
 
-Each subfolder inside `uis/` must correspond to **one specific user interface** (for example: `website`, `backoffice`) and include its own technical and functional documentation.
+| App | Port | Routes |
+| --- | --- | --- |
+| `website/` | 3000 | `/`, `/application` |
+| `backoffice/` | 3001 | `/`, `/utilities` |
+| `talent-pipeline-tracker/` | 3002 | `/`, `/candidates/[id]` |
 
-- **Main purpose**: to centralize in a single place all the frontend applications that support the company's use cases.
-- **Recommendation**: document in this file (or in sub-READMEs) the applications you add, their objective, the technology used, and how to run them.
+## Run all apps
+
+From the repository root:
+
+```bash
+npm run dev
+```
+
+Dev hub with links: http://localhost:4173
+
+## Run one app
+
+```bash
+cd uis/website && npm install && npm run dev
+```
 
 > _Spanish version: [README.es.md](./README.es.md)._

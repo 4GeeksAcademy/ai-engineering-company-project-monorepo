@@ -1,48 +1,39 @@
 # HealthCore Monorepo — Progress
 
-_Last updated: Milestone 4 implementation_
+_Last updated: Milestone 4 finalized — static migration complete_
 
 ## Completed
 
-### Milestone 1 — Public website (legacy static)
+### Milestone 1 — Public website
 
-- [x] `index.html` landing page with header, hero, services, benefits, locations, contact, footer
-- [x] `application.html` patient enquiry form with full validation
-- [x] Bilingual EN/ES via `language-toggle.js`
-- [x] Tailwind CSS, Schema.org markup, responsive layout
+- [x] Migrated to `uis/website/` (Next.js App Router)
+- [x] Routes: `/` landing, `/application` patient enquiry form
+- [x] Bilingual EN/ES, Schema.org, responsive mobile navigation
+- [x] Legacy root HTML removed
 
 ### Milestone 2 — TypeScript utilities
 
-- [x] Entity types in `src/types.d.ts`
-- [x] `src/utils/collections.ts`, `search.ts`, `transformations.ts`, `validations.ts`
+- [x] `src/utils/` — collections, search, transformations, validations
+- [x] `src/utility-registry.ts` — shared function catalog for testers
 - [x] Vitest coverage in `tests/utils/`
-- [x] Manual tester at `utility-test.html`
 
 ### Milestone 3 — Talent Pipeline Tracker
 
-- [x] `uis/talent-pipeline-tracker/` — candidate list, filters, detail, notes, registration
-- [x] Client-side data fetching with stale-while-revalidate UX
+- [x] `uis/talent-pipeline-tracker/` on port 3002
 
-### Milestone 4 — Agent infrastructure
+### Milestone 4 — Agent infrastructure & Next.js apps
 
-- [x] `memory-bank/` (projectbrief, techContext, progress)
-- [x] Root `AGENTS.md`
-- [x] `.agents/healthcore-context.md`
-- [x] `skills/monday-operations-brief/SKILL.md`
-
-### Milestone 4 — Next.js applications
-
-- [x] `uis/website/` — M1 migration to Next.js with EN/ES
-- [x] `uis/backoffice/` — internal dashboard surfacing M2 reports
+- [x] `memory-bank/`, root `AGENTS.md`, `.agents/`, `skills/monday-operations-brief/`
+- [x] `uis/backoffice/` — operations dashboard + `/utilities` tester
+- [x] Root `npm run dev` serves all apps concurrently
+- [x] Dev hub at `public/index.html` (port 4173)
 
 ## In progress
 
-- [ ] Verify legacy static site can be retired after stakeholder sign-off on `uis/website`
-- [ ] Connect backoffice to live data APIs (future milestone)
+- [ ] Live API integrations for backoffice (future milestone)
 
 ## Planned next
 
-- Agent implementations under `agents/` (appointment reminders, claims review assist)
-- Executive KPI dashboard for Dr. Okonkwo
-- HealthCore central API integration
-- Additional agent skills (compliance review, recruitment workflow)
+- Agent implementations under `agents/`
+- Executive KPI dashboard
+- HealthCore central API

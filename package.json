@@ -4,7 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npx serve . -l 4173",
+    "dev": "concurrently -k -n hub,website,backoffice,tracker -c blue,cyan,magenta,green \"npm run dev:hub\" \"npm run dev:website\" \"npm run dev:backoffice\" \"npm run dev:tracker\"",
+    "dev:hub": "npx serve public -l 4173",
+    "dev:website": "npm run dev --prefix uis/website -- --port 3000",
+    "dev:backoffice": "npm run dev --prefix uis/backoffice -- --port 3001",
+    "dev:tracker": "npm run dev --prefix uis/talent-pipeline-tracker -- --port 3002",
+    "build": "npm run build:apps",
+    "build:apps": "npm run build --prefix uis/website && npm run build --prefix uis/backoffice && npm run build --prefix uis/talent-pipeline-tracker",
+    "start": "concurrently -k -n website,backoffice,tracker -c cyan,magenta,green \"npm run start --prefix uis/website -- --port 3000\" \"npm run start --prefix uis/backoffice -- --port 3001\" \"npm run start --prefix uis/talent-pipeline-tracker -- --port 3002\"",
+    "lint:apps": "npm run lint --prefix uis/website && npm run lint --prefix uis/backoffice && npm run lint --prefix uis/talent-pipeline-tracker",
     "build:css": "tailwindcss -c tailwind.config.js -i ./styles/tailwind.css -o ./assets/css/tailwind.css --minify",
     "build:css:watch": "tailwindcss -c tailwind.config.js -i ./styles/tailwind.css -o ./assets/css/tailwind.css --watch",
     "build:utility-test": "esbuild ./src/utility-test.ts --bundle --format=esm --platform=browser --outfile=./assets/js/utility-test.js",
@@ -14,6 +22,7 @@
     "utils:playground": "tsx src/utils-playground.ts"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "esbuild": "^0.25.6",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",

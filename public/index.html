@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthCore Digital — Application Hub</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f766e, #0369a1);
+        color: #0f172a;
+      }
+      main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 2rem 1rem 3rem;
+      }
+      .card {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.75rem;
+      }
+      p {
+        margin: 0 0 1rem;
+        color: #475569;
+        line-height: 1.5;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+      a {
+        display: block;
+        padding: 0.875rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        color: #0f766e;
+        font-weight: 600;
+      }
+      a:hover {
+        background: #f0fdfa;
+        border-color: #14b8a6;
+      }
+      small {
+        display: block;
+        margin-top: 0.25rem;
+        color: #64748b;
+        font-weight: 400;
+      }
+      code {
+        background: #f1f5f9;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <h1>HealthCore Digital</h1>
+        <p>
+          All frontend applications run as separate Next.js services. Start everything with
+          <code>npm run dev</code> from the repository root, then open the links below.
+        </p>
+        <ul>
+          <li>
+            <a href="http://localhost:3000">
+              Public website
+              <small>Bilingual corporate site and patient enquiry form · port 3000</small>
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:3001">
+              Operations backoffice
+              <small>Billing, clinical, and CME dashboards · port 3001</small>
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:3001/utilities">
+              Utility function tester
+              <small>Milestone 2 manual utility runner · backoffice /utilities</small>
+            </a>
+          </li>
+          <li>
+            <a href="http://localhost:3002">
+              Talent pipeline tracker
+              <small>Recruitment pipeline for Diane Foster · port 3002</small>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </main>
+  </body>
+</html>

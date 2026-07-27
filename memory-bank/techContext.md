@@ -13,21 +13,18 @@
 ├── src/                  # M2 TypeScript utilities and types
 ├── tests/utils/          # Vitest suites and shared fixtures
 ├── uis/                  # Next.js frontend applications
-│   ├── website/          # M4 public corporate site
-│   ├── backoffice/       # M4 internal operations dashboard
-│   └── talent-pipeline-tracker/  # M3 recruitment UI
-├── index.html            # Legacy M1 static site (until migration approved)
-└── application.html
+│   ├── website/          # Public corporate site (port 3000)
+│   ├── backoffice/       # Internal operations dashboard (port 3001)
+│   └── talent-pipeline-tracker/  # Recruitment UI (port 3002)
+└── public/               # Dev application hub (port 4173)
 ```
 
 ## Stacks in use
 
 | Area | Stack |
 | --- | --- |
-| Root / M2 | TypeScript, Vitest, Tailwind CSS v3, esbuild (utility tester) |
-| `uis/talent-pipeline-tracker/` | Next.js 16, React 19, Tailwind CSS v4 |
-| `uis/website/` | Next.js 16, React 19, Tailwind CSS v4 |
-| `uis/backoffice/` | Next.js 16, React 19, Tailwind CSS v4, imports `@healthcore/utils` from `src/` |
+| Root / M2 | TypeScript, Vitest, `concurrently`, `src/utility-registry.ts` |
+| All `uis/*` | Next.js 16, React 19, Tailwind CSS v4 |
 
 ## Architectural decisions
 
@@ -47,15 +44,14 @@
 ## Key commands
 
 ```bash
+# All apps + dev hub
+npm run dev
+
 # Root (M2)
 npm run typecheck
 npm test
-
-# Per UI app (from uis/<app>/)
-npm install
-npm run dev      # default http://localhost:3000
-npm run lint
-npm run build
+npm run build        # all Next.js apps
+npm run lint:apps
 ```
 
 ## Path aliases (backoffice)
@@ -65,3 +61,4 @@ npm run build
 | `@/*` | `uis/backoffice/*` |
 | `@healthcore/utils` | `src/utils` |
 | `@healthcore/fixtures` | `tests/utils/fixtures` |
+| `@healthcore/utility-registry` | `src/utility-registry` |

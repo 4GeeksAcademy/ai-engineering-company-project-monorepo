@@ -18,7 +18,8 @@
       "@/*": ["./*"],
       "@healthcore/utils": ["../../src/utils/index.ts"],
       "@healthcore/utils/*": ["../../src/utils/*"],
-      "@healthcore/fixtures": ["../../tests/utils/fixtures.ts"]
+      "@healthcore/fixtures": ["../../tests/utils/fixtures.ts"],
+      "@healthcore/utility-registry": ["../../src/utility-registry.ts"]
     }
   },
   "include": [
@@ -29,6 +30,7 @@
     ".next/dev/types/**/*.ts",
     "../../src/utils/**/*.ts",
     "../../src/types.d.ts",
+    "../../src/utility-registry.ts",
     "../../tests/utils/fixtures.ts"
   ],
   "exclude": ["node_modules"]
