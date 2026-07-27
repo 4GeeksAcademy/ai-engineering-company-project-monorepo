@@ -8,6 +8,9 @@ HealthCore project workspace containing:
 - Unit tests and fixtures in `tests/utils`
 - Manual utility function tester UI (`utility-test.html`)
 - Talent Pipeline Tracker UI (`uis/talent-pipeline-tracker`)
+- Public website Next.js app (`uis/website`)
+- Internal operations backoffice (`uis/backoffice`)
+- Agent infrastructure (`memory-bank/`, `AGENTS.md`, `.agents/`, `skills/`)
 
 ## Quick Start
 
@@ -60,6 +63,30 @@ npm run dev
 Default local URL: `http://localhost:3000`
 
 See `uis/talent-pipeline-tracker/README.md` for app-specific details.
+
+## Public Website (Next.js)
+
+Milestone 1 corporate site migrated to `uis/website`.
+
+```bash
+cd uis/website
+npm install
+npm run dev
+```
+
+Routes: `/` (landing), `/application` (patient enquiry form). EN/ES language toggle supported.
+
+## Operations Backoffice
+
+Internal dashboard importing Milestone 2 utilities from `src/utils`.
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev -- -p 3001
+```
+
+Use port `3001` if another Next.js app is already on `3000`.
 
 ## Development Workflow
 
@@ -139,7 +166,10 @@ Deploy the repository root as static files, including generated assets:
 - `tests/`: Vitest test suites and fixtures
 - `assets/`: Built frontend assets and static resources
 - `styles/`: Tailwind source stylesheet
-- `uis/talent-pipeline-tracker/`: Next.js app for the recruitment pipeline tracker
+- `uis/talent-pipeline-tracker/`: Next.js recruitment pipeline tracker
+- `uis/website/`: Next.js public corporate website
+- `uis/backoffice/`: Next.js internal operations dashboard
+- `memory-bank/`: Agent session context for HealthCore Digital
 
 ## Language Support
 
