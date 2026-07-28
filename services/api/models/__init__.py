@@ -16,6 +16,12 @@ from models.supplier_models import (
     SupplierCreate,
     SupplierStatus,
 )
+from models.incident import (
+    IncidentCreate,
+    IncidentUpdateStatus,
+    IncidentResponse,
+    SummaryResponse,
+)
 
 __all__ = [
     "Category",
@@ -26,4 +32,8 @@ __all__ = [
     "Supplier",
     "SupplierCreate",
     "SupplierStatus",
+    "IncidentCreate",
+    "IncidentUpdateStatus",
+    "IncidentResponse",
+    "SummaryResponse",
 ]

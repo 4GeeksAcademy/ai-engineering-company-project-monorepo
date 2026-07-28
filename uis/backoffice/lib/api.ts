@@ -8,8 +8,9 @@
 // - apiPost(url, body): POST con auth header
 // - apiGet(url): GET con auth header
 // - apiPut(url, body): PUT con auth header
+// - apiPatch(url, body): PATCH con auth header
 //
-// Uso: import { apiGet, apiPost, apiPut } from "@/lib/api"
+// Uso: import { apiGet, apiPost, apiPut, apiPatch } from "@/lib/api"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -102,6 +103,33 @@ export async function apiPut<T = unknown>(
 ): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw { status: response.status, detail: await response.json().catch(() => ({})) };
+  }
+
+  return response.json();
+}
+
+/**
+ * Realiza una petición PATCH a la API.
+ * 
+ * Útil para actualizaciones parciales (ej: cambiar estado de incidencia).
+ * El token se adjunta automáticamente si existe.
+ * 
+ * @param path - Ruta relativa (ej: "/api/incidents/1/status")
+ * @param body - Objeto con los datos parciales a actualizar
+ * @returns Respuesta parseada como JSON
+ */
+export async function apiPatch<T = unknown>(
+  path: string,
+  body: Record<string, unknown>
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
     headers: authHeaders(),
     body: JSON.stringify(body),
   });
