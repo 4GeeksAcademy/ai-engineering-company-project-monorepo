@@ -14,15 +14,15 @@ Este plan de implementación articula los requisitos de `.github/STRATEGY.md` y 
 - ✅ 🏗️ **Arquitecto Next.js**: Definición de interfaces TypeScript en `types/candidate.ts` (`Candidate`, `CandidateNote`, `Status`, `Stage`, `CandidateFilters`).
 - ✅ 🎨 **Experto UX/Nexova**: Mapeo de valores de dominio y etiquetas para el flujo de selección de Nexova Solutions (ej. Pendiente, En Revisión, Entrevista, Oferta).
 - ✅ ⚡ **Ingeniero de APIs**: Implementación de `services/api.ts` con cliente `fetch` nativo encapsulando `GET`, `POST`, `PUT`, `PATCH`, `DELETE` hacia `NEXT_PUBLIC_API_URL`. Creación de `.env.example`.
-- ✅ 📦 **Git Commit**: Commit de valor registrado (`feat(tracker): añadir interfaces TypeScript, cliente de servicio API REST y .env.example (Fase 1)`).
+- ✅ 📦 **Git Commit**: Commit de valor registrado (`añadir interfaces TypeScript, cliente de servicio API REST y .env.example (Fase 1)`).
 
 ---
 
-### 🔹 Fase 2: Layout de Nexova Solutions y Componentes Base de UI
-- 🏗️ **Arquitecto Next.js**: Creación de la estructura base de componentes en `src/components/ui/` y `src/components/layout/`.
-- 🎨 **Experto UX/Nexova**: Implementación de `Header.tsx` con la identidad de *Nexova Solutions - Operaciones de Selección*.
-- ⚡ **Ingeniero de APIs**: Creación de primitivos de feedback para los 3 estados obligatorios: `LoadingSpinner.tsx`, `ErrorMessage.tsx` y `Badge.tsx`.
-- 📦 **Git Commit**: Commit de valor (`feat(tracker): añadir layout de Nexova Solutions y componentes base de UI (Fase 2)`).
+### ✅ 🔹 Fase 2: Layout de Nexova Solutions y Componentes Base de UI (COMPLETADA)
+- ✅ 🏗️ **Arquitecto Next.js**: Creación de la estructura base de componentes en `components/ui/` (`Badge.tsx`, `LoadingSpinner.tsx`, `ErrorMessage.tsx`) y `components/layout/` (`Header.tsx`).
+- ✅ 🎨 **Experto UX/Nexova**: Implementación de `Header.tsx` con la identidad de *Nexova Solutions - Operaciones de Selección*.
+- ✅ ⚡ **Ingeniero de APIs**: Creación de primitivos de feedback para los 3 estados obligatorios: `LoadingSpinner.tsx`, `ErrorMessage.tsx` y `Badge.tsx`.
+- 📦 **Git Commit**: Commit de valor sugerido (`feat(tracker): añadir layout de Nexova Solutions y componentes base de UI (Fase 2)`).
 
 ---
 
