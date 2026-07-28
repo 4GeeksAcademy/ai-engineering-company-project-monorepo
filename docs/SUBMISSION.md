@@ -4,7 +4,7 @@
 - Company: Brasaland
 - Milestone: Coding Fundamentals with TypeScript (Milestone 1)
 - Repository: 4GeeksAcademy/ai-engineering-company-project-monorepo
-- Branch: main
+- Branch: milestone-2-programming-fundamentals
 
 ## Live Demo Link
 - Landing page: https://automatic-space-umbrella-qv7qr45jq5qrh6r9-3000.app.github.dev/index.html
@@ -99,6 +99,16 @@ Implementation:
 Implementation:
 - uis/website/testing.html
 - uis/website/testing.js
+
+## Rubric Alignment Evidence (Strict)
+
+- Canonical graded implementation lives in `packages/shared/types/*.ts`.
+- Required TypeScript validation command:
+
+npm --prefix packages/shared run validate
+
+- Result: no TypeScript compile errors.
+- Manual testing UI is included as an interaction layer to execute the same operation categories required by the rubric (filter, sort, linear search, binary search, aggregation, validation). The grading source remains the TypeScript modules under `packages/shared/types`.
 
 ## Code Quality Compliance
 - Explicit types in TypeScript parameters and returns
