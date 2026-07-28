@@ -30,17 +30,17 @@ Este plan de implementación articula los requisitos de `.github/STRATEGY.md` y 
 - ✅ 🏗️ **Arquitecto Next.js**: Sincronización de filtros de búsqueda (`query`), `status` y `stage` en la URL usando `useSearchParams` y `useRouter` sin recarga de página.
 - ✅ 🎨 **Experto UX/Nexova**: Componente `CandidateCard.tsx` con vista rápida de nombre, puesto, experiencia, badges semaforizados y enlace al detalle.
 - ✅ ⚡ **Ingeniero de APIs**: Integración de `GET /records` en `src/app/page.tsx` gestionando estados visuales de carga (spinner), éxito (grid de tarjetas) y error de red.
-- 📦 **Git Commit**: Commit de valor sugerido (`feat(tracker): implementar vista de listado de candidaturas, buscador y filtros dinámicos (Fase 3)`).
+- ✅ 📦 **Git Commit**: Commit de valor registrado (`implementar vista de listado de candidaturas, buscador y filtros dinámicos (Fase 3)`).
 
 ---
 
-### 🔹 Fase 4: Vista de Detalle, Actualización Rápida (PATCH) y Notas (`/candidates/[id]`)
-- 🏗️ **Arquitecto Next.js**: Configuración de ruta dinámica en `src/app/candidates/[id]/page.tsx`.
-- 🎨 **Experto UX/Nexova**: Visualización completa del candidato (LinkedIn, CV, teléfono, experiencia) y panel de notas internas para consultores.
-- ⚡ **Ingeniero de APIs**:
-  - Actualización rápida de Estado y Etapa mediante `PATCH /records/:id`.
+### ✅ 🔹 Fase 4: Vista de Detalle, Actualización Rápida (PATCH) y Notas (`/candidates/[id]`) (COMPLETADA)
+- ✅ 🏗️ **Arquitecto Next.js**: Configuración de ruta dinámica en `app/candidates/[id]/page.tsx`.
+- ✅ 🎨 **Experto UX/Nexova**: Visualización completa del candidato (LinkedIn, CV, teléfono, experiencia) y panel de notas internas para consultores.
+- ✅ ⚡ **Ingeniero de APIs**:
+  - Actualización rápida de Estado y Etapa mediante `PATCH /records/:id` (`StatusStageControls.tsx`).
   - Componente `CandidateNotesSection.tsx` para listar (`GET`), agregar (`POST`) y eliminar (`DELETE`) notas en tiempo real.
-- 📦 **Git Commit**: Commit de valor (`feat(tracker): implementar vista de detalle, controles PATCH y gestión de notas internas (Fase 4)`).
+- 📦 **Git Commit**: Commit de valor sugerido (`implementar vista de detalle, controles PATCH y gestión de notas internas (Fase 4)`).
 
 ---
 
@@ -48,7 +48,7 @@ Este plan de implementación articula los requisitos de `.github/STRATEGY.md` y 
 - 🏗️ **Arquitecto Next.js**: Componente `CandidateForm.tsx` reutilizable con validación en cliente.
 - 🎨 **Experto UX/Nexova**: Vistas de alta en `/candidates/new` (`POST /records`) y edición en `/candidates/[id]/edit` (`PUT /records/:id`) con mensajes de éxito/error.
 - ⚡ **Ingeniero de APIs**: Pruebas de integración de mutaciones completas y verificación técnica ejecutando `npm run build` y `npm run lint`.
-- 📦 **Git Commit**: Commit de valor final (`feat(tracker): implementar formularios de alta/edición y verificación del build (Fase 5)`).
+- 📦 **Git Commit**: Commit de valor final (`implementar formularios de alta/edición y verificación del build (Fase 5)`).
 
 ---
 
