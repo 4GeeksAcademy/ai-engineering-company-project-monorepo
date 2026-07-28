@@ -40,4 +40,19 @@
   - [x] `models.py` eliminado (reemplazado por `models/supplier_models.py` dentro del package)
   - [x] Testing manual completado: registro, login, /auth/me, /profiles/me, suppliers protegidos, permisos owner/admin, edge cases
   - [x] Todos los tests pasados: 200 OK, 401, 403, 409, 404 según corresponda
-
+- [x] **Feature Auth (AUTH-02) — Authentication Flows in the Frontend**:
+  - [x] Rama `feature/auth-frontend` creada desde `feature/auth`
+  - [x] `lib/api.ts` — helper fetch con authHeaders, apiGet, apiPost, apiPut
+  - [x] `lib/auth-actions.ts` — loginUser, registerUser, logoutUser, getCurrentUser, updateProfile
+  - [x] `components/login-form.tsx` + `app/login/page.tsx` — formulario de login con manejo de errores
+  - [x] `components/register-form.tsx` + `app/register/page.tsx` — formulario de registro con validación local
+  - [x] `components/profile-form.tsx` + `app/account/profile/page.tsx` — perfil de usuario con edición
+  - [x] `app/account/layout.tsx` — layout protegido client-side para /account/*
+  - [x] `middleware.ts` — capa adicional de protección (edge, opcional)
+  - [x] `components/navbar-auth.tsx` — navbar con login/logout/perfil según estado de auth
+  - [x] `app/layout.tsx` — actualizado para usar NavbarAuth
+  - [x] `app/suppliers/components/SuppliersClient.tsx` — migrado de fetch directo a authFetch con token
+  - [x] `next.config.ts` — añadidos proxies para /auth/, /users/, /profiles/
+  - [x] `.env.local` — creado con NEXT_PUBLIC_API_URL
+  - [x] Build exitoso (next build) — 11 rutas generadas sin errores
+  - [x] TypeScript compila sin errores (tsc --noEmit)

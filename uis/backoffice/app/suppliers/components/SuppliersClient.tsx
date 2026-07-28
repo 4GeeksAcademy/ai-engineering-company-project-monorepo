@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Supplier, VALID_CATEGORIES } from "../types";
+import { authHeaders } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth-actions";
 
 // Usamos ruta relativa para que Next.js proxy (next.config.ts) redirija
 // al backend FastAPI. En codespace el navegador no puede acceder
@@ -9,6 +12,7 @@ import { Supplier, VALID_CATEGORIES } from "../types";
 const API_BASE_URL = "/suppliers";
 
 export default function SuppliersClient() {
+  const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +25,26 @@ export default function SuppliersClient() {
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  /**
+   * Helper para llamadas fetch con autenticación.
+   * Agrega el token JWT automáticamente y maneja 401.
+   */
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const headers = { ...authHeaders(), ...(options.headers || {}) } as Record<string, string>;
+    const res = await fetch(url, { ...options, headers });
+
+    // Si la API devuelve 401, el token no es válido → redirigir al login
+    if (res.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("access_token");
+      }
+      router.replace("/login");
+      throw new Error("Sesión expirada. Redirigiendo al login...");
+    }
+
+    return res;
+  };
+
   const fetchSuppliers = async () => {
     setLoading(true);
     setError(null);
@@ -29,12 +53,14 @@ export default function SuppliersClient() {
       if (filterCountry) params.append("country", filterCountry);
       if (filterCategory) params.append("category", filterCategory);
 
-      const res = await fetch(`${API_BASE_URL}/?${params.toString()}`);
+      const res = await authFetch(`${API_BASE_URL}/?${params.toString()}`);
       if (!res.ok) throw new Error("Error al obtener los proveedores");
       const data = await res.json();
       setSuppliers(data);
     } catch (err: any) {
-      setError(err.message);
+      if (err.message !== "Sesión expirada. Redirigiendo al login...") {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -48,15 +74,17 @@ export default function SuppliersClient() {
   const toggleStatus = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
     try {
-      const res = await fetch(`${API_BASE_URL}/${id}/status`, {
+      const res = await authFetch(`${API_BASE_URL}/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error("Error al cambiar estado");
       setSuppliers(suppliers.map(s => s.id === id ? { ...s, status: newStatus as "active" | "suspended" } : s));
-    } catch (err) {
-      alert("No se pudo actualizar el estado.");
+    } catch (err: any) {
+      if (err.message !== "Sesión expirada. Redirigiendo al login...") {
+        alert("No se pudo actualizar el estado.");
+      }
     }
   };
 
@@ -71,7 +99,7 @@ export default function SuppliersClient() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/${id}/rate`, {
+      const res = await authFetch(`${API_BASE_URL}/${id}/rate`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rate_per_shipment: newRate })
@@ -83,7 +111,9 @@ export default function SuppliersClient() {
       const updatedSupplier = await res.json();
       setSuppliers(suppliers.map(s => s.id === id ? updatedSupplier : s));
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      if (err.message !== "Sesión expirada. Redirigiendo al login...") {
+        alert(`Error: ${err.message}`);
+      }
     }
   };
 
@@ -107,7 +137,7 @@ export default function SuppliersClient() {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/`, {
+      const res = await authFetch(`${API_BASE_URL}/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -122,7 +152,9 @@ export default function SuppliersClient() {
       setSuppliers([...suppliers, newSupplier]);
       setShowForm(false);
     } catch (err: any) {
-      setFormError(err.message);
+      if (err.message !== "Sesión expirada. Redirigiendo al login...") {
+        setFormError(err.message);
+      }
     }
   };
 
