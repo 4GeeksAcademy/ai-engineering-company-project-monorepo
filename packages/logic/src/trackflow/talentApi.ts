@@ -1,13 +1,22 @@
 import { Candidate, CandidateInput, Note } from "./contracts";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://playground.4geeks.com/tracker/api/v1';
+/**
+ * Crea un cliente API de talento humano configurable.
+ * La URL base se inyecta desde la capa de UI o servicio,
+ * eliminando la dependencia directa de process.env (Next.js).
+ * 
+ * @param apiBaseUrl - URL base de la API de candidatos
+ * @returns Objeto con métodos para operaciones CRUD de candidatos y notas
+ */
+export function createTalentApiClient(apiBaseUrl: string) {
+  const API_BASE_URL = apiBaseUrl;
 
-export const talentApi = {
-  /**
-   * 1. OBTENER TODAS LAS CANDIDATURAS (GET /records)
-   * Carga inicial completa para procesar el filtrado veloz en memoria.
-   */
-  async getAllCandidates(): Promise<Candidate[]> {
+  return {
+    /**
+     * 1. OBTENER TODAS LAS CANDIDATURAS (GET /records)
+     * Carga inicial completa para procesar el filtrado veloz en memoria.
+     */
+    async getAllCandidates(): Promise<Candidate[]> {
     try {
       const res = await fetch(`${API_BASE_URL}/records`);
       if (!res.ok) {
@@ -178,3 +187,13 @@ export const talentApi = {
     }
   }
 };
+}
+
+/**
+ * Instancia por defecto del cliente API usando variable de entorno.
+ * La UI debe llamar a createTalentApiClient(process.env.NEXT_PUBLIC_API_BASE_URL!)
+ * para inyectar su propia URL y evitar dependencias directas de Next.js en el paquete de lógica.
+ */
+export const talentApi = createTalentApiClient(
+  'https://playground.4geeks.com/tracker/api/v1'
+);
