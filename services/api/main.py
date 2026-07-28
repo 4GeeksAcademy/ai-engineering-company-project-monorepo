@@ -48,14 +48,14 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Captura errores de validación Pydantic y devuelve un 422 limpio."""
+    """Captura errores de validación Pydantic y devuelve un 400 identificando el campo problemático."""
     errors = []
     for err in exc.errors():
         field = " → ".join(str(loc) for loc in err.get("loc", []))
         msg = err.get("msg", "Error de validación")
         errors.append(f"{field}: {msg}" if field else msg)
     return JSONResponse(
-        status_code=422,
+        status_code=400,
         content={"detail": errors},
     )
 

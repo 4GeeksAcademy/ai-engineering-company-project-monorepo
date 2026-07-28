@@ -3,15 +3,19 @@
 // Muestra todas las incidencias del sistema en una tabla responsive.
 // Incluye filtros por estado, categoría y sede, además de acciones
 // para cambiar el estado de cada incidencia.
+//
+// Checklist:
+//   #26: 3 estados (cargando, vacío, con datos)
+//   #27: Error con opción de reintentar
+//   #28: Sin resultados -> mensaje informativo
+//   #29: Cambio de estado revierte visualmente si falla
 
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   fetchIncidents,
-  fetchIncidentsSummary,
   updateIncidentStatus,
   VALID_STATUSES,
   VALID_CATEGORIES,
@@ -43,11 +47,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function IncidentList() {
-  const router = useRouter();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [actionMsgType, setActionMsgType] = useState<"success" | "error">("success");
 
   // Filtros
   const [filterStatus, setFilterStatus] = useState("");
@@ -87,6 +91,7 @@ export default function IncidentList() {
   const handleOpenStatusModal = (incident: Incident) => {
     const transitions = getAllowedTransitions(incident.status);
     if (transitions.length === 0) {
+      setActionMsgType("error");
       setActionMsg(`La incidencia #${incident.id} está en estado final "${STATUS_LABELS[incident.status] ?? incident.status}". No se permite cambiar su estado.`);
       setTimeout(() => setActionMsg(null), 4000);
       return;
@@ -98,14 +103,29 @@ export default function IncidentList() {
     if (!statusModal) return;
     setUpdating(true);
     setActionMsg(null);
+
+    // Optimistic update: apply change immediately
+    const previousIncidents = [...incidents];
+    const prevStatus = statusModal.incident.status;
+    statusModal.incident.status = newStatus;
+    setIncidents((prev) =>
+      prev.map((inc) =>
+        inc.id === statusModal.incident.id ? { ...inc, status: newStatus } : inc
+      )
+    );
+    setStatusModal(null);
+
     try {
       await updateIncidentStatus(statusModal.incident.id, newStatus);
+      setActionMsgType("success");
       setActionMsg(`Incidencia #${statusModal.incident.id} actualizada a "${STATUS_LABELS[newStatus] ?? newStatus}".`);
-      setStatusModal(null);
-      loadIncidents();
       setTimeout(() => setActionMsg(null), 3000);
     } catch (err: any) {
-      setActionMsg(err?.detail?.detail ?? err?.detail ?? err?.message ?? "Error al actualizar estado");
+      // Revert visual change on failure (Checklist #29)
+      setIncidents(previousIncidents);
+      statusModal.incident.status = prevStatus;
+      setActionMsgType("error");
+      setActionMsg(err?.detail?.detail ?? err?.detail ?? err?.message ?? "Error al actualizar estado. Se ha revertido el cambio.");
     } finally {
       setUpdating(false);
     }
@@ -115,7 +135,13 @@ export default function IncidentList() {
     <div className="space-y-6">
       {/* Mensajes de acción */}
       {actionMsg && (
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+        <div
+          className={`rounded-xl border p-4 text-sm ${
+            actionMsgType === "error"
+              ? "border-rose-200 bg-rose-50 text-rose-900"
+              : "border-indigo-200 bg-indigo-50 text-indigo-900"
+          }`}
+        >
           {actionMsg}
         </div>
       )}
@@ -183,7 +209,15 @@ export default function IncidentList() {
       {loading ? (
         <div className="py-12 text-center text-sm text-slate-500">Cargando incidencias...</div>
       ) : error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+          <p className="text-sm text-rose-900">{error}</p>
+          <button
+            onClick={loadIncidents}
+            className="mt-3 rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+          >
+            Reintentar
+          </button>
+        </div>
       ) : incidents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 py-12 text-center text-sm text-slate-500">
           No hay incidencias que coincidan con los filtros.
@@ -228,7 +262,8 @@ export default function IncidentList() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleOpenStatusModal(inc)}
-                      className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100"
+                      disabled={updating}
+                      className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Cambiar estado
                     </button>

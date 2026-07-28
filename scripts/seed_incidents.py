@@ -35,39 +35,37 @@ def seed_database(csv_path: str, db_path: str = "incidentes_db.json"):
     Incident = Query()
 
     inserted = 0
-    skipped = 0
+    duplicated = 0
     errors = []
 
     for row in rows:
         incident_id_raw = row.get("incident_id", "").strip()
         if not incident_id_raw.isdigit():
             errors.append(f"Fila sin incident_id v├ílido: {dict(row)}")
-            skipped += 1
             continue
 
         incident_id = int(incident_id_raw)
 
         # Idempotencia: si ya existe, saltar
         if table.contains(Incident.incident_id == incident_id):
-            skipped += 1
+            duplicated += 1
             continue
 
         valid, result = validate_and_transform_row(row)
         if not valid:
             errors.append(f"Incidente #{incident_id}: {result}")
-            skipped += 1
             continue
 
         table.insert(result)
         inserted += 1
 
-    print(f"Insertados: {inserted}, Inv├ílidos: {len(errors)}, Saltados: {skipped}")
+    print(f"Insertados: {inserted}, Inv├ílidos: {len(errors)}, Duplicados: {duplicated}")
     if errors:
         print("\n--- Registros inv├ílidos ---")
         for e in errors:
             print(f"  {e}")
 
-    return inserted, len(errors), skipped, errors
+    return inserted, len(errors), duplicated, errors
 
 
 if __name__ == "__main__":

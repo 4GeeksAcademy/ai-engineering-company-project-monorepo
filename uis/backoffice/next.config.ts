@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         source: "/profiles/:path*",
         destination: "http://localhost:8000/profiles/:path*",
       },
+      {
+        source: "/api/incidents/:path*",
+        destination: "http://localhost:8000/api/incidents/:path*",
+      },
     ];
   },
 };

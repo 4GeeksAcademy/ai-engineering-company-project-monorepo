@@ -155,6 +155,61 @@ def list_incidents(
 
 
 # ─────────────────────────────────────────────────────────────
+# GET /api/incidents/summary — Resumen estadístico
+# ─────────────────────────────────────────────────────────────
+
+@router.get("/summary", response_model=SummaryResponse)
+def get_incidents_summary(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Devuelve un resumen estadístico de todas las incidencias.
+
+    Agrupa por:
+      - status: open / in_progress / resolved / discarded
+      - category: todas las categorías válidas
+      - origin: customer / branch / internal
+      - branch: todas las sedes válidas
+    """
+    table = _get_incidents_table()
+    docs = table.all()
+
+    # Inicializar contadores con todas las opciones válidas
+    by_status: dict[str, int] = {s: 0 for s in sorted(VALID_STATUSES)}
+    by_category: dict[str, int] = {c: 0 for c in sorted(VALID_CATEGORIES)}
+    by_origin: dict[str, int] = {o: 0 for o in sorted(VALID_ORIGINS)}
+    by_branch: dict[str, int] = {b: 0 for b in sorted(VALID_BRANCHES)}
+
+    for doc in docs:
+        s = doc.get("status")
+        if s in by_status:
+            by_status[s] += 1
+
+        cat = doc.get("category")
+        if cat in by_category:
+            by_category[cat] += 1
+
+        org = doc.get("origin")
+        if org in by_origin:
+            by_origin[org] += 1
+
+        bra = doc.get("branch")
+        if bra in by_branch:
+            by_branch[bra] += 1
+
+    # Filtrar entradas con valor 0
+    def _non_zero(d: dict[str, int]) -> dict[str, int]:
+        return {k: v for k, v in d.items() if v > 0}
+
+    return SummaryResponse(
+        by_status=_non_zero(by_status),
+        by_category=_non_zero(by_category),
+        by_origin=_non_zero(by_origin),
+        by_branch=_non_zero(by_branch),
+    )
+
+
+# ─────────────────────────────────────────────────────────────
 # GET /api/incidents/{id} — Detalle de una incidencia
 # ─────────────────────────────────────────────────────────────
 
@@ -203,7 +258,7 @@ def update_incident_status(
 
     Raises:
         404: Si la incidencia no existe.
-        422: Si la transición no está permitida.
+        400: Si la transición no está permitida.
     """
     table = _get_incidents_table()
     Incident = TinyQuery()
@@ -222,7 +277,7 @@ def update_incident_status(
     allowed = STATUS_TRANSITIONS.get(current_status, set())
     if new_status not in allowed:
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail=(
                 f"Transición no permitida: de '{current_status}' a '{new_status}'. "
                 f"Transiciones válidas desde '{current_status}': "
@@ -241,57 +296,3 @@ def update_incident_status(
     return _doc_to_response(doc)
 
 
-# ─────────────────────────────────────────────────────────────
-# GET /api/incidents/summary — Resumen estadístico
-# ─────────────────────────────────────────────────────────────
-
-@router.get("/summary", response_model=SummaryResponse)
-def get_incidents_summary(
-    current_user: dict = Depends(get_current_user),
-):
-    """
-    Devuelve un resumen estadístico de todas las incidencias.
-
-    Agrupa por:
-      - status: open / in_progress / resolved / discarded
-      - category: todas las categorías válidas
-      - origin: customer / branch / internal
-      - branch: todas las sedes válidas
-    """
-    table = _get_incidents_table()
-    docs = table.all()
-
-    by_status: dict[str, int] = {s: 0 for s in sorted(VALID_STATUSES)}
-    by_category: dict[str, int] = {c: 0 for c in sorted(VALID_CATEGORIES)}
-    by_origin: dict[str, int] = {o: 0 for o in sorted(VALID_ORIGINS)}
-    by_branch: dict[str, int] = {b: 0 for b in sorted(VALID_BRANCHES)}
-
-    for doc in docs:
-        s = doc.get("status", "")
-        if s in by_status:
-            by_status[s] += 1
-
-        c = doc.get("category", "")
-        if c in by_category:
-            by_category[c] += 1
-
-        o = doc.get("origin", "")
-        if o in by_origin:
-            by_origin[o] += 1
-
-        b = doc.get("branch", "")
-        if b in by_branch:
-            by_branch[b] += 1
-
-    # Limpiar ceros
-    by_status = {k: v for k, v in by_status.items() if v > 0}
-    by_category = {k: v for k, v in by_category.items() if v > 0}
-    by_origin = {k: v for k, v in by_origin.items() if v > 0}
-    by_branch = {k: v for k, v in by_branch.items() if v > 0}
-
-    return SummaryResponse(
-        by_status=by_status,
-        by_category=by_category,
-        by_origin=by_origin,
-        by_branch=by_branch,
-    )
