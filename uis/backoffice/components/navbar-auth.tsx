@@ -14,17 +14,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { isAuthenticated, logoutUser } from "@/lib/auth-actions";
 
 export default function NavbarAuth() {
   const [authenticated, setAuthenticated] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Verificar estado de autenticación al montar
+    // Verificar estado de autenticación cada vez que cambia la ruta.
+    // Esto asegura que después de hacer login (router.push /suppliers)
+    // el navbar detecte el token y muestre "Cerrar sesión".
     setAuthenticated(isAuthenticated());
-  }, []);
+  }, [pathname]);
 
   const handleLogout = () => {
     logoutUser();
