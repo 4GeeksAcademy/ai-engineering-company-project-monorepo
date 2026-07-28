@@ -12,18 +12,30 @@
 - Application form: https://automatic-space-umbrella-qv7qr45jq5qrh6r9-3000.app.github.dev/application.html
 
 ## Local Run Commands
+- Install dependencies (required on fresh clone):
+
+```bash
+npm --prefix packages/shared install
+```
+
 - Run TypeScript validation:
 
+```bash
 npm --prefix packages/shared run validate
+```
 
 - Run TypeScript demo:
 
+```bash
 npm --prefix packages/shared run dev
+```
 
 - Serve frontend manually:
 
+```bash
 cd uis/website
 npx http-server . -p 3000 -a 0.0.0.0
+```
 
 ## Technical Deliverables Completed
 
@@ -103,9 +115,12 @@ Implementation:
 ## Rubric Alignment Evidence (Strict)
 
 - Canonical graded implementation lives in `packages/shared/types/*.ts`.
-- Required TypeScript validation command:
+- Required TypeScript validation commands:
 
+```bash
+npm --prefix packages/shared install
 npm --prefix packages/shared run validate
+```
 
 - Result: no TypeScript compile errors.
 - Manual testing UI is included as an interaction layer to execute the same operation categories required by the rubric (filter, sort, linear search, binary search, aggregation, validation). The grading source remains the TypeScript modules under `packages/shared/types`.

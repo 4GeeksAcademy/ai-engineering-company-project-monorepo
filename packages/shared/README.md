@@ -4,17 +4,29 @@ This package contains the TypeScript implementation for Brasaland entities, util
 
 ## Local Commands
 
+- First-time setup (fresh clone):
+
+```bash
+npm --prefix packages/shared install
+```
+
 - Validate TypeScript:
 
+```bash
 npm --prefix packages/shared run validate
+```
 
 - Typecheck directly:
 
+```bash
 npm --prefix packages/shared run typecheck
+```
 
 - Run demo execution:
 
+```bash
 npm --prefix packages/shared run dev
+```
 
 ## File Structure
 
