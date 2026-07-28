@@ -10,6 +10,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from analyzer import analyze_incidents, build_export_rows, parse_csv_text
 from routes.suppliers import router as suppliers_router
+from routes.users import router as users_router
+from routes.profiles import router as profiles_router
+from routes.auth import router as auth_router
 
 
 
@@ -36,6 +39,11 @@ app.add_middleware(
 # Registrar el router de proveedores (Milestone 9)
 # Todos sus endpoints quedan bajo /suppliers/
 app.include_router(suppliers_router)
+
+# Registrar routers de autenticación (Feature Auth)
+app.include_router(users_router)
+app.include_router(profiles_router)
+app.include_router(auth_router)
 
 
 _last_analysis: dict | None = None

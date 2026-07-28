@@ -1,5 +1,5 @@
 """
-models.py — Modelos Pydantic para el Directorio de Proveedores de TrackFlow
+supplier_models.py — Modelos Pydantic para el Directorio de Proveedores de TrackFlow
 
 ¿Por qué Pydantic?
 ------------------

@@ -23,9 +23,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from database import suppliers_table, Supplier as SupplierQuery
+from dependencies.auth_deps import get_current_user
 from models import Supplier, SupplierCreate, RateUpdate, StatusUpdate
 
 router = APIRouter(
@@ -52,7 +53,10 @@ def _with_id(doc_id: int, data: dict) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 @router.post("/", response_model=Supplier, status_code=201)
-def create_supplier(supplier: SupplierCreate) -> dict:
+def create_supplier(
+    supplier: SupplierCreate,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
     """
     Registra un nuevo proveedor en el directorio.
 
@@ -90,6 +94,7 @@ def create_supplier(supplier: SupplierCreate) -> dict:
 def list_suppliers(
     country: Optional[str] = None,
     category: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
 ) -> list[dict]:
     """
     Devuelve todos los proveedores.
@@ -129,7 +134,10 @@ def list_suppliers(
 # ─────────────────────────────────────────────────────────────
 
 @router.get("/{supplier_id}", response_model=Supplier)
-def get_supplier(supplier_id: int) -> dict:
+def get_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
     """
     Devuelve el detalle de un proveedor por su ID de TinyDB.
     Si el ID no existe → 404 (no inventamos datos).
@@ -150,7 +158,11 @@ def get_supplier(supplier_id: int) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 @router.patch("/{supplier_id}/rate", response_model=Supplier)
-def update_rate(supplier_id: int, payload: RateUpdate) -> dict:
+def update_rate(
+    supplier_id: int,
+    payload: RateUpdate,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
     """
     Actualiza la tarifa de un proveedor y registra automáticamente
     el timestamp de la actualización en updated_at.
@@ -187,7 +199,11 @@ def update_rate(supplier_id: int, payload: RateUpdate) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 @router.patch("/{supplier_id}/status", response_model=Supplier)
-def update_status(supplier_id: int, payload: StatusUpdate) -> dict:
+def update_status(
+    supplier_id: int,
+    payload: StatusUpdate,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
     """
     Activa o suspende un proveedor.
 
@@ -222,7 +238,10 @@ def update_status(supplier_id: int, payload: StatusUpdate) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 @router.delete("/{supplier_id}", status_code=200)
-def delete_supplier(supplier_id: int) -> dict:
+def delete_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
     """
     Elimina un proveedor del directorio.
     Si no existe → 404.

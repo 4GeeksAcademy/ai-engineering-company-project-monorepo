@@ -25,4 +25,19 @@
   - [x] `@swc/helpers` instalado para compatibilidad Next.js 16.2.9
   - [x] Backend probado: health, list, filter, create, rate/status update, delete — todo OK
   - [x] Ambos frontends compilados exitosamente (production build)
+- [x] **Feature Auth (AUTH-01) — Autenticación JWT + Protección de rutas**:
+  - [x] Rama `feature/auth` creada desde `milestrone-9`
+  - [x] Dependencias instaladas: `python-jose[cryptography]`, `passlib[bcrypt]`, `bcrypt==4.0.1`, `email-validator`
+  - [x] `models/` package creado con `__init__.py`, `supplier_models.py`, `user_models.py`, `profile_models.py`
+  - [x] `services/` creado con `auth_service.py` (hash, verify, JWT) y `user_service.py` (CRUD User+Profile)
+  - [x] `dependencies/` creado con `auth_deps.py` (`get_current_user`, `get_admin_user`)
+  - [x] `routes/users.py` — CRUD completo (POST público, resto protegido con owner/admin check)
+  - [x] `routes/profiles.py` — GET/PUT /me (protegido, solo owner)
+  - [x] `routes/auth.py` — POST /login (JWT) + GET /me (protegido)
+  - [x] `routes/suppliers.py` — 6 endpoints protegidos con `Depends(get_current_user)`
+  - [x] `main.py` actualizado con imports de nuevos routers
+  - [x] `.env` con `SECRET_KEY` y `ACCESS_TOKEN_EXPIRE_MINUTES`
+  - [x] `models.py` eliminado (reemplazado por `models/supplier_models.py` dentro del package)
+  - [x] Testing manual completado: registro, login, /auth/me, /profiles/me, suppliers protegidos, permisos owner/admin, edge cases
+  - [x] Todos los tests pasados: 200 OK, 401, 403, 409, 404 según corresponda
 
