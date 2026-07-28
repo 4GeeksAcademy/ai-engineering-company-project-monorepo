@@ -4,3 +4,4 @@ __pycache__
 .env
 !/.env.example
 services/api/db.json
+context-flujoContraseña.md

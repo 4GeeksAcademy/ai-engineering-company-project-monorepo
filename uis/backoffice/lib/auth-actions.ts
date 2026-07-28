@@ -157,3 +157,79 @@ export async function updateProfile(data: {
 }): Promise<{ id: number; user_id: number; name: string; phone: string | null; address: string | null }> {
   return apiPut("/profiles/me", data as Record<string, unknown>);
 }
+
+// ─────────────────────────────────────────────────────────────
+// AUTH-03: Acciones de restablecimiento de contraseña
+// ─────────────────────────────────────────────────────────────
+//
+// Estas funciones se añaden al archivo lib/auth-actions.ts existente.
+//
+// forgotPassword(email):
+//   Envía solicitud de restablecimiento al servidor.
+//   SIEMPRE muestra el mismo mensaje (incluso si email no existe).
+//
+// resetPassword(token, newPassword):
+//   Envía token + nueva contraseña para completar el reset.
+//
+// changePassword(currentPassword, newPassword):
+//   Cambia la contraseña del usuario autenticado.
+
+/**
+ * Solicita un enlace de restablecimiento de contraseña.
+ *
+ * Llama a POST /auth/forgot-password con el email.
+ * SIEMPRE devuelve el mismo mensaje de confirmación,
+ * independientemente de si el email está registrado.
+ * Esto evita que un atacante pueda enumerar usuarios.
+ *
+ * @param email - Email del usuario que olvidó su contraseña
+ * @returns Mensaje de confirmación genérico
+ */
+export async function forgotPassword(
+  email: string
+): Promise<{ message: string }> {
+  return apiPost<{ message: string }>("/auth/forgot-password", { email });
+}
+
+/**
+ * Restablece la contraseña usando un token de reset.
+ *
+ * El token se obtiene del query string de la URL:
+ * /reset-password?token=<token>
+ *
+ * @param token - Token JWT de restablecimiento
+ * @param newPassword - Nueva contraseña
+ * @returns Mensaje de confirmación
+ * @throws 400 si el token es inválido o expiró
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  return apiPost<{ message: string }>("/auth/reset-password", {
+    token,
+    new_password: newPassword,
+  });
+}
+
+/**
+ * Cambia la contraseña del usuario autenticado.
+ *
+ * Requiere la contraseña actual para verificar la identidad.
+ * La función apiPost() ya adjunta el token de acceso
+ * automáticamente via authHeaders().
+ *
+ * @param currentPassword - Contraseña actual
+ * @param newPassword - Nueva contraseña
+ * @returns Mensaje de confirmación
+ * @throws 400 si la contraseña actual es incorrecta
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  return apiPost<{ message: string }>("/auth/change-password", {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
+}

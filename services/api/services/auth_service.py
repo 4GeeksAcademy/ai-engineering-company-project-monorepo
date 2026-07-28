@@ -18,12 +18,16 @@ Importante:
 
 from __future__ import annotations
 
+import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
+import logging
+logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
 # Configuración de passlib con bcrypt
@@ -110,3 +114,94 @@ def decode_access_token(
         return payload
     except JWTError:
         return None
+
+
+# ════════════════════════════════════════════════════════════════
+# TOKENS DE RESTABLECIMIENTO DE CONTRASEÑA (AUTH-03)
+# ════════════════════════════════════════════════════════════════
+
+# Variable de entorno para expiración del token de reset
+RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES", "30"))
+
+
+def create_reset_token(user_id: int) -> str:
+    """
+    Genera un token JWT firmado para restablecimiento de contraseña.
+
+    El token incluye sub=user_id, type="password_reset" y exp.
+    La expiración se configura via RESET_TOKEN_EXPIRE_MINUTES.
+
+    Args:
+        user_id: ID del usuario
+
+    Returns:
+        String con token JWT firmado
+    """
+    secret_key = os.getenv("SECRET_KEY", "fallback-insecure-key-change-in-production")
+    algorithm = "HS256"
+
+    expire = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    to_encode = {
+        "sub": str(user_id),
+        "type": "password_reset",
+        "exp": expire,
+    }
+    return jwt.encode(to_encode, secret_key, algorithm=algorithm)
+
+
+def verify_reset_token(token: str) -> int | None:
+    """
+    Verifica y decodifica un token de restablecimiento.
+
+    Valida: firma, expiración, y que type sea "password_reset".
+
+    Args:
+        token: Token JWT a verificar
+
+    Returns:
+        int: user_id si es válido
+        None: si expiró, firma inválida, o type incorrecto
+    """
+    secret_key = os.getenv("SECRET_KEY", "fallback-insecure-key-change-in-production")
+    algorithm = "HS256"
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        if payload.get("type") != "password_reset":
+            logger.warning("Token de reset inválido: type incorrecto")
+            return None
+        user_id = payload.get("sub")
+        return int(user_id) if user_id else None
+    except jwt.ExpiredSignatureError:
+        logger.warning("Token de reset expirado")
+        return None
+    except jwt.JWTError as e:
+        logger.warning(f"Token de reset inválido: {e}")
+        return None
+
+
+# Conjunto en memoria para tokens de reset usados
+_invalidated_tokens: set[str] = set()
+
+
+def invalidate_reset_token(token: str) -> None:
+    """Marca un token de reset como usado para evitar reutilización."""
+    token_id = _get_token_id(token)
+    _invalidated_tokens.add(token_id)
+
+
+def is_token_invalidated(token: str) -> bool:
+    """Verifica si un token de reset ya fue usado."""
+    token_id = _get_token_id(token)
+    return token_id in _invalidated_tokens
+
+
+def _get_token_id(token: str) -> str:
+    """Obtiene un identificador único del token (jti o hash)."""
+    secret_key = os.getenv("SECRET_KEY", "fallback-insecure-key-change-in-production")
+    algorithm = "HS256"
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm],
+                             options={"verify_exp": False})
+        return payload.get("jti", hashlib.sha256(token.encode()).hexdigest())
+    except jwt.JWTError:
+        return hashlib.sha256(token.encode()).hexdigest()

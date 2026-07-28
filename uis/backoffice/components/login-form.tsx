@@ -117,6 +117,16 @@ export default function LoginForm() {
           </button>
         </form>
 
+        {/* Enlace a restablecimiento de contraseña */}
+        <div className="text-center text-sm mt-2">
+          <Link
+            href="/forgot-password"
+            className="text-indigo-600 hover:text-indigo-500"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
+
         {/* Enlace a registro */}
         <p className="mt-6 text-center text-sm text-slate-600">
           ¿No tienes cuenta?{" "}
