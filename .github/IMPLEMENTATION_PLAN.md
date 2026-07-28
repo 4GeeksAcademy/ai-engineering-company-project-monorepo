@@ -22,15 +22,15 @@ Este plan de implementación articula los requisitos de `.github/STRATEGY.md` y 
 - ✅ 🏗️ **Arquitecto Next.js**: Creación de la estructura base de componentes en `components/ui/` (`Badge.tsx`, `LoadingSpinner.tsx`, `ErrorMessage.tsx`) y `components/layout/` (`Header.tsx`).
 - ✅ 🎨 **Experto UX/Nexova**: Implementación de `Header.tsx` con la identidad de *Nexova Solutions - Operaciones de Selección*.
 - ✅ ⚡ **Ingeniero de APIs**: Creación de primitivos de feedback para los 3 estados obligatorios: `LoadingSpinner.tsx`, `ErrorMessage.tsx` y `Badge.tsx`.
-- 📦 **Git Commit**: Commit de valor sugerido (`feat(tracker): añadir layout de Nexova Solutions y componentes base de UI (Fase 2)`).
+- ✅ 📦 **Git Commit**: Commit de valor registrado (`añadir layout de Nexova Solutions y componentes base de UI (Fase 2)`).
 
 ---
 
-### 🔹 Fase 3: Listado de Candidaturas, Buscador y Filtros Dinámicos (`/`)
-- 🏗️ **Arquitecto Next.js**: Sincronización de filtros de búsqueda (`query`), `status` y `stage` en la URL usando `useSearchParams` y `useRouter` sin recarga de página.
-- 🎨 **Experto UX/Nexova**: Componente `CandidateCard.tsx` con vista rápida de nombre, puesto, experiencia, badges semaforizados y enlace al detalle.
-- ⚡ **Ingeniero de APIs**: Integración de `GET /records` en `src/app/page.tsx` gestionando estados visuales de carga (skeleton), éxito y error de red.
-- 📦 **Git Commit**: Commit de valor (`feat(tracker): implementar vista de listado de candidaturas, buscador y filtros dinámicos (Fase 3)`).
+### ✅ 🔹 Fase 3: Listado de Candidaturas, Buscador y Filtros Dinámicos (`/`) (COMPLETADA)
+- ✅ 🏗️ **Arquitecto Next.js**: Sincronización de filtros de búsqueda (`query`), `status` y `stage` en la URL usando `useSearchParams` y `useRouter` sin recarga de página.
+- ✅ 🎨 **Experto UX/Nexova**: Componente `CandidateCard.tsx` con vista rápida de nombre, puesto, experiencia, badges semaforizados y enlace al detalle.
+- ✅ ⚡ **Ingeniero de APIs**: Integración de `GET /records` en `src/app/page.tsx` gestionando estados visuales de carga (spinner), éxito (grid de tarjetas) y error de red.
+- 📦 **Git Commit**: Commit de valor sugerido (`feat(tracker): implementar vista de listado de candidaturas, buscador y filtros dinámicos (Fase 3)`).
 
 ---
 
