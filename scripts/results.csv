@@ -1,0 +1,19 @@
+section,key,value
+general,total_rows,15
+general,valid_rows,9
+general,invalid_rows,6
+category,Almacenaje,2
+category,Atencion cliente,2
+category,Inventario,1
+category,Logistica inversa,2
+category,Reparto urbano,2
+status,abierto,2
+status,cerrado,5
+status,descartado,2
+closed_cases,average_satisfaction,4.02
+invalid_reason,categoria vacia,1
+invalid_reason,estado vacio,1
+invalid_reason,estado fuera de rango: en_progreso,1
+invalid_reason,satisfaccion vacia para caso cerrado,1
+invalid_reason,satisfaccion fuera de rango: 6 (esperado entre 0 y 5),1
+invalid_reason,satisfaccion invalida: abc,1
