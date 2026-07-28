@@ -12,6 +12,7 @@ const navItems: NavItem[] = [
   { href: "/", label: "Inicio" },
   { href: "/leads", label: "Leads" },
   { href: "/operaciones", label: "Operaciones" },
+  { href: "/operaciones/proveedores", label: "Directorio de proveedores" },
   { href: "/operaciones/incidencias", label: "Analisis de incidencias" },
 ];
 
