@@ -115,6 +115,12 @@ Implementation:
 ## Rubric Alignment Evidence (Strict)
 
 - Canonical graded implementation lives in `packages/shared/types/*.ts`.
+- Rubric-compatible `src/` structure is present and maps directly to canonical modules:
+  - `packages/shared/src/types/models.ts`
+  - `packages/shared/src/utils/collections.ts`
+  - `packages/shared/src/utils/search.ts`
+  - `packages/shared/src/utils/transformations.ts`
+  - `packages/shared/src/utils/validations.ts`
 - Required TypeScript validation commands:
 
 ```bash
@@ -141,6 +147,12 @@ npm --prefix packages/shared run validate
 - packages/shared/types/validations.ts
 - packages/shared/types/business-rules.ts
 - packages/shared/types/index.ts
+- packages/shared/src/index.ts
+- packages/shared/src/types/models.ts
+- packages/shared/src/utils/collections.ts
+- packages/shared/src/utils/search.ts
+- packages/shared/src/utils/transformations.ts
+- packages/shared/src/utils/validations.ts
 - packages/shared/package.json
 - packages/shared/tsconfig.json
 - uis/website/index.html

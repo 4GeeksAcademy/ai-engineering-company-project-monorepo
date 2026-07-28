@@ -10,6 +10,7 @@
     "noEmit": true
   },
   "include": [
-    "types/**/*.ts"
+    "types/**/*.ts",
+    "src/**/*.ts"
   ]
 }
