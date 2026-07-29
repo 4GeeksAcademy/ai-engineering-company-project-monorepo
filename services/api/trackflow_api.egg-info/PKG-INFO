@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: trackflow-api
+Version: 0.1.0
+Summary: TrackFlow backend API
+Requires-Python: >=3.11
+Requires-Dist: flask==3.0.3
+Requires-Dist: pydantic==2.9.2
+Requires-Dist: tinydb==4.8.0

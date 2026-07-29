@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from src.routes.incidents_routes import incidents_blueprint
+from src.routes.suppliers_routes import suppliers_blueprint
 
 
 def create_app() -> Flask:
@@ -15,13 +16,14 @@ def create_app() -> Flask:
     app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
     app.register_blueprint(incidents_blueprint)
+    app.register_blueprint(suppliers_blueprint)
 
     @app.after_request
     def add_cors_headers(response):
         origin = request.headers.get("Origin", "*")
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PATCH,DELETE,OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
         return response
 

@@ -1,0 +1,24 @@
+[project]
+name = "trackflow-api"
+version = "0.1.0"
+description = "TrackFlow backend API"
+requires-python = ">=3.11"
+dependencies = [
+  "flask==3.0.3",
+  "pydantic==2.9.2",
+  "tinydb==4.8.0",
+]
+
+[project.scripts]
+seed = "src.seed:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

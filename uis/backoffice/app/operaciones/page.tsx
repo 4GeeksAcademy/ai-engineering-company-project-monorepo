@@ -9,6 +9,12 @@ export default function OperacionesPage() {
       </p>
       <div className="mt-6">
         <Link
+          href="/operaciones/proveedores"
+          className="mr-2 inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+        >
+          Ir a directorio de proveedores
+        </Link>
+        <Link
           href="/operaciones/incidencias"
           className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
         >
