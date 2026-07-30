@@ -3,6 +3,13 @@ Name: trackflow-api
 Version: 0.1.0
 Summary: TrackFlow backend API
 Requires-Python: >=3.11
+Requires-Dist: bcrypt<4.1
+Requires-Dist: fastapi>=0.141.1
 Requires-Dist: flask==3.0.3
+Requires-Dist: passlib[bcrypt]>=1.7.4
 Requires-Dist: pydantic==2.9.2
+Requires-Dist: pydantic-settings>=2.14.2
+Requires-Dist: python-jose[cryptography]>=3.5.0
+Requires-Dist: python-multipart>=0.0.32
 Requires-Dist: tinydb==4.8.0
+Requires-Dist: uvicorn>=0.52.0

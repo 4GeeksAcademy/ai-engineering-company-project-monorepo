@@ -1,0 +1,17 @@
+services/api/.env
+
+# Python cache and bytecode
+**/__pycache__/
+*.py[cod]
+
+# Local virtual environments
+.venv/
+
+# Python packaging artifacts
+*.egg-info/
+
+# Local test databases and temp files
+*.db
+*.sqlite
+*.sqlite3
+tmp/
