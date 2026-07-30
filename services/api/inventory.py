@@ -1,217 +1,133 @@
-from .auth import get_current_user
-from fastapi import APIRouter, Depends
-from sqlmodel import Session, select, func
-from typing import List
-from .database import get_db
-from .models import Product, InboundOrder, OutboundOrder
-from .schemas import ProductResponse, OrderType, ProductCreate
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+PRODUCTS_FILE = REPO_ROOT / "products.csv"
+FIELDNAMES = ["product_id", "name", "quantity", "unit"]
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
-@router.get("/products", response_model=List[ProductResponse])
-def get_products(db: Session = Depends(get_db)):
-    products = db.exec(select(Product)).all()
-    response = []
+
+class ProductCreate(BaseModel):
+    name: str = Field(min_length=1)
+    quantity: int = Field(ge=0)
+    unit: str = Field(min_length=1)
+
+
+class StockDelta(BaseModel):
+    delta: int
+
+
+def _ensure_products_file() -> None:
+    if PRODUCTS_FILE.exists():
+        return
+    with PRODUCTS_FILE.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
+        writer.writeheader()
+
+
+def load_products() -> list[dict[str, str | int]]:
+    _ensure_products_file()
+    try:
+        with PRODUCTS_FILE.open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+    except OSError as error:
+        raise HTTPException(status_code=500, detail="Unable to read inventory file") from error
+
+    products: list[dict[str, str | int]] = []
+    for row in rows:
+        try:
+            products.append(
+                {
+                    "product_id": int(row["product_id"]),
+                    "name": row["name"],
+                    "quantity": int(row["quantity"]),
+                    "unit": row["unit"],
+                }
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise HTTPException(status_code=500, detail="Invalid inventory data in products.csv") from error
+    return products
+
+
+def save_products(products: list[dict[str, str | int]]) -> None:
+    try:
+        with PRODUCTS_FILE.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
+            writer.writeheader()
+            for product in products:
+                writer.writerow(
+                    {
+                        "product_id": product["product_id"],
+                        "name": product["name"],
+                        "quantity": product["quantity"],
+                        "unit": product["unit"],
+                    }
+                )
+    except OSError as error:
+        raise HTTPException(status_code=500, detail="Unable to write inventory file") from error
+
+
+def _find_product(products: list[dict[str, str | int]], product_id: int) -> dict[str, str | int] | None:
     for product in products:
-        # Sum inbound quantities
-        inbound = db.exec(
-            select(func.sum(InboundOrder, OutboundOrder.quantity))
-            .where(InboundOrder, OutboundOrder.product_id == product.id)
-            .where(InboundOrder, OutboundOrder.order_type == OrderType.INBOUND)
-        ).one() or 0
-        
-        # Sum outbound quantities
-        outbound = db.exec(
-            select(func.sum(InboundOrder, OutboundOrder.quantity))
-            .where(InboundOrder, OutboundOrder.product_id == product.id)
-            .where(InboundOrder, OutboundOrder.order_type == OrderType.OUTBOUND)
-        ).one() or 0
-        
-        current_stock = inbound - outbound
-        
-        # Build the response object. Note: Product model fields are mapped, 
-        # and defaults are provided for fields in ProductResponse not present in Product.
-        response.append(ProductResponse(
-            product_id=str(product.id),
-            name=product.name,
-            sku=product.sku,
-            current_stock=current_stock,
-            description=getattr(product, 'description', None),
-            price=getattr(product, 'price', 0.0)
-        ))
-    return response
+        if product["product_id"] == product_id:
+            return product
+    return None
 
-@router.post("/products", response_model=ProductResponse, status_code=201)
-def create_product(
-    product_in: ProductCreate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    # Map ProductCreate to Product model. 
-    # Note: Product model expects "unit", but ProductCreate might not have it.
-    # Defaulting unit to "unit" if not present to avoid validation errors.
-    product_data = product_in.model_dump()
-    if "unit" not in product_data:
-        product_data["unit"] = "unit"
-    
-    db_product = Product(**product_data)
-    db.add(db_product)
-    db.commit()
-    db.refresh(db_product)
-    
-    return ProductResponse(
-        product_id=str(db_product.id),
-        name=db_product.name,
-        sku=db_product.sku,
-        current_stock=0,
-        description=db_product.description,
-        price=db_product.price
-    )
 
-@inventory_router.get("/products/{id}", response_model=ProductResponse)
-def get_product(id: int, db: Session = Depends(get_session)):
-    product = db.get(Product, id)
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    inbound_stock = db.exec(
-        select(func.sum(InboundOrder, OutboundOrder.quantity))
-        .where(InboundOrder, OutboundOrder.product_id == id)
-    ).one() or 0
-    
-    outbound_stock = db.exec(
-        select(func.sum(OutboundOrder.quantity))
-        .where(OutboundOrder.product_id == id)
-    ).one() or 0
-    
-    current_stock = inbound_stock - outbound_stock
-    
-    return ProductResponse(
-        product_id=str(product.id),
-        sku=product.sku,
-        name=product.name,
-        description=product.description,
-        price=product.price,
-        current_stock=current_stock
-    )
+def create_product(name: str, quantity: int, unit: str) -> dict[str, str | int]:
+    products = load_products()
+    next_id = max((int(product["product_id"]) for product in products), default=0) + 1
+    product = {"product_id": next_id, "name": name.strip(), "quantity": quantity, "unit": unit.strip()}
+    products.append(product)
+    save_products(products)
+    return product
 
-@inventory_router.post("/orders/inbound", response_model=OrderResponse)
-def create_inbound_order(
-    *,
-    db: Session = Depends(get_session),
-    order_in: InboundOrder, OutboundOrderCreate,
-    current_user: dict = Depends(get_current_user)
-):
-    db_order = InboundOrder, OutboundOrder(
-        product_id=order_in.product_id,
-        quantity=order_in.quantity,
-        user_uuid=current_user["uuid"]
-    )
-    db.add(db_order)
-    db.commit()
-    db.refresh(db_order)
-    return db_order
 
-@inventory_router.post("/orders/inbound", response_model=OrderResponse)
-def create_inbound_order(
-    *,
-    db: Session = Depends(get_session),
-    order_in: InboundOrder, OutboundOrderCreate,
-    current_user: dict = Depends(get_current_user)
-):
-    db_order = InboundOrder, OutboundOrder(
-        product_id=order_in.product_id,
-        quantity=order_in.quantity,
-        user_uuid=current_user["uuid"]
-    )
-    db.add(db_order)
-    db.commit()
-    db.refresh(db_order)
-    return db_order
+def apply_delta(product_id: int, delta: int) -> dict[str, str | int]:
+    products = load_products()
+    product = _find_product(products, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
 
-@router.post("/orders/outbound", response_model=OrderResponse)
-def create_outbound_order(
-    order_in: OutboundOrderCreate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    # Calculate current stock (SUM(inbound) - SUM(outbound))
-    inbound_qty = db.exec(
-        select(func.sum(InboundOrder.quantity))
-        .where(InboundOrder.product_id == order_in.product_id)
-    ).first() or 0
-    
-    outbound_qty = db.exec(
-        select(func.sum(OutboundOrder.quantity))
-        .where(OutboundOrder.product_id == order_in.product_id)
-    ).first() or 0
-    
-    current_stock = inbound_qty - outbound_qty
-    
-    if order_in.quantity > current_stock:
+    new_quantity = int(product["quantity"]) + delta
+    if new_quantity < 0:
         raise HTTPException(
-            status_code=400, 
-            detail="Insufficient stock available"
+            status_code=400,
+            detail=f"Insufficient stock: cannot reduce below 0 (current: {product['quantity']}, delta: {delta})",
         )
-    
-    db_order = OutboundOrder(
-        product_id=order_in.product_id,
-        quantity=order_in.quantity,
-        user_uuid=current_user["uuid"]
-    )
-    db.add(db_order)
-    db.commit()
-    db.refresh(db_order)
-    return db_order
 
-@inventory_router.get("/orders", response_model=List[OrderResponse])
-def get_orders(db: Session = Depends(get_db)):
-    # Query inbound orders with product data
-    inbound_orders = db.query(InboundOrder, Product).join(
-        Product, InboundOrder.product_id == Product.id
-    ).all()
-    
-    # Query outbound orders with product data
-    outbound_orders = db.query(OutboundOrder, Product).join(
-        Product, OutboundOrder.product_id == Product.id
-    ).all()
-    
-    all_orders = []
-    
-    # Process inbound
-    for order, product in inbound_orders:
-        all_orders.append(OrderResponse(
-            id=order.id,
-            type=OrderType.INBOUND,
-            created_by=order.user_uuid,
-            created_at=order.created_at,
-            items=[OrderItemResponse(
-                product_id=product.id,
-                sku=product.sku,
-                name=product.name,
-                unit=product.unit,
-                quantity=order.quantity,
-                price=product.price
-            )]
-        ))
-        
-    # Process outbound
-    for order, product in outbound_orders:
-        all_orders.append(OrderResponse(
-            id=order.id,
-            type=OrderType.OUTBOUND,
-            created_by=order.user_uuid,
-            created_at=order.created_at,
-            items=[OrderItemResponse(
-                product_id=product.id,
-                sku=product.sku,
-                name=product.name,
-                unit=product.unit,
-                quantity=order.quantity,
-                price=product.price
-            )]
-        ))
-    
-    # Sort by creation date descending
-    all_orders.sort(key=lambda x: x.created_at, reverse=True)
-    return all_orders
+    product["quantity"] = new_quantity
+    save_products(products)
+    return product
+
+
+def get_alerts(threshold: int = 10) -> list[dict[str, str | int]]:
+    if threshold < 0:
+        raise HTTPException(status_code=400, detail="Threshold must be greater than or equal to 0")
+    return [product for product in load_products() if int(product["quantity"]) < threshold]
+
+
+@router.get("")
+def list_inventory() -> list[dict[str, str | int]]:
+    return load_products()
+
+
+@router.post("", status_code=201)
+def add_product(body: ProductCreate) -> dict[str, str | int]:
+    return create_product(body.name, body.quantity, body.unit)
+
+
+@router.get("/alerts")
+def low_stock_alerts(threshold: int = 10) -> list[dict[str, str | int]]:
+    return get_alerts(threshold)
+
+
+@router.patch("/{product_id}")
+def update_stock(product_id: int, body: StockDelta) -> dict[str, str | int]:
+    return apply_delta(product_id, body.delta)

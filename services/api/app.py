@@ -11,10 +11,12 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from inventory import router as inventory_router
+from routers.knowledge import router as knowledge_router
 from pydantic import BaseModel, Field
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UI_ROOT = REPO_ROOT / "uis" / "web"
+KNOWLEDGE_UI_ROOT = REPO_ROOT / "uis" / "knowledge"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 Engine = Literal["native", "pandas"]
@@ -89,6 +91,7 @@ def _register_analyze_routes(app: FastAPI, route_prefix: str) -> None:
 
 app = FastAPI(title="Company Incident File Analyzer", version="1.0.0")
 app.include_router(inventory_router)
+app.include_router(knowledge_router)
 _register_analyze_routes(app, "anylayze")
 _register_analyze_routes(app, "analyze")
 
@@ -98,6 +101,9 @@ def export_results(output_file: str = "results.csv"):
     if not output_path.exists():
         raise HTTPException(status_code=404, detail=f"Results file not found: {output_file}")
     return FileResponse(path=output_path, filename=output_path.name, media_type="text/csv")
+
+if KNOWLEDGE_UI_ROOT.exists():
+    app.mount("/knowledge", StaticFiles(directory=KNOWLEDGE_UI_ROOT, html=True), name="knowledge-ui")
 
 if UI_ROOT.exists():
     app.mount("/", StaticFiles(directory=UI_ROOT, html=True), name="web-ui")
