@@ -1,33 +1,43 @@
 import os
-from openai import OpenAI
+
 from qdrant_client import QdrantClient
-from data.process.rag import embed, COLLECTION_NAME
 
-GENERATION_MODEL = "gpt-4o-mini"
-MIN_SCORE = 0.40  # Threshold to prevent hallucination
+from data.process.rag import COLLECTION_NAME, embed
+from shared.llm_config import GENERATION_MODEL_ID, generation_client
 
-client = OpenAI()
-qdrant_client = QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"), port=6333)
+MIN_SCORE = 0.40
+
+qdrant_client = QdrantClient(
+    host=os.getenv("QDRANT_HOST", "localhost"),
+    port=int(os.getenv("QDRANT_PORT", 6333)),
+)
+
 
 def retrieve(query_str: str, k: int = 3, min_score: float = MIN_SCORE) -> list[dict]:
     query_vector = embed(query_str)
-    search_results = qdrant_client.search(
+    search_results = qdrant_client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
-        limit=k
-    )
+        query=query_vector,
+        limit=k,
+    ).points
     return [hit.payload for hit in search_results if hit.score >= min_score]
+
 
 def query(question: str) -> str:
     retrieved_chunks = retrieve(question)
-    
+
     if not retrieved_chunks:
         return "There is not enough information available to answer this question."
-    
-    context = "\n\n".join([f"--- {chunk['source_document']} ---\n{chunk['text']}" for chunk in retrieved_chunks])
-    
+
+    context = "\n\n".join(
+        [
+            f"--- {chunk['source_document']} ---\n{chunk['text']}"
+            for chunk in retrieved_chunks
+        ]
+    )
+
     prompt = f"""
-    You are an expert sales and operational assistant for Brasaland. 
+    You are an expert sales and operational assistant for Brasaland.
 
     STRICT BUSINESS RULES:
     1. Base your answer ONLY on the provided Context.
@@ -41,10 +51,10 @@ def query(question: str) -> str:
 
     Question: {question}
     """
-    
-    response = client.chat.completions.create(
-        model=GENERATION_MODEL,
+
+    response = generation_client.chat.completions.create(
+        model=GENERATION_MODEL_ID,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.0
+        temperature=0.0,
     )
     return response.choices[0].message.content

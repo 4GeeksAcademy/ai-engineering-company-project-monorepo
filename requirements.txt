@@ -4,3 +4,7 @@ python-multipart>=0.0.9
 pandas>=2.2.0
 openai>=1.0.0
 python-dotenv>=1.0.0
+
+# Dependencies are managed with uv. Install/sync with:
+#   uv sync
+# See pyproject.toml for the canonical dependency list.
