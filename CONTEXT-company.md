@@ -17,6 +17,9 @@ Index every file below from `docs/company-knowledge-base/`:
 
 - **Collection name:** `brasaland_kb`
 - **Company slug in payloads:** `brasaland`
+- **API:** `POST /knowledge/query`
+  - Request: `{ "question": "..." }`
+  - Response: `{ "answer": "..." }` (model-generated string only — never chunks, scores, or Qdrant payloads)
 - **Currency:** Keep USD $ and COP $ exactly as written — never convert.
 - **Allergens:** Never claim "zero risk" or "100% safe"; follow source wording.
 - **Unknown answers:** Respond with *"There is not enough information available."*

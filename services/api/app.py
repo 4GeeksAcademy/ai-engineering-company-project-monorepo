@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UI_ROOT = REPO_ROOT / "uis" / "web"
+BACKOFFICE_UI_ROOT = REPO_ROOT / "uis" / "backoffice"
 KNOWLEDGE_UI_ROOT = REPO_ROOT / "uis" / "knowledge"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -101,6 +102,9 @@ def export_results(output_file: str = "results.csv"):
     if not output_path.exists():
         raise HTTPException(status_code=404, detail=f"Results file not found: {output_file}")
     return FileResponse(path=output_path, filename=output_path.name, media_type="text/csv")
+
+if BACKOFFICE_UI_ROOT.exists():
+    app.mount("/backoffice", StaticFiles(directory=BACKOFFICE_UI_ROOT, html=True), name="backoffice-ui")
 
 if KNOWLEDGE_UI_ROOT.exists():
     app.mount("/knowledge", StaticFiles(directory=KNOWLEDGE_UI_ROOT, html=True), name="knowledge-ui")

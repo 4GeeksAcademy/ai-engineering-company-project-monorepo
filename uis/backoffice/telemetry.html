@@ -4,101 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Health - Telemetry Report</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background-color: #f9fafb; color: #111827; }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        .period-box { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-weight: 500; }
-        .metric-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb; }
-        th { background-color: #f3f4f6; }
-        .error { color: #dc2626; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>⚙️ Engineering Telemetry Dashboard</h1>
-        
-        <div class="period-box" id="period-display">
-            Loading time window...
+    <main class="page">
+        <div class="page-header">
+            <h1>Engineering Telemetry Dashboard</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
         </div>
 
-        <div class="metric-section">
+        <nav class="nav-links" aria-label="Backoffice navigation">
+            <a href="/backoffice/">KPI Dashboard</a>
+            <a href="/backoffice/telemetry.html">Telemetry</a>
+            <a href="/knowledge/">Knowledge Assistant</a>
+        </nav>
+
+        <div class="info-banner" id="period-display">Loading time window...</div>
+
+        <section class="card">
             <h3>Traffic Volume (Events Per Day)</h3>
             <table id="volume-table">
                 <thead><tr><th>Date</th><th>Total Events</th></tr></thead>
                 <tbody></tbody>
             </table>
-        </div>
+        </section>
 
-        <div class="metric-section">
+        <section class="card">
             <h3>System Errors by Type</h3>
             <table id="errors-table">
                 <thead><tr><th>Error Type</th><th>Occurrences</th></tr></thead>
                 <tbody></tbody>
             </table>
-        </div>
+        </section>
 
-        <div class="metric-section">
+        <section class="card">
             <h3>Authentication Failure Rate</h3>
             <table id="auth-table">
                 <thead><tr><th>Date</th><th>Successes</th><th>Failures</th><th>Failure Rate</th></tr></thead>
                 <tbody></tbody>
             </table>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script>
-        // Adjust this URL if your FastAPI backend runs on a different port/host
-        const API_URL = 'http://localhost:8000/telemetry/report';
-
         async function loadTelemetry() {
+            const periodDisplay = document.getElementById('period-display');
+
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch('/telemetry/report');
+                if (!response.ok) {
+                    throw new Error(`Request failed (${response.status})`);
+                }
+
                 const data = await response.json();
 
-                // 1. Display the Period
-                document.getElementById('period-display').innerHTML = 
-                    `📅 <strong>Period:</strong> ${new Date(data.period.from).toLocaleString()} &mdash; ${new Date(data.period.to).toLocaleString()}`;
+                periodDisplay.innerHTML =
+                    `<strong>Period:</strong> ${new Date(data.period.from).toLocaleString()} &mdash; ${new Date(data.period.to).toLocaleString()}`;
 
-                // 2. Render Traffic Volume
                 const volumeBody = document.querySelector('#volume-table tbody');
-                data.metrics.events_per_day.forEach(row => {
-                    volumeBody.innerHTML += `<tr><td>${row.date}</td><td>${row.event_count}</td></tr>`;
-                });
+                volumeBody.innerHTML = data.metrics.events_per_day.map((row) =>
+                    `<tr><td>${row.date}</td><td>${row.event_count}</td></tr>`
+                ).join('');
 
-                // 3. Render Error Rates
                 const errorsBody = document.querySelector('#errors-table tbody');
                 if (data.metrics.error_rate_by_type.length === 0) {
-                    errorsBody.innerHTML = `<tr><td colspan="2">No technical errors detected in this period! 🎉</td></tr>`;
+                    errorsBody.innerHTML = '<tr><td colspan="2">No technical errors detected in this period.</td></tr>';
                 } else {
-                    data.metrics.error_rate_by_type.forEach(row => {
-                        errorsBody.innerHTML += `<tr><td class="error">${row.event_type}</td><td>${row.error_count}</td></tr>`;
-                    });
+                    errorsBody.innerHTML = data.metrics.error_rate_by_type.map((row) =>
+                        `<tr><td class="text-error">${row.event_type}</td><td>${row.error_count}</td></tr>`
+                    ).join('');
                 }
 
-                // 4. Render Auth Failure Rates
                 const authBody = document.querySelector('#auth-table tbody');
                 if (data.metrics.auth_failure_rate.length === 0) {
-                    authBody.innerHTML = `<tr><td colspan="4">No authentication events in this period.</td></tr>`;
+                    authBody.innerHTML = '<tr><td colspan="4">No authentication events in this period.</td></tr>';
                 } else {
-                    data.metrics.auth_failure_rate.forEach(row => {
+                    authBody.innerHTML = data.metrics.auth_failure_rate.map((row) => {
                         const ratePercent = (row.failure_rate * 100).toFixed(1) + '%';
-                        authBody.innerHTML += `<tr>
+                        return `<tr>
                             <td>${row.date}</td>
                             <td>${row.user_login_succeeded}</td>
-                            <td class="error">${row.user_login_failed}</td>
+                            <td class="text-error">${row.user_login_failed}</td>
                             <td>${ratePercent}</td>
                         </tr>`;
-                    });
+                    }).join('');
                 }
             } catch (error) {
-                document.getElementById('period-display').innerHTML = `<span class="error">Failed to load telemetry data: ${error.message}</span>`;
+                periodDisplay.innerHTML = `<span class="text-error">Failed to load telemetry data: ${error.message}</span>`;
             }
         }
 
-        // Load the data immediately when the page opens
         loadTelemetry();
     </script>
 </body>

@@ -4,53 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brasaland Business KPIs</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 2rem; background: #f9fafb; color: #111827; }
-        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-        h3 { font-weight: normal; color: #4b5563; margin-bottom: 2rem; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        th { background-color: #f3f4f6; font-weight: 600; font-size: 0.875rem; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { font-size: 0.875rem; }
-    </style>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
 </head>
 <body>
-    <h1>Brasaland Leadership Dashboard</h1>
-    <h3 id="week-label">Loading KPIs...</h3>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Location</th>
-                <th>Country</th>
-                <th>Total Purchase Cost</th>
-                <th>Total Waste Cost</th>
-                <th>Waste Ratio</th>
-                <th>Stockout Events</th>
-                <th>Price Alerts</th>
-            </tr>
-        </thead>
-        <tbody id="kpi-body">
-            <tr><td colspan="7">Loading data...</td></tr>
-        </tbody>
-    </table>
+    <main class="page">
+        <div class="page-header">
+            <h1>Brasaland Leadership Dashboard</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Backoffice navigation">
+            <a href="/backoffice/">KPI Dashboard</a>
+            <a href="/backoffice/telemetry.html">Telemetry</a>
+            <a href="/knowledge/">Knowledge Assistant</a>
+        </nav>
+
+        <p class="subtitle" id="week-label">Loading KPIs...</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Country</th>
+                    <th>Total Purchase Cost</th>
+                    <th>Total Waste Cost</th>
+                    <th>Waste Ratio</th>
+                    <th>Stockout Events</th>
+                    <th>Price Alerts</th>
+                </tr>
+            </thead>
+            <tbody id="kpi-body">
+                <tr><td colspan="7">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </main>
 
     <script>
         async function loadKPIs() {
+            const weekLabel = document.getElementById('week-label');
+            const tbody = document.getElementById('kpi-body');
+
             try {
-                // Fetch directly from our own FastAPI endpoints
                 const res = await fetch('/reporting/weekly-location-performance');
+                if (!res.ok) {
+                    throw new Error(`Request failed (${res.status})`);
+                }
+
                 const data = await res.json();
-                
-                document.getElementById('week-label').innerText = `Performance for Week Starting: ${data.week_start || 'N/A'}`;
-                const tbody = document.getElementById('kpi-body');
-                
+                weekLabel.textContent = `Performance for week starting: ${data.week_start || 'N/A'}`;
+
                 if (!data.locations || data.locations.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7">No data available for this period.</td></tr>';
                     return;
                 }
 
-                tbody.innerHTML = data.locations.map(loc => `
+                tbody.innerHTML = data.locations.map((loc) => `
                     <tr>
                         <td><strong>${loc.location_id}</strong></td>
                         <td>${loc.country}</td>
@@ -62,9 +71,11 @@
                     </tr>
                 `).join('');
             } catch (err) {
-                document.getElementById('kpi-body').innerHTML = '<tr><td colspan="7" style="color:red;">Error loading KPIs. Ensure the API is running.</td></tr>';
+                weekLabel.textContent = '';
+                tbody.innerHTML = `<tr><td colspan="7" class="text-error">Error loading KPIs: ${err.message}</td></tr>`;
             }
         }
+
         loadKPIs();
     </script>
 </body>
