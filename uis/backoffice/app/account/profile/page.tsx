@@ -1,11 +1,9 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { Alert } from '../../../../components/ui/Alert';
-import { Spinner } from '../../../../components/ui/Spinner';
-import { apiFetch, logout } from '../../../../services/httpClient';
-
-const AUTH_TOKEN_STORAGE_KEY = 'trackflow_token';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Alert } from '../../components/ui/Alert';
+import { Spinner } from '../../components/ui/Spinner';
+import { apiFetch, getSessionToken, logout } from '../../../services/authApi';
 
 interface ProfileFormValues {
   email: string;
@@ -16,35 +14,29 @@ interface ProfileFormValues {
 
 interface AuthMeResponse {
   email?: string;
-  user?: {
-    email?: string;
-    name?: string;
-    phone?: string;
-    address?: string;
-    profile?: {
-      name?: string;
-      phone?: string;
-      address?: string;
-    };
-  };
   profile?: {
-    name?: string;
-    phone?: string;
-    address?: string;
-  };
-  name?: string;
-  phone?: string;
-  address?: string;
+    name?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  } | null;
+}
+
+interface ProfileUpdateResponse {
+  name?: string | null;
+  phone?: string | null;
+  address?: string | null;
+}
+
+function normalizeField(value: string | null | undefined): string {
+  return value?.trim() || '';
 }
 
 function getProfileValues(payload: AuthMeResponse): ProfileFormValues {
-  const nestedProfile = payload.profile || payload.user?.profile;
-
   return {
-    email: payload.email || payload.user?.email || '',
-    name: nestedProfile?.name || payload.name || payload.user?.name || '',
-    phone: nestedProfile?.phone || payload.phone || payload.user?.phone || '',
-    address: nestedProfile?.address || payload.address || payload.user?.address || '',
+    email: payload.email || '',
+    name: normalizeField(payload.profile?.name),
+    phone: normalizeField(payload.profile?.phone),
+    address: normalizeField(payload.profile?.address),
   };
 }
 
@@ -66,12 +58,19 @@ async function parseApiError(response: Response, fallback: string): Promise<stri
 }
 
 export default function AccountProfilePage() {
-  const [formValues, setFormValues] = useState<ProfileFormValues>({
+  const [profileValues, setProfileValues] = useState<ProfileFormValues>({
     email: '',
     name: '',
     phone: '',
     address: '',
   });
+  const [draftValues, setDraftValues] = useState<ProfileFormValues>({
+    email: '',
+    name: '',
+    phone: '',
+    address: '',
+  });
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,9 +80,7 @@ export default function AccountProfilePage() {
     let isMounted = true;
 
     const loadProfile = async () => {
-      const storedToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-
-      if (!storedToken) {
+      if (!getSessionToken()) {
         logout();
         return;
       }
@@ -98,14 +95,16 @@ export default function AccountProfilePage() {
         }
 
         if (!response.ok) {
-          const message = await parseApiError(response, 'No fue posible cargar el perfil.');
+          const message = await parseApiError(response, 'No fue posible cargar los datos de tu cuenta.');
           throw new Error(message);
         }
 
         const profilePayload = (await response.json()) as AuthMeResponse;
+        const nextValues = getProfileValues(profilePayload);
 
         if (isMounted) {
-          setFormValues(getProfileValues(profilePayload));
+          setProfileValues(nextValues);
+          setDraftValues(nextValues);
           setErrorMessage(null);
         }
       } catch (error) {
@@ -126,17 +125,42 @@ export default function AccountProfilePage() {
     };
   }, []);
 
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      profileValues.name !== draftValues.name ||
+      profileValues.phone !== draftValues.phone ||
+      profileValues.address !== draftValues.address
+    );
+  }, [profileValues, draftValues]);
+
   const handleChange = (field: keyof ProfileFormValues, value: string) => {
-    setFormValues((previous) => ({
+    setDraftValues((previous) => ({
       ...previous,
       [field]: value,
     }));
   };
 
+  const handleEdit = () => {
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    setDraftValues(profileValues);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setDraftValues(profileValues);
+    setIsEditing(false);
+    setErrorMessage(null);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)) {
+    if (!isEditing) {
+      return;
+    }
+
+    if (!getSessionToken()) {
       logout();
       return;
     }
@@ -145,17 +169,16 @@ export default function AccountProfilePage() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const payload = {
+      name: draftValues.name.trim(),
+      phone: draftValues.phone.trim(),
+      address: draftValues.address.trim(),
+    };
+
     try {
       const response = await apiFetch('/profiles/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formValues.name.trim(),
-          phone: formValues.phone.trim(),
-          address: formValues.address.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.status === 401) {
@@ -163,19 +186,21 @@ export default function AccountProfilePage() {
       }
 
       if (!response.ok) {
-        const message = await parseApiError(response, 'No fue posible actualizar el perfil.');
+        const message = await parseApiError(response, 'No fue posible actualizar tus datos de perfil.');
         throw new Error(message);
       }
 
-      const updatedPayload = (await response.json()) as Partial<AuthMeResponse>;
+      const updatedPayload = (await response.json()) as ProfileUpdateResponse;
+      const updatedValues: ProfileFormValues = {
+        email: profileValues.email,
+        name: normalizeField(updatedPayload.name),
+        phone: normalizeField(updatedPayload.phone),
+        address: normalizeField(updatedPayload.address),
+      };
 
-      setFormValues((previousValues) => ({
-        ...previousValues,
-        name: updatedPayload.profile?.name || updatedPayload.name || previousValues.name,
-        phone: updatedPayload.profile?.phone || updatedPayload.phone || previousValues.phone,
-        address: updatedPayload.profile?.address || updatedPayload.address || previousValues.address,
-      }));
-
+      setProfileValues(updatedValues);
+      setDraftValues(updatedValues);
+      setIsEditing(false);
       setSuccessMessage('Perfil actualizado correctamente.');
     } catch (error) {
       setErrorMessage(getReadableErrorMessage(error));
@@ -187,8 +212,10 @@ export default function AccountProfilePage() {
   return (
     <section className="mx-auto w-full max-w-2xl space-y-6">
       <header className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Gestion de cuenta</h2>
-        <p className="text-sm text-slate-600">Actualiza tu informacion de contacto para mantener tu perfil al dia.</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Gestion de usuario</h2>
+        <p className="text-sm text-slate-600">
+          Revisa y actualiza tus datos de contacto. El email y la contrasena no se editan desde esta vista.
+        </p>
       </header>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -206,7 +233,7 @@ export default function AccountProfilePage() {
                 id="email"
                 name="email"
                 type="email"
-                value={formValues.email}
+                value={profileValues.email}
                 disabled
                 className="w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
               />
@@ -221,8 +248,8 @@ export default function AccountProfilePage() {
                 name="name"
                 type="text"
                 autoComplete="name"
-                disabled={isSavingProfile}
-                value={formValues.name}
+                disabled={!isEditing || isSavingProfile}
+                value={draftValues.name}
                 onChange={(event) => handleChange('name', event.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-sky-300 transition focus:border-sky-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
                 placeholder="Tu nombre"
@@ -238,8 +265,8 @@ export default function AccountProfilePage() {
                 name="phone"
                 type="tel"
                 autoComplete="tel"
-                disabled={isSavingProfile}
-                value={formValues.phone}
+                disabled={!isEditing || isSavingProfile}
+                value={draftValues.phone}
                 onChange={(event) => handleChange('phone', event.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-sky-300 transition focus:border-sky-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
                 placeholder="+1 555 123 4567"
@@ -255,8 +282,8 @@ export default function AccountProfilePage() {
                 name="address"
                 type="text"
                 autoComplete="street-address"
-                disabled={isSavingProfile}
-                value={formValues.address}
+                disabled={!isEditing || isSavingProfile}
+                value={draftValues.address}
                 onChange={(event) => handleChange('address', event.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-sky-300 transition focus:border-sky-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
                 placeholder="Direccion de contacto"
@@ -264,7 +291,7 @@ export default function AccountProfilePage() {
             </div>
 
             {errorMessage ? (
-              <Alert variant="error" title="Error al actualizar perfil">
+              <Alert variant="error" title="Error de perfil">
                 {errorMessage}
               </Alert>
             ) : null}
@@ -276,20 +303,33 @@ export default function AccountProfilePage() {
             ) : null}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={logout}
-                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-              >
-                Cerrar sesion
-              </button>
-              <button
-                type="submit"
-                disabled={isSavingProfile}
-                className="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isSavingProfile ? 'Actualizando perfil...' : 'Actualizar perfil'}
-              </button>
+              {isEditing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={isSavingProfile}
+                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingProfile || !hasUnsavedChanges}
+                    className="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isSavingProfile ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleEdit}
+                  className="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-800"
+                >
+                  Editar perfil
+                </button>
+              )}
             </div>
           </form>
         )}

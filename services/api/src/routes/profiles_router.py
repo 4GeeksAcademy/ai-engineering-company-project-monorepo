@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from src.models.profile import Profile
 from src.models.user import User
 from src.services.auth_service import get_current_user
-from src.services.profile_service import get_profile_by_user_id, update_profile
+from src.services.profile_service import create_profile_for_user, get_profile_by_user_id, update_profile
 
 profiles_router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -38,8 +38,10 @@ def update_my_profile(
     updates = payload.model_dump(exclude_none=True)
     profile = update_profile(current_user.id, updates)
     if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found",
+        profile = create_profile_for_user(
+            user_id=current_user.id,
+            name=str(updates.get("name", "")),
+            phone=str(updates.get("phone", "")),
+            address=str(updates.get("address", "")),
         )
     return profile

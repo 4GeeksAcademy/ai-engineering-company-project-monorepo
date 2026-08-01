@@ -1,5 +1,10 @@
 const API_BASE_URL = 'https://crispy-space-goggles-qxjqwvjvw4qc9r5g-3001.app.github.dev';
 const AUTH_TOKEN_STORAGE_KEY = 'trackflow_token';
+const LOGIN_PATH = '/login';
+
+interface ApiFetchOptions extends RequestInit {
+  skipAuth?: boolean;
+}
 
 interface LoginPayload {
   email: string;
@@ -22,6 +27,10 @@ interface ApiErrorResponse {
   detail?: string;
   message?: string;
   error?: string;
+}
+
+function resolveEndpointUrl(endpoint: string): string {
+  return `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 }
 
 function getErrorMessage(payload: ApiErrorResponse | null, fallback: string): string {
@@ -62,7 +71,37 @@ export function logout(): void {
   }
 
   clearSessionToken();
-  window.location.assign('/login');
+
+  if (window.location.pathname !== LOGIN_PATH) {
+    window.location.assign(LOGIN_PATH);
+  }
+}
+
+export async function apiFetch(endpoint: string, options: ApiFetchOptions = {}): Promise<Response> {
+  const { skipAuth = false, headers, ...restOptions } = options;
+  const requestHeaders = new Headers(headers ?? undefined);
+
+  if (!skipAuth && typeof window !== 'undefined') {
+    const token = getSessionToken();
+    if (token) {
+      requestHeaders.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
+  if (restOptions.body && !(restOptions.body instanceof FormData) && !requestHeaders.has('Content-Type')) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(resolveEndpointUrl(endpoint), {
+    ...restOptions,
+    headers: requestHeaders,
+  });
+
+  if (response.status === 401) {
+    logout();
+  }
+
+  return response;
 }
 
 export function isTokenValid(token: string): boolean {
@@ -92,7 +131,8 @@ export function isTokenValid(token: string): boolean {
 }
 
 export async function login(payload: LoginPayload): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await apiFetch('/auth/login', {
+    skipAuth: true,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -120,7 +160,8 @@ export async function login(payload: LoginPayload): Promise<string> {
 }
 
 export async function register(payload: RegisterPayload): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/users`, {
+  const response = await apiFetch('/users', {
+    skipAuth: true,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
