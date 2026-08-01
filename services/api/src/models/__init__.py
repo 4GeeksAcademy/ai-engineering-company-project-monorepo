@@ -6,9 +6,11 @@ from src.models.supplier import (
     SupplierCreate,
     SupplierRateUpdate,
     SupplierResponse,
-    SupplierStatusUpdate,
     SupplierStatus,
+    SupplierStatusUpdate,
 )
+from src.models.user import TinyDBId, User, UserRole
+from src.models.profile import Profile
 
 __all__ = [
     "SupplierCategory",
@@ -18,4 +20,8 @@ __all__ = [
     "SupplierResponse",
     "SupplierStatusUpdate",
     "SupplierStatus",
+    "TinyDBId",
+    "User",
+    "UserRole",
+    "Profile",
 ]

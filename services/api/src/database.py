@@ -17,6 +17,8 @@ DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 db = TinyDB(DB_PATH)
 suppliers_table = db.table("suppliers")
+users_table = db.table("users")
+profiles_table = db.table("profiles")
 
 
 def get_db() -> TinyDB:
@@ -29,3 +31,15 @@ def get_suppliers_table() -> Table:
     """Return the suppliers table handle."""
 
     return suppliers_table
+
+
+def get_users_table() -> Table:
+    """Return the users table handle."""
+
+    return users_table
+
+
+def get_profiles_table() -> Table:
+    """Return the profiles table handle."""
+
+    return profiles_table
