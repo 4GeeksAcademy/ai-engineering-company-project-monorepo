@@ -275,13 +275,22 @@ export default function AccountProfilePage() {
               </Alert>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={isSavingProfile}
-              className="inline-flex w-full items-center justify-center rounded-md bg-sky-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSavingProfile ? 'Guardando cambios...' : 'Guardar cambios'}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={logout}
+                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                Cerrar sesion
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                className="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSavingProfile ? 'Actualizando perfil...' : 'Actualizar perfil'}
+              </button>
+            </div>
           </form>
         )}
       </div>
