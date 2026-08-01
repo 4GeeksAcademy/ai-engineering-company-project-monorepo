@@ -10,6 +10,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "Inicio" },
+  { href: "/candidaturas", label: "Candidaturas" },
   { href: "/leads", label: "Leads" },
   { href: "/operaciones", label: "Operaciones" },
   { href: "/operaciones/proveedores", label: "Directorio de proveedores" },
@@ -23,7 +24,9 @@ export function SidebarNav() {
     <nav aria-label="Navegacion dashboard">
       <ul className="space-y-2 text-sm">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/" && pathname.startsWith(`${item.href}/`));
 
           return (
             <li key={item.href}>

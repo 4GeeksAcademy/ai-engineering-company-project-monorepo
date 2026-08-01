@@ -3,19 +3,20 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from '../../../components/ui/Alert';
-import { Spinner } from '../../../components/ui/Spinner';
-import { StageBadge } from '../../../components/ui/StageBadge';
-import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { STAGE_LABELS, STATUS_LABELS } from '../../../lib/mappings';
+import { Alert } from '../../components/ui/Alert';
+import { Spinner } from '../../components/ui/Spinner';
+import { StageBadge } from '../../components/ui/StageBadge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { STAGE_LABELS, STATUS_LABELS } from '../../../lib/candidatesMappings';
 import {
   createCandidateNote,
+  deleteCandidate,
   deleteCandidateNote,
   getCandidateById,
   getCandidateNotes,
   updateCandidateStage,
   updateCandidateStatus,
-} from '../../../services/api';
+} from '../../../services/candidatesApi';
 import type { Candidate, CandidateStage, CandidateStatus, Note } from '../../../types/candidate';
 
 const statusOptions = Object.entries(STATUS_LABELS) as Array<[CandidateStatus, string]>;
@@ -36,6 +37,7 @@ export default function CandidateDetailPage() {
   const [stageUpdating, setStageUpdating] = useState<boolean>(false);
   const [noteSubmitting, setNoteSubmitting] = useState<boolean>(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [deletingCandidate, setDeletingCandidate] = useState<boolean>(false);
 
   const [error, setError] = useState<string | null>(null);
   const [notesError, setNotesError] = useState<string | null>(null);
@@ -47,50 +49,57 @@ export default function CandidateDetailPage() {
     }, 2500);
   }, []);
 
-  const loadCandidate = useCallback(async () => {
-    if (!candidateId) {
-      setError('No se pudo identificar la candidatura.');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await getCandidateById(candidateId);
-      setCandidate(data);
-    } catch (fetchError) {
-      setError((fetchError as Error).message || 'No fue posible cargar la candidatura.');
-    } finally {
-      setLoading(false);
-    }
-  }, [candidateId]);
-
-  const loadNotes = useCallback(async () => {
-    if (!candidateId) {
-      setNotesError('No se pudo identificar la candidatura para cargar notas.');
-      setNotesLoading(false);
-      return;
-    }
-
-    setNotesLoading(true);
-    setNotesError(null);
-
-    try {
-      const data = await getCandidateNotes(candidateId);
-      setNotes(data);
-    } catch (fetchError) {
-      setNotesError((fetchError as Error).message || 'No fue posible cargar las notas.');
-    } finally {
-      setNotesLoading(false);
-    }
-  }, [candidateId]);
-
   useEffect(() => {
-    void loadCandidate();
-    void loadNotes();
-  }, [loadCandidate, loadNotes]);
+    let isMounted = true;
+
+    const loadPageData = async () => {
+      if (!candidateId) {
+        if (isMounted) {
+          setError('No se pudo identificar la candidatura.');
+          setNotesError('No se pudo identificar la candidatura para cargar notas.');
+          setLoading(false);
+          setNotesLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setLoading(true);
+        setNotesLoading(true);
+        setError(null);
+        setNotesError(null);
+      }
+
+      try {
+        const [candidateData, notesData] = await Promise.all([
+          getCandidateById(candidateId),
+          getCandidateNotes(candidateId),
+        ]);
+
+        if (isMounted) {
+          setCandidate(candidateData);
+          setNotes(notesData);
+        }
+      } catch (fetchError) {
+        if (isMounted) {
+          const message = (fetchError as Error).message || 'No fue posible cargar la candidatura.';
+          setError(message);
+          setNotesError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setNotesLoading(false);
+        }
+      }
+    };
+
+    void loadPageData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [candidateId]);
 
   const detailRows = useMemo(() => {
     if (!candidate) {
@@ -172,7 +181,6 @@ export default function CandidateDetailPage() {
 
     try {
       const created = await createCandidateNote(candidateId, { content });
-      // Forzamos a que current sea tratado como un array vacío si no es iterable
       setNotes((current) => {
         const safeCurrent = Array.isArray(current) ? current : [];
         return [created, ...safeCurrent];
@@ -207,6 +215,29 @@ export default function CandidateDetailPage() {
       setNotesError((deleteError as Error).message || 'No fue posible eliminar la nota.');
     } finally {
       setDeletingNoteId(null);
+    }
+  };
+
+  const handleDeleteCandidate = async () => {
+    if (!candidateId) {
+      return;
+    }
+
+    const userConfirmed = window.confirm('Esta accion eliminara la candidatura. Deseas continuar?');
+    if (!userConfirmed) {
+      return;
+    }
+
+    setDeletingCandidate(true);
+    setError(null);
+
+    try {
+      await deleteCandidate(candidateId);
+      window.location.href = '/candidaturas';
+    } catch (deleteError) {
+      setError((deleteError as Error).message || 'No fue posible eliminar la candidatura.');
+    } finally {
+      setDeletingCandidate(false);
     }
   };
 
@@ -245,27 +276,33 @@ export default function CandidateDetailPage() {
           <StatusBadge status={candidate.status} />
           <StageBadge stage={candidate.stage} />
           <Link
-            href={`/candidates/${candidate.id}/edit`}
+            href={`/candidaturas/${candidate.id}/edit`}
             className="ml-auto inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             Editar datos
           </Link>
+          <button
+            type="button"
+            disabled={deletingCandidate}
+            onClick={handleDeleteCandidate}
+            className="inline-flex items-center rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deletingCandidate ? 'Eliminando...' : 'Eliminar candidatura'}
+          </button>
         </header>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {detailRows.map((row) => (
             <div key={row.label} className="rounded-md border border-slate-100 bg-slate-50 p-3">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{row.label}</p>
-              <p className="mt-1 text-sm text-slate-900 break-all">{row.value || '-'}</p>
+              <p className="mt-1 break-all text-sm text-slate-900">{row.value || '-'}</p>
             </div>
           ))}
         </div>
       </article>
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-600">
-          Actualizar proceso
-        </h3>
+        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-600">Actualizar proceso</h3>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="space-y-1">
@@ -338,8 +375,7 @@ export default function CandidateDetailPage() {
           <Spinner label="Cargando notas..." />
         ) : (
           <div className="space-y-3">
-            {/* Agregamos una verificación robusta para evitar crasheos */}
-            {(!notes || !Array.isArray(notes) || notes.length === 0) ? (
+            {!notes || !Array.isArray(notes) || notes.length === 0 ? (
               <p className="text-sm text-slate-600">Aun no hay notas registradas para esta candidatura.</p>
             ) : (
               notes.map((note) => (
@@ -347,7 +383,7 @@ export default function CandidateDetailPage() {
                   key={note.id}
                   className="flex items-start justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
                 >
-                  <p className="text-sm text-slate-800 whitespace-pre-wrap">{note.content}</p>
+                  <p className="whitespace-pre-wrap text-sm text-slate-800">{note.content}</p>
                   <button
                     type="button"
                     onClick={() => handleDeleteNote(note.id)}

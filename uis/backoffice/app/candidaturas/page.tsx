@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Alert } from '../components/ui/Alert';
 import { Spinner } from '../components/ui/Spinner';
 import { StageBadge } from '../components/ui/StageBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { STAGE_LABELS, STATUS_LABELS } from '../lib/mappings';
-import { getCandidates } from '../services/api';
-import type { Candidate, CandidateStage, CandidateStatus } from '../types/candidate';
+import { STAGE_LABELS, STATUS_LABELS } from '../../lib/candidatesMappings';
+import { getCandidates } from '../../services/candidatesApi';
+import type { Candidate, CandidateStage, CandidateStatus } from '../../types/candidate';
 
 const statusOptions = Object.entries(STATUS_LABELS) as Array<[CandidateStatus, string]>;
 const stageOptions = Object.entries(STAGE_LABELS) as Array<[CandidateStage, string]>;
@@ -30,7 +30,7 @@ function parseStageFilter(value: string | null): CandidateStage | '' {
   return value in STAGE_LABELS ? (value as CandidateStage) : '';
 }
 
-export default function HomePage() {
+function CandidatesPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,18 +53,7 @@ export default function HomePage() {
       try {
         const data = await getCandidates();
         if (isMounted) {
-          // Verificamos si la API devolvió un array directo
-          if (Array.isArray(data)) {
-            setCandidates(data);
-          }
-          // Si la API lo envuelve en un objeto (ej. { records: [...] } o { candidates: [...] })
-          else if (data && typeof data === 'object') {
-            setCandidates((data as any).records || (data as any).candidates || (data as any).data || []);
-          }
-          // Fallback de seguridad
-          else {
-            setCandidates([]);
-          }
+          setCandidates(Array.isArray(data) ? data : []);
         }
       } catch (fetchError) {
         if (isMounted) {
@@ -77,7 +66,7 @@ export default function HomePage() {
       }
     }
 
-    loadCandidates();
+    void loadCandidates();
 
     return () => {
       isMounted = false;
@@ -93,7 +82,7 @@ export default function HomePage() {
 
       const matchesSearch = normalizedSearch
         ? candidate.full_name.toLowerCase().includes(normalizedSearch) ||
-        candidate.email.toLowerCase().includes(normalizedSearch)
+          candidate.email.toLowerCase().includes(normalizedSearch)
         : true;
 
       return matchesStatus && matchesStage && matchesSearch;
@@ -115,7 +104,7 @@ export default function HomePage() {
   };
 
   const navigateToCandidate = (candidateId: string) => {
-    router.push(`/candidates/${candidateId}`);
+    router.push(`/candidaturas/${candidateId}`);
   };
 
   return (
@@ -123,7 +112,7 @@ export default function HomePage() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-900">Candidaturas</h2>
         <Link
-          href="/candidates/new"
+          href="/candidaturas/new"
           className="inline-flex items-center rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-800"
         >
           Nueva candidatura
@@ -234,7 +223,7 @@ export default function HomePage() {
                   aria-label={`Abrir candidatura de ${candidate.full_name}`}
                 >
                   <td className="px-4 py-3 font-medium text-slate-900">
-                    <Link href={`/candidates/${candidate.id}`} className="hover:text-sky-700 hover:underline">
+                    <Link href={`/candidaturas/${candidate.id}`} className="hover:text-sky-700 hover:underline">
                       {candidate.full_name}
                     </Link>
                   </td>
@@ -258,5 +247,19 @@ export default function HomePage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function CandidatesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <Spinner label="Cargando candidaturas..." />
+        </div>
+      }
+    >
+      <CandidatesPageContent />
+    </Suspense>
   );
 }
