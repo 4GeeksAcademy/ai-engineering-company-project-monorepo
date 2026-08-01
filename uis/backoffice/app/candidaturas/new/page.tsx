@@ -1,4 +1,4 @@
-import { CandidateForm } from '../../../components/CandidateForm';
+import { CandidateForm } from '../../components/candidates/CandidateForm';
 
 export default function NewCandidatePage() {
   return (

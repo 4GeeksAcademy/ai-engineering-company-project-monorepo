@@ -7,11 +7,42 @@ import type {
   NotePayload,
 } from '../types/candidate';
 
-const API_BASE_URL = 'https://playground.4geeks.com/tracker/api/v1';
+const PLAYGROUND_API_BASE_URL = 'https://playground.4geeks.com/tracker/api/v1';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
 };
+
+function extractCandidatesList(payload: unknown): Candidate[] {
+  if (Array.isArray(payload)) {
+    return payload as Candidate[];
+  }
+
+  if (payload && typeof payload === 'object') {
+    const wrappedPayload = payload as {
+      data?: unknown;
+      results?: unknown;
+      items?: unknown;
+      records?: unknown;
+      candidates?: unknown;
+    };
+
+    const possibleLists = [
+      wrappedPayload.data,
+      wrappedPayload.results,
+      wrappedPayload.items,
+      wrappedPayload.records,
+      wrappedPayload.candidates,
+    ];
+
+    const firstList = possibleLists.find((value) => Array.isArray(value));
+    if (Array.isArray(firstList)) {
+      return firstList as Candidate[];
+    }
+  }
+
+  return [];
+}
 
 function extractNotesList(payload: unknown): Note[] {
   if (Array.isArray(payload)) {
@@ -47,9 +78,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
     let errorMessage = `Request failed with status ${response.status}`;
 
     try {
-      const errorData = (await response.json()) as { message?: string };
+      const errorData = (await response.json()) as { message?: string; error?: string };
       if (errorData?.message) {
         errorMessage = errorData.message;
+      } else if (errorData?.error) {
+        errorMessage = errorData.error;
       }
     } catch {
       // Ignore JSON parse failures and keep status-based error.
@@ -67,9 +100,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function getCandidates(): Promise<Candidate[]> {
   try {
-    // Corregido para apuntar directamente a /records
-    const response = await fetch(`${API_BASE_URL}/records`);
-    return await handleResponse<Candidate[]>(response);
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records`);
+    const payload = await handleResponse<unknown>(response);
+    return extractCandidatesList(payload);
   } catch (error) {
     throw new Error(`Error fetching candidates: ${(error as Error).message}`);
   }
@@ -77,8 +110,7 @@ export async function getCandidates(): Promise<Candidate[]> {
 
 export async function getCandidateById(candidateId: string): Promise<Candidate> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`);
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`);
     return await handleResponse<Candidate>(response);
   } catch (error) {
     throw new Error(`Error fetching candidate: ${(error as Error).message}`);
@@ -87,21 +119,10 @@ export async function getCandidateById(candidateId: string): Promise<Candidate> 
 
 export async function createCandidate(payload: CandidatePayload): Promise<Candidate> {
   try {
-    const body: CandidatePayload = {
-      full_name: payload.full_name,
-      email: payload.email,
-      phone: payload.phone,
-      position: payload.position,
-      linkedin_url: payload.linkedin_url,
-      cv_url: payload.cv_url,
-      experience_years: payload.experience_years,
-    };
-
-    // Reemplazado /candidates por /records
-    const response = await fetch(`${API_BASE_URL}/records`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records`, {
       method: 'POST',
       headers: JSON_HEADERS,
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     return await handleResponse<Candidate>(response);
@@ -115,21 +136,10 @@ export async function updateCandidate(
   payload: CandidatePayload,
 ): Promise<Candidate> {
   try {
-    const body: CandidatePayload = {
-      full_name: payload.full_name,
-      email: payload.email,
-      phone: payload.phone,
-      position: payload.position,
-      linkedin_url: payload.linkedin_url,
-      cv_url: payload.cv_url,
-      experience_years: payload.experience_years,
-    };
-
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`, {
       method: 'PUT',
       headers: JSON_HEADERS,
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     return await handleResponse<Candidate>(response);
@@ -140,8 +150,7 @@ export async function updateCandidate(
 
 export async function deleteCandidate(candidateId: string): Promise<void> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`, {
       method: 'DELETE',
     });
 
@@ -153,8 +162,7 @@ export async function deleteCandidate(candidateId: string): Promise<void> {
 
 export async function getCandidateNotes(candidateId: string): Promise<Note[]> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes`);
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}/notes`);
     const payload = await handleResponse<unknown>(response);
     return extractNotesList(payload);
   } catch (error) {
@@ -167,15 +175,10 @@ export async function createCandidateNote(
   payload: NotePayload,
 ): Promise<Note> {
   try {
-    const body: NotePayload = {
-      content: payload.content,
-    };
-
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}/notes`, {
       method: 'POST',
       headers: JSON_HEADERS,
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     return await handleResponse<Note>(response);
@@ -189,8 +192,7 @@ export async function updateCandidateStatus(
   status: CandidateStatus,
 ): Promise<Candidate> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`, {
       method: 'PATCH',
       headers: JSON_HEADERS,
       body: JSON.stringify({ status }),
@@ -207,8 +209,7 @@ export async function updateCandidateStage(
   stage: CandidateStage,
 ): Promise<Candidate> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`, {
       method: 'PATCH',
       headers: JSON_HEADERS,
       body: JSON.stringify({ stage }),
@@ -225,8 +226,7 @@ export async function deleteCandidateNote(
   noteId: string,
 ): Promise<void> {
   try {
-    // Reemplazado /candidates/ por /records/
-    const response = await fetch(`${API_BASE_URL}/records/${candidateId}/notes/${noteId}`, {
+    const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}/notes/${noteId}`, {
       method: 'DELETE',
     });
 

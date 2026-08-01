@@ -2,9 +2,9 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert } from './ui/Alert';
-import { createCandidate, updateCandidate } from '../services/api';
-import type { Candidate, CandidatePayload } from '../types/candidate';
+import { Alert } from '../ui/Alert';
+import { createCandidate, updateCandidate } from '../../../services/candidatesApi';
+import type { Candidate, CandidatePayload } from '../../../types/candidate';
 
 interface CandidateFormProps {
   mode: 'create' | 'edit';
@@ -123,12 +123,12 @@ export function CandidateForm({ mode, candidateId, initialData }: CandidateFormP
       if (mode === 'create') {
         const created = await createCandidate(payload);
         setSuccess('Candidato creado correctamente.');
-        router.push(`/candidates/${created.id}`);
+        router.push(`/candidaturas/${created.id}`);
         router.refresh();
       } else {
         await updateCandidate(candidateId as string, payload);
         setSuccess('Candidato actualizado correctamente.');
-        router.push(`/candidates/${candidateId}`);
+        router.push(`/candidaturas/${candidateId}`);
         router.refresh();
       }
     } catch (submitError) {

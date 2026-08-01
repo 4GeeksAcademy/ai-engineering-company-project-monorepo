@@ -1,5 +1,5 @@
-import { getStatusLabel } from '../../lib/mappings';
-import type { CandidateStatus } from '../../types/candidate';
+import { getStatusLabel } from '../../../lib/candidatesMappings';
+import type { CandidateStatus } from '../../../types/candidate';
 
 interface StatusBadgeProps {
   status: CandidateStatus;

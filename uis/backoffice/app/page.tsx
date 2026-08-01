@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LeadValidationPanel } from "./components/LeadValidationPanel";
 
 export default function Home() {
@@ -10,6 +11,14 @@ export default function Home() {
           Esta vista centraliza herramientas internas para validar leads y apoyar operaciones comerciales entre Estados
           Unidos y España.
         </p>
+        <div className="mt-5">
+          <Link
+            href="/candidaturas"
+            className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+          >
+            Ir a gestion de candidaturas
+          </Link>
+        </div>
       </section>
 
       <LeadValidationPanel />

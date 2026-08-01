@@ -11,6 +11,7 @@ from src.models.profile import Profile
 from src.models.user import TinyDBId, User, UserRole
 from src.services.auth_service import get_current_user
 from src.services.profile_service import get_profile_by_user_id
+from src.services.security import PasswordValidationError
 from src.services.user_service import (
     create_user,
     delete_user,
@@ -74,6 +75,8 @@ def register_user(payload: UserCreateRequest) -> UserWithProfileResponse:
             phone=payload.phone,
             address=payload.address,
         )
+    except PasswordValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -107,6 +110,8 @@ def put_user(
     updates = payload.model_dump(exclude_none=True)
     try:
         user = update_user(user_id, updates)
+    except PasswordValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 

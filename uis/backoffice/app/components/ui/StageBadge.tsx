@@ -1,5 +1,5 @@
-import { getStageLabel } from '../../lib/mappings';
-import type { CandidateStage } from '../../types/candidate';
+import { getStageLabel } from '../../../lib/candidatesMappings';
+import type { CandidateStage } from '../../../types/candidate';
 
 interface StageBadgeProps {
   stage: CandidateStage;

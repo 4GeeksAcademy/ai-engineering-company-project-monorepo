@@ -2,10 +2,10 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { CandidateForm } from '../../../../components/CandidateForm';
-import { Alert } from '../../../../components/ui/Alert';
-import { Spinner } from '../../../../components/ui/Spinner';
-import { getCandidateById } from '../../../../services/api';
+import { CandidateForm } from '../../../components/candidates/CandidateForm';
+import { Alert } from '../../../components/ui/Alert';
+import { Spinner } from '../../../components/ui/Spinner';
+import { getCandidateById } from '../../../../services/candidatesApi';
 import type { Candidate } from '../../../../types/candidate';
 
 export default function EditCandidatePage() {
