@@ -5,6 +5,9 @@
   "description": "Shared types for AI Engineering transversal projects",
   "main": "index.ts",
   "types": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
   "scripts": {},
   "keywords": [
     "types",
