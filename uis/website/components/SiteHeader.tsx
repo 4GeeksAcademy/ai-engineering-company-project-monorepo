@@ -1,7 +1,6 @@
 const navItems = [
-  { href: "#promesa", label: "Nuestra Promesa" },
-  { href: "#operacion", label: "Operacion" },
-  { href: "#digital", label: "Brasaland Digital" },
+  { href: "#que-hacemos", label: "Que hacemos" },
+  { href: "#caracteristicas", label: "Beneficios" },
   { href: "#contacto", label: "Contacto" },
 ];
 
@@ -24,6 +23,11 @@ export function SiteHeader() {
               <a href={item.href}>{item.label}</a>
             </li>
           ))}
+          <li>
+            <a href="/aplicar" className="apply-link">
+              Aplicar
+            </a>
+          </li>
         </ul>
       </nav>
     </header>

@@ -10,9 +10,16 @@
 - Public website migrated to reusable TypeScript components and Brasaland-aligned sections.
 - Shared business logic module implemented in `packages/shared/types/index.ts`.
 - Backoffice imports shared logic module (no duplication) and renders computed output in the UI.
+- Website aligned against Hito 1 reference repo sections:
+  - Added explicit section ids and navigation parity (`que-hacemos`, `caracteristicas`, `contacto`).
+  - Added dedicated `/aplicar` route with typed form and client-side validation.
+  - Added SEO structured data (Schema.org Restaurant) in website layout.
+  - Added legal links and expanded contact CTA parity.
 - Validation completed:
   - `uis/website`: `npm run build` OK.
   - `uis/backoffice`: `npm run build` OK (webpack mode for local shared package compatibility).
+  - `uis/website`: `npm run lint` OK after Hito 1 alignment.
+  - `uis/website`: `npm run build` OK after Hito 1 alignment.
 
 ## In Progress
 - None.

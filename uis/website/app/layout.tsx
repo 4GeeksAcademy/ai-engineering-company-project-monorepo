@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,6 +18,18 @@ export const metadata: Metadata = {
   description: "Cadena de restaurantes a la brasa en Colombia y Florida.",
 };
 
+const restaurantSchema = {
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  name: "Brasaland",
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "CO, US",
+  },
+  email: "contacto@brasaland.com",
+  url: "https://brasaland.com",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +37,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Script
+          id="brasaland-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

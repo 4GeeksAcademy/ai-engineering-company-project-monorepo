@@ -49,7 +49,7 @@ export default function Home() {
       <SiteHeader />
 
       <main>
-        <section className="hero" aria-labelledby="hero-title">
+        <section id="que-hacemos" className="hero" aria-labelledby="hero-title">
           <p className="eyebrow">Cadena de restaurantes a la brasa</p>
           <h1 id="hero-title">
             Brasaland: 14 locales, dos paises y una promesa de consistencia.
@@ -59,18 +59,18 @@ export default function Home() {
             con sabor estable, servicio cercano y operacion rapida.
           </p>
           <div className="hero-cta">
-            <a href="#digital" className="btn btn-solid">
-              Conocer Brasaland Digital
+            <a href="/aplicar" className="btn btn-solid">
+              Unete a nuestro equipo
             </a>
-            <a href="#promesa" className="btn btn-outline">
-              Ver nuestra promesa
+            <a href="#caracteristicas" className="btn btn-outline">
+              Ver beneficios
             </a>
           </div>
         </section>
 
         <KpiStrip />
 
-        <section id="promesa" className="section">
+        <section id="caracteristicas" className="section">
           <SectionTitle
             eyebrow="Identidad"
             title="Tres promesas que sostienen la marca"
@@ -127,6 +127,17 @@ export default function Home() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section id="contacto" className="contact-cta section">
+          <div>
+            <h3>Listo para vivir la experiencia Brasaland?</h3>
+            <p>Contactanos o aplica para ser parte de nuestro equipo.</p>
+            <a href="mailto:contacto@brasaland.com">contacto@brasaland.com</a>
+          </div>
+          <a href="/aplicar" className="btn btn-solid">
+            Aplicar ahora
+          </a>
         </section>
       </main>
 
