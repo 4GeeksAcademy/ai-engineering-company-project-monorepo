@@ -1,0 +1,6 @@
+{"timestamp":"00:00:01.167","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:09.857","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:00:12.073","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:02:50.909","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/workspaces/ai-engineering-company-project-monorepo-miguelMillan/uis/talent-pipeline-tracker/src/app'"}
+{"timestamp":"00:02:50.925","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir '/workspaces/ai-engineering-company-project-monorepo-miguelMillan/uis/talent-pipeline-tracker/src/app'"}
+{"timestamp":"00:02:50.937","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir '/workspaces/ai-engineering-company-project-monorepo-miguelMillan/uis/talent-pipeline-tracker/src/app'"}

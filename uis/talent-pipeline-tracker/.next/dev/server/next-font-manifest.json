@@ -1,0 +1,15 @@
+{
+  "app": {
+    "[project]/src/app/candidates/[id]/page": [
+      "static/media/fa0520225c6f3d07-s.p.33u8lzvd44aqk.woff2",
+      "static/media/c41ca59f1c34ba31-s.p.2y2uoi4t910qy.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/fa0520225c6f3d07-s.p.33u8lzvd44aqk.woff2",
+      "static/media/c41ca59f1c34ba31-s.p.2y2uoi4t910qy.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

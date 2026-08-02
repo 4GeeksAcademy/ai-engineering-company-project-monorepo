@@ -1,0 +1,47 @@
+/* [next]/internal/font/google/public_sans_1bc6418c.module.css [app-client] (css) */
+@font-face {
+  font-family: Public Sans;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../media/6e8df35dd937fa7a-s.0itc0wjx1mi4q.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Public Sans;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../media/fc2699ecc8323b38-s.1gwygi6ipeo67.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Public Sans;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../media/fa0520225c6f3d07-s.p.33u8lzvd44aqk.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Public Sans Fallback;
+  src: local(Arial);
+  ascent-override: 90.59%;
+  descent-override: 21.46%;
+  line-gap-override: 0.0%;
+  size-adjust: 104.87%;
+}
+
+.public_sans_1bc6418c-module__6uzjwa__className {
+  font-family: Public Sans, Public Sans Fallback;
+  font-style: normal;
+}
+
+.public_sans_1bc6418c-module__6uzjwa__variable {
+  --font-public-sans: "Public Sans", "Public Sans Fallback";
+}
+
+/*# sourceMappingURL=%5Bnext%5D_internal_font_google_public_sans_1bc6418c_module_css_1igg3k2._.single.css.map*/
