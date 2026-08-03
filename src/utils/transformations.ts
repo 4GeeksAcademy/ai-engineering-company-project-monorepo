@@ -1,116 +1,151 @@
-import { DeliveryOrder, DeliveryStatus, InventoryRecord, ProductType } from '../types/models';
-import { groupBy } from './collections';
+import { Carrier, Product, ProductCategory, Shipment, ShipmentStatus } from '../types/models';
 
-export interface DeliveryOperationsReport {
-  totalOrders: number;
-  totalShippingCostUsd: number;
-  averageShippingCostUsd: number;
-  averageDistanceKm: number;
-  maxShippingCostUsd: number | null;
-  minShippingCostUsd: number | null;
-  ordersByStatus: Record<DeliveryStatus, number>;
+function roundTo2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-export interface InventorySummaryReport {
-  totalSkus: number;
-  totalUnitsInStock: number;
-  totalInventoryValueUsd: number;
-  averageUnitValueUsd: number;
-  unitsByProductType: Record<ProductType, number>;
+function calculatePriorityMultiplier(priority: Shipment['priority']): number {
+  if (priority === 'Express') {
+    return 1.3;
+  }
+
+  if (priority === 'Same-day') {
+    return 1.6;
+  }
+
+  return 1;
 }
 
-export function countByCategory<T, K extends string>(
-  items: T[],
-  categorySelector: (item: T) => K
-): Record<K, number> {
-  const grouped = groupBy(items, categorySelector);
-  const counts = {} as Record<K, number>;
+export function calculateShippingCost(shipment: Shipment, product: Product, carrier: Carrier): number {
+  const baseRate = carrier.baseRateUSD;
+  const weightCost = product.weightKg * carrier.ratePerKgUSD * shipment.quantity;
+  const distanceCost = shipment.destination.distanceKm * carrier.ratePerKmUSD;
+  const subtotal = baseRate + weightCost + distanceCost;
+  const total = subtotal * calculatePriorityMultiplier(shipment.priority);
 
-  for (const key of Object.keys(grouped) as K[]) {
-    counts[key] = grouped[key].length;
+  return roundTo2(total);
+}
+
+export function scoreCarrierForShipment(carrier: Carrier, shipment: Shipment, product: Product): number {
+  let score = 0;
+
+  if (carrier.operatesIn.includes(shipment.destination.country)) {
+    score += 20;
+  }
+
+  if (product.weightKg * shipment.quantity <= carrier.maxWeightKg) {
+    score += 20;
+  }
+
+  if (carrier.acceptsPriority.includes(shipment.priority)) {
+    score += 15;
+  }
+
+  if (!product.isFragile || carrier.handlesFragile) {
+    score += 15;
+  }
+
+  score += carrier.onTimeRate * 0.3;
+
+  return roundTo2(score);
+}
+
+export function selectBestCarrier(
+  carriers: Carrier[],
+  shipment: Shipment,
+  product: Product
+): { carrier: Carrier; score: number; cost: number } | null {
+  let best: { carrier: Carrier; score: number; cost: number } | null = null;
+
+  for (const carrier of carriers) {
+    const score = scoreCarrierForShipment(carrier, shipment, product);
+
+    if (score < 50) {
+      continue;
+    }
+
+    const cost = calculateShippingCost(shipment, product, carrier);
+
+    if (best === null || cost < best.cost) {
+      best = { carrier, score, cost };
+    }
+  }
+
+  return best;
+}
+
+export function countProductsByCategory(products: Product[]): Record<ProductCategory, number> {
+  const counts: Record<ProductCategory, number> = {
+    Fashion: 0,
+    Electronics: 0,
+    Cosmetics: 0,
+    Home: 0,
+    Other: 0
+  };
+
+  for (const product of products) {
+    counts[product.category] += 1;
   }
 
   return counts;
 }
 
-export function sumBy<T>(items: T[], valueSelector: (item: T) => number): number {
-  return items.reduce((total: number, item: T) => total + valueSelector(item), 0);
+export function calculateTotalInventoryValue(products: Product[]): number {
+  const total = products.reduce(
+    (accumulator: number, product: Product) => accumulator + product.stockQuantity * product.unitCostUSD,
+    0
+  );
+
+  return roundTo2(total);
 }
 
-export function averageBy<T>(items: T[], valueSelector: (item: T) => number): number {
-  if (items.length === 0) {
+export function calculateAverageShipmentDistance(shipments: Shipment[]): number {
+  if (shipments.length === 0) {
     return 0;
   }
 
-  return sumBy(items, valueSelector) / items.length;
+  const totalDistance = shipments.reduce(
+    (accumulator: number, shipment: Shipment) => accumulator + shipment.destination.distanceKm,
+    0
+  );
+
+  return roundTo2(totalDistance / shipments.length);
 }
 
-export function maxBy<T>(items: T[], valueSelector: (item: T) => number): number | null {
-  if (items.length === 0) {
-    return null;
+export function groupShipmentsByStatus(shipments: Shipment[]): Record<ShipmentStatus, Shipment[]> {
+  const grouped: Record<ShipmentStatus, Shipment[]> = {
+    Pending: [],
+    Assigned: [],
+    'In transit': [],
+    Delivered: [],
+    Failed: []
+  };
+
+  for (const shipment of shipments) {
+    grouped[shipment.status].push(shipment);
   }
 
-  return items.reduce((maxValue: number, item: T) => Math.max(maxValue, valueSelector(item)), Number.NEGATIVE_INFINITY);
+  return grouped;
 }
 
-export function minBy<T>(items: T[], valueSelector: (item: T) => number): number | null {
-  if (items.length === 0) {
-    return null;
+export function findTopCarriers(shipments: Shipment[], topN: number): Array<{ carrier: string; count: number }> {
+  if (topN <= 0) {
+    return [];
   }
 
-  return items.reduce((minValue: number, item: T) => Math.min(minValue, valueSelector(item)), Number.POSITIVE_INFINITY);
-}
+  const usageMap = new Map<string, number>();
 
-function createDefaultDeliveryStatusCount(): Record<DeliveryStatus, number> {
-  return {
-    pending: 0,
-    'in-transit': 0,
-    delivered: 0,
-    cancelled: 0
-  };
-}
+  for (const shipment of shipments) {
+    if (shipment.carrier === null) {
+      continue;
+    }
 
-function createDefaultUnitsByProductType(): Record<ProductType, number> {
-  return {
-    fashion: 0,
-    electronics: 0,
-    cosmetics: 0,
-    food: 0,
-    other: 0
-  };
-}
-
-export function generateDeliveryOperationsReport(orders: DeliveryOrder[]): DeliveryOperationsReport {
-  const groupedByStatus = countByCategory(orders, (order: DeliveryOrder) => order.status);
-  const ordersByStatus = createDefaultDeliveryStatusCount();
-
-  for (const status of Object.keys(groupedByStatus) as DeliveryStatus[]) {
-    ordersByStatus[status] = groupedByStatus[status] ?? 0;
+    const currentCount = usageMap.get(shipment.carrier) ?? 0;
+    usageMap.set(shipment.carrier, currentCount + 1);
   }
 
-  return {
-    totalOrders: orders.length,
-    totalShippingCostUsd: sumBy(orders, (order: DeliveryOrder) => order.shippingCostUsd),
-    averageShippingCostUsd: averageBy(orders, (order: DeliveryOrder) => order.shippingCostUsd),
-    averageDistanceKm: averageBy(orders, (order: DeliveryOrder) => order.distanceKm),
-    maxShippingCostUsd: maxBy(orders, (order: DeliveryOrder) => order.shippingCostUsd),
-    minShippingCostUsd: minBy(orders, (order: DeliveryOrder) => order.shippingCostUsd),
-    ordersByStatus
-  };
-}
-
-export function generateInventorySummaryReport(records: InventoryRecord[]): InventorySummaryReport {
-  const unitsByProductType = createDefaultUnitsByProductType();
-
-  for (const record of records) {
-    unitsByProductType[record.productType] += record.unitsInStock;
-  }
-
-  return {
-    totalSkus: records.length,
-    totalUnitsInStock: sumBy(records, (record: InventoryRecord) => record.unitsInStock),
-    totalInventoryValueUsd: sumBy(records, (record: InventoryRecord) => record.unitsInStock * record.unitValueUsd),
-    averageUnitValueUsd: averageBy(records, (record: InventoryRecord) => record.unitValueUsd),
-    unitsByProductType
-  };
+  return Array.from(usageMap.entries())
+    .map(([carrier, count]) => ({ carrier, count }))
+    .sort((left, right) => right.count - left.count)
+    .slice(0, topN);
 }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Track Flow utility test interface for filtering, sorting, searching, and report generation."
+    content="Track Flow utility test interface for product filters, shipment search, carrier scoring, reports, and validations."
   />
   <title>Track Flow | Utility Testing Interface</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,35 +59,36 @@
       <p class="mb-3 inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-flowBlueDeep">
         Faster routes, smarter deliveries
       </p>
-      <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">Utility Testing Interface</h1>
+      <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">TrackFlow Utility Testing Interface</h1>
       <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-        Use this page to manually test filtering, sorting, searching, and report generation for Track Flow operations data.
+        Use this page to manually test all required milestone functions for product inventory, shipment routing, and carrier selection.
       </p>
     </section>
 
     <section class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div class="space-y-6">
         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
-          <h2 class="font-heading text-xl font-semibold text-slate-900">Filter Orders</h2>
-          <p class="mt-1 text-sm text-slate-600">Filter by status and shipping cost range.</p>
-          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+          <h2 class="font-heading text-xl font-semibold text-slate-900">Filter Products</h2>
+          <p class="mt-1 text-sm text-slate-600">Filter by warehouse and category, and check low-stock products.</p>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <label class="text-sm font-medium text-slate-700">
-              Status
-              <select id="filterStatus" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+              Warehouse
+              <select id="filterWarehouse" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
                 <option value="">Any</option>
-                <option value="pending">pending</option>
-                <option value="in-transit">in-transit</option>
-                <option value="delivered">delivered</option>
-                <option value="cancelled">cancelled</option>
+                <option value="Los Angeles">Los Angeles</option>
+                <option value="Zaragoza">Zaragoza</option>
               </select>
             </label>
             <label class="text-sm font-medium text-slate-700">
-              Min USD
-              <input id="filterMinCost" type="number" min="0" step="0.01" placeholder="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
-            </label>
-            <label class="text-sm font-medium text-slate-700">
-              Max USD
-              <input id="filterMaxCost" type="number" min="0" step="0.01" placeholder="1500" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
+              Category
+              <select id="filterCategory" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+                <option value="">Any</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Cosmetics">Cosmetics</option>
+                <option value="Home">Home</option>
+                <option value="Other">Other</option>
+              </select>
             </label>
           </div>
           <button id="runFilter" class="mt-4 rounded-xl border border-flowBlue bg-flowBlue px-4 py-2 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
@@ -96,15 +97,14 @@
         </article>
 
         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
-          <h2 class="font-heading text-xl font-semibold text-slate-900">Sort Orders</h2>
-          <p class="mt-1 text-sm text-slate-600">Sort by distance, package count, or shipping cost.</p>
+          <h2 class="font-heading text-xl font-semibold text-slate-900">Sort Data</h2>
+          <p class="mt-1 text-sm text-slate-600">Sort products by stock quantity or carriers by reliability.</p>
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <label class="text-sm font-medium text-slate-700">
-              Field
-              <select id="sortField" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
-                <option value="shippingCostUsd">shippingCostUsd</option>
-                <option value="distanceKm">distanceKm</option>
-                <option value="packageCount">packageCount</option>
+              Target
+              <select id="sortTarget" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+                <option value="products">Products by stockQuantity</option>
+                <option value="carriers">Carriers by onTimeRate</option>
               </select>
             </label>
             <label class="text-sm font-medium text-slate-700">
@@ -122,36 +122,63 @@
 
         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
           <h2 class="font-heading text-xl font-semibold text-slate-900">Search Operations</h2>
-          <p class="mt-1 text-sm text-slate-600">Linear search by order ID and binary search by shipping cost.</p>
-          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <p class="mt-1 text-sm text-slate-600">Find products and shipments with linear search, then binary search by product weight.</p>
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
             <label class="text-sm font-medium text-slate-700">
-              Order ID (Linear Search)
-              <input id="searchOrderId" type="text" placeholder="ord-003" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
+              Product SKU
+              <input id="searchProductSku" type="text" placeholder="laptop-dell-15" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
             </label>
             <label class="text-sm font-medium text-slate-700">
-              Shipping Cost (Binary Search)
-              <input id="searchCost" type="number" min="0" step="0.01" placeholder="915.4" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
+              Shipment ID
+              <input id="searchShipmentId" type="text" placeholder="SH-2024-9002" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
+            </label>
+            <label class="text-sm font-medium text-slate-700">
+              Product Weight
+              <input id="searchWeight" type="number" min="0" step="0.1" placeholder="0.8" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" />
             </label>
           </div>
           <div class="mt-4 flex flex-wrap gap-3">
-            <button id="runLinearSearch" class="rounded-xl border border-flowBlue bg-white px-4 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
-              Run Linear Search
+            <button id="runProductSearch" class="rounded-xl border border-flowBlue bg-white px-4 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+              Find Product By SKU
             </button>
-            <button id="runBinarySearch" class="rounded-xl border border-flowBlue bg-white px-4 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
-              Run Binary Search
+            <button id="runShipmentSearch" class="rounded-xl border border-flowBlue bg-white px-4 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+              Find Shipment By ID
+            </button>
+            <button id="runWeightSearch" class="rounded-xl border border-flowBlue bg-white px-4 py-2 text-sm font-semibold text-flowBlueDeep transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+              Binary Search Weight
             </button>
           </div>
         </article>
 
         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
-          <h2 class="font-heading text-xl font-semibold text-slate-900">Generate Reports</h2>
-          <p class="mt-1 text-sm text-slate-600">Generate delivery and inventory summary reports.</p>
+          <h2 class="font-heading text-xl font-semibold text-slate-900">Carrier Cost and Scoring</h2>
+          <p class="mt-1 text-sm text-slate-600">Calculate shipping cost, score one carrier, and get the best carrier candidate.</p>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <label class="text-sm font-medium text-slate-700">
+              Shipment
+              <select id="shipmentSelect" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"></select>
+            </label>
+            <label class="text-sm font-medium text-slate-700">
+              Carrier
+              <select id="carrierSelect" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"></select>
+            </label>
+          </div>
           <div class="mt-4 flex flex-wrap gap-3">
-            <button id="runDeliveryReport" class="rounded-xl border border-flowTeal bg-flowTeal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200">
-              Delivery Report
+            <button id="runCarrierOps" class="rounded-xl border border-flowTeal bg-flowTeal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200">
+              Run Carrier Analysis
             </button>
-            <button id="runInventoryReport" class="rounded-xl border border-flowTeal bg-flowTeal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200">
-              Inventory Report
+          </div>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="font-heading text-xl font-semibold text-slate-900">Reports and Validations</h2>
+          <p class="mt-1 text-sm text-slate-600">Generate required aggregations and run entity validations.</p>
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button id="runReports" class="rounded-xl border border-flowTeal bg-flowTeal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200">
+              Run Reports
+            </button>
+            <button id="runValidations" class="rounded-xl border border-flowTeal bg-flowTeal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200">
+              Run Validations
             </button>
           </div>
         </article>

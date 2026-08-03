@@ -1,99 +1,160 @@
-const deliveryOrders = [
+const products = [
   {
-    id: 'ord-001',
-    companyName: 'NorthPoint Commerce',
-    service: 'last-mile-delivery',
-    destinationCity: 'Valencia',
-    status: 'in-transit',
-    dispatchDate: '2026-08-03T08:15:00.000Z',
-    deliveryDate: null,
-    packageCount: 38,
-    distanceKm: 356,
-    shippingCostUsd: 915.4
+    sku: 'SHOE-BLK-42',
+    name: 'Black Running Shoes - Size 42',
+    category: 'Fashion',
+    weightKg: 0.8,
+    dimensions: { lengthCm: 35, widthCm: 22, heightCm: 12 },
+    warehouse: 'Los Angeles',
+    stockQuantity: 45,
+    minStockThreshold: 20,
+    unitCostUSD: 35.0,
+    isFragile: false,
+    status: 'Active'
   },
   {
-    id: 'ord-002',
-    companyName: 'NorthPoint Commerce',
-    service: 'order-fulfillment',
-    destinationCity: 'Barcelona',
-    status: 'delivered',
-    dispatchDate: '2026-08-03T07:30:00.000Z',
-    deliveryDate: '2026-08-03T19:10:00.000Z',
-    packageCount: 24,
-    distanceKm: 620,
-    shippingCostUsd: 1180.25
+    sku: 'LAPTOP-DELL-15',
+    name: 'Dell Laptop 15 inch',
+    category: 'Electronics',
+    weightKg: 2.3,
+    dimensions: { lengthCm: 40, widthCm: 28, heightCm: 3 },
+    warehouse: 'Zaragoza',
+    stockQuantity: 8,
+    minStockThreshold: 10,
+    unitCostUSD: 650.0,
+    isFragile: true,
+    status: 'Low stock'
   },
   {
-    id: 'ord-003',
-    companyName: 'Nova Route Labs',
-    service: 'warehousing',
-    destinationCity: 'Seville',
-    status: 'pending',
-    dispatchDate: '2026-08-04T09:00:00.000Z',
-    deliveryDate: null,
-    packageCount: 10,
-    distanceKm: 530,
-    shippingCostUsd: 740.0
-  },
-  {
-    id: 'ord-004',
-    companyName: 'Axis Retail Group',
-    service: 'reverse-logistics',
-    destinationCity: 'Bilbao',
-    status: 'cancelled',
-    dispatchDate: '2026-08-02T11:10:00.000Z',
-    deliveryDate: null,
-    packageCount: 7,
-    distanceKm: 410,
-    shippingCostUsd: 520.5
+    sku: 'PERFUME-COCO-50',
+    name: 'Coco Perfume 50ml',
+    category: 'Cosmetics',
+    weightKg: 0.3,
+    dimensions: { lengthCm: 12, widthCm: 8, heightCm: 15 },
+    warehouse: 'Los Angeles',
+    stockQuantity: 120,
+    minStockThreshold: 30,
+    unitCostUSD: 85.0,
+    isFragile: true,
+    status: 'Active'
   }
 ];
 
-const inventoryRecords = [
+const carriers = [
   {
-    id: 'inv-001',
-    warehouseCity: 'Madrid',
-    sku: 'ELEC-HEADSET-100',
-    productType: 'electronics',
-    unitsInStock: 580,
-    reorderPoint: 120,
-    unitValueUsd: 42.5,
-    updatedAt: '2026-08-02T15:00:00.000Z'
+    id: 'CAR-UPS',
+    name: 'UPS',
+    operatesIn: ['United States'],
+    baseRateUSD: 5.0,
+    ratePerKgUSD: 1.2,
+    ratePerKmUSD: 0.05,
+    avgDeliveryDays: 3,
+    onTimeRate: 88,
+    maxWeightKg: 30,
+    handlesFragile: true,
+    acceptsPriority: ['Standard', 'Express']
   },
   {
-    id: 'inv-002',
-    warehouseCity: 'Guadalajara',
-    sku: 'FASH-JACKET-230',
-    productType: 'fashion',
-    unitsInStock: 310,
-    reorderPoint: 90,
-    unitValueUsd: 33.2,
-    updatedAt: '2026-08-02T16:20:00.000Z'
+    id: 'CAR-SEUR',
+    name: 'SEUR',
+    operatesIn: ['Spain'],
+    baseRateUSD: 6.5,
+    ratePerKgUSD: 1.5,
+    ratePerKmUSD: 0.08,
+    avgDeliveryDays: 2,
+    onTimeRate: 92,
+    maxWeightKg: 25,
+    handlesFragile: true,
+    acceptsPriority: ['Standard', 'Express', 'Same-day']
   },
   {
-    id: 'inv-003',
-    warehouseCity: 'Monterrey',
-    sku: 'COSM-SERUM-050',
-    productType: 'cosmetics',
-    unitsInStock: 920,
-    reorderPoint: 160,
-    unitValueUsd: 18.9,
-    updatedAt: '2026-08-03T10:45:00.000Z'
+    id: 'CAR-DHL',
+    name: 'DHL Express',
+    operatesIn: ['United States', 'Spain'],
+    baseRateUSD: 12.0,
+    ratePerKgUSD: 2.0,
+    ratePerKmUSD: 0.1,
+    avgDeliveryDays: 1,
+    onTimeRate: 95,
+    maxWeightKg: 50,
+    handlesFragile: true,
+    acceptsPriority: ['Express', 'Same-day']
+  }
+];
+
+const shipments = [
+  {
+    id: 'SH-2024-8821',
+    sku: 'LAPTOP-DELL-15',
+    quantity: 1,
+    origin: 'Zaragoza',
+    destination: {
+      city: 'Madrid',
+      country: 'Spain',
+      postalCode: '28001',
+      distanceKm: 320
+    },
+    priority: 'Express',
+    declaredValueUSD: 650.0,
+    carrier: null,
+    status: 'Pending',
+    createdAt: new Date('2024-03-15')
+  },
+  {
+    id: 'SH-2024-9001',
+    sku: 'SHOE-BLK-42',
+    quantity: 3,
+    origin: 'Los Angeles',
+    destination: {
+      city: 'Los Angeles',
+      country: 'United States',
+      postalCode: '90001',
+      distanceKm: 24
+    },
+    priority: 'Standard',
+    declaredValueUSD: 105.0,
+    carrier: 'UPS',
+    status: 'Assigned',
+    createdAt: new Date('2024-03-16')
+  },
+  {
+    id: 'SH-2024-9002',
+    sku: 'PERFUME-COCO-50',
+    quantity: 2,
+    origin: 'Los Angeles',
+    destination: {
+      city: 'Barcelona',
+      country: 'Spain',
+      postalCode: '08001',
+      distanceKm: 300
+    },
+    priority: 'Same-day',
+    declaredValueUSD: 170.0,
+    carrier: 'DHL Express',
+    status: 'In transit',
+    createdAt: new Date('2024-03-17')
   }
 ];
 
 const resultMeta = document.getElementById('resultMeta');
 const resultOutput = document.getElementById('resultOutput');
 
-const filterStatus = document.getElementById('filterStatus');
-const filterMinCost = document.getElementById('filterMinCost');
-const filterMaxCost = document.getElementById('filterMaxCost');
+const filterWarehouse = document.getElementById('filterWarehouse');
+const filterCategory = document.getElementById('filterCategory');
 
-const sortField = document.getElementById('sortField');
+const sortTarget = document.getElementById('sortTarget');
 const sortDirection = document.getElementById('sortDirection');
 
-const searchOrderId = document.getElementById('searchOrderId');
-const searchCost = document.getElementById('searchCost');
+const searchProductSku = document.getElementById('searchProductSku');
+const searchShipmentId = document.getElementById('searchShipmentId');
+const searchWeight = document.getElementById('searchWeight');
+
+const shipmentSelect = document.getElementById('shipmentSelect');
+const carrierSelect = document.getElementById('carrierSelect');
+
+function roundTo2(value) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
 
 function toNumberOrUndefined(value) {
   if (value === '' || value === null) {
@@ -110,68 +171,79 @@ function printResult(label, payload) {
   resultOutput.textContent = JSON.stringify(payload, null, 2);
 }
 
-function compareValues(left, right) {
-  if (typeof left === 'string' && typeof right === 'string') {
-    return left.localeCompare(right, undefined, { sensitivity: 'base' });
-  }
-
-  if (left < right) {
-    return -1;
-  }
-
-  if (left > right) {
-    return 1;
-  }
-
-  return 0;
+function getProductBySku(sku) {
+  return products.find((product) => product.sku === sku) ?? null;
 }
 
-function filterDeliveryOrders(items, filters) {
-  return items.filter((item) => {
-    if (filters.status && item.status !== filters.status) {
-      return false;
-    }
+function calculatePriorityMultiplier(priority) {
+  if (priority === 'Express') {
+    return 1.3;
+  }
 
-    if (typeof filters.minShippingCostUsd === 'number' && item.shippingCostUsd < filters.minShippingCostUsd) {
-      return false;
-    }
+  if (priority === 'Same-day') {
+    return 1.6;
+  }
 
-    if (typeof filters.maxShippingCostUsd === 'number' && item.shippingCostUsd > filters.maxShippingCostUsd) {
-      return false;
-    }
-
-    return true;
-  });
+  return 1;
 }
 
-function sortByField(items, field, direction) {
-  const factor = direction === 'asc' ? 1 : -1;
-  return [...items].sort((left, right) => factor * compareValues(left[field], right[field]));
+function filterProductsByWarehouse(items, warehouse) {
+  return items.filter((product) => product.warehouse === warehouse);
 }
 
-function linearSearch(items, matcher) {
-  for (let index = 0; index < items.length; index += 1) {
-    if (matcher(items[index])) {
-      return index;
+function filterProductsByCategory(items, category) {
+  return items.filter((product) => product.category === category);
+}
+
+function filterLowStockProducts(items) {
+  return items.filter((product) => product.stockQuantity <= product.minStockThreshold);
+}
+
+function sortProductsByStock(items, order) {
+  const direction = order === 'asc' ? 1 : -1;
+  return [...items].sort((left, right) => (left.stockQuantity - right.stockQuantity) * direction);
+}
+
+function sortCarriersByReliability(items, order) {
+  const direction = order === 'asc' ? 1 : -1;
+  return [...items].sort((left, right) => (left.onTimeRate - right.onTimeRate) * direction);
+}
+
+function findProductBySKU(items, sku) {
+  const normalizedSku = sku.trim().toLowerCase();
+
+  for (const product of items) {
+    if (product.sku.toLowerCase() === normalizedSku) {
+      return product;
     }
   }
 
-  return -1;
+  return null;
 }
 
-function binarySearchByNumber(items, target, valueSelector) {
+function findShipmentById(items, id) {
+  for (const shipment of items) {
+    if (shipment.id === id) {
+      return shipment;
+    }
+  }
+
+  return null;
+}
+
+function binarySearchProductByWeight(sortedProducts, targetWeight) {
   let left = 0;
-  let right = items.length - 1;
+  let right = sortedProducts.length - 1;
 
   while (left <= right) {
     const middle = Math.floor((left + right) / 2);
-    const current = valueSelector(items[middle]);
+    const currentWeight = sortedProducts[middle].weightKg;
 
-    if (current === target) {
+    if (currentWeight === targetWeight) {
       return middle;
     }
 
-    if (current < target) {
+    if (currentWeight < targetWeight) {
       left = middle + 1;
     } else {
       right = middle - 1;
@@ -181,127 +253,353 @@ function binarySearchByNumber(items, target, valueSelector) {
   return -1;
 }
 
-function countByCategory(items, selector) {
-  return items.reduce((counts, item) => {
-    const key = selector(item);
-    counts[key] = (counts[key] ?? 0) + 1;
-    return counts;
-  }, {});
+function calculateShippingCost(shipment, product, carrier) {
+  const baseRate = carrier.baseRateUSD;
+  const weightCost = product.weightKg * carrier.ratePerKgUSD * shipment.quantity;
+  const distanceCost = shipment.destination.distanceKm * carrier.ratePerKmUSD;
+  const subtotal = baseRate + weightCost + distanceCost;
+  return roundTo2(subtotal * calculatePriorityMultiplier(shipment.priority));
 }
 
-function sumBy(items, selector) {
-  return items.reduce((total, item) => total + selector(item), 0);
+function scoreCarrierForShipment(carrier, shipment, product) {
+  let score = 0;
+
+  if (carrier.operatesIn.includes(shipment.destination.country)) {
+    score += 20;
+  }
+
+  if (product.weightKg * shipment.quantity <= carrier.maxWeightKg) {
+    score += 20;
+  }
+
+  if (carrier.acceptsPriority.includes(shipment.priority)) {
+    score += 15;
+  }
+
+  if (!product.isFragile || carrier.handlesFragile) {
+    score += 15;
+  }
+
+  score += carrier.onTimeRate * 0.3;
+  return roundTo2(score);
 }
 
-function averageBy(items, selector) {
+function selectBestCarrier(availableCarriers, shipment, product) {
+  let best = null;
+
+  for (const carrier of availableCarriers) {
+    const score = scoreCarrierForShipment(carrier, shipment, product);
+
+    if (score < 50) {
+      continue;
+    }
+
+    const cost = calculateShippingCost(shipment, product, carrier);
+
+    if (best === null || cost < best.cost) {
+      best = { carrier, score, cost };
+    }
+  }
+
+  return best;
+}
+
+function countProductsByCategory(items) {
+  const counts = {
+    Fashion: 0,
+    Electronics: 0,
+    Cosmetics: 0,
+    Home: 0,
+    Other: 0
+  };
+
+  for (const product of items) {
+    counts[product.category] += 1;
+  }
+
+  return counts;
+}
+
+function calculateTotalInventoryValue(items) {
+  const total = items.reduce((accumulator, product) => accumulator + product.stockQuantity * product.unitCostUSD, 0);
+  return roundTo2(total);
+}
+
+function calculateAverageShipmentDistance(items) {
   if (items.length === 0) {
     return 0;
   }
 
-  return sumBy(items, selector) / items.length;
+  const totalDistance = items.reduce((accumulator, shipment) => accumulator + shipment.destination.distanceKm, 0);
+  return roundTo2(totalDistance / items.length);
 }
 
-function maxBy(items, selector) {
-  if (items.length === 0) {
-    return null;
+function groupShipmentsByStatus(items) {
+  const grouped = {
+    Pending: [],
+    Assigned: [],
+    'In transit': [],
+    Delivered: [],
+    Failed: []
+  };
+
+  for (const shipment of items) {
+    grouped[shipment.status].push(shipment);
   }
 
-  return items.reduce((max, item) => Math.max(max, selector(item)), Number.NEGATIVE_INFINITY);
+  return grouped;
 }
 
-function minBy(items, selector) {
-  if (items.length === 0) {
-    return null;
+function findTopCarriers(items, topN) {
+  if (topN <= 0) {
+    return [];
   }
 
-  return items.reduce((min, item) => Math.min(min, selector(item)), Number.POSITIVE_INFINITY);
+  const usageMap = new Map();
+
+  for (const shipment of items) {
+    if (shipment.carrier === null) {
+      continue;
+    }
+
+    const currentCount = usageMap.get(shipment.carrier) ?? 0;
+    usageMap.set(shipment.carrier, currentCount + 1);
+  }
+
+  return Array.from(usageMap.entries())
+    .map(([carrier, count]) => ({ carrier, count }))
+    .sort((left, right) => right.count - left.count)
+    .slice(0, topN);
 }
 
-function generateDeliveryOperationsReport(orders) {
-  return {
-    totalOrders: orders.length,
-    totalShippingCostUsd: sumBy(orders, (order) => order.shippingCostUsd),
-    averageShippingCostUsd: averageBy(orders, (order) => order.shippingCostUsd),
-    averageDistanceKm: averageBy(orders, (order) => order.distanceKm),
-    maxShippingCostUsd: maxBy(orders, (order) => order.shippingCostUsd),
-    minShippingCostUsd: minBy(orders, (order) => order.shippingCostUsd),
-    ordersByStatus: countByCategory(orders, (order) => order.status)
-  };
+function validateProduct(product) {
+  const errors = [];
+
+  if (product.sku.trim().length === 0) {
+    errors.push('sku must not be empty');
+  }
+
+  if (!Number.isFinite(product.weightKg) || product.weightKg <= 0 || product.weightKg > 100) {
+    errors.push('weightKg must be > 0 and <= 100');
+  }
+
+  if (!Number.isFinite(product.dimensions.lengthCm) || product.dimensions.lengthCm <= 0 || product.dimensions.lengthCm > 200) {
+    errors.push('dimensions.lengthCm must be > 0 and <= 200');
+  }
+
+  if (!Number.isFinite(product.dimensions.widthCm) || product.dimensions.widthCm <= 0 || product.dimensions.widthCm > 200) {
+    errors.push('dimensions.widthCm must be > 0 and <= 200');
+  }
+
+  if (!Number.isFinite(product.dimensions.heightCm) || product.dimensions.heightCm <= 0 || product.dimensions.heightCm > 200) {
+    errors.push('dimensions.heightCm must be > 0 and <= 200');
+  }
+
+  if (!Number.isFinite(product.stockQuantity) || product.stockQuantity < 0) {
+    errors.push('stockQuantity must be >= 0');
+  }
+
+  if (!Number.isFinite(product.minStockThreshold) || product.minStockThreshold < 0) {
+    errors.push('minStockThreshold must be >= 0');
+  }
+
+  if (!Number.isFinite(product.unitCostUSD) || product.unitCostUSD <= 0) {
+    errors.push('unitCostUSD must be > 0');
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
-function generateInventorySummaryReport(records) {
-  return {
-    totalSkus: records.length,
-    totalUnitsInStock: sumBy(records, (record) => record.unitsInStock),
-    totalInventoryValueUsd: sumBy(records, (record) => record.unitsInStock * record.unitValueUsd),
-    averageUnitValueUsd: averageBy(records, (record) => record.unitValueUsd),
-    unitsByProductType: records.reduce((totals, record) => {
-      totals[record.productType] = (totals[record.productType] ?? 0) + record.unitsInStock;
-      return totals;
-    }, {})
-  };
+function validateShipment(shipment) {
+  const errors = [];
+
+  if (!Number.isFinite(shipment.quantity) || shipment.quantity <= 0) {
+    errors.push('quantity must be > 0');
+  }
+
+  if (!Number.isFinite(shipment.declaredValueUSD) || shipment.declaredValueUSD <= 0) {
+    errors.push('declaredValueUSD must be > 0');
+  }
+
+  if (!Number.isFinite(shipment.destination.distanceKm) || shipment.destination.distanceKm < 0) {
+    errors.push('distanceKm must be >= 0');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+function validateCarrier(carrier) {
+  const errors = [];
+
+  if (!Number.isFinite(carrier.baseRateUSD) || carrier.baseRateUSD < 0) {
+    errors.push('baseRateUSD must be >= 0');
+  }
+
+  if (!Number.isFinite(carrier.ratePerKgUSD) || carrier.ratePerKgUSD < 0) {
+    errors.push('ratePerKgUSD must be >= 0');
+  }
+
+  if (!Number.isFinite(carrier.ratePerKmUSD) || carrier.ratePerKmUSD < 0) {
+    errors.push('ratePerKmUSD must be >= 0');
+  }
+
+  if (!Number.isFinite(carrier.avgDeliveryDays) || carrier.avgDeliveryDays <= 0) {
+    errors.push('avgDeliveryDays must be > 0');
+  }
+
+  if (!Number.isFinite(carrier.onTimeRate) || carrier.onTimeRate < 0 || carrier.onTimeRate > 100) {
+    errors.push('onTimeRate must be between 0 and 100');
+  }
+
+  if (!Number.isFinite(carrier.maxWeightKg) || carrier.maxWeightKg <= 0) {
+    errors.push('maxWeightKg must be > 0');
+  }
+
+  if (carrier.operatesIn.length < 1) {
+    errors.push('operatesIn must contain at least 1 country');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+function populateSelectOptions() {
+  for (const shipment of shipments) {
+    const option = document.createElement('option');
+    option.value = shipment.id;
+    option.textContent = shipment.id;
+    shipmentSelect.appendChild(option);
+  }
+
+  for (const carrier of carriers) {
+    const option = document.createElement('option');
+    option.value = carrier.id;
+    option.textContent = carrier.name;
+    carrierSelect.appendChild(option);
+  }
 }
 
 document.getElementById('runFilter').addEventListener('click', () => {
-  const filtered = filterDeliveryOrders(deliveryOrders, {
-    status: filterStatus.value || undefined,
-    minShippingCostUsd: toNumberOrUndefined(filterMinCost.value),
-    maxShippingCostUsd: toNumberOrUndefined(filterMaxCost.value)
-  });
+  const warehouse = filterWarehouse.value;
+  const category = filterCategory.value;
 
-  printResult('Filter Orders', {
-    totalFound: filtered.length,
-    data: filtered
+  const byWarehouse = warehouse ? filterProductsByWarehouse(products, warehouse) : products;
+  const byCategory = category ? filterProductsByCategory(products, category) : byWarehouse;
+  const lowStock = filterLowStockProducts(byCategory);
+
+  printResult('Filter Products', {
+    selectedWarehouse: warehouse || 'Any',
+    selectedCategory: category || 'Any',
+    totalFound: byCategory.length,
+    lowStockCount: lowStock.length,
+    data: byCategory
   });
 });
 
 document.getElementById('runSort').addEventListener('click', () => {
-  const sorted = sortByField(deliveryOrders, sortField.value, sortDirection.value);
-
-  printResult('Sort Orders', {
-    sortField: sortField.value,
-    direction: sortDirection.value,
-    data: sorted
-  });
-});
-
-document.getElementById('runLinearSearch').addEventListener('click', () => {
-  const targetId = searchOrderId.value.trim();
-  const index = linearSearch(deliveryOrders, (order) => order.id.toLowerCase() === targetId.toLowerCase());
-
-  printResult('Linear Search', {
-    targetOrderId: targetId,
-    index,
-    result: index >= 0 ? deliveryOrders[index] : null
-  });
-});
-
-document.getElementById('runBinarySearch').addEventListener('click', () => {
-  const targetCost = toNumberOrUndefined(searchCost.value);
-  if (typeof targetCost !== 'number') {
-    printResult('Binary Search', {
-      error: 'Please enter a valid shipping cost number.'
+  if (sortTarget.value === 'products') {
+    const sortedProducts = sortProductsByStock(products, sortDirection.value);
+    printResult('Sort Products by Stock', {
+      direction: sortDirection.value,
+      data: sortedProducts
     });
     return;
   }
 
-  const sortedByCost = sortByField(deliveryOrders, 'shippingCostUsd', 'asc');
-  const index = binarySearchByNumber(sortedByCost, targetCost, (order) => order.shippingCostUsd);
-
-  printResult('Binary Search', {
-    targetShippingCostUsd: targetCost,
-    sortedData: sortedByCost,
-    index,
-    result: index >= 0 ? sortedByCost[index] : null
+  const sortedCarriers = sortCarriersByReliability(carriers, sortDirection.value);
+  printResult('Sort Carriers by Reliability', {
+    direction: sortDirection.value,
+    data: sortedCarriers
   });
 });
 
-document.getElementById('runDeliveryReport').addEventListener('click', () => {
-  printResult('Delivery Report', generateDeliveryOperationsReport(deliveryOrders));
+document.getElementById('runProductSearch').addEventListener('click', () => {
+  const sku = searchProductSku.value.trim();
+  const found = findProductBySKU(products, sku);
+
+  printResult('Find Product By SKU', {
+    sku,
+    result: found
+  });
 });
 
-document.getElementById('runInventoryReport').addEventListener('click', () => {
-  printResult('Inventory Report', generateInventorySummaryReport(inventoryRecords));
+document.getElementById('runShipmentSearch').addEventListener('click', () => {
+  const id = searchShipmentId.value.trim();
+  const found = findShipmentById(shipments, id);
+
+  printResult('Find Shipment By ID', {
+    id,
+    result: found
+  });
+});
+
+document.getElementById('runWeightSearch').addEventListener('click', () => {
+  const targetWeight = toNumberOrUndefined(searchWeight.value);
+  if (typeof targetWeight !== 'number') {
+    printResult('Binary Search Product By Weight', {
+      error: 'Please enter a valid target weight.'
+    });
+    return;
+  }
+
+  const sortedByWeight = [...products].sort((left, right) => left.weightKg - right.weightKg);
+  const index = binarySearchProductByWeight(sortedByWeight, targetWeight);
+
+  printResult('Binary Search Product By Weight', {
+    targetWeight,
+    sortedByWeight,
+    index,
+    result: index >= 0 ? sortedByWeight[index] : null
+  });
+});
+
+document.getElementById('runCarrierOps').addEventListener('click', () => {
+  const shipment = findShipmentById(shipments, shipmentSelect.value);
+  const carrier = carriers.find((item) => item.id === carrierSelect.value) ?? null;
+
+  if (!shipment || !carrier) {
+    printResult('Carrier Ops', {
+      error: 'Please select both a shipment and a carrier.'
+    });
+    return;
+  }
+
+  const product = getProductBySku(shipment.sku);
+  if (!product) {
+    printResult('Carrier Ops', {
+      error: `Product not found for shipment SKU ${shipment.sku}.`
+    });
+    return;
+  }
+
+  const cost = calculateShippingCost(shipment, product, carrier);
+  const score = scoreCarrierForShipment(carrier, shipment, product);
+  const bestCarrier = selectBestCarrier(carriers, shipment, product);
+
+  printResult('Carrier Cost and Scoring', {
+    shipmentId: shipment.id,
+    selectedCarrier: carrier.name,
+    selectedCarrierCost: cost,
+    selectedCarrierScore: score,
+    bestCarrier
+  });
+});
+
+document.getElementById('runReports').addEventListener('click', () => {
+  printResult('TrackFlow Reports', {
+    productsByCategory: countProductsByCategory(products),
+    totalInventoryValueUSD: calculateTotalInventoryValue(products),
+    averageShipmentDistanceKm: calculateAverageShipmentDistance(shipments),
+    shipmentsByStatus: groupShipmentsByStatus(shipments),
+    topCarriers: findTopCarriers(shipments, 3)
+  });
+});
+
+document.getElementById('runValidations').addEventListener('click', () => {
+  printResult('Entity Validations', {
+    productValidation: validateProduct(products[0]),
+    shipmentValidation: validateShipment(shipments[0]),
+    carrierValidation: validateCarrier(carriers[0])
+  });
 });
 
 document.getElementById('clearResults').addEventListener('click', () => {
@@ -314,3 +612,5 @@ document.getElementById('clearResults').addEventListener('click', () => {
     2
   );
 });
+
+populateSelectOptions();

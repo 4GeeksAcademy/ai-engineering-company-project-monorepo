@@ -51,6 +51,13 @@ ai-engineering-project-template/
 
 ---
 
+## Local validation commands
+
+- TypeScript validation: `npm run typecheck`
+- Run the milestone demo script: `npm run demo`
+
+---
+
 ## Milestones (reference)
 
 | Milestone | Focus        | Typical deliverables                        |
