@@ -1,5 +1,5 @@
-from fastapi import FastAPI
-from api.routers.knowledge import router as knowledge_router  # Adjust import path if needed
+"""Compatibility entry point — use ``uvicorn api.app:app`` (see docs/rag/rag-design.md)."""
 
-app = FastAPI()
-app.include_router(knowledge_router)
+from app import app
+
+__all__ = ["app"]
