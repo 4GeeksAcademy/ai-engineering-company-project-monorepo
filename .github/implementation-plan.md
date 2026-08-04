@@ -59,10 +59,10 @@ Plan de implementación detallado para estructurar la infraestructura de IA (Mem
   * Criterios de aceptación verificables.
 
 ### 📍 FASE 4: Construcción de Apps Next.js en `./uis/website` y `./uis/backoffice`
-- [ ] ⏳ **Tarea 4.1:** Inicializar la web pública en `./uis/website` (Next.js + TypeScript):
+- [x] ✅ **Tarea 4.1:** Inicializar la web pública en `./uis/website` (Next.js + TypeScript):
   * Reconstruir/Migrar la landing de Nexova (Hito 1) en `/` con componentes React modulares (`Header`, `Hero`, `Services`, `Footer`).
   * Estilos profesionales y coherentes con la identidad de Nexova.
-- [ ] ⏳ **Tarea 4.2:** Inicializar el portal interno en `./uis/backoffice` (Next.js + TypeScript):
+- [x] ✅ **Tarea 4.2:** Inicializar el portal interno en `./uis/backoffice` (Next.js + TypeScript):
   * Crear layout propio de Backoffice (Sidebar de navegación + área principal de trabajo).
   * Vista de inicio en `/` (Dashboard de bienvenida para consultores).
 

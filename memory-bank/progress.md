@@ -17,9 +17,9 @@
   - [x] `.agents/rules/nexova-conventions.md` — Convenciones técnicas.
 - [x] **Fase 3: Skill de Agente Reutilizable (`.agents/skills/`)**
   - [x] `.agents/skills/candidate-scoring-ui/SKILL.md` — Skill atómica con criterios de aceptación.
-- [ ] **Fase 4: Aplicaciones Frontend Next.js (`./uis/website` y `./uis/backoffice`)**
-  - [ ] `./uis/website` — Migración de web corporativa a Next.js + TS.
-  - [ ] `./uis/backoffice` — Dashboard interno con layout separado.
+- [x] **Fase 4: Aplicaciones Frontend Next.js (`./uis/website` y `./uis/backoffice`)**
+  - [x] `./uis/website` — Migración de web corporativa a Next.js + TS.
+  - [x] `./uis/backoffice` — Dashboard interno con layout separado.
 - [ ] **Fase 5: Integración & Verificación Final**
   - [ ] Conexión del script de Hito 2 en el Backoffice sin duplicar código.
   - [ ] Pruebas y verificación de compilación/ejecución (`npm run dev`).
