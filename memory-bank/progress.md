@@ -15,8 +15,8 @@
 - [x] **Fase 2: Protocolo Global de Agentes (`AGENTS.md` y `.agents/rules/`)**
   - [x] `AGENTS.md` — Protocolo pre-commit y carpetas protegidas.
   - [x] `.agents/rules/nexova-conventions.md` — Convenciones técnicas.
-- [ ] **Fase 3: Skill de Agente Reutilizable (`.agents/skills/`)**
-  - [ ] `.agents/skills/candidate-scoring-ui/SKILL.md` — Skill atómica con criterios de aceptación.
+- [x] **Fase 3: Skill de Agente Reutilizable (`.agents/skills/`)**
+  - [x] `.agents/skills/candidate-scoring-ui/SKILL.md` — Skill atómica con criterios de aceptación.
 - [ ] **Fase 4: Aplicaciones Frontend Next.js (`./uis/website` y `./uis/backoffice`)**
   - [ ] `./uis/website` — Migración de web corporativa a Next.js + TS.
   - [ ] `./uis/backoffice` — Dashboard interno con layout separado.

@@ -51,8 +51,8 @@ Plan de implementación detallado para estructurar la infraestructura de IA (Mem
 - [x] ✅ **Tarea 2.2:** Crear la carpeta `.agents/rules/` y definir al menos una regla de desarrollo (ej. `nexova-conventions.md`) especificando su alcance explícito (Scope: `always` o `glob: uis/**`).
 
 ### 📍 FASE 3: Definición de Skill de Agente Reutilizable (`.agents/skills/`)
-- [ ] ⏳ **Tarea 3.1:** Crear la carpeta `.agents/skills/candidate-scoring-ui/` (skill para la tarea recurrente de generación/verificación de componentes de selección).
-- [ ] ⏳ **Tarea 3.2:** Crear `SKILL.md` con:
+- [x] ✅ **Tarea 3.1:** Crear la carpeta `.agents/skills/candidate-scoring-ui/` (skill para la tarea recurrente de generación/verificación de componentes de selección).
+- [x] ✅ **Tarea 3.2:** Crear `SKILL.md` con:
   * Objetivo único y claro.
   * Entradas requeridas (`Candidate`, `Vacancy`, scoring result).
   * Salidas esperadas (Componente React con semaforización de score).
