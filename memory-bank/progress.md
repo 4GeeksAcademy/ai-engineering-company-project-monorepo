@@ -12,9 +12,9 @@
   - [x] `projectbrief.md` — Contexto de negocio y solución Nexova.
   - [x] `techContext.md` — Stack técnico, entidades y restricciones.
   - [x] `progress.md` — Estado del desarrollo y siguientes pasos.
-- [ ] **Fase 2: Protocolo Global de Agentes (`AGENTS.md` y `.agents/rules/`)**
-  - [ ] `AGENTS.md` — Protocolo pre-commit y carpetas protegidas.
-  - [ ] `.agents/rules/nexova-conventions.md` — Convenciones técnicas.
+- [x] **Fase 2: Protocolo Global de Agentes (`AGENTS.md` y `.agents/rules/`)**
+  - [x] `AGENTS.md` — Protocolo pre-commit y carpetas protegidas.
+  - [x] `.agents/rules/nexova-conventions.md` — Convenciones técnicas.
 - [ ] **Fase 3: Skill de Agente Reutilizable (`.agents/skills/`)**
   - [ ] `.agents/skills/candidate-scoring-ui/SKILL.md` — Skill atómica con criterios de aceptación.
 - [ ] **Fase 4: Aplicaciones Frontend Next.js (`./uis/website` y `./uis/backoffice`)**

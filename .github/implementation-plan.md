@@ -44,11 +44,11 @@ Plan de implementación detallado para estructurar la infraestructura de IA (Mem
 - [x] ✅ **Tarea 1.4:** Crear `memory-bank/progress.md` reflejando el progreso (Hito 1 web completado, Hito 2 utilidades TS completadas, Hito 4 infraestructura AI y apps Next.js en desarrollo).
 
 ### 📍 FASE 2: Gobernanza y Reglas de Agentes (`AGENTS.md` y `.agents/rules/`)
-- [ ] ⏳ **Tarea 2.1:** Crear `AGENTS.md` en la raíz especificando:
+- [x] ✅ **Tarea 2.1:** Crear `AGENTS.md` en la raíz especificando:
   * Paso 1: Lectura obligatoria de `memory-bank/` al inicio de cada sesión.
   * Paso 2: Flujo de entrega pre-commit obligatorio (Linting, Type-check `tsc --noEmit`, comprobación de dev server, resumen de cambios).
   * Paso 3: Lista de archivos protegidos (ej. `CONTEXT.md`, `.github/`, configs base).
-- [ ] ⏳ **Tarea 2.2:** Crear la carpeta `.agents/rules/` y definir al menos una regla de desarrollo (ej. `nexova-conventions.md`) especificando su alcance explícito (Scope: `always` o `glob: uis/**`).
+- [x] ✅ **Tarea 2.2:** Crear la carpeta `.agents/rules/` y definir al menos una regla de desarrollo (ej. `nexova-conventions.md`) especificando su alcance explícito (Scope: `always` o `glob: uis/**`).
 
 ### 📍 FASE 3: Definición de Skill de Agente Reutilizable (`.agents/skills/`)
 - [ ] ⏳ **Tarea 3.1:** Crear la carpeta `.agents/skills/candidate-scoring-ui/` (skill para la tarea recurrente de generación/verificación de componentes de selección).
