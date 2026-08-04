@@ -10,7 +10,6 @@ Eres un asistente de desarrollo experto. Tu objetivo es generar código que cump
   - `admin/admin.js` (Lógica del módulo de Scoring IA)
   - `admin/tickets.js` (Lógica del módulo de Ticketing IA)
 - **Prohibición:** NO modifiques el archivo `CONTEXT.md`.
-- **Ejecución:** El código debe ser compatible para ejecutarse localmente y en Codespaces mediante `npx http-server . -p 3000 -a 0.0.0.0`.
 - **Arquitectura de Panel:** El `nexova-departamentos-panel.html` funciona como una Single-Page Application (SPA). La navegación lateral debe mostrar/ocultar los `article` de cada departamento, no recargar la página.
 
 ## 2. Reglas de Negocio y Tono (Adherencia al CONTEXT.md)

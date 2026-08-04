@@ -11,13 +11,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
-    <header class="border-b border-blue-200 bg-white">
+    <header class="sticky top-0 z-50 border-b border-blue-200 bg-white/95 backdrop-blur">
       <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegacion principal">
-        <a href="../marketing-comunicacion/index.html" class="text-lg font-semibold tracking-wide text-blue-900">Nexova Solutions</a>
-        <div class="flex items-center gap-3 text-sm">
-          <a href="../marketing-comunicacion/index.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Inicio</a>
-          <a href="tickets.html" class="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Panel de tickets</a>
-        </div>
+        <a href="../marketing-comunicacion/index.html" class="text-lg font-semibold tracking-wide text-blue-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Nexova Solutions</a>
+        <ul class="hidden items-center gap-4 text-sm md:flex lg:gap-6">
+          <li><a href="../marketing-comunicacion/index.html#servicios" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Servicios</a></li>
+          <li><a href="../marketing-comunicacion/index.html#impacto" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Impacto</a></li>
+          <li><a href="../marketing-comunicacion/index.html#experiencia" class="hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Experiencia</a></li>
+          <li><a href="../operaciones-seleccion/nexova-departamentos-panel.html" class="inline-flex items-center justify-center rounded-md bg-blue-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900">Acceso Consultores (Backoffice)</a></li>
+        </ul>
       </nav>
     </header>
 

@@ -791,8 +791,7 @@ function createCandidateCard(candidate) {
 
 function bindCandidateActions() {
   document.querySelectorAll("[data-advance-candidate]").forEach(btn => {
-    if (btn.dataset.bound) return;
-    btn.addEventListener("click", () => {
+    btn.onclick = () => {
       const id = btn.dataset.advanceCandidate;
       const candidates = readCandidates();
       const index = candidates.findIndex(c => c.id === id);
@@ -801,19 +800,19 @@ function bindCandidateActions() {
         writeCandidates(candidates);
         renderCandidates();
       }
-    });
-    btn.dataset.bound = "true";
+    };
   });
 }
 
+let currentPipelineFilter = "all";
+let currentCandidatesPage = 1;
+const CANDIDATES_PER_PAGE = 5;
+
 function renderCandidates() {
   const containerNuevos = document.getElementById("candidatesContainer");
-  const candidatesContactados = document.getElementById("candidates-contactados");
-  const candidatesPreseleccionados = document.getElementById("candidates-preseleccionados");
-  const candidatesSeleccionados = document.getElementById("candidates-seleccionados");
   const sortSelect = document.getElementById("sortCandidates");
 
-  if (!containerNuevos || !candidatesContactados || !candidatesPreseleccionados || !candidatesSeleccionados) {
+  if (!containerNuevos) {
     return;
   }
 
@@ -821,68 +820,121 @@ function renderCandidates() {
   const filteredCandidates = applyScoringFilters(allCandidates);
   
   containerNuevos.innerHTML = "";
-  candidatesContactados.innerHTML = "";
-  candidatesPreseleccionados.innerHTML = "";
-  candidatesSeleccionados.innerHTML = "";
 
   const sortOrder = sortSelect ? sortSelect.value : "desc";
 
-  // Distribuir "Nuevos" en la lista principal
+  // Agrupaciones para los contadores
   const nuevos = filteredCandidates.filter(c => c.estado_pipeline === "Nuevo");
-
-  // Filtrar el resto del pipeline
   const contactados = filteredCandidates.filter(c => c.estado_pipeline === "Contactado");
   const preseleccionados = filteredCandidates.filter(c => c.estado_pipeline === "Preseleccionado");
   const seleccionados = filteredCandidates.filter(c => c.estado_pipeline === "Seleccionado");
 
-  const scoringResultsInfo = document.getElementById("scoringResultsInfo");
-  if (scoringResultsInfo) {
-    scoringResultsInfo.textContent = `${filteredCandidates.length} de ${allCandidates.length} candidatos visibles`;
+  // Filtrar candidatos a mostrar según la pestaña seleccionada
+  let candidatesToDisplay = filteredCandidates;
+  if (currentPipelineFilter !== "all") {
+    candidatesToDisplay = filteredCandidates.filter(c => c.estado_pipeline === currentPipelineFilter);
   }
 
-  renderScoringInsights(filteredCandidates, allCandidates);
-
-  nuevos.sort((a, b) => {
+  candidatesToDisplay.sort((a, b) => {
     return sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia;
   });
 
-  nuevos.forEach(candidate => {
+  // Paginación: calcular total de páginas y tajada de 10 elementos
+  const totalItems = candidatesToDisplay.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / CANDIDATES_PER_PAGE));
+  if (currentCandidatesPage > totalPages) {
+    currentCandidatesPage = totalPages;
+  }
+
+  const startIndex = (currentCandidatesPage - 1) * CANDIDATES_PER_PAGE;
+  const endIndex = Math.min(startIndex + CANDIDATES_PER_PAGE, totalItems);
+  const pagedCandidates = candidatesToDisplay.slice(startIndex, endIndex);
+
+  pagedCandidates.forEach(candidate => {
     containerNuevos.innerHTML += createCandidateCard(candidate);
   });
 
-  // Actualizar contadores
+  // Actualizar indicadores de paginación
+  const paginationInfo = document.getElementById("paginationInfo");
+  const currentPageIndicator = document.getElementById("currentPageIndicator");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
+
+  if (paginationInfo) {
+    paginationInfo.textContent = totalItems > 0 
+      ? `Mostrando ${startIndex + 1}-${endIndex} de ${totalItems} candidatos`
+      : "No hay candidatos que mostrar";
+  }
+
+  if (currentPageIndicator) {
+    currentPageIndicator.textContent = `Página ${currentCandidatesPage} de ${totalPages}`;
+  }
+
+  if (prevBtn) {
+    prevBtn.disabled = currentCandidatesPage <= 1;
+    prevBtn.onclick = () => {
+      if (currentCandidatesPage > 1) {
+        currentCandidatesPage--;
+        renderCandidates();
+      }
+    };
+  }
+
+  if (nextBtn) {
+    nextBtn.disabled = currentCandidatesPage >= totalPages;
+    nextBtn.onclick = () => {
+      if (currentCandidatesPage < totalPages) {
+        currentCandidatesPage++;
+        renderCandidates();
+      }
+    };
+  }
+
+  // Actualizar contadores en los botones del pipeline
   const countNuevos = document.getElementById("count-nuevos");
+  const countPipeCandidatos = document.getElementById("count-candidatos-pipe");
   const countContactados = document.getElementById("count-contactados");
   const countPreseleccionados = document.getElementById("count-preseleccionados");
   const countSeleccionados = document.getElementById("count-seleccionados");
 
   if (countNuevos) countNuevos.textContent = nuevos.length;
+  if (countPipeCandidatos) countPipeCandidatos.textContent = nuevos.length;
   if (countContactados) countContactados.textContent = contactados.length;
   if (countPreseleccionados) countPreseleccionados.textContent = preseleccionados.length;
   if (countSeleccionados) countSeleccionados.textContent = seleccionados.length;
 
-  // Distribuir el resto en el pipeline (las tarjetas se adaptarán al ancho)
-  contactados
-    .sort((a, b) => {
-      return sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia;
-    })
-    .forEach(c => candidatesContactados.innerHTML += createCandidateCard(c));
-
-  preseleccionados
-    .sort((a, b) => {
-      return sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia;
-    })
-    .forEach(c => candidatesPreseleccionados.innerHTML += createCandidateCard(c));
-
-  seleccionados
-    .sort((a, b) => {
-      return sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia;
-    })
-    .forEach(c => candidatesSeleccionados.innerHTML += createCandidateCard(c));
-
-  setupAccordions();
+  renderScoringInsights(filteredCandidates, allCandidates);
   bindCandidateActions();
+  setupAccordions();
+  bindPipelineTabs();
 }
+
+function bindPipelineTabs() {
+  // Resaltar el botón activo según currentPipelineFilter
+  document.querySelectorAll("[data-pipeline-filter]").forEach(b => {
+    const isSelected = b.dataset.pipelineFilter === currentPipelineFilter;
+    b.classList.toggle("ring-2", isSelected);
+    b.classList.toggle("ring-blue-600", isSelected);
+    b.classList.toggle("border-blue-600", isSelected);
+    b.classList.toggle("shadow-md", isSelected);
+    b.classList.toggle("bg-blue-50/70", isSelected);
+  });
+}
+
+// Escuchador global de clics para los botones del pipeline
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-pipeline-filter]");
+  if (!btn) return;
+
+  const filter = btn.dataset.pipelineFilter;
+  if (currentPipelineFilter === filter) {
+    currentPipelineFilter = "all";
+  } else {
+    currentPipelineFilter = filter;
+  }
+
+  renderCandidates();
+});
 
 function setupAccordions() {
   const toggles = document.querySelectorAll(".accordion-toggle");

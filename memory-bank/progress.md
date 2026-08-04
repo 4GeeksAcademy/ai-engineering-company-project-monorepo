@@ -20,6 +20,6 @@
 - [x] **Fase 4: Aplicaciones Frontend Next.js (`./uis/website` y `./uis/backoffice`)**
   - [x] `./uis/website` — Migración de web corporativa a Next.js + TS.
   - [x] `./uis/backoffice` — Dashboard interno con layout separado.
-- [ ] **Fase 5: Integración & Verificación Final**
-  - [ ] Conexión del script de Hito 2 en el Backoffice sin duplicar código.
-  - [ ] Pruebas y verificación de compilación/ejecución (`npm run dev`).
+- [x] **Fase 5: Integración & Verificación Final**
+  - [x] Conexión del script de Hito 2 en el Backoffice sin duplicar código.
+  - [x] Pruebas y verificación de compilación/ejecución (`npm run dev`).

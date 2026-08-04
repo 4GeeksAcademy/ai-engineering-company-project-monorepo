@@ -67,10 +67,10 @@ Plan de implementación detallado para estructurar la infraestructura de IA (Mem
   * Vista de inicio en `/` (Dashboard de bienvenida para consultores).
 
 ### 📍 FASE 5: Integración del Módulo de Lógica TS (Hito 2) & Verificación
-- [ ] ⏳ **Tarea 5.1:** Conectar la lógica de negocio de TypeScript del Hito 2 (`src/utils/` o similar) con `./uis/backoffice`:
+- [x] ✅ **Tarea 5.1:** Conectar la lógica de negocio de TypeScript del Hito 2 (`src/utils/` o similar) con `./uis/backoffice`:
   * Importación directa sin duplicación de código.
-- [ ] ⏳ **Tarea 5.2:** Renderizar en la UI del Backoffice el listado de candidatos, cálculo de scoring frente a vacantes y reportes agregados.
-- [ ] ⏳ **Tarea 5.3:** Verificación final con compilación estricta y pruebas de ejecución con `npm run dev` en ambos entornos.
+- [x] ✅ **Tarea 5.2:** Renderizar en la UI del Backoffice el listado de candidatos, cálculo de scoring frente a vacantes y reportes agregados.
+- [x] ✅ **Tarea 5.3:** Verificación final con compilación estricta y pruebas de ejecución con `npm run dev` en ambos entornos.
 
 ---
 
