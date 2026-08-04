@@ -171,3 +171,25 @@ def delete_user(user_id: TinyDBId) -> bool:
         profiles_table.remove(profile_query.user_id == normalized_id)
 
     return True
+
+
+def update_user_password(user_id: TinyDBId, password: str) -> User | None:
+    """Update only the user password and return updated record."""
+
+    document = _get_user_document_by_id(user_id)
+    if document is None:
+        return None
+
+    users_table = get_users_table()
+    users_table.update(
+        {
+            "hashed_password": hash_password(password),
+        },
+        doc_ids=[document.doc_id],
+    )
+
+    updated_document = users_table.get(doc_id=document.doc_id)
+    if updated_document is None:
+        return None
+
+    return _serialize_user(updated_document)

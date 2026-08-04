@@ -11,6 +11,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/", label: "Inicio" },
   { href: "/account/profile", label: "Mi perfil" },
+  { href: "/account/change-password", label: "Cambiar contraseña" },
   { href: "/candidaturas", label: "Candidaturas" },
   { href: "/leads", label: "Leads" },
   { href: "/operaciones", label: "Operaciones" },

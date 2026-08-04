@@ -17,6 +17,20 @@ interface RegisterPayload extends LoginPayload {
   address?: string;
 }
 
+interface ForgotPasswordPayload {
+  email: string;
+}
+
+interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
+interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
 interface LoginResponse {
   token?: string;
   access_token?: string;
@@ -177,5 +191,60 @@ export async function register(payload: RegisterPayload): Promise<void> {
     }
 
     throw new Error(getErrorMessage(errorData, 'No fue posible crear la cuenta.'));
+  }
+}
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
+  const response = await apiFetch('/auth/forgot-password', {
+    skipAuth: true,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await parseErrorResponse(response);
+    throw new Error(
+      getErrorMessage(errorData, 'No fue posible procesar la solicitud de recuperacion.')
+    );
+  }
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
+  const response = await apiFetch('/auth/reset-password', {
+    skipAuth: true,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token: payload.token,
+      new_password: payload.newPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await parseErrorResponse(response);
+    throw new Error(getErrorMessage(errorData, 'No fue posible restablecer la contrasena.'));
+  }
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  const response = await apiFetch('/auth/change-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      current_password: payload.currentPassword,
+      new_password: payload.newPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await parseErrorResponse(response);
+    throw new Error(getErrorMessage(errorData, 'No fue posible cambiar la contrasena.'));
   }
 }

@@ -12,7 +12,6 @@ from jose import JWTError, ExpiredSignatureError, jwt
 from src.models.user import TinyDBId, User
 from src.services.user_service import get_user_by_id
 
-ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
@@ -23,6 +22,13 @@ def _get_secret_key() -> str:
 
     # Local/dev fallback to avoid hard failures when env var is not configured.
     return "trackflow-dev-secret-key"
+
+
+def _get_algorithm() -> str:
+    value = os.getenv("ALGORITHM", "HS256").strip()
+    if value:
+        return value
+    return "HS256"
 
 
 def _get_access_token_expire_minutes() -> int:
@@ -46,7 +52,7 @@ def create_access_token(user_id: TinyDBId) -> str:
         "sub": str(user_id),
         "exp": expire_at,
     }
-    return jwt.encode(payload, _get_secret_key(), algorithm=ALGORITHM)
+    return jwt.encode(payload, _get_secret_key(), algorithm=_get_algorithm())
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
@@ -59,7 +65,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     )
 
     try:
-        payload = jwt.decode(token, _get_secret_key(), algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _get_secret_key(), algorithms=[_get_algorithm()])
     except (ExpiredSignatureError, JWTError) as exc:
         raise unauthorized_exception from exc
 

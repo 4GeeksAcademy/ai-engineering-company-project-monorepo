@@ -221,7 +221,7 @@ export function SuppliersDirectoryPanel() {
       <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">Directorio de proveedores</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Gestiona carriers por pais, categoria, tarifa y estado operativo.
+          Gestiona carriers por país, categoría, tarifa y estado operativo.
         </p>
       </header>
 

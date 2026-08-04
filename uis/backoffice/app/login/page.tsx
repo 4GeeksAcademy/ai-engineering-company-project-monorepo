@@ -75,6 +75,14 @@ export default function LoginPage() {
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-sky-300 transition focus:border-sky-500 focus:ring-2"
               placeholder="Ingresa tu contrasena"
             />
+            <div className="pt-1 text-right">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-sky-700 hover:text-sky-800 hover:underline"
+              >
+                Olvide mi contrasena
+              </Link>
+            </div>
           </div>
 
           {errorMessage ? (
