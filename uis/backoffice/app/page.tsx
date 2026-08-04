@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Candidate, Vacancy } from "../../../../src/types";
-import { calculateCandidateScore } from "../../../../src/utils/transformations";
+import type { Candidate, Vacancy } from "../../../src/types/models";
+import { calculateCandidateScore } from "../../../src/utils/transformations";
 
 // Datos de prueba simulados importados según los modelos de Hito 2
 const sampleVacancy: Vacancy = {
@@ -110,8 +110,8 @@ export default function CandidateScoringDashboard() {
 
         <div className="mt-4 pt-4 border-t border-slate-900 flex flex-wrap gap-2">
           <span className="text-xs text-slate-500 mr-2 py-1">Skills Requeridas:</span>
-          {sampleVacancy.requiredSkills.map((skill) => (
-            <span key={skill} className="rounded bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-300 border border-slate-800">
+          {sampleVacancy.requiredSkills.map((skill: string) => (
+            <span key={skill} className="rounded bg-blue-900/40 px-2 py-0.5 text-xs text-blue-200 border border-blue-800">
               {skill}
             </span>
           ))}
@@ -152,7 +152,7 @@ export default function CandidateScoringDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-1">
-                {candidate.skills.slice(0, 3).map((s) => (
+                {candidate.skills.slice(0, 3).map((s: string) => (
                   <span key={s} className="rounded bg-slate-950 px-2 py-0.5 text-[10px] text-slate-400">
                     {s}
                   </span>

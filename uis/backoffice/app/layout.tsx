@@ -12,7 +12,7 @@ export default function BackofficeLayout({
 }) {
   return (
     <html lang="es">
-      <body class="bg-slate-900 text-slate-100 antialiased">
+      <body className="bg-slate-900 text-slate-100 antialiased">
         <div className="flex min-h-screen">
           {/* Sidebar exclusivo de Backoffice */}
           <aside className="w-64 border-r border-slate-800 bg-slate-950 p-6 flex flex-col justify-between">
