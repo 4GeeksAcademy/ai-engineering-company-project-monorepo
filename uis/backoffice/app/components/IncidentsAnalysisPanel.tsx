@@ -155,10 +155,10 @@ export function IncidentsAnalysisPanel() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Operaciones</p>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900">Analisis de incidencias</h1>
+          <h1 className="mt-2 text-2xl font-bold text-slate-900">Análisis de incidencias</h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Carga un CSV para obtener metricas generales, desglose por categoria/estado y detalle de registros
-            invalidos.
+            Carga un CSV para obtener métricas generales, desglose por categoría/estado y detalle de registros
+            inválidos.
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export function IncidentsAnalysisPanel() {
               : "rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center"
           }
         >
-          <p className="text-sm font-medium text-slate-800">Arrastra y suelta tu archivo CSV aqui</p>
+          <p className="text-sm font-medium text-slate-800">Arrastra y suelta tu archivo CSV aquí</p>
           <p className="mt-1 text-xs text-slate-500">o haz click para seleccionarlo desde tu equipo</p>
           {selectedFile ? (
             <p className="mt-3 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700">
@@ -255,15 +255,15 @@ export function IncidentsAnalysisPanel() {
               <p className="mt-2 text-2xl font-bold text-slate-900">{summary.totalRows}</p>
             </div>
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-              <p className="text-xs uppercase tracking-wide text-emerald-700">Registros validos</p>
+              <p className="text-xs uppercase tracking-wide text-emerald-700">Registros válidos</p>
               <p className="mt-2 text-2xl font-bold text-emerald-900">{summary.validRows}</p>
             </div>
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <p className="text-xs uppercase tracking-wide text-rose-700">Registros invalidos</p>
+              <p className="text-xs uppercase tracking-wide text-rose-700">Registros inválidos</p>
               <p className="mt-2 text-2xl font-bold text-rose-900">{summary.invalidRows}</p>
             </div>
             <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4">
-              <p className="text-xs uppercase tracking-wide text-cyan-700">Satisfaccion promedio</p>
+              <p className="text-xs uppercase tracking-wide text-cyan-700">Satisfacción promedio</p>
               <p className="mt-2 text-2xl font-bold text-cyan-900">
                 {summary.averageSatisfaction === null ? "N/A" : `${summary.averageSatisfaction.toFixed(2)} / 5`}
               </p>
@@ -274,7 +274,7 @@ export function IncidentsAnalysisPanel() {
             <article className="rounded-xl border border-slate-200 p-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">Desglose por categoria</h2>
               {categoryItems.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">Sin categorias validas para mostrar.</p>
+                <p className="mt-3 text-sm text-slate-500">Sin categorías válidas para mostrar.</p>
               ) : (
                 <ul className="mt-3 space-y-2 text-sm">
                   {categoryItems.map(([category, count]) => (
@@ -292,7 +292,7 @@ export function IncidentsAnalysisPanel() {
             <article className="rounded-xl border border-slate-200 p-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">Desglose por estado</h2>
               {statusItems.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">Sin estados validos para mostrar.</p>
+                <p className="mt-3 text-sm text-slate-500">Sin estados válidos para mostrar.</p>
               ) : (
                 <ul className="mt-3 space-y-2 text-sm">
                   {statusItems.map(([status, count]) => (
@@ -310,10 +310,10 @@ export function IncidentsAnalysisPanel() {
 
           <article className="rounded-xl border border-slate-200 p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-              Registros invalidos detectados
+              Registros inválidos detectados
             </h2>
             {invalidReasonItems.length === 0 ? (
-              <p className="mt-3 text-sm text-emerald-700">No se detectaron registros invalidos.</p>
+              <p className="mt-3 text-sm text-emerald-700">No se detectaron registros inválidos.</p>
             ) : (
               <ul className="mt-3 space-y-2 text-sm">
                 {invalidReasonItems.map(([reason, count]) => (

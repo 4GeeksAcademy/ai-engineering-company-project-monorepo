@@ -11,5 +11,6 @@ Requires-Dist: pydantic==2.9.2
 Requires-Dist: pydantic-settings>=2.14.2
 Requires-Dist: python-jose[cryptography]>=3.5.0
 Requires-Dist: python-multipart>=0.0.32
+Requires-Dist: sendgrid>=6.12.5
 Requires-Dist: tinydb==4.8.0
 Requires-Dist: uvicorn>=0.52.0

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Alert } from '../../components/ui/Alert';
 import { Spinner } from '../../components/ui/Spinner';
@@ -214,7 +215,14 @@ export default function AccountProfilePage() {
       <header className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Gestion de usuario</h2>
         <p className="text-sm text-slate-600">
-          Revisa y actualiza tus datos de contacto. El email y la contrasena no se editan desde esta vista.
+          Revisa y actualiza tus datos de contacto. El email no se edita desde esta vista.
+        </p>
+        <p className="text-sm text-slate-600">
+          Para actualizar tu clave, ve a{' '}
+          <Link href="/account/change-password" className="font-medium text-sky-700 hover:text-sky-800 hover:underline">
+            Cambiar contrasena
+          </Link>
+          .
         </p>
       </header>
 

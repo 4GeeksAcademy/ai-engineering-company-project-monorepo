@@ -6,5 +6,6 @@ pydantic==2.9.2
 pydantic-settings>=2.14.2
 python-jose[cryptography]>=3.5.0
 python-multipart>=0.0.32
+sendgrid>=6.12.5
 tinydb==4.8.0
 uvicorn>=0.52.0

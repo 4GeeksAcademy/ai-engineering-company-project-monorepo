@@ -11,7 +11,7 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-const PUBLIC_PATHS = new Set(['/login', '/register']);
+const PUBLIC_PATHS = new Set(['/login', '/register', '/forgot-password', '/reset-password']);
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
@@ -38,7 +38,7 @@ export function AppShell({ children }: AppShellProps) {
             onClick={logout}
             className="mt-6 inline-flex w-full justify-center rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
           >
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </aside>
 
