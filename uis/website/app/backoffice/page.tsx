@@ -312,6 +312,102 @@ const fullCandidatesDataset: FullCandidate[] = [
   },
 ];
 
+export interface TicketMessage {
+  role: "bot" | "user";
+  text: string;
+}
+
+export interface SupportTicket {
+  ticket_id: string;
+  fecha: string;
+  cliente_info: {
+    nombre: string;
+    email: string;
+  };
+  nivel_gravedad: "Alta" | "Media" | "Baja";
+  resumen_problema: string;
+  historial_transcripcion: TicketMessage[];
+  estado: "Abierto" | "Resuelto";
+}
+
+const seedTicketsData: SupportTicket[] = [
+  {
+    ticket_id: "TK-240601",
+    fecha: "2026-06-10 09:35",
+    cliente_info: { nombre: "RetailNova", email: "soporte@retailnova.example.com" },
+    nivel_gravedad: "Alta",
+    resumen_problema: "Fallo crítico de sincronización del catálogo de productos con el CRM central.",
+    historial_transcripcion: [
+      { role: "bot", text: "Hola, soy Nexova Assist. Para comenzar, indícame el nombre de tu empresa." },
+      { role: "user", text: "RetailNova" },
+      { role: "bot", text: "Comparte tu email de contacto corporativo." },
+      { role: "user", text: "soporte@retailnova.example.com" },
+      { role: "bot", text: "Describe brevemente la incidencia principal." },
+      { role: "user", text: "Desde la última actualización, la API de sincronización con nuestro CRM no actualiza el stock y devuelve un timeout." }
+    ],
+    estado: "Abierto"
+  },
+  {
+    ticket_id: "TK-240602",
+    fecha: "2026-06-11 14:20",
+    cliente_info: { nombre: "FinAxis Group", email: "mesa.ayuda@finaxis.example.com" },
+    nivel_gravedad: "Media",
+    resumen_problema: "Latencia elevada y timeouts intermitentes en el portal de acceso B2B.",
+    historial_transcripcion: [
+      { role: "bot", text: "Hola, soy Nexova Assist. Para comenzar, indícame el nombre de tu empresa." },
+      { role: "user", text: "FinAxis Group" },
+      { role: "bot", text: "Comparte tu email de contacto corporativo." },
+      { role: "user", text: "mesa.ayuda@finaxis.example.com" },
+      { role: "bot", text: "Describe brevemente la incidencia principal." },
+      { role: "user", text: "Reportamos tiempos de carga superiores a 15 segundos en el portal B2B, afectando a la operativa de los asesores." }
+    ],
+    estado: "Abierto"
+  },
+  {
+    ticket_id: "TK-240603",
+    fecha: "2026-06-12 11:05",
+    cliente_info: { nombre: "TechBridge", email: "it@techbridge.example.com" },
+    nivel_gravedad: "Baja",
+    resumen_problema: "Solicitud de asistencia para la configuración de webhooks y notificaciones.",
+    historial_transcripcion: [
+      { role: "bot", text: "Hola, soy Nexova Assist. Para comenzar, indícame el nombre de tu empresa." },
+      { role: "user", text: "TechBridge" },
+      { role: "bot", text: "Comparte tu email de contacto corporativo." },
+      { role: "user", text: "it@techbridge.example.com" },
+      { role: "bot", text: "Describe brevemente la incidencia principal." },
+      { role: "user", text: "Necesitamos documentación adicional o soporte para configurar el envío de eventos vía webhook hacia nuestro ERP." }
+    ],
+    estado: "Resuelto"
+  },
+  {
+    ticket_id: "TK-240604",
+    fecha: "2026-06-14 10:00",
+    cliente_info: { nombre: "InnoTech", email: "dev@innotech.example.com" },
+    nivel_gravedad: "Media",
+    resumen_problema: "Divergencia de datos en la generación de reportes consolidados del módulo financiero.",
+    historial_transcripcion: [],
+    estado: "Abierto"
+  },
+  {
+    ticket_id: "TK-240605",
+    fecha: "2026-06-14 11:30",
+    cliente_info: { nombre: "Global Retail", email: "ops@globalretail.example.com" },
+    nivel_gravedad: "Baja",
+    resumen_problema: "Consulta operativa sobre la importación masiva de perfiles de usuario vía CSV.",
+    historial_transcripcion: [],
+    estado: "Abierto"
+  },
+  {
+    ticket_id: "TK-240606",
+    fecha: "2026-06-14 15:45",
+    cliente_info: { nombre: "SecureBank", email: "security@securebank.example.com" },
+    nivel_gravedad: "Alta",
+    resumen_problema: "Auditoría de seguridad reporta vulnerabilidad potencial en la autenticación SSO.",
+    historial_transcripcion: [],
+    estado: "Abierto"
+  }
+];
+
 export default function BackofficeDashboard() {
   const [activeDepartment, setActiveDepartment] = useState<string>("operaciones-seleccion");
   const [pipelineFilter, setPipelineFilter] = useState<string>("all");
@@ -328,6 +424,62 @@ export default function BackofficeDashboard() {
     { sender: "bot", text: "Hola. Por favor describe tu incidencia de soporte para evaluarla con triaje IA." },
   ]);
   const [ticketEscalated, setTicketEscalated] = useState(false);
+
+  // Tickets Board State
+  const [ticketsList, setTicketsList] = useState<SupportTicket[]>(seedTicketsData);
+  const [ticketSortOrder, setTicketSortOrder] = useState<"desc" | "asc">("desc");
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [detailChatInput, setDetailChatInput] = useState("");
+
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput;
+    setChatMessages((prev) => [...prev, { sender: "user", text: userText }]);
+    setChatInput("");
+
+    setTimeout(() => {
+      setChatMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: `Incidencia analizada por Triaje IA: "${userText}". Asignando nivel de prioridad ALTA a soporte especializado.` },
+      ]);
+      setTicketEscalated(true);
+    }, 600);
+  };
+
+  const handleDetailChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detailChatInput.trim() || !selectedTicket) return;
+
+    const newMsg: TicketMessage = { role: "user", text: detailChatInput };
+    const updatedTickets = ticketsList.map((t) => {
+      if (t.ticket_id !== selectedTicket.ticket_id) return t;
+      return {
+        ...t,
+        historial_transcripcion: [...t.historial_transcripcion, newMsg],
+      };
+    });
+
+    setTicketsList(updatedTickets);
+    setSelectedTicket((prev) =>
+      prev ? { ...prev, historial_transcripcion: [...prev.historial_transcripcion, newMsg] } : null
+    );
+    setDetailChatInput("");
+  };
+
+  const toggleTicketStatus = (ticketId: string) => {
+    setTicketsList((prev) =>
+      prev.map((t) => {
+        if (t.ticket_id !== ticketId) return t;
+        const newStatus = t.estado === "Abierto" ? "Resuelto" : "Abierto";
+        return { ...t, estado: newStatus };
+      })
+    );
+    if (selectedTicket && selectedTicket.ticket_id === ticketId) {
+      setSelectedTicket((prev) => (prev ? { ...prev, estado: prev.estado === "Abierto" ? "Resuelto" : "Abierto" } : null));
+    }
+  };
 
   const candidatesPerPage = 5;
 
@@ -368,22 +520,7 @@ export default function BackofficeDashboard() {
   const endIndex = Math.min(startIndex + candidatesPerPage, totalItems);
   const currentCandidates = sortedCandidates.slice(startIndex, endIndex);
 
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
 
-    const userText = chatInput;
-    setChatMessages((prev) => [...prev, { sender: "user", text: userText }]);
-    setChatInput("");
-
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: `Incidencia analizada por Triaje IA: "${userText}". Asignando nivel de prioridad ALTA a soporte especializado.` },
-      ]);
-      setTicketEscalated(true);
-    }, 600);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-900 antialiased font-sans">
@@ -779,10 +916,11 @@ export default function BackofficeDashboard() {
           )}
 
           {activeDepartment === "soporte-cliente" && (
+            <>
             <article className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm">
               <header className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-bold text-blue-950">Soporte al Cliente Externalizado</h2>
+                  <h2 className="text-xl font-bold text-blue-950">Panel de Agentes - Tickets Escalados</h2>
                   <p className="mt-1 text-sm text-slate-700">SLA comprometido en 24h, promedio real en 48h y backlog con baja visibilidad.</p>
                 </div>
                 <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-900">Roberto Diaz</span>
@@ -822,30 +960,202 @@ export default function BackofficeDashboard() {
                   )}
                 </div>
 
-                {/* Resumen & Métricas de Soporte */}
+                {/* Métricas dinámicas de Soporte */}
                 <div className="space-y-4">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <h3 className="text-base font-semibold text-blue-950">Panel de Agentes & SLAs</h3>
+                    <h3 className="text-base font-semibold text-blue-950">Panel de Agentes &amp; SLAs</h3>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
                       <div className="rounded-md border border-slate-200 bg-white p-2 text-center">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Activos</span>
-                        <p className="text-xl font-bold text-blue-950 mt-0.5">286</p>
+                        <p className="text-xl font-bold text-blue-950 mt-0.5">{ticketsList.filter(t => t.estado === "Abierto").length}</p>
                       </div>
                       <div className="rounded-md border border-slate-200 bg-white p-2 text-center">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Alta Prioridad</span>
-                        <p className="text-xl font-bold text-rose-700 mt-0.5">42</p>
+                        <p className="text-xl font-bold text-rose-700 mt-0.5">{ticketsList.filter(t => t.nivel_gravedad === "Alta" && t.estado === "Abierto").length}</p>
                       </div>
                       <div className="rounded-md border border-slate-200 bg-white p-2 text-center">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Resueltos</span>
-                        <p className="text-xl font-bold text-emerald-700 mt-0.5">144</p>
+                        <p className="text-xl font-bold text-emerald-700 mt-0.5">{ticketsList.filter(t => t.estado === "Resuelto").length}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </section>
-            </article>
-          )}
 
+              {/* Listado de Tickets */}
+              <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-lg font-semibold text-blue-950">Tickets en seguimiento</h3>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="sortTickets" className="text-xs font-medium text-slate-600">Ordenar por:</label>
+                    <select
+                      id="sortTickets"
+                      value={ticketSortOrder}
+                      onChange={(e) => setTicketSortOrder(e.target.value as "desc" | "asc")}
+                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="desc">Mayor gravedad primero</option>
+                      <option value="asc">Menor gravedad primero</option>
+                    </select>
+                  </div>
+                </header>
+
+                {/* Encabezados */}
+                <header className="hidden sm:flex items-center px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="sm:w-1/4">ID / Cliente</div>
+                  <div className="sm:w-1/4 px-2">Estado</div>
+                  <div className="flex-1 px-4">Descripción de la incidencia</div>
+                  <div className="w-[160px] text-right pr-2">Fecha y Gravedad</div>
+                </header>
+
+                <div className="mt-2 flex flex-col gap-3">
+                  {[...ticketsList]
+                    .sort((a, b) => {
+                      const order: Record<string, number> = { Alta: 3, Media: 2, Baja: 1 };
+                      return ticketSortOrder === "desc"
+                        ? (order[b.nivel_gravedad] ?? 0) - (order[a.nivel_gravedad] ?? 0)
+                        : (order[a.nivel_gravedad] ?? 0) - (order[b.nivel_gravedad] ?? 0);
+                    })
+                    .map((ticket) => {
+                      const severityStyles: Record<string, string> = {
+                        Alta: "border-rose-300 bg-rose-50 text-rose-900",
+                        Media: "border-amber-300 bg-amber-50 text-amber-900",
+                        Baja: "border-slate-300 bg-slate-50 text-slate-700",
+                      };
+                      const severityBadge = severityStyles[ticket.nivel_gravedad] || severityStyles.Baja;
+
+                      return (
+                        <article
+                          key={ticket.ticket_id}
+                          className="flex flex-col sm:flex-row sm:items-center rounded-lg border border-slate-200 bg-white p-3 shadow-sm hover:border-blue-300 transition cursor-pointer"
+                          onClick={() => setSelectedTicket(ticket)}
+                        >
+                          <div className="sm:w-1/4">
+                            <p className="text-xs font-bold text-blue-900">{ticket.ticket_id}</p>
+                            <p className="text-xs text-slate-600">{ticket.cliente_info.nombre}</p>
+                            <p className="text-[10px] text-slate-500">{ticket.cliente_info.email}</p>
+                          </div>
+                          <div className="sm:w-1/4 px-2 mt-1 sm:mt-0">
+                            <span className={`inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold ${severityBadge}`}>
+                              {ticket.nivel_gravedad}
+                            </span>
+                            <span className={`ml-1 inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold ${ticket.estado === "Resuelto" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-300 bg-white text-slate-700"}`}>
+                              {ticket.estado}
+                            </span>
+                          </div>
+                          <div className="flex-1 px-0 sm:px-4 mt-1 sm:mt-0">
+                            <p className="text-xs text-slate-700 line-clamp-2">{ticket.resumen_problema}</p>
+                          </div>
+                          <div className="w-full sm:w-[160px] text-left sm:text-right mt-1 sm:mt-0 pr-0 sm:pr-2">
+                            <p className="text-[10px] font-semibold text-slate-500">{ticket.fecha}</p>
+                          </div>
+                        </article>
+                      );
+                    })}
+                </div>
+              </section>
+            </article>
+
+            {/* Modal Overlay de Detalle de Ticket */}
+            {selectedTicket && (
+              <div className="fixed inset-0 z-40 bg-slate-900/50 p-4 sm:p-6 flex items-start justify-center overflow-y-auto" onClick={() => setSelectedTicket(null)}>
+                <article className="mx-auto max-w-4xl w-full rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6 mt-8" onClick={(e) => e.stopPropagation()}>
+                  <header className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Detalle de ticket</p>
+                      <h2 className="mt-1 text-2xl font-bold text-blue-950">{selectedTicket.ticket_id}</h2>
+                    </div>
+                    <button type="button" onClick={() => setSelectedTicket(null)} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                      Cerrar
+                    </button>
+                  </header>
+
+                  <section className="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                    <article>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Cliente</h3>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{selectedTicket.cliente_info.nombre}</p>
+                      <p className="text-sm text-slate-700">{selectedTicket.cliente_info.email}</p>
+                    </article>
+                    <article>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Estado</h3>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`rounded-md border px-2 py-1 text-xs font-semibold ${
+                          selectedTicket.nivel_gravedad === "Alta" ? "border-rose-300 bg-rose-50 text-rose-900" :
+                          selectedTicket.nivel_gravedad === "Media" ? "border-amber-300 bg-amber-50 text-amber-900" :
+                          "border-slate-300 bg-slate-50 text-slate-700"
+                        }`}>{selectedTicket.nivel_gravedad}</span>
+                        <span className={`rounded-md border px-2 py-1 text-xs font-semibold ${selectedTicket.estado === "Resuelto" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-300 bg-white text-slate-700"}`}>
+                          {selectedTicket.estado}
+                        </span>
+                      </div>
+                    </article>
+                  </section>
+
+                  <section className="mt-5">
+                    <h3 className="text-sm font-semibold text-blue-950">Resumen del problema</h3>
+                    <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">{selectedTicket.resumen_problema}</p>
+                  </section>
+
+                  {selectedTicket.historial_transcripcion.length > 0 && (
+                    <section className="mt-5">
+                      <h3 className="text-sm font-semibold text-blue-950">Historial de transcripción</h3>
+                      <div className="mt-2 max-h-48 overflow-y-auto grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+                        {selectedTicket.historial_transcripcion.map((msg, idx) => (
+                          <div key={idx} className={`p-2 rounded-md text-xs ${msg.role === "bot" ? "bg-blue-50 text-blue-900 border border-blue-200" : "bg-white text-slate-900 border border-slate-200 text-right font-medium"}`}>
+                            {msg.text}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="mt-5 rounded-md border border-blue-200 bg-blue-50 p-4">
+                    <h3 className="text-sm font-semibold text-blue-950">Canal de seguimiento con cliente</h3>
+                    <p className="mt-1 text-xs text-blue-800">Puedes enviar mensajes mientras el ticket esté abierto.</p>
+                    <form onSubmit={handleDetailChatSubmit} className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <input
+                        type="text"
+                        placeholder="Escribe una actualización para el cliente..."
+                        value={detailChatInput}
+                        onChange={(e) => setDetailChatInput(e.target.value)}
+                        className="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
+                      />
+                      <button type="submit" className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800">
+                        Enviar mensaje
+                      </button>
+                    </form>
+                  </section>
+
+                  <section className="mt-5 rounded-md border border-blue-200 bg-blue-50 p-4">
+                    <h3 className="text-sm font-semibold text-blue-950">Acciones operativas</h3>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                      <a href={`mailto:${selectedTicket.cliente_info.email}`} className="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100 text-center">
+                        Contactar Cliente
+                      </a>
+                      <button type="button" className="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
+                        Videollamada
+                      </button>
+                      <button type="button" className="rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100">
+                        Invitar Ingeniero
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleTicketStatus(selectedTicket.ticket_id)}
+                        className={`rounded-md border px-3 py-2 text-sm font-semibold transition ${
+                          selectedTicket.estado === "Abierto"
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
+                            : "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"
+                        }`}
+                      >
+                        {selectedTicket.estado === "Abierto" ? "Marcar Resuelto" : "Reabrir Ticket"}
+                      </button>
+                    </div>
+                  </section>
+                </article>
+              </div>
+            )}
+            </>
+          )}
           {activeDepartment === "formacion-corporativa" && (
             <article className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm">
               <header className="flex items-start justify-between gap-3">
