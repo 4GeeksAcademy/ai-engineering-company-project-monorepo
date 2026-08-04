@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Candidate, Vacancy } from "../../../src/types/models";
-import { calculateCandidateScore } from "../../../src/utils/transformations";
+import type { Candidate, Vacancy } from "../../../../src/types/models";
+import { calculateCandidateScore } from "../../../../src/utils/transformations";
 
 const sampleVacancy: Vacancy = {
   id: "V-2026-001",
@@ -22,86 +22,293 @@ const sampleVacancy: Vacancy = {
   status: "Open",
 };
 
-const sampleCandidates: Candidate[] = [
+export interface FullCandidate {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  puesto_aplicado: string;
+  score_ia: number;
+  skills_clave: string[];
+  razonamiento_corto: string;
+  estado_pipeline: "Nuevo" | "Contactado" | "Preseleccionado" | "Seleccionado";
+}
+
+const fullCandidatesDataset: FullCandidate[] = [
   {
-    id: "C-2026-001",
-    fullName: "Carlos Mendoza",
-    email: "carlos.mendoza@example.com",
-    phone: "+34 611 223 344",
-    yearsOfExperience: 6,
-    skills: ["TypeScript", "React", "Next.js", "Tailwind CSS", "Node.js"],
-    englishLevel: "C1",
-    seniority: "Senior",
-    currentSalary: 50000,
-    expectedSalary: 58000,
-    availability: "Immediate",
-    location: "Valencia, España",
-    remoteOnly: false,
-    status: "Active",
+    id: "C-001",
+    nombre: "Alicia Romero",
+    email: "alicia.romero.work@example.com",
+    telefono: "+34600111222",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 92,
+    skills_clave: ["Headhunting", "Entrevista por competencias", "ATS", "Ingles C1"],
+    razonamiento_corto: "Alta compatibilidad con procesos de mandos medios/directivos, experiencia previa con volumen alto de vacantes y excelente calidad de feedback al cliente.",
+    estado_pipeline: "Nuevo",
   },
   {
-    id: "C-2026-002",
-    fullName: "Laura Gómez",
-    email: "laura.gomez@example.com",
-    phone: "+34 622 334 455",
-    yearsOfExperience: 3,
-    skills: ["React", "JavaScript", "HTML", "CSS"],
-    englishLevel: "B1",
-    seniority: "Semi-Senior",
-    currentSalary: 32000,
-    expectedSalary: 38000,
-    availability: "1 month",
-    location: "Madrid, España",
-    remoteOnly: false,
-    status: "Active",
+    id: "C-002",
+    nombre: "Bruno Salas",
+    email: "bruno.salas.work@example.com",
+    telefono: "+34600333444",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 78,
+    skills_clave: ["Sourcing", "LinkedIn Recruiter", "CRM", "Comunicacion"],
+    razonamiento_corto: "Buen potencial para cubrir vacantes tecnicas y gestionar pipeline, pero con menor experiencia en posiciones directivas frente a los perfiles top.",
+    estado_pipeline: "Nuevo",
   },
   {
-    id: "C-2026-003",
-    fullName: "Mateo Rossi",
-    email: "mateo.rossi@example.com",
-    phone: "+34 633 445 566",
-    yearsOfExperience: 8,
-    skills: ["Python", "TypeScript", "Node.js", "Docker", "AWS"],
-    englishLevel: "C2",
-    seniority: "Lead",
-    currentSalary: 60000,
-    expectedSalary: 72000,
-    availability: "Immediate",
-    location: "Remoto",
-    remoteOnly: true,
-    status: "Active",
+    id: "C-003",
+    nombre: "Carla Nuñez",
+    email: "carla.nunez.work@example.com",
+    telefono: "+34600555666",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 64,
+    skills_clave: ["Criba curricular", "Entrevistas", "Reporteria", "Trabajo en equipo"],
+    razonamiento_corto: "Perfil operativo estable para etapas de preseleccion; requiere soporte adicional en presentaciones ejecutivas y trato consultivo con clientes.",
+    estado_pipeline: "Nuevo",
   },
   {
-    id: "C-2026-004",
-    fullName: "Sofía Martínez",
-    email: "sofia.martinez@example.com",
-    phone: "+34 644 556 677",
-    yearsOfExperience: 5,
-    skills: ["TypeScript", "React", "GraphQL", "Jest"],
-    englishLevel: "B2",
-    seniority: "Senior",
-    currentSalary: 48000,
-    expectedSalary: 54000,
-    availability: "2 weeks",
-    location: "Barcelona, España",
-    remoteOnly: false,
-    status: "Active",
+    id: "C-004",
+    nombre: "Diego Mendez",
+    email: "diego.mendez.work@example.com",
+    telefono: "+34600777888",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 47,
+    skills_clave: ["Administracion", "Excel", "Seguimiento"],
+    razonamiento_corto: "Experiencia relevante en soporte administrativo pero brecha en sourcing especializado y evaluacion de perfiles senior.",
+    estado_pipeline: "Nuevo",
   },
   {
-    id: "C-2026-005",
-    fullName: "Alejandro Silva",
-    email: "alejandro.silva@example.com",
-    phone: "+34 655 667 788",
-    yearsOfExperience: 2,
-    skills: ["JavaScript", "React", "CSS"],
-    englishLevel: "A2",
-    seniority: "Junior",
-    currentSalary: 24000,
-    expectedSalary: 28000,
-    availability: "Immediate",
-    location: "Valencia, España",
-    remoteOnly: false,
-    status: "Active",
+    id: "C-005",
+    nombre: "Elena Pardo",
+    email: "elena.pardo.work@example.com",
+    telefono: "+34600999000",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 85,
+    skills_clave: ["Evaluacion por competencias", "Data recruiting", "Stakeholder management", "Ingles B2"],
+    razonamiento_corto: "Muy buen equilibrio entre analitica y ejecucion de procesos; destaca en comunicacion con hiring managers y cierre de vacantes criticas.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-006",
+    nombre: "Fernando Gutierrez",
+    email: "fernando.g.work@example.com",
+    telefono: "+34601112233",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 95,
+    skills_clave: ["Headhunting", "Negociación", "Cierre de ofertas", "Ingles C2"],
+    razonamiento_corto: "Excelente perfil para roles de liderazgo. Gran experiencia en negociación y cierre de ofertas complejas.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-007",
+    nombre: "Gloria Torres",
+    email: "gloria.t.work@example.com",
+    telefono: "+34602223344",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 75,
+    skills_clave: ["Entrevista por competencias", "Sourcing", "Onboarding", "Ingles B2"],
+    razonamiento_corto: "Sólida experiencia en entrevistas y sourcing. Podría necesitar apoyo en la gestión de clientes de gran volumen.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-008",
+    nombre: "Hector Navarro",
+    email: "hector.n.work@example.com",
+    telefono: "+34603334455",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 42,
+    skills_clave: ["Administración de RRHH", "Nóminas", "Excel"],
+    razonamiento_corto: "Perfil más orientado a la administración de personal que a la selección. Poca experiencia en sourcing y headhunting.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-009",
+    nombre: "Irene Lozano",
+    email: "irene.lozano.work@example.com",
+    telefono: "+34604445566",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 88,
+    skills_clave: ["Headhunting", "People Analytics", "ATS", "Ingles C1"],
+    razonamiento_corto: "Perfil con alto encaje para procesos de seleccion consultiva y seguimiento de KPI de reclutamiento en clientes enterprise.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-010",
+    nombre: "Javier Cano",
+    email: "javier.cano.work@example.com",
+    telefono: "+34605556677",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 81,
+    skills_clave: ["Sourcing tecnico", "Entrevistas estructuradas", "CRM", "Comunicacion"],
+    razonamiento_corto: "Buen rendimiento en vacantes tecnologicas y coordinacion con hiring managers; requiere refuerzo puntual en negociacion salarial.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-011",
+    nombre: "Karen Vega",
+    email: "karen.vega.work@example.com",
+    telefono: "+34606667788",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 69,
+    skills_clave: ["Criba curricular", "Entrevistas", "Seguimiento", "Reporting"],
+    razonamiento_corto: "Aporta consistencia operativa en fases iniciales y buena documentacion del pipeline, con margen de mejora en cierres complejos.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-012",
+    nombre: "Luis Aranda",
+    email: "luis.aranda.work@example.com",
+    telefono: "+34607778899",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 53,
+    skills_clave: ["ATS", "Coordinacion", "Excel", "Atencion al cliente"],
+    razonamiento_corto: "Perfil util para soporte de procesos en volumen; necesita acompanamiento para entrevistas por competencias en posiciones senior.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-013",
+    nombre: "Marta Prieto",
+    email: "marta.prieto.work@example.com",
+    telefono: "+34608889900",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 90,
+    skills_clave: ["Stakeholder management", "Negociacion", "Headhunting", "Ingles C2"],
+    razonamiento_corto: "Excelente capacidad de interlocucion con clientes y candidatos clave; destaca en cierre de procesos de alta criticidad.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-014",
+    nombre: "Nicolas Rios",
+    email: "nicolas.rios.work@example.com",
+    telefono: "+34609990011",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 58,
+    skills_clave: ["Sourcing", "LinkedIn Recruiter", "ATS", "Onboarding"],
+    razonamiento_corto: "Buen desempeño en captacion de perfiles intermedios y gestion de onboarding, con menor experiencia en roles ejecutivos.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-015",
+    nombre: "Olga Serrano",
+    email: "olga.serrano.work@example.com",
+    telefono: "+34601112244",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 76,
+    skills_clave: ["Entrevistas por competencias", "Employer branding", "Data recruiting", "Ingles B2"],
+    razonamiento_corto: "Candidata equilibrada para procesos integrales de seleccion; fortalece la experiencia de candidato y la comunicacion con cliente.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-016",
+    nombre: "Pablo Rivas",
+    email: "pablo.rivas.work@example.com",
+    telefono: "+34601223355",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 73,
+    skills_clave: ["Sourcing", "ATS", "Entrevistas", "Comunicacion"],
+    razonamiento_corto: "Perfil versatil para cubrir vacantes de volumen medio, con buena capacidad de seguimiento y coordinacion con hiring managers.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-017",
+    nombre: "Quim Beltran",
+    email: "quim.beltran.work@example.com",
+    telefono: "+34601334466",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 66,
+    skills_clave: ["Criba curricular", "LinkedIn Recruiter", "Reporting", "Onboarding"],
+    razonamiento_corto: "Rinde bien en fases de preseleccion y comunicacion con candidatos, con oportunidad de mejora en cierres de alta complejidad.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-018",
+    nombre: "Raquel Dominguez",
+    email: "raquel.dominguez.work@example.com",
+    telefono: "+34601445577",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 91,
+    skills_clave: ["Headhunting", "Negociacion", "Stakeholder management", "Ingles C1"],
+    razonamiento_corto: "Candidata fuerte para procesos estrategicos y cierres complejos, con alto nivel de interlocucion con cliente.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-019",
+    nombre: "Sergio Molina",
+    email: "sergio.molina.work@example.com",
+    telefono: "+34601556688",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 57,
+    skills_clave: ["ATS", "Excel", "Atencion al cliente", "Seguimiento"],
+    razonamiento_corto: "Buen soporte operativo para procesos continuos; requiere acompanamiento en entrevistas por competencias avanzadas.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-020",
+    nombre: "Tamara Solis",
+    email: "tamara.solis.work@example.com",
+    telefono: "+34601667799",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 83,
+    skills_clave: ["People Analytics", "Data recruiting", "ATS", "Ingles B2"],
+    razonamiento_corto: "Combina enfoque analitico con buena ejecucion de pipeline, ideal para equipos con objetivos de conversion.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-021",
+    nombre: "Ulises Marquez",
+    email: "ulises.marquez.work@example.com",
+    telefono: "+34601778800",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 49,
+    skills_clave: ["Administracion", "Excel", "Coordinacion", "CRM"],
+    razonamiento_corto: "Aporta orden en procesos y cumplimiento de SLAs, con margen de crecimiento en sourcing especializado.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-022",
+    nombre: "Valeria Ochoa",
+    email: "valeria.ochoa.work@example.com",
+    telefono: "+34601889911",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 87,
+    skills_clave: ["Entrevista por competencias", "Headhunting", "Employer branding", "Ingles C1"],
+    razonamiento_corto: "Muy buen encaje en procesos consultivos de punta a punta y excelente experiencia de candidato.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-023",
+    nombre: "Walter Naranjo",
+    email: "walter.naranjo.work@example.com",
+    telefono: "+34601990022",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 62,
+    skills_clave: ["Sourcing tecnico", "Entrevistas estructuradas", "ATS", "Comunicacion"],
+    razonamiento_corto: "Buen rendimiento en vacantes tecnicas, con oportunidad de mejora en negociacion salarial de perfiles senior.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-024",
+    nombre: "Ximena Fuentes",
+    email: "ximena.fuentes.work@example.com",
+    telefono: "+34602001133",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 79,
+    skills_clave: ["Stakeholder management", "Sourcing", "Onboarding", "Ingles B2"],
+    razonamiento_corto: "Perfil equilibrado para gestionar procesos integrales, especialmente util en coordinacion con equipos multidisciplinares.",
+    estado_pipeline: "Nuevo",
+  },
+  {
+    id: "C-025",
+    nombre: "Yago Prieto",
+    email: "yago.prieto.work@example.com",
+    telefono: "+34602112244",
+    puesto_aplicado: "Consultor/a de Seleccion Senior",
+    score_ia: 94,
+    skills_clave: ["Headhunting", "Negociacion", "Cierre de ofertas", "Ingles C2"],
+    razonamiento_corto: "Excelente perfil para liderar proyectos complejos de seleccion y garantizar cierres exitosos.",
+    estado_pipeline: "Nuevo",
   },
 ];
 
@@ -115,6 +322,7 @@ export default function BackofficeDashboard() {
   const [searchSalary, setSearchSalary] = useState<string>("");
   const [searchResult, setSearchResult] = useState<string>("Sin ejecución todavía.");
 
+  // Chatbot State para Soporte al Cliente
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<Array<{ sender: string; text: string }>>([
     { sender: "bot", text: "Hola. Por favor describe tu incidencia de soporte para evaluarla con triaje IA." },
@@ -123,42 +331,42 @@ export default function BackofficeDashboard() {
 
   const candidatesPerPage = 5;
 
-  const scoredCandidates = sampleCandidates.map((c) => ({
-    ...c,
-    score_ia: calculateCandidateScore(c, sampleVacancy),
-  }));
+  const [candidatesList, setCandidatesList] = useState<FullCandidate[]>(fullCandidatesDataset);
+  const [expandedReasoning, setExpandedReasoning] = useState<Record<string, boolean>>({});
 
-  scoredCandidates.sort((a, b) => (sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia));
+  const toggleReasoning = (id: string) => {
+    setExpandedReasoning((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-  const totalItems = scoredCandidates.length;
+  const advanceCandidateStatus = (id: string) => {
+    setCandidatesList((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+        let nextStatus: FullCandidate["estado_pipeline"] = c.estado_pipeline;
+        if (c.estado_pipeline === "Nuevo") nextStatus = "Contactado";
+        else if (c.estado_pipeline === "Contactado") nextStatus = "Preseleccionado";
+        else if (c.estado_pipeline === "Preseleccionado") nextStatus = "Seleccionado";
+        return { ...c, estado_pipeline: nextStatus };
+      })
+    );
+  };
+
+  const filteredByPipeline = candidatesList.filter((c) => {
+    if (pipelineFilter === "contacted") return c.estado_pipeline === "Contactado";
+    if (pipelineFilter === "preselected") return c.estado_pipeline === "Preseleccionado";
+    if (pipelineFilter === "selected") return c.estado_pipeline === "Seleccionado";
+    return true;
+  });
+
+  const sortedCandidates = [...filteredByPipeline].sort((a, b) =>
+    sortOrder === "desc" ? b.score_ia - a.score_ia : a.score_ia - b.score_ia
+  );
+
+  const totalItems = sortedCandidates.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / candidatesPerPage));
   const startIndex = (currentPage - 1) * candidatesPerPage;
   const endIndex = Math.min(startIndex + candidatesPerPage, totalItems);
-  const currentCandidates = scoredCandidates.slice(startIndex, endIndex);
-
-  const handleSearch = () => {
-    let resId = "No encontrado";
-    let resEmail = "No encontrado";
-    let resSalary = "Sin valor";
-
-    if (searchId.trim()) {
-      const found = scoredCandidates.find((c) => c.id.toLowerCase() === searchId.trim().toLowerCase());
-      if (found) resId = found.fullName;
-    }
-    if (searchEmail.trim()) {
-      const found = scoredCandidates.find((c) => c.email.toLowerCase() === searchEmail.trim().toLowerCase());
-      if (found) resEmail = found.fullName;
-    }
-    if (searchSalary.trim()) {
-      const sal = Number(searchSalary);
-      if (!isNaN(sal)) {
-        const found = scoredCandidates.find((c) => c.expectedSalary <= sal);
-        resSalary = found ? `${found.fullName} ($${found.expectedSalary})` : "No encontrado";
-      }
-    }
-
-    setSearchResult(`ID: ${resId} | Email: ${resEmail} | Salario: ${resSalary}`);
-  };
+  const currentCandidates = sortedCandidates.slice(startIndex, endIndex);
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,18 +405,99 @@ export default function BackofficeDashboard() {
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-6 items-start">
+        {/* Sidebar Lateral Fijo de Departamentos */}
         <aside className="w-full md:w-[280px] shrink-0 rounded-xl border border-blue-200 bg-white p-4 shadow-sm md:sticky md:top-20">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-blue-900">Departamentos</h2>
           <nav className="mt-3">
             <ul className="space-y-1 text-sm">
-              <li><button type="button" onClick={() => setActiveDepartment("operaciones-seleccion")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "operaciones-seleccion" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Scoring IA</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("soporte-cliente")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "soporte-cliente" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Soporte al Cliente (Triaje IA)</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("formacion-corporativa")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "formacion-corporativa" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Formacion Corporativa</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("ventas-desarrollo")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "ventas-desarrollo" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Ventas y Desarrollo</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("marketing-comunicacion")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "marketing-comunicacion" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Marketing y Comunicacion</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("recursos-humanos")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "recursos-humanos" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Recursos Humanos</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("tecnologia-infraestructura")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "tecnologia-infraestructura" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Tecnologia e Infraestructura</button></li>
-              <li><button type="button" onClick={() => setActiveDepartment("direccion-ejecutiva")} className={`w-full text-left rounded-md px-3 py-2 transition ${activeDepartment === "direccion-ejecutiva" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"}`}>Direccion Ejecutiva</button></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("operaciones-seleccion")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "operaciones-seleccion" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Scoring IA
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("soporte-cliente")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "soporte-cliente" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Soporte al Cliente (Triaje IA)
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("formacion-corporativa")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "formacion-corporativa" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Formacion Corporativa
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("ventas-desarrollo")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "ventas-desarrollo" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Ventas y Desarrollo
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("marketing-comunicacion")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "marketing-comunicacion" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Marketing y Comunicacion
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("recursos-humanos")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "recursos-humanos" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Recursos Humanos
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("tecnologia-infraestructura")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "tecnologia-infraestructura" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Tecnologia e Infraestructura
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setActiveDepartment("direccion-ejecutiva")}
+                  className={`w-full text-left rounded-md px-3 py-2 transition ${
+                    activeDepartment === "direccion-ejecutiva" ? "bg-blue-100 font-semibold text-blue-900" : "text-blue-900 hover:bg-blue-50"
+                  }`}
+                >
+                  Direccion Ejecutiva
+                </button>
+              </li>
             </ul>
           </nav>
 
@@ -227,6 +516,7 @@ export default function BackofficeDashboard() {
           </section>
         </aside>
 
+        {/* Área Contenido Principal Deducida por el Departamento Activo */}
         <section className="flex-1 w-full space-y-6">
           {activeDepartment === "operaciones-seleccion" && (
             <article className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm">
@@ -245,26 +535,26 @@ export default function BackofficeDashboard() {
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <article className="rounded-md border border-slate-200 bg-white p-3">
                     <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Candidatos Evaluados</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{scoredCandidates.length}</p>
+                    <p className="mt-1 text-xl font-extrabold text-slate-900">{candidatesList.length}</p>
                   </article>
                   <article className="rounded-md border border-slate-200 bg-white p-3">
                     <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Salario Promedio Deseado</p>
                     <p className="mt-1 text-xl font-extrabold text-slate-900">$51,200</p>
                   </article>
                   <article className="rounded-md border border-slate-200 bg-white p-3">
-                    <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Fill Rate Pipeline</p>
+                    <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold font-bold">Fill Rate Pipeline</p>
                     <p className="mt-1 text-xl font-extrabold text-slate-900">80%</p>
                   </article>
                   <article className="rounded-md border border-slate-200 bg-white p-3">
-                    <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Top Skill</p>
-                    <p className="mt-1 text-sm font-bold text-slate-900">TypeScript (4)</p>
+                    <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold font-bold">Top Skill</p>
+                    <p className="mt-1 text-sm font-bold text-slate-900">Headhunting ({candidatesList.filter(c => c.skills_clave.includes("Headhunting")).length})</p>
                   </article>
                 </div>
 
                 <div className="mt-4 grid gap-2 lg:grid-cols-4">
                   <input
                     type="text"
-                    placeholder="Buscar por ID (ej. C-2026-001)"
+                    placeholder="Buscar por ID (ej. C-001)"
                     value={searchId}
                     onChange={(e) => setSearchId(e.target.value)}
                     className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -285,7 +575,20 @@ export default function BackofficeDashboard() {
                   />
                   <button
                     type="button"
-                    onClick={handleSearch}
+                    onClick={() => {
+                      let resId = "No encontrado";
+                      let resEmail = "No encontrado";
+
+                      if (searchId.trim()) {
+                        const found = candidatesList.find((c) => c.id.toLowerCase() === searchId.trim().toLowerCase());
+                        if (found) resId = found.nombre;
+                      }
+                      if (searchEmail.trim()) {
+                        const found = candidatesList.find((c) => c.email.toLowerCase() === searchEmail.trim().toLowerCase());
+                        if (found) resEmail = found.nombre;
+                      }
+                      setSearchResult(`ID: ${resId} | Email: ${resEmail}`);
+                    }}
                     className="rounded-md bg-blue-900 text-white font-semibold text-xs py-1.5 hover:bg-blue-800 transition"
                   >
                     Ejecutar búsquedas
@@ -294,6 +597,7 @@ export default function BackofficeDashboard() {
                 <p className="mt-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">{searchResult}</p>
               </section>
 
+              {/* Pipeline de Seguimiento 4 Etapas */}
               <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div>
@@ -323,7 +627,7 @@ export default function BackofficeDashboard() {
                   >
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Candidatos</p>
-                      <p className="text-xl font-bold text-slate-900 mt-0.5">{scoredCandidates.length}</p>
+                      <p className="text-xl font-bold text-slate-900 mt-0.5">{candidatesList.length}</p>
                     </div>
                     <span className="h-2 w-2 rounded-full bg-slate-400"></span>
                   </button>
@@ -337,7 +641,7 @@ export default function BackofficeDashboard() {
                   >
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Contactados</p>
-                      <p className="text-xl font-bold text-slate-900 mt-0.5">0</p>
+                      <p className="text-xl font-bold text-slate-900 mt-0.5">{candidatesList.filter(c => c.estado_pipeline === "Contactado").length}</p>
                     </div>
                     <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                   </button>
@@ -351,7 +655,7 @@ export default function BackofficeDashboard() {
                   >
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Preseleccionados</p>
-                      <p className="text-xl font-bold text-slate-900 mt-0.5">0</p>
+                      <p className="text-xl font-bold text-slate-900 mt-0.5">{candidatesList.filter(c => c.estado_pipeline === "Preseleccionado").length}</p>
                     </div>
                     <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
                   </button>
@@ -365,44 +669,90 @@ export default function BackofficeDashboard() {
                   >
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Seleccionados</p>
-                      <p className="text-xl font-bold text-slate-900 mt-0.5">0</p>
+                      <p className="text-xl font-bold text-slate-900 mt-0.5">{candidatesList.filter(c => c.estado_pipeline === "Seleccionado").length}</p>
                     </div>
                     <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                   </button>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
-                {currentCandidates.map((candidate) => (
-                  <div key={candidate.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-900">{candidate.id}</span>
-                        <h4 className="font-bold text-blue-950">{candidate.fullName}</h4>
+              {/* Lista Candidatos con Tarjeta Rica del Monorepo */}
+              <div className="mt-6 space-y-4">
+                {currentCandidates.map((candidate: FullCandidate) => {
+                  const getNextState = (current: FullCandidate["estado_pipeline"]) => {
+                    if (current === "Nuevo") return "Contactado";
+                    if (current === "Contactado") return "Preseleccionado";
+                    if (current === "Preseleccionado") return "Seleccionado";
+                    return null;
+                  };
+                  const nextState = getNextState(candidate.estado_pipeline);
+
+                  return (
+                    <article key={candidate.id} className="rounded-xl border border-blue-200 bg-white p-4 shadow-sm transition hover:border-blue-400">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-900">{candidate.id}</span>
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">{candidate.estado_pipeline}</span>
+                            <h4 className="font-bold text-blue-950 text-base">{candidate.nombre}</h4>
+                          </div>
+                          <p className="text-xs text-slate-600">{candidate.puesto_aplicado} • {candidate.email} • {candidate.telefono}</p>
+
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {candidate.skills_clave.map((sk) => (
+                              <span key={sk} className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 border border-amber-200">
+                                {sk}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 flex flex-wrap gap-2 items-center">
+                            <button
+                              type="button"
+                              onClick={() => toggleReasoning(candidate.id)}
+                              className="inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"
+                            >
+                              <span>Ver razonamiento IA</span>
+                              <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                            </button>
+                            <a href={`mailto:${candidate.email}`} className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50">Email</a>
+                            <a href={`tel:${candidate.telefono}`} className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50">Llamar</a>
+                          </div>
+                        </div>
+
+                        <div className="text-right sm:w-40 flex sm:flex-col justify-between items-end gap-2">
+                          <div>
+                            <span className="text-2xl font-black text-blue-900 block">{candidate.score_ia}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Score IA / 100</span>
+                          </div>
+
+                          {nextState ? (
+                            <button
+                              type="button"
+                              onClick={() => advanceCandidateStatus(candidate.id)}
+                              className="w-full rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition text-center leading-tight"
+                            >
+                              Marcar como {nextState}
+                            </button>
+                          ) : (
+                            <span className="w-full rounded-md bg-emerald-100 border border-emerald-300 px-2 py-1.5 text-xs font-bold text-emerald-800 text-center block">
+                              Seleccionado
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-600 mt-1">{candidate.email} • {candidate.location} • Exp: {candidate.yearsOfExperience} años</p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {candidate.skills.map((sk) => (
-                          <span key={sk} className="rounded bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700 font-medium">{sk}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right sm:w-40 flex sm:flex-col justify-between items-end gap-2">
-                      <div>
-                        <span className="text-2xl font-black text-blue-900 block">{candidate.score_ia}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Score IA / 100</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="w-full rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition text-center leading-tight"
-                      >
-                        Marcar como Preseleccionado
-                      </button>
-                    </div>
-                  </div>
-                ))}
+
+                      {expandedReasoning[candidate.id] && (
+                        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs text-amber-950 leading-relaxed">
+                          <strong>Razonamiento IA:</strong> {candidate.razonamiento_corto}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
 
+              {/* Paginación */}
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-xs font-semibold text-slate-700">
                 <span>Mostrando {startIndex + 1}-{endIndex} de {totalItems} candidatos</span>
                 <div className="flex items-center gap-2">
@@ -439,6 +789,7 @@ export default function BackofficeDashboard() {
               </header>
 
               <section className="mt-6 grid gap-6 md:grid-cols-2">
+                {/* Chatbot de Triaje IA */}
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="text-base font-semibold text-blue-950">Chatbot de Triaje Inteligente</h3>
                   <p className="mt-1 text-xs text-slate-600">Filtra incidencias y escala automaticamente al panel de agentes.</p>
@@ -471,6 +822,7 @@ export default function BackofficeDashboard() {
                   )}
                 </div>
 
+                {/* Resumen & Métricas de Soporte */}
                 <div className="space-y-4">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <h3 className="text-base font-semibold text-blue-950">Panel de Agentes & SLAs</h3>

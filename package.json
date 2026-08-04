@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx http-server . -p 3000 -a 0.0.0.0",
+    "dev": "cd uis/website && npx next dev -p 3000",
+    "dev:backoffice": "cd uis/backoffice && npx next dev -p 3001",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

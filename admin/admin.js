@@ -728,11 +728,11 @@ function createCandidateCard(candidate) {
     <button
       type="button"
       data-advance-candidate="${candidate.id}"
-      class="mt-3 w-full rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11px] font-semibold text-amber-900 transition hover:bg-amber-100 whitespace-nowrap"
+      class="mt-3 w-full rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 transition hover:bg-amber-100 text-center leading-tight"
     >
       Marcar como ${nextState}
     </button>
-  ` : `<div class="mt-3 w-full rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] font-semibold text-emerald-800 text-center border border-emerald-200 whitespace-nowrap">Seleccionado</div>`;
+  ` : `<div class="mt-3 w-full rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] font-semibold text-emerald-800 text-center border border-emerald-200">Seleccionado</div>`;
 
   const groupLabel = (candidate.puestos_grupo || [candidate.puesto_aplicado]).join(" | ");
 
