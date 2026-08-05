@@ -1,0 +1,185 @@
+import {
+  sampleCandidates,
+  sampleProcesses,
+  sampleUsageResults,
+  sampleVacancy,
+} from "../../../scripts/src/sample-usage";
+
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
+const numberFormatter = new Intl.NumberFormat("en-US");
+
+function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: "success" | "warning" | "neutral" }) {
+  return <span className={`status-badge status-${tone}`}>{label}</span>;
+}
+
+function SectionHeading({ eyebrow, title, detail }: { eyebrow: string; title: string; detail?: string }) {
+  return (
+    <div className="section-heading">
+      <p className="eyebrow">{eyebrow}</p>
+      <div className="section-heading-row">
+        <h2>{title}</h2>
+        {detail ? <span className="section-detail">{detail}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  const { reports, scoring, validations } = sampleUsageResults;
+  const vacancyValidation = validations.vacancy;
+  const activeCandidates = sampleCandidates.filter((candidate) => candidate.status === "Active").length;
+  const hiredCandidates = sampleProcesses.filter((process) => process.stage === "Hired").length;
+  const topCandidate = scoring.rankedCandidates[0];
+
+  return (
+    <main className="backoffice-shell">
+      <aside className="sidebar">
+        <div className="brand-lockup">
+          <span className="brand-mark">N</span>
+          <div>
+            <strong>Nexova</strong>
+            <span>Talent operations</span>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Backoffice navigation">
+          <a className="nav-item nav-item-active" href="#overview">
+            <span className="nav-icon">01</span> Overview
+          </a>
+          <a className="nav-item" href="#candidates">
+            <span className="nav-icon">02</span> Candidates
+          </a>
+          <a className="nav-item" href="#reports">
+            <span className="nav-icon">03</span> Reports
+          </a>
+        </nav>
+
+        <div className="sidebar-footer">
+          <span className="online-dot" />
+          <span>Logic engine connected</span>
+        </div>
+      </aside>
+
+      <section className="workspace">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Backoffice / Overview</p>
+            <h1>Talent command center</h1>
+          </div>
+          <div className="topbar-meta">
+            <span className="live-indicator"><span className="online-dot" /> Live data</span>
+            <span className="avatar">AM</span>
+          </div>
+        </header>
+
+        <div className="dashboard-content" id="overview">
+          <section className="hero-panel">
+            <div>
+              <p className="eyebrow">Active hiring brief</p>
+              <h2>{sampleVacancy.title}</h2>
+              <p className="hero-copy">{sampleVacancy.companyName} is looking for a {sampleVacancy.requiredSeniority.toLowerCase()} profile with {sampleVacancy.minYearsExperience}-{sampleVacancy.maxYearsExperience} years of experience.</p>
+              <div className="chip-row">
+                <StatusBadge label={sampleVacancy.status} tone="success" />
+                <span className="chip">{sampleVacancy.location}</span>
+                <span className="chip">{sampleVacancy.requiredEnglishLevel} English</span>
+              </div>
+            </div>
+            <div className="hero-score">
+              <span>Top match</span>
+              <strong>{topCandidate?.score ?? 0}<small>/100</small></strong>
+              <em>{topCandidate?.fullName}</em>
+            </div>
+          </section>
+
+          <section className="metric-grid" aria-label="Hiring metrics">
+            <article className="metric-card metric-card-accent">
+              <span className="metric-label">Candidate pool</span>
+              <strong>{numberFormatter.format(sampleCandidates.length)}</strong>
+              <span className="metric-note">{activeCandidates} active profiles</span>
+            </article>
+            <article className="metric-card">
+              <span className="metric-label">Average expected salary</span>
+              <strong>{currencyFormatter.format(reports.averageExpectedSalary)}</strong>
+              <span className="metric-note">Across current candidates</span>
+            </article>
+            <article className="metric-card">
+              <span className="metric-label">Process fill rate</span>
+              <strong>{reports.vacancyFillRate}%</strong>
+              <span className="metric-note">{hiredCandidates} hire from {sampleProcesses.length} processes</span>
+            </article>
+            <article className="metric-card">
+              <span className="metric-label">Data quality</span>
+              <strong>{vacancyValidation.valid ? "100%" : "Review"}</strong>
+              <span className="metric-note">All records validated</span>
+            </article>
+          </section>
+
+          <section className="content-grid" id="candidates">
+            <div className="panel panel-large">
+              <SectionHeading eyebrow="Scoring engine" title="Ranked candidates" detail="Calculated from skills, experience, seniority, English, and salary" />
+              <div className="candidate-list">
+                {scoring.rankedCandidates.map((entry, index) => {
+                  const candidate = sampleCandidates.find((item) => item.fullName === entry.fullName);
+                  return (
+                    <article className="candidate-row" key={entry.fullName}>
+                      <span className="rank-number">0{index + 1}</span>
+                      <div className="candidate-avatar">{entry.fullName.split(" ").map((part) => part[0]).join("")}</div>
+                      <div className="candidate-main">
+                        <strong>{entry.fullName}</strong>
+                        <span>{candidate?.seniority} · {candidate?.yearsOfExperience} years · {candidate?.location}</span>
+                      </div>
+                      <div className="candidate-skills">
+                        {candidate?.skills.slice(0, 3).map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}
+                      </div>
+                      <div className="score-block">
+                        <strong>{entry.score}</strong>
+                        <span>match score</span>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="panel validation-panel">
+              <SectionHeading eyebrow="Validation layer" title="Data health" detail="From scripts/utils/validations" />
+              <div className="validation-summary">
+                <div className="validation-ring"><strong>{validations.candidates.filter((entry) => entry.result.valid).length}/{validations.candidates.length}</strong><span>valid</span></div>
+                <div><StatusBadge label={vacancyValidation.valid ? "Vacancy valid" : "Needs review"} tone={vacancyValidation.valid ? "success" : "warning"} /><p>No blocking errors found in the current hiring brief.</p></div>
+              </div>
+              <div className="validation-items">
+                {validations.candidates.map((entry) => <div className="validation-item" key={entry.id}><span>{entry.id}</span><StatusBadge label={entry.result.valid ? "Passed" : "Review"} tone={entry.result.valid ? "success" : "warning"} /></div>)}
+              </div>
+            </div>
+          </section>
+
+          <section className="content-grid reports-grid" id="reports">
+            <div className="panel">
+              <SectionHeading eyebrow="Distribution" title="Seniority mix" />
+              <div className="bar-list">
+                {Object.entries(reports.groupedBySeniority).filter(([, candidates]) => candidates.length > 0).map(([seniority, candidates]) => <div className="bar-item" key={seniority}><div><span>{seniority}</span><strong>{candidates.length}</strong></div><div className="bar-track"><span style={{ width: `${(candidates.length / sampleCandidates.length) * 100}%` }} /></div></div>)}
+              </div>
+            </div>
+            <div className="panel">
+              <SectionHeading eyebrow="Demand signals" title="Top skills" detail="Most common across the pool" />
+              <div className="skills-cloud">{reports.topSkills.map((entry) => <div className="skill-stat" key={entry.skill}><strong>{entry.skill}</strong><span>{entry.count} candidates</span></div>)}</div>
+              <div className="status-summary"><span>Required skills matched</span><strong>{sampleUsageResults.filters.requiredSkills.length}/{sampleCandidates.length}</strong></div>
+            </div>
+            <div className="panel">
+              <SectionHeading eyebrow="Pipeline" title="Candidate status" />
+              <div className="status-list">{Object.entries(reports.countByStatus).map(([status, count]) => <div className="status-list-item" key={status}><span className={`status-dot status-dot-${status.toLowerCase().replace(" ", "-")}`} />{status}<strong>{count}</strong></div>)}</div>
+              <div className="search-callout"><span>Search utility</span><strong>{sampleUsageResults.searches.byEmail}</strong><small>Found by normalized email lookup</small></div>
+            </div>
+          </section>
+
+          <footer className="dashboard-footer">Powered by the shared TypeScript business logic module <span>scripts/src</span><span className="footer-divider" /> Last calculated from {sampleCandidates.length} candidates and {sampleProcesses.length} selection processes</footer>
+        </div>
+      </section>
+    </main>
+  );
+}
