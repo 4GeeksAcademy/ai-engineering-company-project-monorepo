@@ -7,4 +7,15 @@ Each subfolder inside `services/` must correspond to **one specific service** (f
 - **Main purpose**: to centralize all the backend logic, APIs, and queue consumers that support the company's use cases.
 - **Recommendation**: document in this file (or in sub-READMEs) the services you add, their objective, the technology used, and how to run them.
 
+## Current services
+
+### `api`
+
+- Technology: FastAPI + Python 3.11+
+- Goal: analyze Brasaland incident CSVs and export the latest summary as a downloadable CSV.
+- Service docs: `services/api/README.md`
+- Initial endpoints:
+	- `POST /api/incidents/analyze`
+	- `GET /api/incidents/results/export`
+
 > _Spanish version: [README.es.md](./README.es.md)._

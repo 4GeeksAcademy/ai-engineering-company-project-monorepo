@@ -6,6 +6,7 @@ import {
   sumarVentasPorLocal,
 } from "../../../../src/utils/transformations";
 import { validarVentaDiaria } from "../../../../src/utils/validations";
+import { BackofficeHeader } from "@/components/backoffice-header";
 
 const locales: Local[] = [
   {
@@ -121,18 +122,7 @@ export default function Home() {
 
   return (
     <div className="backoffice-page">
-      <header className="bo-header">
-        <div className="container">
-          <div className="brand-block">
-            <span className="brand-dot" />
-            <div>
-              <h1>Brasaland Backoffice</h1>
-              <p>Operaciones y Compras · Vista de arranque</p>
-            </div>
-          </div>
-          <span className="status-pill">Hito 2 integrado por import</span>
-        </div>
-      </header>
+      <BackofficeHeader activeView="overview" badge="Hito 2 integrado por import" />
 
       <main className="container bo-main">
         <section className="kpi-grid">
@@ -156,6 +146,19 @@ export default function Home() {
             <p className="kpi-number kpi-warn">{alertas.length}</p>
             <p className="kpi-sub">Ingredientes bajo minimo</p>
           </article>
+        </section>
+
+        <section className="card spotlight-card">
+          <div>
+            <p className="eyebrow">Nuevo modulo</p>
+            <h2>Analizador de incidencias operativo</h2>
+            <p className="muted">
+              El equipo ya puede cargar el CSV de incidencias, validar registros corruptos, revisar el resumen y exportar los resultados desde la nueva vista interna.
+            </p>
+          </div>
+          <a className="primary-button link-button" href="/incidents">
+            Abrir analizador
+          </a>
         </section>
 
         <section className="panel-grid">

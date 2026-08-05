@@ -1,0 +1,6 @@
+fastapi<1.0,>=0.116
+python-multipart<1.0,>=0.0.20
+uvicorn<1.0,>=0.35
+
+[dev]
+pytest<9.0,>=8.0

@@ -6,3 +6,14 @@ Cada subcarpeta dentro de `services/` debe corresponder a **un servicio concreto
 
 - **Propósito principal**: centralizar toda la lógica backend, APIs y consumidores de colas que dan soporte a los casos de uso de la compañía.
 - **Recomendación**: documenta en este archivo (o en sub-READMEs) los servicios que vayas añadiendo, su objetivo, tecnología usada y cómo ejecutarlos.
+
+## Servicios presentes
+
+### `api`
+
+- Tecnología: FastAPI + Python 3.11+
+- Objetivo: analizar CSVs de incidencias de Brasaland y exportar el último resultado como CSV descargable.
+- Documentación específica: `services/api/README.md`
+- Endpoints iniciales:
+	- `POST /api/incidents/analyze`
+	- `GET /api/incidents/results/export`

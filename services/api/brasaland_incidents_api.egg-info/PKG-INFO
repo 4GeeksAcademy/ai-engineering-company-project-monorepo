@@ -1,0 +1,40 @@
+Metadata-Version: 2.4
+Name: brasaland-incidents-api
+Version: 0.1.0
+Summary: FastAPI service for Brasaland incident analysis
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.116
+Requires-Dist: python-multipart<1.0,>=0.0.20
+Requires-Dist: uvicorn<1.0,>=0.35
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
+
+# services/api
+
+Servicio FastAPI para analizar CSVs de incidencias de Brasaland y exportar el ultimo resultado generado.
+
+## Requisitos
+
+- Python 3.11+
+
+## Instalacion
+
+```bash
+cd services/api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+## Ejecucion
+
+```bash
+cd services/api
+uvicorn app.main:app --reload
+```
+
+## Endpoints
+
+- POST /api/incidents/analyze
+- GET /api/incidents/results/export
