@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from jose import ExpiredSignatureError, JWTError, jwt
+from python_http_client.exceptions import HTTPError
 from python_http_client.exceptions import ForbiddenError
 
 from src.database import get_users_table
@@ -171,7 +172,7 @@ def _build_reset_link(raw_token: str) -> str:
 
 
 def _build_reset_email_html(reset_link: str, expire_minutes: int) -> str:
-        return f"""
+    return f"""
 <!doctype html>
 <html lang="es">
     <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#0f172a;">
@@ -225,13 +226,13 @@ def _build_reset_email_html(reset_link: str, expire_minutes: int) -> str:
 
 
 def _build_reset_email_text(reset_link: str, expire_minutes: int) -> str:
-        return (
-                "TrackFlow Backoffice - Restablecimiento de contrasena\n\n"
-                "Recibimos una solicitud para cambiar la contrasena de tu cuenta.\n"
-                f"Este enlace vence en {expire_minutes} minutos y solo puede usarse una vez.\n\n"
-                f"Restablecer contrasena: {reset_link}\n\n"
-                "Si no solicitaste este cambio, ignora este correo."
-        )
+    return (
+        "TrackFlow Backoffice - Restablecimiento de contrasena\n\n"
+        "Recibimos una solicitud para cambiar la contrasena de tu cuenta.\n"
+        f"Este enlace vence en {expire_minutes} minutos y solo puede usarse una vez.\n\n"
+        f"Restablecer contrasena: {reset_link}\n\n"
+        "Si no solicitaste este cambio, ignora este correo."
+    )
 
 
 def _send_reset_email(email: str, reset_link: str, expire_minutes: int) -> None:
@@ -266,8 +267,11 @@ def _send_reset_email(email: str, reset_link: str, expire_minutes: int) -> None:
         raise RuntimeError(
             "SendGrid rejected the request (403). Verify the API key has 'Mail Send' permission and SENDGRID_FROM_EMAIL is a verified sender/domain."
         ) from exc
+    except (HTTPError, OSError, TimeoutError) as exc:
+        raise RuntimeError("Failed to communicate with the email provider.") from exc
+
     if response.status_code >= 400:
-        raise RuntimeError(f"SendGrid returned status code {response.status_code}.")
+        raise RuntimeError("The email provider returned an unexpected error.")
 
 
 def issue_password_reset(user: User) -> None:
@@ -291,8 +295,8 @@ def issue_password_reset(user: User) -> None:
 
     try:
         _send_reset_email(user.email, reset_link, expire_minutes)
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Failed to send reset password email: %s", exc)
+    except RuntimeError:
+        logger.warning("Password reset email delivery failed for user_id=%s", user.id)
 
 
 def reset_password_with_token(token: str, new_password: str) -> None:

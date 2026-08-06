@@ -92,30 +92,34 @@ export function logout(): void {
 }
 
 export async function apiFetch(endpoint: string, options: ApiFetchOptions = {}): Promise<Response> {
-  const { skipAuth = false, headers, ...restOptions } = options;
-  const requestHeaders = new Headers(headers ?? undefined);
+  try {
+    const { skipAuth = false, headers, ...restOptions } = options;
+    const requestHeaders = new Headers(headers ?? undefined);
 
-  if (!skipAuth && typeof window !== 'undefined') {
-    const token = getSessionToken();
-    if (token) {
-      requestHeaders.set('Authorization', `Bearer ${token}`);
+    if (!skipAuth && typeof window !== 'undefined') {
+      const token = getSessionToken();
+      if (token) {
+        requestHeaders.set('Authorization', `Bearer ${token}`);
+      }
     }
+
+    if (restOptions.body && !(restOptions.body instanceof FormData) && !requestHeaders.has('Content-Type')) {
+      requestHeaders.set('Content-Type', 'application/json');
+    }
+
+    const response = await fetch(resolveEndpointUrl(endpoint), {
+      ...restOptions,
+      headers: requestHeaders,
+    });
+
+    if (response.status === 401) {
+      logout();
+    }
+
+    return response;
+  } catch {
+    throw new Error('No fue posible comunicarse con el servidor. Revisa tu conexion e intenta nuevamente.');
   }
-
-  if (restOptions.body && !(restOptions.body instanceof FormData) && !requestHeaders.has('Content-Type')) {
-    requestHeaders.set('Content-Type', 'application/json');
-  }
-
-  const response = await fetch(resolveEndpointUrl(endpoint), {
-    ...restOptions,
-    headers: requestHeaders,
-  });
-
-  if (response.status === 401) {
-    logout();
-  }
-
-  return response;
 }
 
 export function isTokenValid(token: string): boolean {
@@ -145,106 +149,146 @@ export function isTokenValid(token: string): boolean {
 }
 
 export async function login(payload: LoginPayload): Promise<string> {
-  const response = await apiFetch('/auth/login', {
-    skipAuth: true,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await apiFetch('/auth/login', {
+      skipAuth: true,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-  const responseData = (await response.json()) as LoginResponse & ApiErrorResponse;
+    const responseData = (await response.json().catch(() => ({}))) as LoginResponse & ApiErrorResponse;
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Credenciales invalidas.');
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Credenciales invalidas.');
+      }
+
+      throw new Error(getErrorMessage(responseData, 'No fue posible iniciar sesion.'));
     }
 
-    throw new Error(getErrorMessage(responseData, 'No fue posible iniciar sesion.'));
+    const token = responseData.token || responseData.access_token || responseData.jwt;
+
+    if (!token) {
+      throw new Error('La respuesta de autenticacion no incluye un token valido.');
+    }
+
+    return token;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error('No fue posible iniciar sesion. Intenta nuevamente.');
   }
-
-  const token = responseData.token || responseData.access_token || responseData.jwt;
-
-  if (!token) {
-    throw new Error('La respuesta de autenticacion no incluye un token valido.');
-  }
-
-  return token;
 }
 
 export async function register(payload: RegisterPayload): Promise<void> {
-  const response = await apiFetch('/users', {
-    skipAuth: true,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await apiFetch('/users', {
+      skipAuth: true,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    const errorData = await parseErrorResponse(response);
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
 
-    if (response.status === 409) {
-      throw new Error(getErrorMessage(errorData, 'El email ya esta registrado.'));
+      if (response.status === 409) {
+        throw new Error(getErrorMessage(errorData, 'El email ya esta registrado.'));
+      }
+
+      throw new Error(getErrorMessage(errorData, 'No fue posible crear la cuenta.'));
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
     }
 
-    throw new Error(getErrorMessage(errorData, 'No fue posible crear la cuenta.'));
+    throw new Error('No fue posible crear la cuenta. Intenta nuevamente.');
   }
 }
 
 export async function forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
-  const response = await apiFetch('/auth/forgot-password', {
-    skipAuth: true,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await apiFetch('/auth/forgot-password', {
+      skipAuth: true,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    const errorData = await parseErrorResponse(response);
-    throw new Error(
-      getErrorMessage(errorData, 'No fue posible procesar la solicitud de recuperacion.')
-    );
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
+      throw new Error(
+        getErrorMessage(errorData, 'No fue posible procesar la solicitud de recuperacion.')
+      );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error('No fue posible procesar la solicitud de recuperacion.');
   }
 }
 
 export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
-  const response = await apiFetch('/auth/reset-password', {
-    skipAuth: true,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      token: payload.token,
-      new_password: payload.newPassword,
-    }),
-  });
+  try {
+    const response = await apiFetch('/auth/reset-password', {
+      skipAuth: true,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: payload.token,
+        new_password: payload.newPassword,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await parseErrorResponse(response);
-    throw new Error(getErrorMessage(errorData, 'No fue posible restablecer la contrasena.'));
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
+      throw new Error(getErrorMessage(errorData, 'No fue posible restablecer la contrasena.'));
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error('No fue posible restablecer la contrasena. Intenta nuevamente.');
   }
 }
 
 export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
-  const response = await apiFetch('/auth/change-password', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      current_password: payload.currentPassword,
-      new_password: payload.newPassword,
-    }),
-  });
+  try {
+    const response = await apiFetch('/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        current_password: payload.currentPassword,
+        new_password: payload.newPassword,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await parseErrorResponse(response);
-    throw new Error(getErrorMessage(errorData, 'No fue posible cambiar la contrasena.'));
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
+      throw new Error(getErrorMessage(errorData, 'No fue posible cambiar la contrasena.'));
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error('No fue posible cambiar la contrasena. Intenta nuevamente.');
   }
 }

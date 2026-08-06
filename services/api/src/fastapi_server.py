@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,11 +54,40 @@ async def request_validation_exception_handler(_request, exc: RequestValidationE
         details.append({"field": field_name, "message": message})
 
     return JSONResponse(
-        status_code=400,
+        status_code=422,
         content={
             "error": "Error de validacion en la solicitud.",
             "details": details,
         },
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_request, exc: HTTPException) -> JSONResponse:
+    detail = exc.detail
+
+    if isinstance(detail, dict):
+        message = str(detail.get("error", "Solicitud invalida."))
+        details = detail.get("details")
+        content: dict[str, object] = {"error": message}
+        if details is not None:
+            content["details"] = details
+        return JSONResponse(status_code=exc.status_code, content=content, headers=exc.headers)
+
+    if isinstance(detail, list):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": "Error de validacion en la solicitud.",
+                "details": detail,
+            },
+            headers=exc.headers,
+        )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": str(detail or "Solicitud invalida.")},
+        headers=exc.headers,
     )
 
 

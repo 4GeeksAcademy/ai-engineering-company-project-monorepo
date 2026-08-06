@@ -22,6 +22,7 @@ export function IncidentsSummaryPanel({ refreshToken }: IncidentsSummaryPanelPro
   const [summary, setSummary] = useState<IncidentSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     const loadSummary = async () => {
@@ -39,7 +40,7 @@ export function IncidentsSummaryPanel({ refreshToken }: IncidentsSummaryPanelPro
     };
 
     void loadSummary();
-  }, [refreshToken]);
+  }, [refreshToken, retryKey]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -58,6 +59,13 @@ export function IncidentsSummaryPanel({ refreshToken }: IncidentsSummaryPanelPro
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
           <p className="text-sm font-medium text-amber-800">{error}</p>
           <p className="mt-1 text-xs text-amber-700">Esta sección es independiente. El formulario y el listado siguen operativos.</p>
+          <button
+            type="button"
+            onClick={() => setRetryKey((previous) => previous + 1)}
+            className="mt-3 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+          >
+            Reintentar
+          </button>
         </div>
       ) : null}
 

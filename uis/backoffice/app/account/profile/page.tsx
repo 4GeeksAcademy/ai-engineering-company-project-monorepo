@@ -76,6 +76,7 @@ export default function AccountProfilePage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -124,7 +125,7 @@ export default function AccountProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const hasUnsavedChanges = useMemo(() => {
     return (
@@ -300,7 +301,24 @@ export default function AccountProfilePage() {
 
             {errorMessage ? (
               <Alert variant="error" title="Error de perfil">
-                {errorMessage}
+                <div className="space-y-3">
+                  <p>{errorMessage}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setReloadKey((previous) => previous + 1)}
+                      className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                    >
+                      Reintentar
+                    </button>
+                    <Link
+                      href="/"
+                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      Ir al inicio
+                    </Link>
+                  </div>
+                </div>
               </Alert>
             ) : null}
 

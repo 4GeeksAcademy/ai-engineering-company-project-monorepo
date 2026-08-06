@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
 type Summary = {
@@ -20,6 +21,22 @@ function formatPercent(value: number, total: number): string {
   }
 
   return `${((value / total) * 100).toFixed(1)}%`;
+}
+
+function getFriendlyIncidentErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) {
+    return fallback;
+  }
+
+  const message = error.message?.trim() || '';
+  const blockedTokens = ['unexpected token', 'error 500', 'syntaxerror', 'traceback'];
+  const isTechnical = blockedTokens.some((token) => message.toLowerCase().includes(token));
+
+  if (!message || isTechnical) {
+    return fallback;
+  }
+
+  return message;
 }
 
 function getExportFilename(disposition: string | null): string {
@@ -109,7 +126,10 @@ export function IncidentsAnalysisPanel() {
 
       setSummary(payload.summary);
     } catch (requestError) {
-      const message = requestError instanceof Error ? requestError.message : "Error inesperado al analizar el CSV.";
+      const message = getFriendlyIncidentErrorMessage(
+        requestError,
+        "No fue posible analizar el archivo CSV. Revisa el formato e intenta nuevamente.",
+      );
       setError(message);
     } finally {
       setIsUploading(false);
@@ -143,7 +163,10 @@ export function IncidentsAnalysisPanel() {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (requestError) {
-      const message = requestError instanceof Error ? requestError.message : "No se pudo descargar el archivo CSV.";
+      const message = getFriendlyIncidentErrorMessage(
+        requestError,
+        "No se pudo descargar el archivo CSV. Intenta nuevamente en unos minutos.",
+      );
       setError(message);
     } finally {
       setIsExporting(false);
@@ -244,7 +267,28 @@ export function IncidentsAnalysisPanel() {
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+        <div className="mt-4 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <p>{error}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedFile) {
+                  void handleUpload();
+                }
+              }}
+              className="rounded-md border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              Reintentar analisis
+            </button>
+            <Link
+              href="/"
+              className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Ir al inicio
+            </Link>
+          </div>
+        </div>
       ) : null}
 
       {summary ? (

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
@@ -20,7 +18,6 @@ from src.services.security import PasswordValidationError, verify_password
 from src.services.user_service import get_user_by_email, update_user_password
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
-logger = logging.getLogger(__name__)
 
 
 class LoginRequest(BaseModel):
@@ -85,10 +82,7 @@ def get_me(current_user: User = Depends(get_current_user)) -> MeResponse:
 def forgot_password(payload: ForgotPasswordRequest) -> ForgotPasswordResponse:
     user = get_user_by_email(payload.email.strip())
     if user is not None:
-        try:
-            issue_password_reset(user)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Failed forgot-password flow for existing user: %s", exc)
+        issue_password_reset(user)
 
     return ForgotPasswordResponse(
         message="If the email exists, reset instructions have been sent."
