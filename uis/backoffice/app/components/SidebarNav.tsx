@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { href: "/leads", label: "Leads" },
   { href: "/operaciones", label: "Operaciones" },
   { href: "/operaciones/proveedores", label: "Directorio de proveedores" },
-  { href: "/operaciones/incidencias", label: "Analisis de incidencias" },
+  { href: "/operaciones/incidencias", label: "Gestion de incidencias" },
 ];
 
 export function SidebarNav() {
