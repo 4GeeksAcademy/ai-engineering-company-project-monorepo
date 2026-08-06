@@ -195,12 +195,12 @@ export function IncidentsListPanel({ refreshToken, onChanged, onNotify }: Incide
                 {incidents.map((incident) => (
                   <tr key={incident.id} className="border-b border-slate-100 last:border-b-0">
                     <td className="px-3 py-3">
-                      <p className="font-medium text-slate-900">{incident.title}</p>
-                      <p className="mt-1 text-xs text-slate-500 line-clamp-2">{incident.description}</p>
+                      <p className="font-medium text-slate-900">{incident.title || 'Sin titulo'}</p>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-2">{incident.description || 'Sin descripcion'}</p>
                     </td>
-                    <td className="px-3 py-3 text-slate-700">{incident.category}</td>
-                    <td className="px-3 py-3 text-slate-700">{incident.origin}</td>
-                    <td className="px-3 py-3 text-slate-700">{incident.branch}</td>
+                    <td className="px-3 py-3 text-slate-700">{incident.category || 'Sin categoria'}</td>
+                    <td className="px-3 py-3 text-slate-700">{incident.origin || 'Sin origen'}</td>
+                    <td className="px-3 py-3 text-slate-700">{incident.branch || 'Sin sede'}</td>
                     <td className="px-3 py-3">
                       <select
                         value={incident.status}
@@ -216,7 +216,7 @@ export function IncidentsListPanel({ refreshToken, onChanged, onNotify }: Incide
                       </select>
                     </td>
                     <td className="px-3 py-3 text-xs text-slate-500">
-                      {new Date(incident.updated_at).toLocaleString("es-ES")}
+                      {incident.updated_at ? new Date(incident.updated_at).toLocaleString("es-ES") : 'Sin fecha'}
                     </td>
                   </tr>
                 ))}

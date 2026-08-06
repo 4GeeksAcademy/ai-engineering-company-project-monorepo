@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CandidateForm } from '../../../components/candidates/CandidateForm';
@@ -15,6 +16,7 @@ export default function EditCandidatePage() {
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,7 +54,7 @@ export default function EditCandidatePage() {
     return () => {
       isMounted = false;
     };
-  }, [candidateId]);
+  }, [candidateId, reloadKey]);
 
   if (loading) {
     return (
@@ -65,7 +67,24 @@ export default function EditCandidatePage() {
   if (error || !candidate || !candidateId) {
     return (
       <Alert variant="error" title="Error al cargar candidato">
-        {error || 'No se encontro informacion del candidato.'}
+        <div className="space-y-3">
+          <p>{error || 'No se encontro informacion del candidato.'}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setReloadKey((previous) => previous + 1)}
+              className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              Reintentar
+            </button>
+            <Link
+              href="/candidaturas"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Volver al listado
+            </Link>
+          </div>
+        </div>
       </Alert>
     );
   }

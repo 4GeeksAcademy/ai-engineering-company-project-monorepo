@@ -39,6 +39,7 @@ function CandidatesPageContent() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   const statusFilter = parseStatusFilter(searchParams.get('status'));
   const stageFilter = parseStageFilter(searchParams.get('stage'));
@@ -71,7 +72,7 @@ function CandidatesPageContent() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const filteredCandidates = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -81,8 +82,8 @@ function CandidatesPageContent() {
       const matchesStage = stageFilter ? candidate.stage === stageFilter : true;
 
       const matchesSearch = normalizedSearch
-        ? candidate.full_name.toLowerCase().includes(normalizedSearch) ||
-          candidate.email.toLowerCase().includes(normalizedSearch)
+        ? (candidate.full_name ?? '').toLowerCase().includes(normalizedSearch) ||
+          (candidate.email ?? '').toLowerCase().includes(normalizedSearch)
         : true;
 
       return matchesStatus && matchesStage && matchesSearch;
@@ -183,7 +184,24 @@ function CandidatesPageContent() {
 
       {error ? (
         <Alert variant="error" title="Error al cargar candidaturas">
-          {error}
+          <div className="space-y-3">
+            <p>{error}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setReloadKey((previous) => previous + 1)}
+                className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Reintentar
+              </button>
+              <Link
+                href="/"
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                Ir al inicio
+              </Link>
+            </div>
+          </div>
         </Alert>
       ) : null}
 
@@ -224,10 +242,10 @@ function CandidatesPageContent() {
                 >
                   <td className="px-4 py-3 font-medium text-slate-900">
                     <Link href={`/candidaturas/${candidate.id}`} className="hover:text-sky-700 hover:underline">
-                      {candidate.full_name}
+                      {candidate.full_name || 'Sin nombre'}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{candidate.position}</td>
+                  <td className="px-4 py-3">{candidate.position || 'Sin puesto definido'}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={candidate.status} />
                   </td>

@@ -42,6 +42,7 @@ export default function CandidateDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const clearSuccessSoon = useCallback(() => {
     window.setTimeout(() => {
@@ -99,7 +100,7 @@ export default function CandidateDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [candidateId]);
+  }, [candidateId, reloadKey]);
 
   const detailRows = useMemo(() => {
     if (!candidate) {
@@ -252,7 +253,24 @@ export default function CandidateDetailPage() {
   if (error && !candidate) {
     return (
       <Alert variant="error" title="Error al cargar candidatura">
-        {error}
+        <div className="space-y-3">
+          <p>{error}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setReloadKey((previous) => previous + 1)}
+              className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              Reintentar
+            </button>
+            <Link
+              href="/candidaturas"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Volver al listado
+            </Link>
+          </div>
+        </div>
       </Alert>
     );
   }
@@ -260,7 +278,15 @@ export default function CandidateDetailPage() {
   if (!candidate) {
     return (
       <Alert variant="error" title="Candidatura no encontrada">
-        No se encontro informacion para la candidatura solicitada.
+        <div className="space-y-3">
+          <p>No se encontro informacion para la candidatura solicitada.</p>
+          <Link
+            href="/candidaturas"
+            className="inline-flex rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Volver al listado
+          </Link>
+        </div>
       </Alert>
     );
   }
@@ -272,7 +298,7 @@ export default function CandidateDetailPage() {
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <header className="mb-5 flex flex-wrap items-center gap-3 border-b border-slate-100 pb-4">
-          <h2 className="text-xl font-semibold text-slate-900">{candidate.full_name}</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{candidate.full_name || 'Sin nombre'}</h2>
           <StatusBadge status={candidate.status} />
           <StageBadge stage={candidate.stage} />
           <Link
@@ -369,7 +395,20 @@ export default function CandidateDetailPage() {
           </button>
         </form>
 
-        {notesError ? <Alert variant="error">{notesError}</Alert> : null}
+        {notesError ? (
+          <Alert variant="error">
+            <div className="space-y-3">
+              <p>{notesError}</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((previous) => previous + 1)}
+                className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Reintentar
+              </button>
+            </div>
+          </Alert>
+        ) : null}
 
         {notesLoading ? (
           <Spinner label="Cargando notas..." />
@@ -383,7 +422,7 @@ export default function CandidateDetailPage() {
                   key={note.id}
                   className="flex items-start justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
                 >
-                  <p className="whitespace-pre-wrap text-sm text-slate-800">{note.content}</p>
+                  <p className="whitespace-pre-wrap text-sm text-slate-800">{note.content || 'Sin contenido'}</p>
                   <button
                     type="button"
                     onClick={() => handleDeleteNote(note.id)}

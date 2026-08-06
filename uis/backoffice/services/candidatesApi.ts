@@ -13,6 +13,26 @@ const JSON_HEADERS = {
   'Content-Type': 'application/json',
 };
 
+const FALLBACK_ERROR_MESSAGE = 'No pudimos procesar la solicitud. Intenta nuevamente en unos minutos.';
+
+function isReadableServerMessage(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  const blockedTokens = ['unexpected token', 'request failed with status', 'traceback', 'syntaxerror'];
+  return !blockedTokens.some((token) => normalized.includes(token));
+}
+
+function getOperationFallback(operation: string): string {
+  return `No fue posible ${operation}.`;
+}
+
 function extractCandidatesList(payload: unknown): Candidate[] {
   if (Array.isArray(payload)) {
     return payload as Candidate[];
@@ -75,17 +95,17 @@ function extractNotesList(payload: unknown): Note[] {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let errorMessage = `Request failed with status ${response.status}`;
+    let errorMessage = FALLBACK_ERROR_MESSAGE;
 
     try {
       const errorData = (await response.json()) as { message?: string; error?: string };
-      if (errorData?.message) {
+      if (isReadableServerMessage(errorData?.message)) {
         errorMessage = errorData.message;
-      } else if (errorData?.error) {
+      } else if (isReadableServerMessage(errorData?.error)) {
         errorMessage = errorData.error;
       }
     } catch {
-      // Ignore JSON parse failures and keep status-based error.
+      // Keep fallback message when body is not JSON.
     }
 
     throw new Error(errorMessage);
@@ -103,8 +123,8 @@ export async function getCandidates(): Promise<Candidate[]> {
     const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records`);
     const payload = await handleResponse<unknown>(response);
     return extractCandidatesList(payload);
-  } catch (error) {
-    throw new Error(`Error fetching candidates: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('cargar las candidaturas'));
   }
 }
 
@@ -112,8 +132,8 @@ export async function getCandidateById(candidateId: string): Promise<Candidate> 
   try {
     const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}`);
     return await handleResponse<Candidate>(response);
-  } catch (error) {
-    throw new Error(`Error fetching candidate: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('cargar la candidatura'));
   }
 }
 
@@ -126,8 +146,8 @@ export async function createCandidate(payload: CandidatePayload): Promise<Candid
     });
 
     return await handleResponse<Candidate>(response);
-  } catch (error) {
-    throw new Error(`Error creating candidate: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('crear la candidatura'));
   }
 }
 
@@ -143,8 +163,8 @@ export async function updateCandidate(
     });
 
     return await handleResponse<Candidate>(response);
-  } catch (error) {
-    throw new Error(`Error updating candidate: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('actualizar la candidatura'));
   }
 }
 
@@ -155,8 +175,8 @@ export async function deleteCandidate(candidateId: string): Promise<void> {
     });
 
     await handleResponse<void>(response);
-  } catch (error) {
-    throw new Error(`Error deleting candidate: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('eliminar la candidatura'));
   }
 }
 
@@ -165,8 +185,8 @@ export async function getCandidateNotes(candidateId: string): Promise<Note[]> {
     const response = await fetch(`${PLAYGROUND_API_BASE_URL}/records/${candidateId}/notes`);
     const payload = await handleResponse<unknown>(response);
     return extractNotesList(payload);
-  } catch (error) {
-    throw new Error(`Error fetching candidate notes: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('cargar las notas'));
   }
 }
 
@@ -182,8 +202,8 @@ export async function createCandidateNote(
     });
 
     return await handleResponse<Note>(response);
-  } catch (error) {
-    throw new Error(`Error creating candidate note: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('crear la nota'));
   }
 }
 
@@ -199,8 +219,8 @@ export async function updateCandidateStatus(
     });
 
     return await handleResponse<Candidate>(response);
-  } catch (error) {
-    throw new Error(`Error updating candidate status: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('actualizar el estado'));
   }
 }
 
@@ -216,8 +236,8 @@ export async function updateCandidateStage(
     });
 
     return await handleResponse<Candidate>(response);
-  } catch (error) {
-    throw new Error(`Error updating candidate stage: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('actualizar la etapa'));
   }
 }
 
@@ -231,7 +251,7 @@ export async function deleteCandidateNote(
     });
 
     await handleResponse<void>(response);
-  } catch (error) {
-    throw new Error(`Error deleting candidate note: ${(error as Error).message}`);
+  } catch {
+    throw new Error(getOperationFallback('eliminar la nota'));
   }
 }

@@ -44,6 +44,9 @@ def _is_empty_row(row: dict[str, str]) -> bool:
 
 
 def seed_incidents(csv_path: Path, unique_field: str) -> int:
+    if csv_path.stat().st_size == 0:
+        raise ValueError(f"El archivo '{csv_path}' esta vacio.")
+
     incidents_table = get_incidents_table()
     query = Query()
 
@@ -121,7 +124,7 @@ def main() -> int:
 
     try:
         seed_incidents(csv_path, args.unique_field)
-    except ValueError as error:
+    except (ValueError, csv.Error) as error:
         print(f"Error de validacion: {error}", file=sys.stderr)
         return 1
     except OSError as error:

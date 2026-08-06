@@ -94,6 +94,9 @@ def validate_row(row):
 
 
 def analyze_csv(csv_path):
+    if csv_path.stat().st_size == 0:
+        raise ValueError(f"El archivo '{csv_path}' esta vacio.")
+
     category_counts = Counter()
     status_counts = Counter({status: 0 for status in STATUS_VALUES})
     invalid_reasons = Counter()
@@ -224,7 +227,7 @@ def main():
 
     try:
         results = analyze_csv(csv_path)
-    except ValueError as error:
+    except (ValueError, csv.Error) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
     except OSError as error:
@@ -237,7 +240,7 @@ def main():
         output_path = Path("results.csv")
         try:
             export_results(results, output_path)
-        except OSError as error:
+        except (OSError, csv.Error) as error:
             print(f"No se pudo generar '{output_path}': {error}", file=sys.stderr)
             return 1
         print(f"Archivo exportado correctamente en: {output_path.resolve()}")

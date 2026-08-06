@@ -88,25 +88,33 @@ function normalizeFieldErrorMessage(rawMessage: string, field: string): string {
 }
 
 export async function createIncident(payload: IncidentCreatePayload): Promise<Incident> {
-  const response = await apiFetch("/api/incidents", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await apiFetch("/api/incidents", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    const errorPayload = await parseJson<ApiErrorPayload>(response);
-    const error = new Error("No se pudo crear la incidencia.");
-    (error as Error & { status?: number; payload?: ApiErrorPayload }).status = response.status;
-    (error as Error & { status?: number; payload?: ApiErrorPayload }).payload = errorPayload ?? undefined;
-    throw error;
+    if (!response.ok) {
+      const errorPayload = await parseJson<ApiErrorPayload>(response);
+      const error = new Error("No se pudo crear la incidencia.");
+      (error as Error & { status?: number; payload?: ApiErrorPayload }).status = response.status;
+      (error as Error & { status?: number; payload?: ApiErrorPayload }).payload = errorPayload ?? undefined;
+      throw error;
+    }
+
+    const data = await parseJson<Incident>(response);
+    if (!data) {
+      throw new Error("No se pudo procesar la respuesta del servidor al crear la incidencia.");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error("No se pudo crear la incidencia.");
   }
-
-  const data = await parseJson<Incident>(response);
-  if (!data) {
-    throw new Error("La API devolvio una respuesta invalida al crear la incidencia.");
-  }
-
-  return data;
 }
 
 export async function listIncidents(filters: {
@@ -115,62 +123,78 @@ export async function listIncidents(filters: {
   branch?: IncidentBranch;
   category?: IncidentCategory;
 }): Promise<Incident[]> {
-  const params = new URLSearchParams();
+  try {
+    const params = new URLSearchParams();
 
-  if (filters.status) params.set("status", filters.status);
-  if (filters.origin) params.set("origin", filters.origin);
-  if (filters.branch) params.set("branch", filters.branch);
-  if (filters.category) params.set("category", filters.category);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.origin) params.set("origin", filters.origin);
+    if (filters.branch) params.set("branch", filters.branch);
+    if (filters.category) params.set("category", filters.category);
 
-  const query = params.toString();
-  const endpoint = query ? `/api/incidents?${query}` : "/api/incidents";
-  const response = await apiFetch(endpoint);
+    const query = params.toString();
+    const endpoint = query ? `/api/incidents?${query}` : "/api/incidents";
+    const response = await apiFetch(endpoint);
 
-  if (!response.ok) {
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el listado de incidencias.");
+    }
+
+    const data = await parseJson<Incident[]>(response);
+    return data ?? [];
+  } catch {
     throw new Error("No se pudo cargar el listado de incidencias.");
   }
-
-  const data = await parseJson<Incident[]>(response);
-  return data ?? [];
 }
 
 export async function patchIncidentStatus(incidentId: string, status: IncidentStatus): Promise<Incident> {
-  const response = await apiFetch(`/api/incidents/${incidentId}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
+  try {
+    const response = await apiFetch(`/api/incidents/${incidentId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
 
-  if (!response.ok) {
-    const payload = await parseJson<ApiErrorPayload>(response);
-    const rawMessage =
-      payload?.error ||
-      (typeof payload?.detail === "string" ? payload.detail : undefined) ||
-      (typeof payload?.detail === "object" ? payload.detail.error : undefined) ||
-      "No se pudo actualizar el estado de la incidencia.";
-    throw new Error(rawMessage);
+    if (!response.ok) {
+      const payload = await parseJson<ApiErrorPayload>(response);
+      const rawMessage =
+        payload?.error ||
+        (typeof payload?.detail === "string" ? payload.detail : undefined) ||
+        (typeof payload?.detail === "object" ? payload.detail.error : undefined) ||
+        "No se pudo actualizar el estado de la incidencia.";
+      throw new Error(rawMessage);
+    }
+
+    const data = await parseJson<Incident>(response);
+    if (!data) {
+      throw new Error("No se pudo procesar la respuesta del servidor al actualizar el estado.");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error("No se pudo actualizar el estado de la incidencia.");
   }
-
-  const data = await parseJson<Incident>(response);
-  if (!data) {
-    throw new Error("La API devolvio una respuesta invalida al actualizar el estado.");
-  }
-
-  return data;
 }
 
 export async function getIncidentsSummary(): Promise<IncidentSummary> {
-  const response = await apiFetch("/api/incidents/summary");
+  try {
+    const response = await apiFetch("/api/incidents/summary");
 
-  if (!response.ok) {
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el resumen de incidencias.");
+    }
+
+    const data = await parseJson<IncidentSummary>(response);
+    if (!data) {
+      throw new Error("No se pudo procesar la respuesta del servidor al obtener el resumen.");
+    }
+
+    return data;
+  } catch {
     throw new Error("No se pudo cargar el resumen de incidencias.");
   }
-
-  const data = await parseJson<IncidentSummary>(response);
-  if (!data) {
-    throw new Error("La API devolvio una respuesta invalida al obtener el resumen.");
-  }
-
-  return data;
 }
 
 export async function extractIncidentFieldErrors(error: unknown): Promise<Record<string, string>> {
