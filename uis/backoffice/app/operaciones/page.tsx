@@ -18,7 +18,7 @@ export default function OperacionesPage() {
           href="/operaciones/incidencias"
           className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
         >
-          Ir a analisis de incidencias
+          Ir a gestion de incidencias
         </Link>
       </div>
     </section>

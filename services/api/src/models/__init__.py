@@ -1,5 +1,13 @@
 """Domain models package."""
 
+from src.models.incident import (
+    Incident,
+    IncidentBranch,
+    IncidentCategory,
+    IncidentOrigin,
+    IncidentStatus,
+)
+from src.models.profile import Profile
 from src.models.supplier import (
     SupplierCategory,
     SupplierCountry,
@@ -10,9 +18,13 @@ from src.models.supplier import (
     SupplierStatusUpdate,
 )
 from src.models.user import TinyDBId, User, UserRole
-from src.models.profile import Profile
 
 __all__ = [
+    "Incident",
+    "IncidentBranch",
+    "IncidentCategory",
+    "IncidentOrigin",
+    "IncidentStatus",
     "SupplierCategory",
     "SupplierCountry",
     "SupplierCreate",

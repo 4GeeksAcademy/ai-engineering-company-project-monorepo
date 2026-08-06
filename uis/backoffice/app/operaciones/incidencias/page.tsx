@@ -1,5 +1,5 @@
-import { IncidentsAnalysisPanel } from "../../components/IncidentsAnalysisPanel";
+import { IncidentsDashboard } from "../../components/incidents/IncidentsDashboard";
 
 export default function IncidenciasPage() {
-  return <IncidentsAnalysisPanel />;
+  return <IncidentsDashboard />;
 }

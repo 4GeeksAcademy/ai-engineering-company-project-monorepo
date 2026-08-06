@@ -19,6 +19,7 @@ db = TinyDB(DB_PATH)
 suppliers_table = db.table("suppliers")
 users_table = db.table("users")
 profiles_table = db.table("profiles")
+incidents_table = db.table("incidents")
 
 
 def get_db() -> TinyDB:
@@ -43,3 +44,9 @@ def get_profiles_table() -> Table:
     """Return the profiles table handle."""
 
     return profiles_table
+
+
+def get_incidents_table() -> Table:
+    """Return the incidents table handle."""
+
+    return incidents_table
