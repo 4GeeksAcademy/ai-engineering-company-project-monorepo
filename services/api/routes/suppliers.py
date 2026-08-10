@@ -18,6 +18,7 @@ Beneficio: cada feature tiene su propio archivo → más fácil de encontrar,
 probar y modificar sin romper lo demás.
 """
 
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -28,6 +29,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from database import suppliers_table, Supplier as SupplierQuery
 from dependencies.auth_deps import get_current_user
 from models import Supplier, SupplierCreate, RateUpdate, StatusUpdate
+from core.cache import cache_get, cache_set, cache_invalidate_prefix
 
 router = APIRouter(
     prefix="/suppliers",
@@ -83,6 +85,7 @@ def create_supplier(
     ]
 
     doc_id = suppliers_table.insert(data)
+    cache_invalidate_prefix("suppliers:")
     return _with_id(doc_id, data)
 
 
@@ -111,6 +114,13 @@ def list_suppliers(
     Esto lee el JSON y devuelve solo los documentos que coinciden.
     Es equivalente a SQL: SELECT * FROM suppliers WHERE country = 'Spain'
     """
+    
+    cache_key = f"suppliers:list:country={country}:category={category}"
+    cached = cache_get(cache_key)
+
+    if cached is not None:
+        return cached
+
     all_docs = suppliers_table.all()
 
     results = []
@@ -126,8 +136,8 @@ def list_suppliers(
 
         results.append(_with_id(doc.doc_id, dict(doc)))
 
+    cache_set(cache_key, results, 60)
     return results
-
 
 # ─────────────────────────────────────────────────────────────
 # GET /suppliers/{id} — Detalle de un proveedor
@@ -142,6 +152,11 @@ def get_supplier(
     Devuelve el detalle de un proveedor por su ID de TinyDB.
     Si el ID no existe → 404 (no inventamos datos).
     """
+    cache_key = f"suppliers:{supplier_id}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     doc = suppliers_table.get(doc_id=supplier_id)
 
     if doc is None:
@@ -150,7 +165,9 @@ def get_supplier(
             detail=f"Proveedor con id {supplier_id} no encontrado."
         )
 
-    return _with_id(supplier_id, dict(doc))
+    result = _with_id(supplier_id, dict(doc))
+    cache_set(cache_key, result, 60)
+    return result
 
 
 # ─────────────────────────────────────────────────────────────
@@ -191,6 +208,7 @@ def update_rate(
     )
 
     updated_doc = suppliers_table.get(doc_id=supplier_id)
+    cache_invalidate_prefix("suppliers:")
     return _with_id(supplier_id, dict(updated_doc))
 
 
@@ -230,6 +248,7 @@ def update_status(
     )
 
     updated_doc = suppliers_table.get(doc_id=supplier_id)
+    cache_invalidate_prefix("suppliers:")
     return _with_id(supplier_id, dict(updated_doc))
 
 
@@ -259,4 +278,5 @@ def delete_supplier(
         )
 
     suppliers_table.remove(doc_ids=[supplier_id])
+    cache_invalidate_prefix("suppliers:")
     return {"deleted": supplier_id, "message": "Proveedor eliminado correctamente."}

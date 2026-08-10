@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import time
+import logging
+
 import csv
 from io import StringIO
 
@@ -29,6 +32,17 @@ class Settings(BaseSettings):
 
 settings = Settings()
 app = FastAPI(title=settings.app_name)
+logger = logging.getLogger("api.timing")
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = (time.perf_counter() - start) * 1000
+    logger.info(
+        f"{request.method} {request.url.path} → {response.status_code} | {duration:.1f}ms"
+    )
+    return response
 
 origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
 

@@ -56,3 +56,18 @@
   - [x] `.env.local` — creado con NEXT_PUBLIC_API_URL
   - [x] Build exitoso (next build) — 11 rutas generadas sin errores
   - [x] TypeScript compila sin errores (tsc --noEmit)
+- [x] **Caching Plan (rama `cachear`)**:
+  - [x] Paso 1: Middleware de timing HTTP en `services/api/main.py` — loguea método, ruta, status y duración en ms
+  - [x] Paso 2: Módulo `services/api/core/cache.py` — caché en memoria con TTL e invalidación por prefijo
+  - [x] Paso 3: Caché aplicada en GETs — suppliers list/detail (60s), incidents list (60s), incidents summary (30s)
+  - [x] Paso 4: Invalidación en escrituras — `cache_invalidate_prefix("suppliers:")` en POST/PATCH rate/PATCH status/DELETE suppliers; `cache_invalidate_prefix("incidents:")` en POST/PATCH status incidents
+  - [x] Paso 5: Checklist de seguridad de caché verificado:
+    - [x] Sin datos por-usuario bajo claves compartidas (`profiles.py` y `auth.py` no usan caché)
+    - [x] TTL obligatorio en TODA entrada: suppliers list (60s), suppliers detail (60s), incidents list (60s), incidents summary (30s)
+    - [x] Invalidación por prefijo en TODA escritura que afecta a lecturas cacheadas
+    - [x] Endpoints rechazados documentados (GET /profiles/me, POST /auth/login, GET /api/incidents/{id})
+  - [ ] Paso 6: Caché en Frontend (useMemo + next/dynamic)
+  - [ ] Paso 7: Seed de datos realistas (cientos/miles de filas)
+  - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
+  - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
+  - [ ] Paso 10: Commit final y PR hacia main

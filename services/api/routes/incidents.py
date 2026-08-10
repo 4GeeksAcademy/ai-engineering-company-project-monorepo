@@ -32,7 +32,7 @@ from models.incident import (
     VALID_ORIGINS,
     VALID_STATUSES,
 )
-
+from core.cache import cache_get, cache_set, cache_invalidate_prefix
 # ───── Misma instancia de TinyDB que el resto de la app ─────
 INCIDENTS_DB_PATH = "incidentes_db.json"
 
@@ -111,6 +111,7 @@ def create_incident(
     }
 
     table.insert(incident_dict)
+    cache_invalidate_prefix("incidents:")
     return _doc_to_response(incident_dict)
 
 
@@ -134,6 +135,12 @@ def list_incidents(
     Filtros disponibles: status, category, origin, branch.
     Ordenación: sort_by (campo) y sort_order (asc/desc).
     """
+    cache_key = f"incidents:list:status={status}:category={category}:origin={origin}:branch={branch}:sort_by={sort_by}:sort_order={sort_order}"
+    cached = cache_get(cache_key)
+
+    if cached is not None:
+        return cached    
+    
     table = _get_incidents_table()
     docs = table.all()
 
@@ -151,7 +158,9 @@ def list_incidents(
     reverse = sort_order.lower() != "asc"
     docs.sort(key=lambda d: d.get(sort_by, ""), reverse=reverse)
 
-    return [_doc_to_response(d) for d in docs]
+    result = [_doc_to_response(d) for d in docs]
+    cache_set(cache_key, result, 60)
+    return result
 
 
 # ─────────────────────────────────────────────────────────────
@@ -171,6 +180,12 @@ def get_incidents_summary(
       - origin: customer / branch / internal
       - branch: todas las sedes válidas
     """
+    cache_key = "incidents:summary"
+    cached = cache_get(cache_key)
+
+    if cached is not None:
+        return cached
+
     table = _get_incidents_table()
     docs = table.all()
 
@@ -201,12 +216,14 @@ def get_incidents_summary(
     def _non_zero(d: dict[str, int]) -> dict[str, int]:
         return {k: v for k, v in d.items() if v > 0}
 
-    return SummaryResponse(
+    result = SummaryResponse(
         by_status=_non_zero(by_status),
         by_category=_non_zero(by_category),
         by_origin=_non_zero(by_origin),
         by_branch=_non_zero(by_branch),
     )
+    cache_set(cache_key, result, 30)
+    return result
 
 
 # ─────────────────────────────────────────────────────────────
@@ -293,6 +310,7 @@ def update_incident_status(
 
     doc["status"] = new_status
     doc["updated_at"] = now
+    cache_invalidate_prefix("incidents:")
     return _doc_to_response(doc)
 
 
