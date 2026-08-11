@@ -1,0 +1,101 @@
+incident_id,date,clinic_id,country,category,description,status,patient_id,satisfaction_score
+HC-000001,2024-01-13,US-TX-02,US,ADMINISTRATIVE,Patient registration data contains error from onboarding,CLOSED,PAT-735605,3
+HC-000002,2024-01-17,UK-LON-02,UK,APPOINTMENT,Patient not informed of appointment reschedule by clinic,OPEN,PAT-539001,
+HC-000003,2024-01-09,US-FL-01,US,ACCESSIBILITY,Patient communications sent only in English despite preference,DISCARDED,PAT-459513,
+HC-000004,2024-01-15,UK-LON-02,UK,ADMINISTRATIVE,Patient unable to obtain copy of test results,CLOSED,PAT-244892,4
+HC-000005,2024-01-20,US-GA-01,US,ACCESSIBILITY,Online booking portal not compatible with screen reader,OPEN,PAT-413433,
+HC-000006,2024-01-28,US-GA-03,US,BILLING,Patient received invoice for visit already covered by plan,CLOSED,PAT-846454,4
+HC-000007,2024-01-21,US-GA-03,US,ACCESSIBILITY,Wheelchair access blocked at clinic entrance,DISCARDED,PAT-310647,
+HC-000008,2024-01-20,US-FL-01,US,BILLING,Duplicate charge for the same consultation detected,OPEN,PAT-404694,
+HC-000009,2024-01-30,US-FL-03,US,BILLING,Duplicate charge for the same consultation detected,CLOSED,PAT-239116,2
+HC-000010,2024-01-17,US-TX-03,US,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,DISCARDED,PAT-828038,
+HC-000011,2024-01-23,US-FL-03,US,CLINICAL_CARE,Patient concerned about diagnosis not aligning with symptoms,DISCARDED,PAT-897730,
+HC-000012,2024-01-18,US-FL-03,US,APPOINTMENT,Patient not informed of appointment reschedule by clinic,CLOSED,PAT-711116,3
+HC-000013,2024-01-22,US-GA-01,US,ACCESSIBILITY,Online booking portal not compatible with screen reader,CLOSED,PAT-399817,4
+HC-000014,2024-01-26,US-GA-01,US,ADMINISTRATIVE,Medical records not transferred ahead of referral appointment,OPEN,PAT-648122,
+HC-000015,2024-01-01,US-TX-02,US,ACCESSIBILITY,Patient communications sent only in English despite preference,OPEN,PAT-252386,
+HC-000016,2024-01-22,UK-LON-01,UK,BILLING,Unexpected charge appeared on patient statement,OPEN,PAT-309612,
+HC-000017,2024-01-25,US-FL-02,US,BILLING,"Insurance claim denied, patient disputes responsibility",DISCARDED,PAT-400538,
+HC-000018,2024-01-09,UK-MAN-01,UK,BILLING,"Insurance claim denied, patient disputes responsibility",CLOSED,PAT-980155,3
+HC-000019,2024-01-23,US-TX-01,US,ACCESSIBILITY,Interpreter not available for Spanish-speaking patient,DISCARDED,PAT-313910,
+HC-000020,2024-01-02,US-GA-03,US,APPOINTMENT,Booking system showed availability but no slot was available,CLOSED,PAT-953568,3
+HC-000021,2024-01-04,US-GA-02,US,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,OPEN,PAT-808340,
+HC-000022,2024-01-18,UK-MAN-01,UK,BILLING,"Insurance claim denied, patient disputes responsibility",OPEN,PAT-878476,
+HC-000023,2024-01-13,US-GA-03,US,CLINICAL_CARE,Referral to specialist not processed after three weeks,CLOSED,PAT-635740,4
+HC-000024,2024-01-10,UK-MAN-01,UK,APPOINTMENT,Patient arrived at wrong location due to system error,CLOSED,PAT-796772,4
+HC-000025,2024-01-30,US-TX-01,US,APPOINTMENT,Patient not informed of appointment reschedule by clinic,CLOSED,PAT-506380,5
+HC-000026,2024-01-31,UK-LON-02,UK,BILLING,Duplicate charge for the same consultation detected,OPEN,PAT-427841,
+HC-000027,2024-01-02,US-GA-03,US,ACCESSIBILITY,Patient with limited English unable to understand discharge notes,CLOSED,PAT-879794,3
+HC-000028,2024-01-07,US-FL-02,US,ADMINISTRATIVE,Patient registration data contains error from onboarding,OPEN,PAT-918859,
+HC-000029,2024-01-27,US-GA-02,US,BILLING,"Insurance claim denied, patient disputes responsibility",CLOSED,PAT-764575,4
+HC-000030,2024-01-23,UK-MAN-01,UK,ACCESSIBILITY,Interpreter not available for Spanish-speaking patient,CLOSED,PAT-891787,5
+HC-000031,2024-01-18,UK-MAN-01,UK,ACCESSIBILITY,Online booking portal not compatible with screen reader,CLOSED,PAT-306012,5
+HC-000032,2024-01-10,US-FL-01,US,ADMINISTRATIVE,Insurance pre-authorisation not submitted before procedure,OPEN,PAT-286044,
+HC-000033,2024-01-06,US-TX-02,US,BILLING,"Insurance claim denied, patient disputes responsibility",CLOSED,PAT-870786,2
+HC-000034,2024-01-04,UK-MAN-01,UK,ACCESSIBILITY,Patient communications sent only in English despite preference,CLOSED,PAT-142608,4
+HC-000035,2024-01-09,US-GA-01,US,BILLING,Patient requesting itemised bill for insurance submission,DISCARDED,PAT-377075,
+HC-000036,2024-01-06,UK-LON-01,UK,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,CLOSED,PAT-987110,5
+HC-000037,2024-01-01,US-FL-02,US,ADMINISTRATIVE,Prescription renewal delayed due to administrative backlog,OPEN,PAT-588983,
+HC-000038,2024-01-30,UK-MAN-01,UK,APPOINTMENT,Appointment cancelled with less than 2 hours notice,CLOSED,PAT-141880,4
+HC-000039,2024-01-30,US-TX-03,US,APPOINTMENT,Booking system showed availability but no slot was available,CLOSED,PAT-725874,4
+HC-000040,2024-01-25,US-TX-01,US,APPOINTMENT,Patient arrived at wrong location due to system error,CLOSED,PAT-745512,5
+HC-000041,2024-01-12,XX-INVALID,US,APPOINTMENT,Patient reported long wait time at reception,OPEN,PAT-234443,
+HC-000042,2024-01-10,UK-MAN-01,UK,APPOINTMENT,Patient not informed of appointment reschedule by clinic,CLOSED,PAT-928278,4
+HC-000043,2024-01-22,UK-LON-01,US,BILLING,Invoice discrepancy reported by patient,OPEN,PAT-787313,
+HC-000044,2024-01-12,US-GA-03,US,APPOINTMENT,Patient waited over 45 minutes past scheduled appointment time,CLOSED,PAT-922116,1
+HC-000045,2024-01-11,UK-MAN-01,UK,BILLING,Patient requesting itemised bill for insurance submission,CLOSED,PAT-330646,5
+HC-000046,2024-01-17,US-TX-03,US,ADMINISTRATIVE,Medical records not transferred ahead of referral appointment,CLOSED,PAT-924451,2
+HC-000047,2024-01-06,UK-MAN-01,UK,APPOINTMENT,Patient not informed of appointment reschedule by clinic,CLOSED,PAT-669460,4
+HC-000048,2024-01-13,US-GA-03,US,ACCESSIBILITY,Patient with limited English unable to understand discharge notes,DISCARDED,PAT-466375,
+HC-000049,2024-01-29,UK-LON-01,UK,CLINICAL_CARE,Referral to specialist not processed after three weeks,DISCARDED,PAT-795556,
+HC-000050,2024-01-11,US-FL-03,US,ADMINISTRATIVE,Prescription renewal delayed due to administrative backlog,OPEN,PAT-407835,
+HC-000051,2024-01-31,US-FL-01,US,APPOINTMENT,Double booking detected for the same time slot,OPEN,PAT-656268,
+HC-000052,2024-01-18,UK-LON-02,UK,BILLING,Duplicate charge for the same consultation detected,CLOSED,PAT-109231,5
+HC-000053,2024-01-22,US-TX-02,US,APPOINTMENT,Booking system showed availability but no slot was available,CLOSED,PAT-567315,4
+HC-000054,2024-01-29,US-FL-01,US,ADMINISTRATIVE,Patient registration data contains error from onboarding,DISCARDED,PAT-751303,
+HC-000055,2024-01-31,US-FL-01,US,BILLING,Unexpected charge appeared on patient statement,CLOSED,PAT-815706,4
+HC-000056,2024-01-13,US-FL-03,US,CLINICAL_CARE,Patient concerned about diagnosis not aligning with symptoms,OPEN,PAT-504620,
+HC-000057,2024-01-18,UK-LON-02,UK,APPOINTMENT,Patient arrived at wrong location due to system error,OPEN,PAT-396567,
+HC-000058,2024-01-08,US-FL-02,US,,Incident reported without valid category,OPEN,PAT-204904,
+HC-000059,2024-01-30,UK-LON-01,UK,APPOINTMENT,Double booking detected for the same time slot,OPEN,PAT-962043,
+HC-000060,2024-01-17,US-FL-03,US,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,OPEN,PAT-567200,
+HC-000061,2024-01-02,UK-LON-02,UK,APPOINTMENT,Booking system showed availability but no slot was available,CLOSED,PAT-783176,4
+HC-000062,2024-01-11,UK-LON-01,UK,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,DISCARDED,PAT-186345,
+HC-000063,2024-01-10,US-GA-01,US,ACCESSIBILITY,,OPEN,PAT-749609,
+HC-000064,2024-01-06,US-TX-02,US,ACCESSIBILITY,Online booking portal not compatible with screen reader,CLOSED,PAT-659106,3
+HC-000065,2024-01-21,UK-LON-01,UK,ADMINISTRATIVE,Medical records not transferred ahead of referral appointment,OPEN,PAT-321020,
+HC-000066,2024-01-28,US-FL-01,US,APPOINTMENT,Patient arrived at wrong location due to system error,OPEN,PAT-544815,
+HC-000067,2024-01-07,US-TX-02,US,APPOINTMENT,Double booking detected for the same time slot,CLOSED,PAT-969005,3
+HC-000068,2024-01-21,US-GA-01,US,CLINICAL_CARE,Patient concerned about diagnosis not aligning with symptoms,CLOSED,PAT-883171,4
+HC-000069,2024-01-05,UK-MAN-01,UK,ADMINISTRATIVE,Medical records not transferred ahead of referral appointment,CLOSED,PAT-581532,2
+HC-000070,2024-01-02,US-FL-03,US,ADMINISTRATIVE,Medical records not transferred ahead of referral appointment,CLOSED,PAT-176806,5
+HC-000071,2024-01-06,US-TX-01,US,CLINICAL_CARE,Lab results not communicated within expected timeframe,OPEN,PAT-685193,
+HC-000072,2024-01-19,UK-LON-01,UK,APPOINTMENT,Appointment cancelled with less than 2 hours notice,DISCARDED,PAT-371212,
+HC-000073,2024-01-13,UK-LON-02,UK,BILLING,Billing code applied does not match service received,OPEN,PAT-760830,
+HC-000074,2024-01-14,US-GA-01,US,APPOINTMENT,Booking system showed availability but no slot was available,OPEN,PAT-117711,
+HC-000075,2024-01-22,US-GA-01,US,APPOINTMENT,Patient waited over 45 minutes past scheduled appointment time,CLOSED,PAT-660814,3
+HC-000076,2024-01-21,US-TX-01,US,ACCESSIBILITY,Online booking portal not compatible with screen reader,CLOSED,PAT-166309,3
+HC-000077,2024-01-19,UK-MAN-01,UK,ACCESSIBILITY,Patient with limited English unable to understand discharge notes,DISCARDED,PAT-834928,
+HC-000078,2024-01-12,UK-LON-01,UK,APPOINTMENT,Double booking detected for the same time slot,CLOSED,PAT-211291,5
+HC-000079,2024-01-03,UK-MAN-01,UK,ADMINISTRATIVE,Records not transferred before appointment,OPEN,,
+HC-000080,2024-01-26,US-FL-02,US,ADMINISTRATIVE,Prescription renewal delayed due to administrative backlog,CLOSED,PAT-736030,4
+HC-000081,2024-01-10,US-TX-02,US,ACCESSIBILITY,Patient communications sent only in English despite preference,OPEN,PAT-499941,
+HC-000082,2024-01-27,US-GA-01,US,APPOINTMENT,Patient arrived at wrong location due to system error,CLOSED,PAT-132316,3
+HC-000083,2024-01-06,US-GA-02,US,APPOINTMENT,Double booking detected for the same time slot,CLOSED,PAT-330545,4
+HC-000084,2024-01-24,US-TX-03,US,APPOINTMENT,Patient not informed of appointment reschedule by clinic,CLOSED,PAT-935474,3
+HC-000085,2024-01-29,US-TX-02,US,CLINICAL_CARE,"Follow-up call completed, patient satisfied",CLOSED,PAT-302897,
+HC-000086,2024-01-10,US-GA-03,US,APPOINTMENT,Patient arrived at wrong location due to system error,CLOSED,PAT-251074,1
+HC-000087,2024-01-22,UK-LON-02,UK,BILLING,Duplicate charge for the same consultation detected,CLOSED,PAT-779414,2
+HC-000088,2024-01-31,UK-LON-02,UK,BILLING,Unexpected charge appeared on patient statement,CLOSED,PAT-680412,4
+HC-000089,2024-01-05,UK-MAN-01,UK,CLINICAL_CARE,Patient concerned about diagnosis not aligning with symptoms,CLOSED,PAT-143802,4
+HC-000090,2024-01-19,US-TX-01,US,APPOINTMENT,Double booking detected for the same time slot,OPEN,PAT-513224,
+HC-000091,2024-01-18,US-GA-03,US,CLINICAL_CARE,Patient concerned about diagnosis not aligning with symptoms,CLOSED,PAT-419491,4
+HC-000092,2024-01-24,US-FL-01,US,ACCESSIBILITY,Interpreter not available for Spanish-speaking patient,DISCARDED,PAT-322022,
+HC-000093,2024-01-29,US-GA-01,US,APPOINTMENT,Patient arrived at wrong location due to system error,CLOSED,PAT-992819,3
+HC-000094,2024-01-05,US-GA-03,US,APPOINTMENT,Appointment cancelled with less than 2 hours notice,OPEN,PAT-292930,
+HC-000095,2024-01-20,UK-LON-01,UK,BILLING,Patient received invoice for visit already covered by plan,OPEN,PAT-303765,
+HC-000096,2024-01-06,US-TX-02,US,CLINICAL_CARE,Follow-up appointment not scheduled after procedure,CLOSED,PAT-993650,4
+HC-000097,2024-01-28,US-TX-01,US,BILLING,Patient requesting itemised bill for insurance submission,CLOSED,PAT-583671,4
+HC-000098,2024-01-18,UK-MAN-01,UK,APPOINTMENT,Patient waited over 45 minutes past scheduled appointment time,OPEN,PAT-404771,
+HC-000099,2024-01-09,US-TX-02,US,ACCESSIBILITY,Patient with limited English unable to understand discharge notes,CLOSED,PAT-307007,4
+HC-000100,2024-01-19,UK-MAN-01,UK,BILLING,Billing code applied does not match service received,CLOSED,PAT-446922,1

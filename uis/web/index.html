@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthCore | Incident Analyzer</title>
+    <meta
+      name="description"
+      content="Internal HealthCore patient incident analysis — upload CSV, review metrics, export results."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">HealthCore</a>
+      <nav aria-label="Application">
+        <a href="index.html" class="nav-link is-active">Incident Analysis</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="intro">
+        <p class="eyebrow">Patient Experience · Internal</p>
+        <h1>Incident Analysis</h1>
+        <p class="lede">
+          Upload the incident CSV to validate records, review category and status
+          summaries, and export metrics. Patient identifiers are never shown.
+        </p>
+      </section>
+
+      <section class="upload-panel" aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Upload CSV</h2>
+        <form id="upload-form">
+          <label
+            id="dropzone"
+            class="dropzone"
+            for="file-input"
+          >
+            <span class="dropzone-title">Drag and drop a CSV here</span>
+            <span class="dropzone-sub">or click to choose a file</span>
+            <span id="file-name" class="file-name">No file selected</span>
+          </label>
+          <input
+            id="file-input"
+            name="file"
+            type="file"
+            accept=".csv,text/csv"
+            required
+          />
+          <div class="actions">
+            <button type="submit" id="analyze-btn">Analyze file</button>
+            <button type="button" id="export-btn" disabled>
+              Download results CSV
+            </button>
+          </div>
+        </form>
+        <p id="status-msg" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="results" class="results is-hidden" aria-live="polite">
+        <h2>Analysis summary</h2>
+        <div class="metric-grid" id="general-metrics"></div>
+
+        <div class="panels">
+          <article>
+            <h3>Invalid records</h3>
+            <ul id="invalid-list"></ul>
+          </article>
+          <article>
+            <h3>By category</h3>
+            <ul id="category-list"></ul>
+          </article>
+          <article>
+            <h3>By status</h3>
+            <ul id="status-list"></ul>
+          </article>
+          <article>
+            <h3>By country</h3>
+            <ul id="country-list"></ul>
+          </article>
+        </div>
+
+        <article class="satisfaction">
+          <h3>Satisfaction index (closed cases)</h3>
+          <p id="satisfaction-summary"></p>
+          <ul id="satisfaction-list"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
