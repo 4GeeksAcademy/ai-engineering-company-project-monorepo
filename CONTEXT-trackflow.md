@@ -2,7 +2,7 @@
 
 _These instructions are also available in [English](./CONTEXT-trackflow.en.md)._
 
-> **Milestone:** 09 — Lightweight Storage API
+> **Milestone:** 09 — Lightweight Storage API  
 > **Ruta en el repositorio:** `09-lightweight-storage/CONTEXT-trackflow.md`
 
 ---

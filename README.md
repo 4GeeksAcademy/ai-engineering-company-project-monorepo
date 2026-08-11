@@ -57,6 +57,38 @@ You are building **one company** across many milestones and projects. Each top-l
 > - There is no root `AGENTS.md` yet.
 > - Shared package metadata exists in `packages/shared/package.json` (`@repo/shared-types`), but no workspace runner is configured at root.
 
+## TrackFlow supplier directory
+
+This repository now includes the TrackFlow Supplier Directory milestone implementation in these paths:
+
+- `services/api` — FastAPI + TinyDB backend
+- `uis/backoffice` — Vite backoffice frontend
+
+### Run the backend
+
+1. `uv run seed`
+2. `uv run uvicorn services.api.main:app --host 0.0.0.0 --port 8000`
+
+### Run the frontend
+
+1. `cd uis/backoffice`
+2. `npm install`
+3. `npm run dev -- --host 0.0.0.0 --port 5173`
+
+### Storage
+
+- TinyDB persists data in `data/tinydb/suppliers.json`
+- Override the path with `TRACKFLOW_TINYDB_PATH` when needed
+
+### Main endpoints
+
+- `POST /suppliers`
+- `GET /suppliers`
+- `GET /suppliers/{id}`
+- `PATCH /suppliers/{id}/rate`
+- `PATCH /suppliers/{id}/status`
+- `DELETE /suppliers/{id}`
+
 ---
 
 ## Folder guide — what goes where

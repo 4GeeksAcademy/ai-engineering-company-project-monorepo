@@ -13,3 +13,7 @@ Organiza `uis/` por **distintas áreas de la compañía** — cada subcarpeta ag
 - **Recomendación**: documenta en este archivo (o en sub-READMEs) las aplicaciones que vayas añadiendo, su objetivo, tecnología usada y cómo ejecutarlas.
 
 > _These instructions are also available in [English](./README.md)._
+
+## Interfaces actuales
+
+- `backoffice/` — backoffice interno del Directorio de Proveedores de TrackFlow.

@@ -57,6 +57,38 @@ Estás construyendo **una sola empresa** a lo largo de muchos hitos y proyectos.
 > - No existe todavía un `AGENTS.md` en la raíz.
 > - Existe metadata del paquete compartido en `packages/shared/package.json` (`@repo/shared-types`), pero aún no hay runner de workspace en raíz.
 
+## Directorio de proveedores de TrackFlow
+
+Este repositorio ya incluye la implementación del hito de Directorio de Proveedores en estas rutas:
+
+- `services/api` — backend FastAPI + TinyDB
+- `uis/backoffice` — frontend backoffice con Vite
+
+### Arrancar el backend
+
+1. `uv run seed`
+2. `uv run uvicorn services.api.main:app --host 0.0.0.0 --port 8000`
+
+### Arrancar el frontend
+
+1. `cd uis/backoffice`
+2. `npm install`
+3. `npm run dev -- --host 0.0.0.0 --port 5173`
+
+### Almacenamiento
+
+- TinyDB persiste datos en `data/tinydb/suppliers.json`
+- Puedes cambiar la ruta con `TRACKFLOW_TINYDB_PATH`
+
+### Endpoints principales
+
+- `POST /suppliers`
+- `GET /suppliers`
+- `GET /suppliers/{id}`
+- `PATCH /suppliers/{id}/rate`
+- `PATCH /suppliers/{id}/status`
+- `DELETE /suppliers/{id}`
+
 ---
 
 ## Guía de carpetas — qué va en cada una
