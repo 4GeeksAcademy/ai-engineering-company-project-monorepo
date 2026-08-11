@@ -1,5 +1,71 @@
 # Progress
 
+## Backoffice business logic integration (2026-08-05)
+
+Scope changed:
+1. `scripts/src/sample-usage.ts`
+2. `uis/backoffice/app/page.tsx`
+3. `uis/backoffice/app/globals.css`
+4. `uis/backoffice/app/layout.tsx`
+5. `uis/backoffice/next.config.ts`
+
+What changed:
+1. Replaced the default Next.js starter route at `uis/backoffice/` with a dedicated Nexova talent operations dashboard.
+2. Imported the existing sample data and calculated results directly from `scripts/src/sample-usage.ts`; no business logic was copied into the UI.
+3. Rendered visible business-logic output for vacancy details, candidate ranking, validation status, average salary, vacancy fill rate, seniority distribution, top skills, status counts, and normalized email search.
+4. Removed the import-time `console.log` from `scripts/src/sample-usage.ts` so it can be safely consumed by the Next.js application.
+5. Configured Turbopack to use the monorepo root and allow the backoffice to bundle the original shared `scripts` directory.
+6. Made the backoffice navigation persist during scrolling with a viewport-sticky desktop sidebar and sticky mobile top navigation.
+
+Validation performed:
+1. `npm run lint` inside `uis/backoffice` (passed).
+2. `npm run build` inside `uis/backoffice` (passed; static `/` route generated).
+3. Manual runtime verification at `http://localhost:3000/` (passed; dashboard rendered shared script results).
+4. Browser scroll verification (passed; sidebar retained `position: sticky` at the viewport edge while viewing the reports section).
+
+Remaining risks / notes:
+1. The dashboard currently uses the repository sample data and has no API, authentication, or CRUD integration.
+
+## Website migration update (2026-08-03)
+
+Scope changed:
+1. `uis/website/app/page.tsx`
+2. `uis/website/app/globals.css`
+3. `uis/website/app/layout.tsx`
+4. `uis/website/app/application/page.tsx`
+5. `uis/website/public/assets/*` (copied from `uis/landing_page/assets/*`)
+
+What changed:
+1. Replaced default Next starter home with a Nexova landing page recreation that mirrors the static `uis/landing_page/index.html` structure:
+   - sticky header and anchor navigation
+   - hero section with CTA
+   - services cards (3 columns)
+   - why-Nexova section
+   - contact section and branded footer
+2. Ported interaction and animation behavior to Next styles:
+   - hero background pan
+   - CTA pulse and hover transitions
+   - service-card hover lift/zoom
+   - reveal-on-scroll with IntersectionObserver
+   - reduced-motion accessibility fallback
+3. Added Organization JSON-LD markup on the Next home page.
+4. Updated site metadata in the Next layout to reflect Nexova SEO context.
+5. Fully migrated `uis/landing_page/application.html` + `validation.js` behavior to Next route `uis/website/app/application/page.tsx`:
+   - complete form fields
+   - all required validation rules and exact error messages
+   - live validation events (input/blur/change)
+   - comments remaining counter with over-limit warning
+   - policy checkbox enforcement
+   - success modal with close/backdrop/escape behavior
+   - reset handling and scroll-to-top on successful simulated submit
+
+Validation performed:
+1. `npm run lint` inside `uis/website` (passed).
+2. `npm run build` inside `uis/website` (passed, static routes `/` and `/application` generated).
+
+Remaining risks / notes:
+1. Form submission is currently simulated client-side (no API integration), matching the original static milestone behavior.
+
 ## Audit summary (2026-08-03)
 
 Audited folders:
@@ -67,3 +133,9 @@ Gaps and risks:
 3. Add lightweight runbooks to each audited folder describing install/run/test commands and expected env vars.
 4. Ensure build artifacts and dependency directories are excluded from version-control workflows and audit scopes.
 5. Create a short acceptance checklist that maps each milestone requirement to concrete file evidence for faster final review.
+
+## Governance setup completed (2026-08-03)
+
+1. Added root agent contract at `AGENTS.md` with required memory-bank read order, mandatory pre-commit workflow, and protected paths requiring explicit confirmation.
+2. Added always-active development rule at `.agents/rules/context-and-change-control.md`.
+3. Added reusable audit skill at `.agents/skills/nexova-milestone-audit/SKILL.md` with documented inputs and verifiable acceptance criteria.

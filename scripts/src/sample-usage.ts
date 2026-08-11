@@ -192,5 +192,3 @@ export function runSampleUsage() {
 
 
 export const sampleUsageResults = runSampleUsage();
-
-console.log(JSON.stringify(sampleUsageResults, null, 2));
