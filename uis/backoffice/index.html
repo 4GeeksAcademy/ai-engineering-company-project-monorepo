@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrackFlow Backoffice - Incident Analyzer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>TrackFlow Incident Analyzer</h1>
+        <p>Upload a CSV and review aggregate incident metrics.</p>
+      </header>
+
+      <section class="panel">
+        <label for="apiBaseUrl">API Base URL</label>
+        <input id="apiBaseUrl" type="text" placeholder="https://<codespace>-8000.app.github.dev" />
+
+        <label for="csvFile">Incidents CSV file</label>
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+
+        <div class="actions">
+          <button id="analyzeBtn">Analyze file</button>
+          <button id="exportBtn" disabled>Export results</button>
+        </div>
+
+        <p id="status" class="status idle">Ready.</p>
+      </section>
+
+      <section id="results" class="panel hidden">
+        <h2>Analysis Summary</h2>
+
+        <div class="summary-grid">
+          <article><h3>Total records</h3><p id="totalRecords">-</p></article>
+          <article><h3>Valid records</h3><p id="validRecords">-</p></article>
+          <article><h3>Invalid records</h3><p id="invalidRecords">-</p></article>
+          <article><h3>Average satisfaction</h3><p id="avgSatisfaction">-</p></article>
+        </div>
+
+        <div class="metrics-grid">
+          <div>
+            <h3>Breakdown by category</h3>
+            <ul id="categoryList"></ul>
+          </div>
+          <div>
+            <h3>Breakdown by status</h3>
+            <ul id="statusList"></ul>
+          </div>
+          <div>
+            <h3>Breakdown by country</h3>
+            <ul id="countryList"></ul>
+          </div>
+          <div>
+            <h3>Invalid records breakdown</h3>
+            <ul id="invalidList"></ul>
+          </div>
+          <div>
+            <h3>Satisfaction distribution</h3>
+            <ul id="satisfactionList"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./main.js" defer></script>
+  </body>
+</html>
