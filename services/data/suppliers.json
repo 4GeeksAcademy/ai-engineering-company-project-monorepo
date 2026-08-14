@@ -1,0 +1,1 @@
+{"users": {"1": {"email": "test_incidents@brasaland.com", "hashed_password": "$2b$12$.LJfC.GnNtG4YOn7yYGFau9TzIYdvE7zcZ/rbGznQMFON9UdVN7PW", "role": "admin", "is_active": true, "created_at": "2026-01-01T00:00:00Z"}}}
