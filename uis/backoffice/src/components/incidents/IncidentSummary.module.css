@@ -1,0 +1,162 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: var(--card, rgba(255,255,255,0.05));
+  border: 1px solid var(--border, rgba(255,255,255,0.14));
+  border-radius: 12px;
+}
+
+.heading {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.totalCard {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(88, 211, 143, 0.08);
+  border: 1px solid rgba(88, 211, 143, 0.15);
+  border-radius: 10px;
+}
+
+.totalNumber {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #58d38f;
+}
+
+.totalLabel {
+  font-size: 14px;
+  color: var(--muted, #a6b5cc);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--muted, #a6b5cc);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.barLabel {
+  font-size: 12px;
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--fg, #ecf3ff);
+}
+
+.barTrack {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.barFill[data-status="open"] { background: #ffbd59; }
+.barFill[data-status="in_progress"] { background: #58d38f; }
+.barFill[data-status="resolved"] { background: #78a0ff; }
+.barFill[data-status="discarded"] { background: #a6b5cc; }
+
+.barFill[data-category="CUSTOMER_COMPLAINT"] { background: #ff7d7d; }
+.barFill[data-category="EQUIPMENT"] { background: #ffbd59; }
+.barFill[data-category="SUPPLY"] { background: #58d38f; }
+.barFill[data-category="FOOD_QUALITY"] { background: #78a0ff; }
+.barFill[data-category="STAFF"] { background: #c78dff; }
+
+.barCount {
+  font-size: 12px;
+  color: var(--muted, #a6b5cc);
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.branchGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.branchItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  font-size: 12px;
+}
+
+.branchName {
+  color: var(--fg, #ecf3ff);
+}
+
+.branchCount {
+  font-weight: 700;
+  color: var(--muted, #a6b5cc);
+}
+
+.loading,
+.empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted, #a6b5cc);
+}
+
+.hint {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.error {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 125, 125, 0.1);
+  color: #ff7d7d;
+  font-size: 13px;
+}

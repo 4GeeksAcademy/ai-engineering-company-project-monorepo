@@ -1,0 +1,91 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: var(--card, rgba(255,255,255,0.05));
+  border: 1px solid var(--border, rgba(255,255,255,0.14));
+  border-radius: 12px;
+}
+
+.heading {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #a6b5cc);
+}
+
+.field input,
+.field textarea,
+.field select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(255,255,255,0.14));
+  background: rgba(255,255,255,0.03);
+  color: var(--fg, #ecf3ff);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: rgba(88, 211, 143, 0.5);
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+}
+
+.submit {
+  align-self: flex-start;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(88, 211, 143, 0.15);
+  color: #58d38f;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.success {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(88, 211, 143, 0.1);
+  color: #58d38f;
+  font-size: 13px;
+  font-weight: 600;
+}

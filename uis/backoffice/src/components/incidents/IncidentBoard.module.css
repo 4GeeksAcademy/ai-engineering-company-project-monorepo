@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--card, rgba(255,255,255,0.05));
+  border: 1px solid var(--border, rgba(255,255,255,0.14));
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted, #a6b5cc);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab:hover {
+  color: var(--fg, #ecf3ff);
+}
+
+.tabActive {
+  background: rgba(88, 211, 143, 0.12);
+  color: #58d38f;
+}
+
+.boardGrid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .boardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+
+.main {
+  min-height: 400px;
+}
+
+.createView {
+  max-width: 600px;
+}
+
+.analysisView {
+  padding: 32px;
+  background: var(--card, rgba(255,255,255,0.05));
+  border: 1px solid var(--border, rgba(255,255,255,0.14));
+  border-radius: 12px;
+}
+
+.globalError {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(255, 125, 125, 0.1);
+  color: #ff7d7d;
+  font-size: 13px;
+}

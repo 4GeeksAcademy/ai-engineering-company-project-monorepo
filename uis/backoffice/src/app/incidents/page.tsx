@@ -1,13 +1,13 @@
 import { BackofficeHeader } from "@/components/backoffice-header";
-import { IncidentsAnalyzer } from "@/components/incidents-analyzer";
+import { IncidentBoard } from "@/components/incidents/IncidentBoard";
 
 export default function IncidentsPage() {
   return (
     <div className="backoffice-page">
-      <BackofficeHeader activeView="incidents" badge="Incidents analysis online" />
+      <BackofficeHeader activeView="incidents" badge="Gestor de Incidencias" />
 
       <main className="container bo-main">
-        <IncidentsAnalyzer />
+        <IncidentBoard />
       </main>
     </div>
   );

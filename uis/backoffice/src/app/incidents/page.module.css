@@ -1,0 +1,33 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted, #a6b5cc);
+  margin: 0;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--muted, #a6b5cc);
+  font-size: 14px;
+}
