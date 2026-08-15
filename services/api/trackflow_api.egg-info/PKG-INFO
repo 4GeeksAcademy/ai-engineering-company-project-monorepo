@@ -7,10 +7,12 @@ Requires-Dist: bcrypt<4.1
 Requires-Dist: fastapi>=0.141.1
 Requires-Dist: flask==3.0.3
 Requires-Dist: passlib[bcrypt]>=1.7.4
+Requires-Dist: psycopg2-binary>=2.9.0
 Requires-Dist: pydantic==2.9.2
 Requires-Dist: pydantic-settings>=2.14.2
 Requires-Dist: python-jose[cryptography]>=3.5.0
 Requires-Dist: python-multipart>=0.0.32
 Requires-Dist: sendgrid>=6.12.5
+Requires-Dist: sqlmodel>=0.0.22
 Requires-Dist: tinydb==4.8.0
 Requires-Dist: uvicorn>=0.52.0

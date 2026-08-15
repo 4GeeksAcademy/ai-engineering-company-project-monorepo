@@ -8,11 +8,13 @@ dependencies = [
   "fastapi>=0.141.1",
   "flask==3.0.3",
   "passlib[bcrypt]>=1.7.4",
+  "psycopg2-binary>=2.9.0",
   "pydantic==2.9.2",
   "pydantic-settings>=2.14.2",
   "python-jose[cryptography]>=3.5.0",
   "python-multipart>=0.0.32",
   "sendgrid>=6.12.5",
+  "sqlmodel>=0.0.22,<0.0.34",
   "tinydb==4.8.0",
   "uvicorn>=0.52.0",
 ]

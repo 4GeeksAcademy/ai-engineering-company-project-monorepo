@@ -3,19 +3,29 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.database import init_db
 from src.routes.auth_router import auth_router
 from src.routes.incidents_fastapi_router import incidents_fastapi_router
 from src.routes.profiles_router import profiles_router
 from src.routes.suppliers_fastapi_router import suppliers_fastapi_router
 from src.routes.users_router import users_router
 
-app = FastAPI(title="TrackFlow Auth API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Create SQLModel tables in Supabase on startup."""
+    init_db()
+    yield
+
+
+app = FastAPI(title="TrackFlow Auth API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
