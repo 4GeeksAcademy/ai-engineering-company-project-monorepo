@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contacto | TrackFlow</title>
+    <meta
+      name="description"
+      content="Formulario de contacto de TrackFlow para consultas comerciales sobre servicios logísticos en EE.UU. y España."
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="shortcut icon" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["Sora", "sans-serif"],
+              body: ["Manrope", "sans-serif"]
+            },
+            colors: {
+              ink: "#111827",
+              ocean: "#0f766e",
+              ambercore: "#fb923c",
+              cloud: "#e5e7eb"
+            }
+          }
+        }
+      };
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Formulario de contacto TrackFlow",
+        "url": "https://trackflow.example/apply",
+        "description": "Formulario para que empresas contacten con TrackFlow sobre servicios logísticos.",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "TrackFlow",
+          "url": "https://trackflow.example"
+        },
+        "about": {
+          "@type": "Organization",
+          "name": "TrackFlow"
+        }
+      }
+    </script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-b from-slate-50 via-emerald-50 to-orange-50 font-body text-ink antialiased">
+    <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm" aria-label="Encabezado">
+      <div class="mx-auto flex max-w-5xl flex-col items-start gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <a href="index.html" class="font-display text-2xl font-extrabold text-ocean">TrackFlow</a>
+        <a
+          href="index.html"
+          class="w-full rounded-full border border-slate-300 px-4 py-2 text-center text-sm font-semibold transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ocean sm:w-auto"
+          >Volver al inicio</a
+        >
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8" aria-labelledby="form-title">
+      <section class="mb-8">
+        <h1 id="form-title" class="font-display text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Contacto comercial
+        </h1>
+        <p class="mt-4 max-w-3xl text-slate-700">
+          Completa este formulario y nuestro equipo comercial se pondrá en contacto contigo para resolver tu consulta.
+        </p>
+      </section>
+
+      <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg sm:p-8" aria-label="Formulario de contacto">
+        <div id="form-alert" class="mb-6 hidden rounded-lg border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
+
+        <form id="application-form" novalidate class="space-y-8" action="#" method="post">
+          <fieldset class="space-y-5">
+            <legend class="font-display text-xl font-bold text-slate-900">Datos de contacto</legend>
+
+            <div>
+              <label for="fullName" class="mb-2 block text-sm font-semibold">Nombre completo *</label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                autocomplete="name"
+                required
+                class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                aria-describedby="fullName-error"
+              />
+              <p id="fullName-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="workEmail" class="mb-2 block text-sm font-semibold">Email corporativo *</label>
+                <input
+                  id="workEmail"
+                  name="workEmail"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="workEmail-error"
+                />
+                <p id="workEmail-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="phone" class="mb-2 block text-sm font-semibold">Teléfono</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="phone-error"
+                />
+                <p id="phone-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="companyName" class="mb-2 block text-sm font-semibold">Empresa</label>
+                <input
+                  id="companyName"
+                  name="companyName"
+                  type="text"
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="companyName-error"
+                />
+                <p id="companyName-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+
+              <div>
+                <label for="subject" class="mb-2 block text-sm font-semibold">Asunto *</label>
+                <input
+                  id="subject"
+                  name="subject"
+                  type="text"
+                  required
+                  class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                  aria-describedby="subject-error"
+                />
+                <p id="subject-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+              </div>
+            </div>
+
+            <div>
+              <label for="message" class="mb-2 block text-sm font-semibold">Mensaje *</label>
+              <textarea
+                id="message"
+                name="message"
+                rows="5"
+                required
+                placeholder="Cuéntanos brevemente qué necesitas y cómo podemos ayudarte."
+                class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-ocean focus:outline-none focus:ring-2 focus:ring-ocean/20"
+                aria-describedby="message-error"
+              ></textarea>
+              <p id="message-error" class="mt-1 hidden text-sm font-medium text-red-700"></p>
+            </div>
+          </fieldset>
+
+          <p class="text-sm text-slate-600">Los campos marcados con * son obligatorios.</p>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="reset"
+              form="application-form"
+              class="w-full rounded-xl border border-slate-300 bg-white px-6 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ocean sm:w-auto"
+            >
+              Limpiar formulario
+            </button>
+            <div class="flex items-center gap-3">
+              <span
+                id="submit-success-indicator"
+                class="hidden items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800"
+                role="status"
+                aria-live="polite"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.2 7.2a1 1 0 01-1.416 0l-3-3a1 1 0 111.414-1.42L8.8 11.79l6.49-6.5a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Enviado
+              </span>
+            <button
+              type="submit"
+              form="application-form"
+              class="w-full rounded-xl bg-ambercore px-6 py-3 text-base font-extrabold text-ink transition hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-ocean sm:w-auto"
+            >
+              Enviar mensaje
+            </button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="mt-12 border-t border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <p>© 2026 TrackFlow</p>
+        <p>Operaciones logísticas modernas para e-commerce</p>
+      </div>
+    </footer>
+
+    <script src="validation.js" defer></script>
+  </body>
+</html>

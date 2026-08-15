@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>TrackFlow | Operador Logístico para E-commerce</title>
+		<meta
+			name="description"
+			content="TrackFlow es un operador logístico para e-commerce: almacenamos, preparamos, enviamos y gestionamos devoluciones en EE.UU. y España."
+		/>
+		<link rel="icon" type="image/png" href="logo.png" />
+		<link rel="shortcut icon" href="logo.png" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: {
+							display: ["Sora", "sans-serif"],
+							body: ["Manrope", "sans-serif"]
+						},
+						colors: {
+							ink: "#0f172a",
+							mist: "#e2e8f0",
+							sea: "#0f766e",
+							mango: "#f97316",
+							slateblue: "#1d4ed8"
+						}
+					}
+				}
+			};
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Organization",
+				"name": "TrackFlow",
+				"url": "https://trackflow.example",
+				"logo": "https://trackflow.example/logo.png",
+				"description": "Empresa de logística de última milla y gestión de almacenes para e-commerce en Estados Unidos y España.",
+				"foundingDate": "2009",
+				"employee": {
+					"@type": "QuantitativeValue",
+					"value": 130
+				},
+				"address": [
+					{
+						"@type": "PostalAddress",
+						"addressLocality": "Los Angeles",
+						"addressCountry": "US"
+					},
+					{
+						"@type": "PostalAddress",
+						"addressLocality": "Zaragoza",
+						"addressCountry": "ES"
+					}
+				],
+				"areaServed": ["US", "ES"],
+				"contactPoint": {
+					"@type": "ContactPoint",
+					"contactType": "sales",
+					"email": "sales@trackflow.example",
+					"availableLanguage": ["Spanish", "English"]
+				}
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				"name": "TrackFlow",
+				"url": "https://trackflow.example",
+				"potentialAction": {
+					"@type": "SearchAction",
+					"target": "https://trackflow.example/?q={search_term_string}",
+					"query-input": "required name=search_term_string"
+				}
+			}
+		</script>
+	</head>
+	<body class="bg-gradient-to-br from-slate-900 via-slateblue to-sea font-body text-white antialiased">
+		<a
+			href="#contenido"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-ink"
+			>Saltar al contenido principal</a
+		>
+
+		<header id="site-header" class="sticky top-0 z-40 border-b border-white/20 bg-slate-900/70 backdrop-blur-md" aria-label="Encabezado principal">
+			<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+				<a href="index.html" class="flex items-center" aria-label="TrackFlow inicio">
+					<img src="logo.png" alt="Logo de TrackFlow" class="h-10 w-auto sm:h-12 md:h-14 lg:h-20 xl:h-24 2xl:h-28" />
+				</a>
+				<button
+					id="mobile-menu-button"
+					type="button"
+					class="inline-flex items-center rounded-lg border border-white/30 p-2 text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white md:hidden"
+					aria-controls="mobile-menu"
+					aria-expanded="false"
+					aria-label="Abrir menú"
+				>
+					<svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+					</svg>
+				</button>
+				<nav class="hidden md:block" aria-label="Navegación principal escritorio">
+					<ul class="flex items-center gap-5 text-sm font-semibold sm:text-base">
+						<li><a class="transition hover:text-mist" href="#beneficios">Beneficios</a></li>
+						<li><a class="transition hover:text-mist" href="#caracteristicas">Características</a></li>
+						<li><a class="transition hover:text-mist" href="#como-funciona">Cómo funciona</a></li>
+						<li><a class="transition hover:text-mist" href="#servicios">Servicios</a></li>
+						<li><a class="transition hover:text-mist" href="#contacto">Contacto</a></li>
+						<li>
+							<a
+								href="apply.html"
+								class="rounded-full bg-mango px-4 py-2 text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+								>Aplicar ahora</a
+							>
+						</li>
+					</ul>
+				</nav>
+			</div>
+			<nav id="mobile-menu" class="hidden border-t border-white/20 px-4 py-4 md:hidden" aria-label="Navegación principal móvil">
+				<ul class="flex flex-col gap-3 text-sm font-semibold">
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#beneficios">Beneficios</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#caracteristicas">Características</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#como-funciona">Cómo funciona</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#servicios">Servicios</a></li>
+					<li><a class="block rounded-lg px-3 py-2 transition hover:bg-white/10" href="#contacto">Contacto</a></li>
+					<li>
+						<a href="apply.html" class="block rounded-lg bg-mango px-3 py-2 text-center font-bold text-ink transition hover:bg-amber-400">Aplicar ahora</a>
+					</li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="contenido">
+			<section class="mx-auto grid min-h-screen max-w-7xl content-center gap-10 px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-24 lg:grid-cols-2 lg:items-center lg:px-8" aria-labelledby="hero-title">
+				<div>
+					<p class="mb-3 inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-bold uppercase tracking-wide text-mist">
+						Operador logístico en EE.UU. y España
+					</p>
+					<h1 id="hero-title" class="font-display text-3xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+						Nos ocupamos de tu logística para que tu marca crezca sin fricción
+					</h1>
+					<p class="mt-6 max-w-xl text-lg text-slate-100">
+						En TrackFlow almacenamos tu inventario, preparamos tus pedidos, coordinamos la última milla y gestionamos devoluciones. Tú vendes; nosotros hacemos que cada entrega llegue bien y a tiempo.
+					</p>
+					<div class="mt-8 flex flex-col gap-4 sm:flex-row">
+						<a
+							href="apply.html"
+							class="rounded-xl bg-mango px-6 py-3 text-center text-base font-extrabold text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+							>Solicitar evaluación gratuita</a
+						>
+						<a
+							href="#beneficios"
+							class="rounded-xl border border-white/50 bg-white/10 px-6 py-3 text-center text-base font-bold transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+							>Explorar beneficios</a
+						>
+					</div>
+				</div>
+
+				<div class="relative">
+					<div class="absolute -left-6 -top-6 h-28 w-28 rounded-full bg-mango/40 blur-2xl" aria-hidden="true"></div>
+					<div class="absolute -bottom-8 right-4 h-36 w-36 rounded-full bg-cyan-300/30 blur-2xl" aria-hidden="true"></div>
+					<img
+						src="https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1300&q=80"
+						alt="Centro logístico moderno con estanterías y movimiento de paquetes"
+						class="relative z-10 w-full rounded-2xl border border-white/20 object-cover shadow-2xl"
+					/>
+				</div>
+			</section>
+
+			<section id="beneficios" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="benefits-title">
+				<div class="mb-10 text-center">
+					<h2 id="benefits-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Por qué las marcas confían su logística a TrackFlow</h2>
+					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
+						Combinamos experiencia operativa en almacén, red de transportistas y atención al cliente para que tu operación funcione de punta a punta.
+					</p>
+				</div>
+				<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Cobertura binacional</h3>
+						<p class="mt-3 text-slate-100">Operamos desde Los Ángeles y Zaragoza para servir tus pedidos en Estados Unidos y España con procesos coordinados.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Red de transportistas consolidada</h3>
+						<p class="mt-3 text-slate-100">Trabajamos con operadores líderes y locales para asignar cada envío al servicio más adecuado según destino y urgencia.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Gestión profesional de devoluciones</h3>
+						<p class="mt-3 text-slate-100">Procesamos logística inversa con criterios claros de revisión y reacondicionamiento para reducir pérdidas y tiempos.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Equipo de soporte dedicado</h3>
+						<p class="mt-3 text-slate-100">Acompañamos a tu marca y a tus destinatarios con seguimiento proactivo de incidencias y comunicación clara.</p>
+					</article>
+				</div>
+			</section>
+
+			<section id="caracteristicas" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen flex-col justify-center bg-white/10 px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="features-title">
+				<div class="mb-10 text-center">
+					<h2 id="features-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Características</h2>
+					<p class="mx-auto mt-4 max-w-2xl text-slate-100">
+						Servicios logísticos integrales para marcas e-commerce que priorizan cumplimiento, trazabilidad y experiencia de entrega.
+					</p>
+				</div>
+				<div class="grid gap-6 lg:grid-cols-3">
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Almacenaje y preparación de pedidos</h3>
+						<p class="mt-3 text-slate-100">Recepción de mercancía, control de inventario, picking y packing estandarizados para cumplir tus niveles de servicio.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Última milla con seguimiento continuo</h3>
+						<p class="mt-3 text-slate-100">Coordinamos entregas con múltiples transportistas y mantenemos visibilidad del estado de cada pedido.</p>
+					</article>
+					<article class="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+						<h3 class="font-display text-xl font-bold">Logística inversa y control de calidad</h3>
+						<p class="mt-3 text-slate-100">Gestionamos devoluciones de forma ágil para recuperar inventario útil y proteger la experiencia postventa.</p>
+					</article>
+				</div>
+			</section>
+
+			<section id="como-funciona" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="how-it-works-title">
+				<div class="w-full">
+					<div class="mb-10 text-center">
+						<h2 id="how-it-works-title" class="scroll-mt-28 font-display text-3xl font-bold sm:text-4xl">Cómo funciona</h2>
+						<p class="mx-auto mt-4 max-w-2xl text-slate-100">
+							Te acompañamos desde el onboarding inicial hasta la operación diaria para que externalizar logística sea simple y seguro.
+						</p>
+					</div>
+					<ol class="grid gap-6 md:grid-cols-3" aria-label="Proceso de implementación TrackFlow">
+						<li class="rounded-2xl border border-white/20 bg-slate-900/30 p-6">
+							<p class="text-sm font-bold uppercase tracking-wide text-mist">Paso 1</p>
+							<h3 class="mt-2 font-display text-xl font-bold">Plan logístico inicial</h3>
+							<p class="mt-3 text-slate-100">Definimos contigo volúmenes, SLA, destinos y reglas operativas para arrancar con una base clara.</p>
+						</li>
+						<li class="rounded-2xl border border-white/20 bg-slate-900/30 p-6">
+							<p class="text-sm font-bold uppercase tracking-wide text-mist">Paso 2</p>
+							<h3 class="mt-2 font-display text-xl font-bold">Operación diaria en almacén y transporte</h3>
+							<p class="mt-3 text-slate-100">Recibimos, almacenamos, preparamos y expedimos tus pedidos con control de calidad y seguimiento continuo.</p>
+						</li>
+						<li class="rounded-2xl border border-white/20 bg-slate-900/30 p-6">
+							<p class="text-sm font-bold uppercase tracking-wide text-mist">Paso 3</p>
+							<h3 class="mt-2 font-display text-xl font-bold">Mejora continua</h3>
+							<p class="mt-3 text-slate-100">Revisamos indicadores y optimizamos rutas, tiempos y devoluciones para sostener tu crecimiento.</p>
+						</li>
+					</ol>
+				</div>
+			</section>
+
+			<section id="servicios" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 flex min-h-screen items-center bg-white/10 py-24" aria-labelledby="solution-title">
+				<div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
+					<div>
+						<h2 id="solution-title" class="font-display text-3xl font-bold sm:text-4xl">Servicios logísticos que cubren todo el ciclo del pedido</h2>
+						<p class="mt-5 text-slate-100">
+							Desde la entrada de inventario hasta la devolución final, operamos tu logística con procesos definidos y foco en cumplimiento.
+						</p>
+						<ul class="mt-6 space-y-3 text-slate-50" aria-label="Ventajas de la plataforma">
+							<li>Almacenaje, picking y packing con estándares operativos consistentes.</li>
+							<li>Coordinación de última milla con red de transportistas en ambos países.</li>
+							<li>Gestión de devoluciones para acelerar reacondicionamiento y reposición.</li>
+							<li>Atención a incidencias para marcas y destinatarios finales.</li>
+						</ul>
+					</div>
+					<div class="rounded-2xl border border-white/20 bg-slate-900/40 p-8">
+						<h3 class="font-display text-2xl font-bold">¿Buscas un partner logístico confiable?</h3>
+						<p class="mt-3 text-slate-100">
+							Cuéntanos tus volúmenes, tus destinos y tus retos operativos. Diseñamos una propuesta logística alineada a tu negocio.
+						</p>
+						<a
+							href="apply.html"
+							class="mt-6 inline-block rounded-xl bg-mango px-6 py-3 font-bold text-ink transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-white"
+							>Ir al formulario de aplicación</a
+						>
+					</div>
+				</div>
+			</section>
+
+			<section id="contacto" class="scroll-mt-24 sm:scroll-mt-28 lg:scroll-mt-40 xl:scroll-mt-44 2xl:scroll-mt-48 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8" aria-labelledby="contact-title">
+				<h2 id="contact-title" class="font-display text-3xl font-bold">Contacto</h2>
+				<p class="mt-4 max-w-2xl text-slate-100">
+					Nuestro equipo comercial y de operaciones te acompaña desde la evaluación inicial hasta la puesta en marcha.
+				</p>
+				<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Email</p>
+						<p class="mt-1 text-lg font-bold">sales@trackflow.example</p>
+					</div>
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Teléfono</p>
+						<p class="mt-1 text-lg font-bold">+1 (213) 555-0188</p>
+					</div>
+					<div class="rounded-xl border border-white/20 bg-white/10 p-5">
+						<p class="text-sm uppercase tracking-wide text-mist">Sedes</p>
+						<p class="mt-1 text-lg font-bold">Los Ángeles · Zaragoza</p>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<footer class="border-t border-white/20 bg-slate-950/60">
+			<div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-mist sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+				<p>© 2026 TrackFlow. Todos los derechos reservados.</p>
+				<p>Logística de última milla y gestión de almacenes para e-commerce.</p>
+			</div>
+		</footer>
+		<script>
+			const siteHeader = document.getElementById("site-header");
+			const menuButton = document.getElementById("mobile-menu-button");
+			const mobileMenu = document.getElementById("mobile-menu");
+
+			const getAnchorOffset = () => {
+				const headerHeight = siteHeader ? siteHeader.offsetHeight : 0;
+				return headerHeight + 16;
+			};
+
+			const updateScrollMargins = () => {
+				const offset = getAnchorOffset();
+				document.querySelectorAll("main[id], section[id], h1[id], h2[id]").forEach((element) => {
+					element.style.scrollMarginTop = `${offset}px`;
+				});
+			};
+
+			const scrollToHash = (hash, updateHistory = false) => {
+				if (!hash || hash === "#") return;
+				const target = document.querySelector(hash);
+				if (!target) return;
+
+				const top = target.getBoundingClientRect().top + window.scrollY - getAnchorOffset();
+				window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+
+				if (updateHistory) {
+					history.pushState(null, "", hash);
+				}
+			};
+
+			document.querySelectorAll('a[href^="#"]').forEach((link) => {
+				link.addEventListener("click", (event) => {
+					const hash = link.getAttribute("href");
+					if (!hash || hash === "#") return;
+					if (!document.querySelector(hash)) return;
+
+					event.preventDefault();
+					scrollToHash(hash, true);
+				});
+			});
+
+			window.addEventListener("resize", updateScrollMargins);
+			window.addEventListener("load", () => {
+				updateScrollMargins();
+				if (window.location.hash) {
+					scrollToHash(window.location.hash);
+				}
+			});
+			window.addEventListener("hashchange", () => {
+				scrollToHash(window.location.hash);
+			});
+
+			if (menuButton && mobileMenu) {
+				menuButton.addEventListener("click", () => {
+					const isExpanded = menuButton.getAttribute("aria-expanded") === "true";
+					menuButton.setAttribute("aria-expanded", String(!isExpanded));
+					menuButton.setAttribute("aria-label", isExpanded ? "Abrir menú" : "Cerrar menú");
+					mobileMenu.classList.toggle("hidden", isExpanded);
+				});
+
+				mobileMenu.querySelectorAll("a").forEach((link) => {
+					link.addEventListener("click", () => {
+						menuButton.setAttribute("aria-expanded", "false");
+						menuButton.setAttribute("aria-label", "Abrir menú");
+						mobileMenu.classList.add("hidden");
+					});
+				});
+			}
+		</script>
+	</body>
+</html>
