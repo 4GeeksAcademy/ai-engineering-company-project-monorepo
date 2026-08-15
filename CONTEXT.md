@@ -1,129 +1,203 @@
-# Bienvenido a TrackFlow
+# CONTEXT — Utilidad de Análisis de Datos: Procesador de Reportes de Incidentes
 
-## AI Engineering · 4Geeks Academy — Briefing de empresa
-
----
-
-TrackFlow es una empresa de logística de última milla y gestión de almacenes fundada en 2009 en Los Ángeles, Estados Unidos. Opera en dos mercados — Estados Unidos y España — con almacenes en Los Ángeles y Zaragoza. La empresa cuenta con unos 130 empleados y factura alrededor de 9 millones de euros anuales.
-
-TrackFlow existe porque las marcas de e-commerce son buenas haciendo y vendiendo productos, pero no haciendo llegar esos productos a la puerta del cliente. Eso es lo que hace TrackFlow por ellas: almacena su inventario, prepara y empaqueta los pedidos, los envía a través de una red de transportistas y gestiona las devoluciones cuando los productos regresan. Para las marcas que trabajan con TrackFlow, toda la operación logística — desde el momento en que se hace un pedido hasta el momento en que se entrega o se devuelve — es responsabilidad de TrackFlow.
-
-## Cómo está organizada la empresa
-
-TrackFlow está liderada por **Thomas Harry**, fundador y CEO, con sede en Los Ángeles. La empresa tiene una oficina de tecnología en Zaragoza, España, donde están el CTO Andrés Kim y la mayor parte del equipo técnico. Los equipos de operaciones, comercial y atención al cliente están distribuidos entre los dos países.
-
-La empresa se organiza en las siguientes áreas:
-
-**Operaciones de Almacén** es donde ocurre el trabajo físico de la logística. Ana Whitfield supervisa los dos almacenes —uno en Los Ángeles, otro en Zaragoza— y los aproximadamente 70 operarios que los gestionan. Cada día, cientos de pedidos llegan, se recogen de las estanterías, se empaquetan y se entregan a los transportistas. Los dos almacenes funcionan con sistemas distintos y no tienen una visión compartida del inventario.
-
-**Última Milla y Gestión de Transportistas** gestiona la relación con los 8 transportistas con los que TrackFlow trabaja en los dos países — entre ellos UPS, FedEx, MRW y SEUR. Carlos Vega coordina qué transportista lleva cada envío, hace seguimiento de las entregas y gestiona las incidencias que inevitablemente ocurren: paquetes perdidos, entregas fallidas, direcciones incorrectas. Hoy, la mayor parte de esto se hace de forma manual, transportista por transportista.
-
-**Logística Inversa** gestiona lo que ocurre cuando un producto regresa. Sofía Ramos lidera este equipo de cinco personas. Las devoluciones representan entre el 18% y el 25% del volumen total según el cliente y el país, y cada devolución implica una cadena de decisiones — aprobar o rechazar, recoger o no, reacondicionar o desechar — que actualmente pasan todas por revisión humana.
-
-**Atención al Cliente** es la primera línea entre TrackFlow y las personas a las que sirve. Valentina Cruz gestiona 15 agentes en Los Ángeles y Zaragoza que atienden consultas tanto de las marcas (que quieren saber cómo va su operación) como de los consumidores finales (que quieren saber dónde está su paquete). La gran mayoría de las consultas son repetitivas, y ahora mismo cada una de ellas la responde una persona.
-
-**Comercial y Relación con Clientes** gestiona la cartera de clientes marca de TrackFlow. Miguel Torres lidera a los account managers y al equipo de desarrollo de negocio, responsables de retener a los clientes actuales y ganar nuevos. Los contratos son anuales, y las renovaciones se ganan o se pierden en función de si los clientes sienten que su operación logística está funcionando bien.
-
-**Tecnología** es el equipo que construye y mantiene todo. Andrés Kim lidera desde Zaragoza a un equipo de desarrolladores, data engineers y personas de sistemas. La arquitectura actual es un patchwork: dos sistemas de almacén distintos, un ERP de principios de los años 2010 e integraciones entre ellos que se construyeron con rapidez y nunca se documentaron bien. Cuando algo falla, el equipo se entera por un mensaje de WhatsApp de alguien en operaciones.
-
-**Dirección Ejecutiva** recae en Thomas, que gestiona el negocio desde Los Ángeles con un informe semanal consolidado que cada director prepara manualmente — un proceso que consume horas cada domingo por la noche y que aun así entrega datos que ya llevan uno o dos días de antigüedad.
-
-## Dónde está la empresa hoy
-
-TrackFlow tiene buenos clientes, un equipo de operaciones competente y una propuesta de valor clara. Lo que le falta es la infraestructura para gestionar una operación logística de dos países a escala. Los dos almacenes no pueden ver el inventario del otro. Los datos de rendimiento de los transportistas no existen en ninguna forma estructurada. Las devoluciones se aprueban o rechazan una por una. Las consultas de los clientes las responden agentes consultando un documento de Word en Google Drive. El CEO toma decisiones basándose en un informe ensamblado a mano.
-
-La consecuencia es que TrackFlow es más lenta, más propensa a errores y menos rentable de lo que necesita ser — y la brecha crece mientras los competidores invierten en automatización.
-
-Daniel ha creado una unidad interna llamada **TrackFlow Tech** con un mandato claro: construir los sistemas, las integraciones y las automatizaciones inteligentes que permitan a TrackFlow operar como la empresa logística moderna que necesita ser.
-
-**Tú formas parte de esa unidad.**
+## Empresa: TrackFlow
 
 ---
 
-## Los departamentos y sus problemas
+## Tu empresa
 
-### 🚚 Operaciones de almacén
+**TrackFlow** es una empresa de logística de última milla y gestión de almacenes que opera en Los Ángeles (EE. UU.) y Zaragoza (España). Sus clientes son marcas de e-commerce que externalizan toda su operación logística.
 
-**Responsable:** Ana Whitfield (~70 operarios + 2 responsables de almacén)
+Formas parte de la unidad interna **TrackFlow Tech**, bajo la dirección de **Thomas Harry (CEO)** y **el tech lead interno**. Tu contacto para este proyecto es **Valentina Cruz (CX Manager)**.
 
-El almacén de Los Ángeles y el de Zaragoza utilizan sistemas de gestión de almacén (SGA) diferentes — uno es software comercial, el otro es una hoja de cálculo avanzada. No existe visibilidad de inventario en tiempo real a nivel global. Los pedidos entrantes llegan por email en formatos distintos según el cliente y se transcriben manualmente. El picking se hace con listas en papel. Las discrepancias de inventario son frecuentes y se detectan tarde.
+El equipo de Valentina (15 agentes) gestiona incidentes de dos tipos de clientes: **marcas (B2B)** que contratan servicios de TrackFlow y **consumidores finales (B2C)** que reciben los paquetes. Todos los incidentes se registran actualmente en un helpdesk legado. Se exportó un mes de datos en CSV para análisis y tu archivo de prueba tiene **1,000 filas**.
 
-**Qué necesitan:** Una API de inventario unificada que devuelva el stock en tiempo real de cualquier SKU en cualquiera de los dos almacenes, un pipeline de ingesta de pedidos que parsee los emails automáticamente, un dashboard de operaciones de almacén, y alertas de stock bajo que notifiquen al cliente y al equipo de compras.
-
----
-
-### 📦 Última milla y gestión de transportistas
-
-**Responsable:** Carlos Vega (6 coordinadores logísticos)
-
-TrackFlow trabaja con 8 transportistas en ambos países (UPS, FedEx y DHL en Estados Unidos; MRW, SEUR y DHL en España, más dos transportistas locales). La asignación de transportista por envío es manual. El seguimiento de paquetes obliga a consultar múltiples portales de cada transportista por separado. No hay datos históricos de rendimiento: sin tasa de entrega a tiempo, sin incidencias por ruta, sin coste por kg.
-
-**Qué necesitan:** Un motor de selección de transportista que recomiende la opción óptima dado el destino, peso y urgencia; un endpoint unificado de tracking que agregue el estado desde cualquier transportista; un portal de seguimiento público para el destinatario; y un dashboard de rendimiento de transportistas.
+El volumen de incidencias es alto: el 80% de las consultas podría automatizarse, pero primero el equipo necesita entender qué está llegando. Este análisis es la base del agente de soporte de primera línea que se construirá en una fase posterior. Tu script debe dar a Valentina una visión clara del volumen, la calidad y la satisfacción antes de empezar ese trabajo.
 
 ---
 
-### 🔄 Logística inversa
+## Estructura del CSV
 
-**Responsable:** Sofía Ramos (equipo de 5 personas)
+**Nombre de archivo:** `incidents.csv`  
+**Codificación:** UTF-8  
+**Separador:** coma (`,`)  
+**Fila de encabezado:** sí (fila 1)
 
-Las devoluciones representan entre el 18% y el 25% del volumen según cliente y país. Cada devolución pasa por revisión manual — no existen criterios de aprobación automáticos. La inspección del producto devuelto es subjetiva e inconsistente entre operarios. No hay visibilidad sobre qué productos se devuelven más ni por qué.
+| Campo                | Tipo    | Requerido | Valores permitidos / formato                        |
+| -------------------- | ------- | --------- | --------------------------------------------------- |
+| `incident_id`        | string  | ✅        | ID único, formato `TRF-XXXXXX` (ej.: `TRF-000001`)  |
+| `date`               | string  | ✅        | `YYYY-MM-DD`                                        |
+| `country`            | string  | ✅        | `US` o `ES`                                         |
+| `customer_type`      | string  | ✅        | `B2B` o `B2C`                                       |
+| `tracking_number`    | string  | ✅        | Número de tracking del carrier, mínimo 8 caracteres |
+| `carrier`            | string  | ✅        | Ver carriers abajo                                  |
+| `category`           | string  | ✅        | Ver categorías abajo                                |
+| `description`        | string  | ✅        | Texto libre, mínimo 5 caracteres                    |
+| `status`             | string  | ✅        | `OPEN`, `CLOSED`, `DISCARDED`                       |
+| `customer_email`     | string  | ✅        | Email válido del cliente que reporta (**sensible**) |
+| `satisfaction_score` | integer | ❌\*      | Entero 1–5. **Requerido si** `status = CLOSED`      |
 
-**Qué necesitan:** Un motor de aprobación automática de devoluciones con reglas configurables por cliente, un flujo automatizado de recogida (aprobación → etiqueta → instrucciones al cliente → programación con transportista), un sistema de inspección asistido por IA donde el operario fotografía el producto y la IA clasifica su estado, y un dashboard de devoluciones con análisis de patrones.
+\*`satisfaction_score` es opcional en la estructura, pero un registro `CLOSED` sin este valor se considera **incompleto**.
 
----
+> ⚠️ El campo `customer_email` contiene correos reales y por eso este archivo no puede compartirse con herramientas de IA externas. Tu script nunca debe imprimir, registrar ni exportar correos individuales en ninguna salida.
 
-### 📞 Experiencia del cliente
+### Carriers válidos
 
-**Responsable:** Valentina Cruz (15 agentes en Los Ángeles y Zaragoza)
+| País | Carriers                            |
+| ---- | ----------------------------------- |
+| `US` | `UPS`, `FEDEX`, `DHL_US`            |
+| `ES` | `MRW`, `SEUR`, `DHL_ES`, `LOCAL_ES` |
 
-TrackFlow atiende a dos tipos de cliente: las marcas (B2B) que contratan sus servicios y los consumidores finales (B2C) que reciben los paquetes. Los 15 agentes gestionan ambos a través de email, WhatsApp y teléfono sin un sistema unificado de tickets. El 80% de las consultas podría resolverse automáticamente. No hay base de conocimiento. La cobertura fuera del horario de oficina es cero.
+Un registro es **inválido** si el carrier no pertenece a la lista válida para su país declarado.
 
-**Qué necesitan:** Un agente de CX de primera línea que resuelva automáticamente consultas de seguimiento y estado de devoluciones, una base de conocimiento semántica indexada para RAG, un sistema unificado de tickets, un dashboard de CX en tiempo real, y análisis de sentimiento para detectar clientes frustrados antes de que escalen. El soporte multiidioma (español + inglés) es opcional pero altamente recomendado, empezando por un idioma base.
+### Categorías válidas
 
----
-
-### 🤝 Comercial y relación con clientes
-
-**Responsable:** Miguel Torres (4 account managers + 4 desarrollo de negocio)
-
-Los account managers gestionan sus cuentas en hojas de cálculo personales e hilos de email — no hay CRM. Los informes a clientes son manuales: cada mes un account manager consolida datos de distintos sistemas para enviar a cada cliente un informe en PDF. No hay visibilidad sobre qué clientes corren riesgo de no renovar.
-
-**Qué necesitan:** Integración con CRM con perfil unificado de cliente, informes PDF para clientes generados automáticamente por un agente, un dashboard de salud de cliente con puntuación de riesgo de renovación, alertas a 90 y 30 días del vencimiento del contrato, y un agente comercial que sugiera el servicio y la estructura de precios más relevantes para cada prospecto.
-
----
-
-### 💻 Tecnología
-
-**CTO:** Andrés Kim (equipo de 7 personas en Zaragoza)
-
-La arquitectura tecnológica de TrackFlow es el resultado de años de crecimiento no planificado: dos SGA diferentes, un ERP corporativo de principios de la década de 2010, scripts de Python punto a punto sin documentar, y bases de datos en dos proveedores cloud distintos. No hay telemetría centralizada. Cuando un endpoint falla en Los Ángeles, el equipo de Zaragoza se entera por WhatsApp. Desplegar una nueva funcionalidad lleva entre una y dos semanas.
-
-**Qué necesitan:** Telemetría y logging centralizados de ambos países, un pipeline de datos que alimente todos los dashboards de la empresa, monitorización en tiempo real con alertas automáticas, un agente de documentación técnica, y automatización de tareas de operaciones (backups, health checks, notificaciones de incidencias con contexto).
-
----
-
-### 📊 Dirección Ejecutiva
-
-**CEO:** Daniel Espinoza
-
-Daniel recibe un informe consolidado cada lunes que sus directores preparan el domingo por la tarde combinando datos de distintos sistemas — 3 o 4 horas de trabajo por director. A las 10 de la mañana del lunes, algunos datos ya tienen dos días de antigüedad. No hay una visión unificada del negocio por país. Las decisiones estratégicas se toman con datos parciales.
-
-**Qué necesita:** Un dashboard ejecutivo global con KPIs de ambas operaciones en tiempo real (volumen de envíos, tasa de entrega a tiempo, coste operativo, devoluciones, satisfacción del cliente), un informe semanal generado automáticamente los lunes a las 7 de la mañana, comparativas por país, alertas por umbrales, y un asistente de IA al que pueda consultar en lenguaje natural.
+| Código             | Descripción                            |
+| ------------------ | -------------------------------------- |
+| `LOST_PARCEL`      | Paquete reportado como perdido         |
+| `DELAYED_DELIVERY` | Entrega fuera de la fecha esperada     |
+| `WRONG_ADDRESS`    | Paquete enviado a dirección incorrecta |
+| `RETURN_REQUEST`   | Cliente solicita devolución            |
+| `DAMAGE`           | Producto recibido con daños            |
 
 ---
 
-## ¿Por qué elegir TrackFlow?
+## Reglas de registros inválidos
 
-Elige TrackFlow si te atraen:
+Un registro debe marcarse como **inválido** si ocurre cualquiera de estos casos:
 
-- **Logística y operaciones físicas** — cada línea de código que escribas está conectada a un paquete que se mueve de una estantería de almacén a la puerta de alguien.
-- **Complejidad transfronteriza** — dos países, dos idiomas, dos entornos regulatorios y dos stacks tecnológicos separados que hay que unificar.
-- **Ingeniería de datos en su forma más concreta** — métricas de rendimiento de transportistas, inventario a nivel de SKU, streams de eventos de envío y clasificación de devoluciones son todos estructurados, medibles y visualmente impactantes en dashboards.
-- **Sistemas que funcionan 24/7** — los clientes de TrackFlow no dejan de esperar sus paquetes después de las 18:00. El agente de CX, el portal de seguimiento y el dashboard de operaciones deben estar siempre disponibles.
+| Regla                                        | Descripción                                                    |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `country` faltante o inválido                | Vacío o distinto de `US` / `ES`                                |
+| `carrier` faltante o inválido                | Vacío, desconocido o carrier que no opera en el país declarado |
+| Falta `tracking_number`                      | Vacío o con menos de 8 caracteres                              |
+| `category` faltante o inválida               | Vacía o fuera de las 5 categorías válidas                      |
+| `description` vacía                          | Vacía o con menos de 5 caracteres                              |
+| `customer_email` faltante o inválido         | Vacío o sin `@`                                                |
+| `status = CLOSED` y sin `satisfaction_score` | Incidente cerrado sin puntaje                                  |
+| `satisfaction_score` fuera de rango          | Hay valor, pero no está entre 1 y 5 (inclusive)                |
 
-Los retos de IA en TrackFlow incluyen clasificación de estado de productos devueltos por imagen, búsqueda semántica sobre políticas logísticas en dos idiomas, selección inteligente de transportista con recomendaciones explicables, y un agregador de tracking en tiempo real que extrae datos de 8 APIs de transportistas distintas. Si quieres construir sistemas que manejen complejidad del mundo físico a escala, TrackFlow es tu empresa.
+Tu script debe reportar cuántos registros caen en cada tipo de regla.
 
 ---
 
-_Documento interno — 4Geeks Academy · AI Engineering Track_
-_Uso exclusivo para la generación de proyectos del programa_
+## Distribución de datos (archivo de prueba provisto)
+
+El archivo `incidents-trackflow.csv` se envió como adjunto (ver ficheros `incidents-trackflow.csv`). Los siguientes valores describen su contenido y son los que tu script debe producir exactamente.
+
+**Total de filas:** 100
+
+**Registros válidos: 95**
+| Categoría | Cantidad |
+|---|---|
+| `LOST_PARCEL` | 14 |
+| `DELAYED_DELIVERY` | 38 |
+| `WRONG_ADDRESS` | 19 |
+| `RETURN_REQUEST` | 17 |
+| `DAMAGE` | 7 |
+
+| Estado      | Cantidad |
+| ----------- | -------- |
+| `OPEN`      | 29       |
+| `CLOSED`    | 52       |
+| `DISCARDED` | 14       |
+
+**Métrica recomendada (no obligatoria para aprobar):**
+
+| País | Cantidad |
+| ---- | -------- |
+| `US` | 50       |
+| `ES` | 45       |
+
+**Registros inválidos: 5**
+| Regla activada | Cantidad |
+|---|---|
+| `tracking_number` faltante o inválido | 1 |
+| Carrier inválido para el país declarado | 1 |
+| `category` faltante o inválida | 1 |
+| `customer_email` faltante o inválido | 1 |
+| `status = CLOSED` sin `satisfaction_score` | 1 |
+
+**Puntajes de satisfacción (52 registros cerrados)**
+| Puntaje | Cantidad |
+|---|---|
+| 1 | 6 |
+| 2 | 11 |
+| 3 | 15 |
+| 4 | 14 |
+| 5 | 6 |
+Promedio: **3.06**
+
+---
+
+## Salida esperada
+
+Cuando el estudiante ejecute `python analyze.py incidents-trackflow.csv` con el archivo provisto, la salida en consola debe mostrar los valores siguientes en todas las secciones **obligatorias** (totales, desglose de inválidos, categoría, estado y satisfacción). El bloque `BREAKDOWN BY COUNTRY` es **recomendado** para TrackFlow — contexto útil para stakeholders, pero no obligatorio para aprobar.
+
+```
+============================================================
+  TRACKFLOW — INCIDENT REPORT ANALYSIS
+  Source file: incidents-trackflow.csv
+============================================================
+
+TOTAL RECORDS IN FILE .......... 100
+  ├─ Valid records ................ 95
+  └─ Invalid / incomplete .......... 5
+
+INVALID RECORDS BREAKDOWN
+  ├─ Invalid tracking number ....... 1
+  ├─ Carrier/country mismatch ...... 1
+  ├─ Invalid or missing category ... 1
+  ├─ Invalid or missing email ...... 1
+  └─ Closed incident, no score ..... 1
+
+BREAKDOWN BY CATEGORY (valid records)
+  ├─ LOST_PARCEL .................. 14  (14.7%)
+  ├─ DELAYED_DELIVERY ............. 38  (40.0%)
+  ├─ WRONG_ADDRESS ................ 19  (20.0%)
+  ├─ RETURN_REQUEST ............... 17  (17.9%)
+  └─ DAMAGE ........................ 7   (7.4%)
+
+BREAKDOWN BY STATUS (valid records)
+  ├─ OPEN ......................... 29  (30.5%)
+  ├─ CLOSED ....................... 52  (54.7%)
+  └─ DISCARDED .................... 14  (14.7%)
+
+BREAKDOWN BY COUNTRY (valid records) — recomendado, no obligatorio
+  ├─ US ........................... 50  (52.6%)
+  └─ ES ........................... 45  (47.4%)
+
+SATISFACTION INDEX (closed incidents)
+  Scored incidents: 52 of 52
+  Average score: 3.06 / 5.00
+  ├─ Score 1 (Very dissatisfied) ... 6
+  ├─ Score 2 (Dissatisfied) ....... 11
+  ├─ Score 3 (Neutral) ............ 15
+  ├─ Score 4 (Satisfied) .......... 14
+  └─ Score 5 (Very satisfied) ...... 6
+
+============================================================
+Export results to CSV? [y / n]:
+```
+
+> **Nota:** Se aceptan diferencias menores de formato (espaciado, caracteres de caja), pero todos los valores numéricos de las secciones **obligatorias** deben coincidir exactamente. El desglose por país es una extensión **recomendada** de TrackFlow — inclúyelo si quieres salida lista para stakeholders, pero no se evalúa contra la rúbrica del README del proyecto.
+
+---
+
+## Nota de stakeholders
+
+> **De Valentina Cruz (CX Manager):**
+> _"Los puntajes de satisfacción en logística suelen ser más bajos que el promedio, eso es normal en nuestro sector. Lo que necesito entender es si el problema es más grave en EE. UU. o en España, y si está concentrado en categorías como_ `DELAYED_DELIVERY` _o_ `LOST_PARCEL`_. Un desglose por país en consola me ayudaría — inclúyelo si puedes. La exportación CSV debe tener una fila por métrica; la usaré en el reporte para clientes. Y como siempre: ningún correo de cliente en la salida, nunca."_
+
+---
+
+## Ruta en el repositorio
+
+```
+incidents-analysis/CONTEXT-trackflow.md
+```
+
+---
+
+_Documento interno — 4Geeks Academy · AI Engineering Track_  
+_Para uso exclusivo en la generación de proyectos del programa_
