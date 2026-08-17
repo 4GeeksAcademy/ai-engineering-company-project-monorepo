@@ -187,12 +187,25 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
-    throw new Error('Unauthorized');
+    throw new Error('Sesión expirada. Inicia sesión nuevamente.');
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: `Error ${response.status}` }));
-    throw new Error(error.message || error.detail || `Error ${response.status}`);
+    const error = await response.json().catch(() => ({}));
+    const serverMessage = error.message || error.detail || '';
+    const statusMessages: Record<number, string> = {
+      400: 'La solicitud contiene datos inválidos.',
+      403: 'No tienes permiso para realizar esta acción.',
+      404: 'El recurso solicitado no fue encontrado.',
+      409: 'El recurso ya existe.',
+      422: 'Los datos enviados no pasaron la validación.',
+      429: 'Demasiadas solicitudes. Intenta de nuevo más tarde.',
+      500: 'Error interno del servidor. Intenta de nuevo más tarde.',
+      502: 'El servicio no está disponible momentáneamente.',
+      503: 'El servicio está en mantenimiento. Intenta más tarde.',
+    };
+    const userMessage = statusMessages[response.status] || `Error de comunicación (${response.status}).`;
+    throw new Error(serverMessage || userMessage);
   }
 
   return response.json();
