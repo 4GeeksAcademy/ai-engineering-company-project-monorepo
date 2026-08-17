@@ -134,7 +134,7 @@ export function IncidentsAnalyzer() {
           </button>
         </div>
 
-        {errorMessage ? <p className="feedback feedback-error">{errorMessage}</p> : null}
+        {errorMessage ? <p className="feedback feedback-error" role="alert">{errorMessage}</p> : null}
         {!errorMessage && analysis ? (
           <p className="feedback feedback-ok">
             Analisis disponible para {analysis.source_file}. Registros invalidos detectados: {analysis.invalid_records}.

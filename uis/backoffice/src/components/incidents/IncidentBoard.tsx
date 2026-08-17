@@ -62,7 +62,7 @@ export function IncidentBoard() {
       </div>
 
       {mutationError && (
-        <div className={styles.globalError}>{mutationError}</div>
+        <div className={styles.globalError} role="alert">{mutationError}</div>
       )}
 
       {tab === 'board' && (
