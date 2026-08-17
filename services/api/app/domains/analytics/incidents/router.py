@@ -40,7 +40,7 @@ async def analyze_incidents(file: UploadFile = File(...)) -> IncidentAnalysisRes
 
     try:
         return analyze_incidents_csv(csv_text, file.filename)
-    except Exception as exc:  # pragma: no cover - defensive boundary for malformed CSV input
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unable to analyze CSV file: {exc}",

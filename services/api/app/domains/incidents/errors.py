@@ -81,6 +81,7 @@ class IncidentErrorResponse(BaseModel):
 # Sanitizer — never expose internals
 # ---------------------------------------------------------------------------
 
+# Patterns that indicate a message contains internal details
 _SENSITIVE_PATTERNS = (
     "traceback",
     "password",
@@ -92,6 +93,16 @@ _SENSITIVE_PATTERNS = (
     ".json",
 )
 
+# Keep only safe characters for user-facing messages
+_ALLOWED_CHARS = set(
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789"
+    "áéíóúüñÁÉÍÓÚÜÑàèìòùçÀÈÌÒÙÇ"
+    ".,;:!?¡¿-–—''\"\"()[]{}@/\\#%&*+=<>~€$¢£¥ "
+    "\n\r\t"
+)
+
 
 def sanitize_error_for_response(error: Any) -> str:
     """Return a safe user-facing message, stripping internal details."""
@@ -100,7 +111,10 @@ def sanitize_error_for_response(error: Any) -> str:
     for pattern in _SENSITIVE_PATTERNS:
         if pattern in lower:
             return "An internal error occurred. Please try again later."
-    return msg
+    # Remove non-printable or unusual characters that could leak internals
+    sanitized = "".join(c if c in _ALLOWED_CHARS else " " for c in msg)
+    sanitized = " ".join(sanitized.split())  # collapse whitespace
+    return sanitized if sanitized else "An internal error occurred. Please try again later."
 
 
 # ---------------------------------------------------------------------------
