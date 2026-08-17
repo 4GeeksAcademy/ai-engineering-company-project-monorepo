@@ -16,6 +16,7 @@ dependencies = [
     "openai>=2.48.0",
     "pandas>=2.3.3",
     "prefect>=3.4.25",
+    "pyjwt>=2.13.0",
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.20",
     "qdrant-client>=1.18.0",
@@ -27,3 +28,6 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "services/api"]

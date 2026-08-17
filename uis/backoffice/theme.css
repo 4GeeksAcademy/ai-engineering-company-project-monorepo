@@ -239,3 +239,184 @@ textarea {
 .nav-links a:hover {
     text-decoration: underline;
 }
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.live-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--surface-muted);
+    color: var(--muted);
+}
+
+.live-badge[data-state="live"] {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.live-badge[data-state="connecting"],
+.live-badge[data-state="reconnecting"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.live-notice {
+    margin: 0 0 1rem;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent);
+    background: #fff7ed;
+    color: #9a3412;
+    font-weight: 600;
+}
+
+.live-notice--emergency_order {
+    border-left-color: #b45309;
+}
+
+.live-notice--waste_escalation {
+    border-left-color: var(--error-border);
+    background: var(--error-bg);
+    color: var(--error-text);
+}
+
+.ticket-item.is-live-new {
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+    background: #fff7ed;
+    animation: brasaland-ticket-in 0.4s ease-out;
+}
+
+.ticket-item--emergency_order.is-live-new {
+    border-left-color: #b45309;
+}
+
+.ticket-item--waste_escalation.is-live-new {
+    border-left-color: var(--error-border);
+    background: var(--error-bg);
+}
+
+.live-chip {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+}
+
+@keyframes brasaland-ticket-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+[data-theme="dark"] .live-badge[data-state="live"] {
+    background: #14532d;
+    color: #bbf7d0;
+}
+
+[data-theme="dark"] .live-notice,
+[data-theme="dark"] .ticket-item.is-live-new {
+    background: #431407;
+    color: #fed7aa;
+}
+
+.ticket-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1rem;
+    margin: 1rem 0;
+}
+
+.ticket-form label {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.ticket-form input,
+.ticket-form select,
+.ticket-form button,
+.ticket-form .status-busy {
+    grid-column: 1 / -1;
+}
+
+.ticket-form button {
+    margin-top: 0;
+}
+
+#emergency-fields,
+#waste-fields {
+    display: contents;
+}
+
+.ticket-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ticket-item,
+.ticket-empty {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.875rem;
+}
+
+.ticket-meta {
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.status-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--surface-muted);
+    color: var(--muted);
+}
+
+.status-pill.status-open {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-pill.status-pending_approval {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pill.status-escalated {
+    background: var(--error-bg);
+    color: var(--error-text);
+}
