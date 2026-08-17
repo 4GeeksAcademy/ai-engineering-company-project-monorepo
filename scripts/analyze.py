@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 import sys
 from pathlib import Path
 
@@ -19,18 +17,24 @@ from app.domains.analytics.incidents.analysis import (  # noqa: E402
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("Usage: python analyze.py <path-to-incidents.csv>")
+        print("Usage: python analyze.py <path-to-incidents.csv>", file=sys.stderr)
         return 1
 
     source_path = Path(sys.argv[1]).expanduser()
     if not source_path.exists() or not source_path.is_file():
-        print(f"File not found: {source_path}")
+        print(f"File not found: {source_path}", file=sys.stderr)
         return 1
 
     try:
         result = analyze_csv_file(source_path)
+    except (OSError, PermissionError) as error:
+        print(f"Error reading file: {error}", file=sys.stderr)
+        return 1
     except ValueError as error:
-        print(f"Invalid CSV file: {error}")
+        print(f"Invalid CSV file: {error}", file=sys.stderr)
+        return 1
+    except Exception as error:
+        print(f"Unexpected error during analysis: {error}", file=sys.stderr)
         return 1
 
     print(render_console_report(result, source_path.name))
@@ -38,8 +42,12 @@ def main() -> int:
     response = input("Deseas exportar los resultados a CSV? [s / n]: ").strip().lower()
     if response == "s":
         output_path = Path.cwd() / "results.csv"
-        write_results_csv(result, output_path)
-        print(f"Archivo exportado: {output_path}")
+        try:
+            write_results_csv(result, output_path)
+            print(f"Archivo exportado: {output_path}")
+        except (OSError, PermissionError, ValueError) as error:
+            print(f"Error exporting results: {error}", file=sys.stderr)
+            return 1
 
     return 0
 

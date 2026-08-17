@@ -73,8 +73,11 @@ class AnalysisResult:
 
 def analyze_csv_file(file_path: str | Path) -> AnalysisResult:
     path = Path(file_path)
-    with path.open("r", encoding="utf-8", newline="") as handle:
-        return analyze_csv_text(handle.read())
+    try:
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            return analyze_csv_text(handle.read())
+    except OSError as exc:
+        raise ValueError(f"Cannot read file: {exc}") from exc
 
 
 def analyze_csv_text(csv_text: str) -> AnalysisResult:
@@ -251,10 +254,13 @@ def render_console_report(result: AnalysisResult, source_file: str) -> str:
 def write_results_csv(result: AnalysisResult, output_path: str | Path) -> None:
     path = Path(output_path)
     rows = export_rows(result)
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["metric", "value", "percentage"])
-        writer.writeheader()
-        writer.writerows(rows)
+    try:
+        with path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["metric", "value", "percentage"])
+            writer.writeheader()
+            writer.writerows(rows)
+    except OSError as exc:
+        raise ValueError(f"Cannot write results to {output_path}: {exc}") from exc
 
 
 def export_rows(result: AnalysisResult) -> list[dict[str, str]]:
