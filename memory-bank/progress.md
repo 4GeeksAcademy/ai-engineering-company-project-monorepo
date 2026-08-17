@@ -1,5 +1,21 @@
 # Progress
 
+## Scoped website Home-page rule (2026-08-11)
+
+Added `.agents/rules/website-home-page.md` with an explicit scope limited to `uis/website/app/page.tsx`. The rule preserves Nexova Home-page context and boundaries the application route, other UIs, shared styles, and assets from implicit changes.
+
+Validation performed:
+1. `git diff --check` passed for the rule change.
+2. Repository status confirmed the new rule is present; unrelated existing changes were left untouched.
+
+## Reusable UI components skill (2026-08-10)
+
+Added `.agents/skills/reusable-ui-components/SKILL.md` to guide detection and extraction of recurring UI layouts into focused, typed, accessible components. The skill covers component boundaries, composition, anti-patterns, consumer replacement, and responsive validation.
+
+Validation performed:
+1. Skill frontmatter inspected successfully.
+2. `git diff --check` passed for the new skill file.
+
 ## Backoffice business logic integration (2026-08-05)
 
 Scope changed:
