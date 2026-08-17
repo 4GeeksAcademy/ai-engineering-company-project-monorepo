@@ -148,7 +148,6 @@ async def forgot_password(
         return MessageResponse(
             detail="Si el email existe, recibirás un enlace de recuperación.",
             debug_reset_link=delivery.reset_link if _should_expose_reset_link() else None,
-            email_delivery="sent" if delivery.sent else "failed",
         )
 
     # Always return the same message regardless of email existence
