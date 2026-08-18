@@ -1,5 +1,14 @@
 # Progress
 
+## Backend architecture proposal (2026-08-17)
+
+Added `docs/Backend-Architecture-Proposal.md` as a Nexova-specific proposal for a modular layered FastAPI monolith. The document covers domain and module boundaries, candidate and notes routers, future vacancy and selection-process domains, persistence and API contract decisions, frontend/backend separation, environment configuration, CORS, security, observability, risks, and an evolution path. It cites official FastAPI and MDN CORS guidance and anchors decisions in the current tracker API consumer and selection models.
+
+Validation performed:
+1. `git diff --check -- docs/Backend-Architecture-Proposal.md` passed.
+2. Required proposal sections were confirmed with a targeted text search.
+3. No backend code, UI code, infrastructure, secrets, or lockfiles were modified.
+
 ## Scoped website Home-page rule (2026-08-11)
 
 Added `.agents/rules/website-home-page.md` with an explicit scope limited to `uis/website/app/page.tsx`. The rule preserves Nexova Home-page context and boundaries the application route, other UIs, shared styles, and assets from implicit changes.
