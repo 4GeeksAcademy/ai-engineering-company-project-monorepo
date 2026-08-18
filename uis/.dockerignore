@@ -1,0 +1,19 @@
+# ── UIS Docker ignore ──────────────────────────────────────────────────
+# Exclude everything that doesn't need to be in the build context.
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+
+# Environment files (contain secrets)
+.env*
+!.env.example
+
+# Logs
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db

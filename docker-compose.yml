@@ -1,0 +1,60 @@
+# ── TrackFlow – Docker Compose ─────────────────────────────────────────
+# Orchestrates all services for local development.
+#
+# Usage:
+#   docker compose build    # Build all images
+#   docker compose up       # Start all services
+#   docker compose up -d    # Start in detached mode (background)
+#   docker compose down     # Stop and remove containers
+#   docker compose logs -f  # Follow logs from all services
+
+services:
+
+  # ── Backend API (FastAPI + Flask) ─────────────────────────────────────
+  api:
+    build:
+      context: ./services
+      dockerfile: Dockerfile
+    container_name: trackflow-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Bind-mount source code for hot-reload (--reload in uvicorn)
+      - ./services/api:/app
+      # Anonymous volume: prevents local node_modules (if any) from
+      # shadowing the container-installed Python packages
+      - /app/__pycache__/
+    networks:
+      - trackflow-net
+
+  # ── Frontend UIS (Website + Backoffice) ──────────────────────────────
+  uis:
+    build:
+      context: ./uis
+      dockerfile: Dockerfile
+    container_name: trackflow-uis
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on:
+      - api
+    volumes:
+      # Bind-mount source code for Next.js hot-reload (HMR)
+      - ./uis/website:/app/website
+      - ./uis/backoffice:/app/backoffice
+      # Anonymous volumes: prevent local node_modules from shadowing
+      # the container-installed ones. Essential for Linux compatibility.
+      - /app/website/node_modules
+      - /app/backoffice/node_modules
+      - /app/website/.next
+      - /app/backoffice/.next
+    networks:
+      - trackflow-net
+
+networks:
+  trackflow-net:
+    driver: bridge

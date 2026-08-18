@@ -1,16 +1,25 @@
-services/api/.env
+# ── Environment & secrets ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
 
-# Python cache and bytecode
+# ── Dependencies ───────────────────────────────────────────────────────
+node_modules/
+
+# ── Python cache and bytecode ──────────────────────────────────────────
 **/__pycache__/
 *.py[cod]
 
-# Local virtual environments
+# ── Logs ───────────────────────────────────────────────────────────────
+*.log
+
+# ── Local virtual environments ─────────────────────────────────────────
 .venv/
 
-# Python packaging artifacts
+# ── Python packaging artifacts ─────────────────────────────────────────
 *.egg-info/
 
-# Local test databases and temp files
+# ── Local test databases and temp files ────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3

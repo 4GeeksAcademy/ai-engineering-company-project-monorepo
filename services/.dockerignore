@@ -1,0 +1,29 @@
+# ── Services Docker ignore ─────────────────────────────────────────────
+# Exclude everything that doesn't need to be in the build context.
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+
+# Environment files (contain secrets)
+.env*
+!.env.example
+
+# Test code (not needed in production image)
+tests/
+
+# Logs
+*.log
+
+# Local databases (TinyDB, SQLite)
+*.db
+*.sqlite
+*.sqlite3
+tmp/
+
+# Python packaging artifacts
+*.egg-info/
+
+# OS metadata
+.DS_Store
+Thumbs.db
