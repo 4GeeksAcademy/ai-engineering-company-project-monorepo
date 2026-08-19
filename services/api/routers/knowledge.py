@@ -1,16 +1,24 @@
 """Brasaland knowledge-base query API (see CONTEXT-company.md).
 
 POST /knowledge/query — request ``{"question": "..."}``, response ``{"answer": "..."}``.
+POST /knowledge/sessions — create a conversation thread (``session_id`` / ``thread_id``).
+WS /knowledge/ws — same ``query`` agent, streamed tokens, interruptible.
+Handshake must include JWT plus ``session_id`` or ``thread_id`` for an existing thread.
 
-This router is a thin HTTP adapter: it validates the request and delegates to
-``data.pipelines.rag.query()`` only. Retrieval, embedding, and generation live in
-``data/pipelines/`` — never duplicated here.
+This router is a thin HTTP/WebSocket adapter. ``POST /query`` delegates to
+``data.pipelines.rag.query()``. Streaming lives on ``KnowledgeProducer``, which
+publishes to ``ChatEventHub``; the WebSocket only subscribes. Retrieval,
+embedding, and generation live in ``data/pipelines/`` — never duplicated here.
 """
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated, Any
 
+from auth import require_backoffice_user
+from chat import store
 from data.pipelines.rag import query
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from pydantic import BaseModel, ConfigDict, Field
+from routers.chat import run_knowledge_websocket
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
@@ -42,3 +50,18 @@ def query_knowledge_base(payload: QueryRequest) -> QueryResponse:
             status_code=500,
             detail=f"Failed to process knowledge query: {error}",
         ) from error
+
+
+@router.post("/sessions", status_code=201)
+def create_knowledge_session(
+    _user: Annotated[dict, Depends(require_backoffice_user)],
+) -> dict[str, Any]:
+    """Open a conversation thread. The WebSocket handshake must pass this id."""
+    session = store.create()
+    return store.public_record(session["session_id"])
+
+
+@router.websocket("/ws")
+async def knowledge_query_stream(websocket: WebSocket) -> None:
+    """Persistent socket bound to an existing ``session_id`` / ``thread_id``."""
+    await run_knowledge_websocket(websocket)

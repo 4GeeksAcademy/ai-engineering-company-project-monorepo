@@ -20,94 +20,38 @@
             <a href="/knowledge/">Knowledge Assistant</a>
         </nav>
 
-        <p class="subtitle">Ask about supplier ordering, waste protocol, loyalty program, and menu allergens.</p>
+        <div id="login-panel" class="card">
+            <h2>Backoffice sign-in</h2>
+            <p class="subtitle">Same JWT as tickets and SSE. Browsers pass it as <code>?token=</code> on the WebSocket (not an Authorization header). Default local users: <code>mariana</code>, <code>felipe</code>, <code>lucia</code> / <code>brasaland</code>.</p>
+            <form id="login-form">
+                <label for="login-username">Username</label>
+                <input id="login-username" name="username" value="mariana" required>
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" value="brasaland" required>
+                <button type="submit" class="btn-primary">Sign in</button>
+                <p id="login-status" class="status-busy" role="status"></p>
+            </form>
+        </div>
 
-        <form id="query-form">
-            <label for="question" class="subtitle">Your question</label>
-            <textarea id="question" placeholder="e.g., What is the minimum stock rule for proteins?" required></textarea>
-            <button type="submit" class="btn-primary" id="submit-btn">Ask Assistant</button>
-        </form>
+        <div id="chat-panel" hidden>
+            <p class="subtitle">Ask about supplier ordering, waste protocol, loyalty program, and menu allergens. Answers stream live. Click <strong>Interrupt</strong> to stop, or send another question while it is answering to abort and redirect — the partial reply stays visible.</p>
+            <p class="subtitle" id="session-meta">Connecting…</p>
 
-        <p id="status" class="status-busy" role="status" aria-live="polite"></p>
-        <div id="error" class="alert-error" role="alert" aria-live="assertive" style="display:none;"></div>
-        <div id="answer-box" class="answer-panel" style="display:none;">
-            <h2>Answer</h2>
-            <p id="answer"></p>
+            <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+
+            <form id="query-form" class="chat-form">
+                <label for="question" class="subtitle">Your question</label>
+                <textarea id="question" placeholder="e.g., What is the minimum stock rule for proteins? Send while it is answering to redirect." required></textarea>
+                <div class="chat-actions">
+                    <button type="submit" class="btn-primary" id="submit-btn" disabled>Ask Assistant</button>
+                    <button type="button" class="btn-secondary" id="interrupt-btn" disabled>Interrupt</button>
+                </div>
+            </form>
+            <p id="status" class="status-busy" role="status" aria-live="polite"></p>
+            <div id="error" class="alert-error" role="alert" aria-live="assertive" style="display:none;"></div>
         </div>
     </main>
 
-    <script>
-        const form = document.getElementById('query-form');
-        const questionInput = document.getElementById('question');
-        const submitBtn = document.getElementById('submit-btn');
-        const statusEl = document.getElementById('status');
-        const errorEl = document.getElementById('error');
-        const answerBox = document.getElementById('answer-box');
-        const answerEl = document.getElementById('answer');
-
-        function showError(message) {
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-            answerBox.style.display = 'none';
-            answerEl.textContent = '';
-        }
-
-        function setLoading(isLoading) {
-            submitBtn.disabled = isLoading;
-            questionInput.disabled = isLoading;
-            statusEl.setAttribute('aria-busy', isLoading ? 'true' : 'false');
-            statusEl.textContent = isLoading
-                ? 'Searching knowledge base and generating answer...'
-                : '';
-        }
-
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const question = questionInput.value.trim();
-            if (!question) return;
-
-            setLoading(true);
-            errorEl.style.display = 'none';
-            answerBox.style.display = 'none';
-            answerEl.textContent = '';
-
-            try {
-                const response = await fetch('/knowledge/query', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question }),
-                });
-
-                let payload = {};
-                try {
-                    payload = await response.json();
-                } catch {
-                    payload = {};
-                }
-
-                if (!response.ok) {
-                    const detail = payload.detail;
-                    const message = typeof detail === 'string'
-                        ? detail
-                        : Array.isArray(detail)
-                            ? detail.map((item) => item.msg || String(item)).join('; ')
-                            : `Request failed (${response.status})`;
-                    throw new Error(message);
-                }
-
-                const answer = typeof payload.answer === 'string' ? payload.answer.trim() : '';
-                if (!answer) {
-                    throw new Error('The server returned an empty answer. Please try again.');
-                }
-
-                answerEl.textContent = answer;
-                answerBox.style.display = 'block';
-            } catch (err) {
-                showError(err.message || 'An unexpected error occurred. Please try again.');
-            } finally {
-                setLoading(false);
-            }
-        });
-    </script>
+    <script src="/knowledge/chat.js"></script>
 </body>
 </html>

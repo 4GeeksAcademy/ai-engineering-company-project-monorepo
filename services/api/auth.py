@@ -1,4 +1,4 @@
-"""JWT auth for the Brasaland backoffice API (tickets + SSE stream)."""
+"""JWT auth for the Brasaland backoffice API (tickets, SSE stream, knowledge WebSocket)."""
 
 from __future__ import annotations
 
@@ -25,6 +25,15 @@ BACKOFFICE_USERS: dict[str, dict[str, str]] = {
 }
 
 _bearer = HTTPBearer(auto_error=False)
+WS_TOKEN_QUERY_PARAMS = ("token", TOKEN_QUERY_PARAM)
+
+
+class AuthError(Exception):
+    """Invalid or missing backoffice JWT (WebSocket-safe; not an HTTPException)."""
+
+    def __init__(self, detail: str = "Not authenticated") -> None:
+        self.detail = detail
+        super().__init__(detail)
 
 
 def create_access_token(username: str, extra: dict[str, Any] | None = None) -> str:
@@ -54,18 +63,44 @@ def authenticate_user(username: str, password: str) -> dict[str, str] | None:
 
 def decode_access_token(token: str) -> dict[str, Any]:
     try:
-        return jwt.decode(
+        return claims_from_access_token(token)
+    except AuthError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error.detail,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from error
+
+
+def claims_from_access_token(token: str) -> dict[str, Any]:
+    """Same JWT as backoffice REST and SSE. Raises AuthError instead of HTTPException."""
+    if not token or not str(token).strip():
+        raise AuthError("Not authenticated")
+    try:
+        claims = jwt.decode(
             token,
             JWT_SECRET,
             algorithms=[JWT_ALGORITHM],
             audience="brasaland-backoffice",
         )
     except jwt.PyJWTError as error:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from error
+        raise AuthError("Invalid or expired token") from error
+    username = claims.get("sub")
+    if not username or username not in BACKOFFICE_USERS:
+        raise AuthError("Unknown backoffice user")
+    return claims
+
+
+def token_from_websocket(websocket: Any) -> str | None:
+    """Browsers cannot set Authorization on the handshake; prefer ?token= or ?access_token=."""
+    for key in WS_TOKEN_QUERY_PARAMS:
+        value = websocket.query_params.get(key)
+        if value:
+            return value
+    authorization = websocket.headers.get("authorization")
+    if authorization and authorization.lower().startswith("bearer "):
+        return authorization.split(" ", 1)[1].strip() or None
+    return None
 
 
 def extract_bearer_or_query_token(
@@ -106,12 +141,4 @@ def require_backoffice_sse_user(
 
 
 def _claims_for_token(token: str) -> dict[str, Any]:
-    claims = decode_access_token(token)
-    username = claims.get("sub")
-    if not username or username not in BACKOFFICE_USERS:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unknown backoffice user",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return claims
+    return decode_access_token(token)

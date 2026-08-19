@@ -163,6 +163,26 @@ th {
     cursor: not-allowed;
 }
 
+.btn-secondary {
+    margin-top: 12px;
+    padding: 12px 20px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--surface-muted);
+}
+
+.btn-secondary:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
 input,
 textarea,
 select {
@@ -419,4 +439,85 @@ textarea {
 .status-pill.status-escalated {
     background: var(--error-bg);
     color: var(--error-text);
+}
+
+.chat-log {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 12rem;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.chat-bubble--user {
+    align-self: flex-end;
+    background: var(--surface-muted);
+}
+
+.chat-bubble--assistant {
+    align-self: flex-start;
+    border-left: 4px solid var(--accent);
+}
+
+.chat-bubble.is-streaming .chat-content::after {
+    content: "▍";
+    margin-left: 2px;
+    color: var(--accent);
+    animation: chat-caret 1s step-end infinite;
+}
+
+@keyframes chat-caret {
+    50% {
+        opacity: 0;
+    }
+}
+
+.chat-bubble.is-interrupted {
+    border-left-color: var(--error-border);
+    opacity: 0.92;
+}
+
+.chat-bubble.is-interrupted .chat-meta {
+    color: var(--error-text);
+    font-weight: 600;
+}
+
+.chat-role {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.chat-content {
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.chat-meta {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.chat-form .chat-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.chat-form .chat-actions .btn-primary,
+.chat-form .chat-actions .btn-secondary {
+    margin-top: 0;
 }

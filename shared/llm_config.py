@@ -1,7 +1,8 @@
 """Shared LLM configuration for RAG: separate embedding vs generation clients.
 
 The embedding client/model must only be used through ``data.process.rag.embed()``.
-The generation client/model must only be used through ``data.pipelines.rag.query()``.
+The generation client/model must only be used through ``data.pipelines.rag.query()``
+and ``query_stream()``.
 """
 
 from __future__ import annotations

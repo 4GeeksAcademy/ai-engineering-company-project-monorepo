@@ -2,6 +2,9 @@
 
 Grilled-food restaurant chain operating in **Colombia** and **Florida (US)**.
 
+- Part 1 SSE tickets: [`docs/10-realtime/notification/`](docs/10-realtime/notification/README.md)
+- Part 2 WebSocket chat: [`docs/10-realtime/communication/CONTEXT-company.md`](docs/10-realtime/communication/CONTEXT-company.md)
+
 ## Knowledge base source documents
 
 Index every file below from `docs/company-knowledge-base/`:
@@ -17,7 +20,7 @@ Index every file below from `docs/company-knowledge-base/`:
 
 - **Collection name:** `brasaland_kb`
 - **Company slug in payloads:** `brasaland`
-- **API:** `POST /knowledge/query`
+- **Non-streaming API:** `POST /knowledge/query`
   - Request: `{ "question": "..." }`
   - Response: `{ "answer": "..." }` (model-generated string only — never chunks, scores, or Qdrant payloads)
 - **Currency:** Keep USD $ and COP $ exactly as written — never convert.
@@ -25,73 +28,47 @@ Index every file below from `docs/company-knowledge-base/`:
 - **Unknown answers:** Respond with *"There is not enough information available."*
 - **Audience:** Commercial and operations teams (salesperson perspective).
 
-## Key people
+## Agent this chat connects
 
-- **Mariana** — CEO
-- **Felipe Guerrero** — Operations Director (waste escalation)
-- **Lucía Fernández** — Procurement Manager (emergency order approval > 500 USD)
+Binding names: [`docs/10-realtime/communication/CONTEXT-company.md`](docs/10-realtime/communication/CONTEXT-company.md).
 
-## Domain identifiers already used in this repo
+| Field | Value |
+|-------|--------|
+| `agent_id` | `brasaland_knowledge_assistant` |
+| Role | Commercial knowledge assistant (salesperson perspective) |
+| Knowledge | Brasaland RAG collection `brasaland_kb` only |
+| UI | existing `uis/knowledge/` — not a parallel app |
+| Catalog | `agents/knowledge-assistant/` |
 
-- **Company slug:** `brasaland`
-- **Ticket / incident id prefix:** `BRS-` (e.g. `BRS-000001`)
-- **Locations:** `miami-downtown` (Florida, USD), `bogota-norte` (Colombia, COP), `COL-01` … `COL-10`
-- **Waste categories (source wording):** `expiration`, `kitchen_error`, `unexplained_shrinkage`
-- **Premium proteins (escalation):** `tenderloin`, `ribs`
+The assistant must not invent company facts. It does not file emergency orders or waste escalations.
 
-## Operational tickets (real-time notifications)
-
-Brasaland does **not** use RFP tickets. Live notifications are **emergency orders** and **waste escalations**. Field names and values below are required.
-
-Shared fields on every ticket:
+## Chat session fields
 
 | Field | Domain value |
 |-------|----------------|
-| `ticket_id` | Server-assigned `BRS-000001`, … |
-| `ticket_type` | `emergency_order` or `waste_escalation` |
-| `location_id` | e.g. `miami-downtown`, `bogota-norte`, `COL-01` |
-| `status` | Server-assigned initial status — clients must not set it |
-| `assignee` | `Lucía Fernández` or `Felipe Guerrero` when a rule fires; otherwise null |
+| `session_id` | Server-assigned `BRS-CHAT-000001`, … |
+| `thread_id` | Same value as `session_id` (LangGraph-style alias) |
 | `company` | always `brasaland` |
+| `agent_id` | always `brasaland_knowledge_assistant` |
+| `status` | `idle`, `streaming`, or `interrupted` — server-assigned |
+| `messages` | `{ "role": "user" \| "assistant", "content": "...", "created_at": "..." }` |
 | `created_at` | ISO-8601 UTC, server-assigned |
 
-SSE event names (not a generic `message`, not `rfp_ticket_created`):
+## Streaming source
 
-- `emergency_order` → `emergency_order_created`
-- `waste_escalation` → `waste_escalation_created`
+Not LangGraph. `query_stream()` yields OpenAI Chat Completions `delta.content` strings (the `messages`-mode equivalent). See the communication CONTEXT. Do not send `values` / `updates` graph state as tokens.
 
-Payload always includes `ticket_id` and `status`.
+## WebSocket event contract
 
-### Emergency order (`ticket_type: emergency_order`)
+Endpoint: **`WS /knowledge/ws?token=...&session_id=...`** (`thread_id` accepted as an alias). Named events from the communication CONTEXT (not SSE ticket events, not a generic `message`):
 
-Raised when protein stock would fall below **3 days** before the next scheduled delivery (8% surcharge). Extra fields: `amount_usd`, `currency` (`USD` or `COP` — never convert), `protein_days_remaining`.
+- Client: `knowledge_auth` (first frame if no query token), `knowledge_user_message`, `knowledge_interrupt`
+- Server: `knowledge_session`, `knowledge_token`, `knowledge_assistant_message`, `knowledge_error`
 
-**Initial status**
+## Delivery
 
-- `pending_approval` when `amount_usd` **> 500** — assignee is **Lucía Fernández**
-- `open` otherwise — `assignee` is null
-
-### Waste escalation (`ticket_type: waste_escalation`)
-
-Logged per shift in `expiration`, `kitchen_error`, or `unexplained_shrinkage`. Extra fields: `category`, `kg`, `protein` (optional), `consecutive_shrinkage_weeks` (optional).
-
-**Initial status**
-
-- `escalated` — assignee **Felipe Guerrero** — when premium protein (`tenderloin` or `ribs`) waste **> 5 kg** in a week, or `consecutive_shrinkage_weeks` **≥ 3**
-- `open` otherwise (explanatory note still required when meat protein waste **> 2 kg** in a shift)
-
-### Delivery
-
-- Auth: `POST /auth/login` issues the backoffice JWT (`aud: brasaland-backoffice`) for Mariana, Felipe Guerrero, and Lucía Fernández
-- Polling: `GET /tickets` (Bearer JWT)
-- Create: `POST /tickets` (Bearer JWT) — emits `emergency_order_created` or `waste_escalation_created`
-- Real-time: `GET /notifications/stream` (`Content-Type: text/event-stream`, keep-alive comments). The backoffice consumes it with `fetch` + `ReadableStream` and `Authorization: Bearer` (not EventSource). Reconnects with progressive backoff and recovers missed events via `Last-Event-ID` replay plus a ticket-list refetch, deduplicated by `ticket_id`. Unauthenticated clients receive no events.
-
-### SSE reconnection (manual check)
-
-Automated coverage lives in `tests/api/test_sse_wire.py` and `tests/api/test_sse_reconnect.py`. To verify in the browser:
-
-1. Sign in at `/backoffice/` as `mariana` / `brasaland`.
-2. File an `emergency_order` for `miami-downtown` — it should appear live with a **New** chip (no page reload, KPIs unchanged).
-3. In DevTools, block `/notifications/stream`, file a `waste_escalation` for `bogota-norte` or `COL-01`, then unblock the stream.
-4. The badge should show reconnect delays of 1s, 2s, 4s, … and the missed ticket should appear once. The same `ticket_id` must never render twice.
+- Open `WS /knowledge/ws?token=...&session_id=...` from the knowledge assistant UI. `POST /knowledge/sessions` creates the thread first. Sign in with the same backoffice JWT as Part 1 (`mariana` / `brasaland`).
+- Tokens appear as they are generated (`messages` mode → `knowledge_token.delta`).
+- The agent **publishes** those events to an in-process pub/sub hub keyed by `session_id`; the WebSocket **subscribes** and consumes them (Redis is not required).
+- `knowledge_interrupt` aborts the model stream and cancels the turn task so no further `knowledge_token` events are sent (not LangGraph HITL `interrupt()`).
+- Reconnect with the same `session_id` restores `knowledge_session.messages` (thread checkpoint), not an empty chat.

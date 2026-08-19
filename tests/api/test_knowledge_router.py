@@ -15,6 +15,7 @@ def test_knowledge_router_delegates_only_to_pipeline_query():
     module_source = inspect.getsource(knowledge_router)
 
     assert "from data.pipelines.rag import query" in module_source
+    assert "@router.websocket(\"/ws\")" in module_source
     assert "retrieve(" not in module_source
     assert "embed(" not in module_source
     assert "generation_client" not in module_source

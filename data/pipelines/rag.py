@@ -1,5 +1,6 @@
 import logging
 import os
+from collections.abc import Callable, Iterator
 
 from qdrant_client import QdrantClient
 
@@ -61,6 +62,85 @@ def retrieve(query: str, *, k: int = DEFAULT_K, min_score: float = MIN_SCORE) ->
     return surviving
 
 
+NO_CONTEXT_ANSWER = "There is not enough information available to answer this question."
+
+
+def _chat_messages(question: str, history: list[dict] | None = None) -> list[dict] | None:
+    retrieved_chunks = retrieve(question, k=DEFAULT_K, min_score=MIN_SCORE)
+    if not retrieved_chunks:
+        return None
+
+    context = "\n\n".join(
+        [
+            f"--- {chunk.get('source_document', 'unknown')} / {chunk.get('section', '')} ---\n{chunk.get('text', '')}"
+            for chunk in retrieved_chunks
+        ]
+    )
+    messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for turn in history or []:
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role in {"user", "assistant"} and content:
+            messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"})
+    return messages
+
+
+def query_stream(
+    question: str,
+    *,
+    history: list[dict] | None = None,
+    should_cancel: Callable[[], bool] | None = None,
+    on_abort: Callable[[Callable[[], None]], None] | None = None,
+) -> Iterator[str]:
+    """Yield assistant text deltas (OpenAI ``delta.content``). Stops when ``should_cancel``.
+
+    On cancel, the HTTP stream is closed so the model stops generating. This is a
+    generation abort, not LangGraph ``interrupt()`` HITL.
+    """
+    if should_cancel and should_cancel():
+        return
+
+    messages = _chat_messages(question, history)
+    if messages is None:
+        yield NO_CONTEXT_ANSWER
+        return
+
+    stream = generation_client.chat.completions.create(
+        model=GENERATION_MODEL_ID,
+        messages=messages,
+        temperature=0.0,
+        stream=True,
+    )
+
+    def close_stream() -> None:
+        close = getattr(stream, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception:
+                pass
+
+    if on_abort is not None:
+        on_abort(close_stream)
+
+    try:
+        for chunk in stream:
+            if should_cancel and should_cancel():
+                return
+            choices = getattr(chunk, "choices", None) or []
+            if not choices:
+                continue
+            delta = getattr(choices[0], "delta", None)
+            text = getattr(delta, "content", None) if delta is not None else None
+            if text:
+                yield text
+            if should_cancel and should_cancel():
+                return
+    finally:
+        close_stream()
+
+
 def query(question: str) -> str:
     """Public RAG entry point: retrieve → prompt assembly → generation → answer string.
 
@@ -71,26 +151,13 @@ def query(question: str) -> str:
     embedding model. When ``retrieve()`` finds no chunks above ``min_score``, returns an honest
     fallback without calling the LLM so company facts are never invented.
     """
-    retrieved_chunks = retrieve(question, k=DEFAULT_K, min_score=MIN_SCORE)
-
-    if not retrieved_chunks:
-        return "There is not enough information available to answer this question."
-
-    context = "\n\n".join(
-        [
-            f"--- {chunk.get('source_document', 'unknown')} / {chunk.get('section', '')} ---\n{chunk.get('text', '')}"
-            for chunk in retrieved_chunks
-        ]
-    )
-
-    user_prompt = f"Context:\n{context}\n\nQuestion: {question}"
+    messages = _chat_messages(question)
+    if messages is None:
+        return NO_CONTEXT_ANSWER
 
     response = generation_client.chat.completions.create(
         model=GENERATION_MODEL_ID,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
+        messages=messages,
         temperature=0.0,
     )
     return response.choices[0].message.content or "There is not enough information available."
