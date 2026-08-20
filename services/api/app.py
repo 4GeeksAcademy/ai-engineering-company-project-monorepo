@@ -13,11 +13,14 @@ from fastapi.staticfiles import StaticFiles
 from inventory import router as inventory_router
 from routers.auth import router as auth_router
 from routers.knowledge import router as knowledge_router
+from routers.reporting import router as reporting_router
+from routers.telemetry import router as telemetry_router
 from routers.tickets import router as tickets_router
 from pydantic import BaseModel, Field
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-UI_ROOT = REPO_ROOT / "uis" / "web"
+WEBSITE_UI_ROOT = REPO_ROOT / "uis" / "website"
+INCIDENTS_UI_ROOT = REPO_ROOT / "uis" / "web"
 BACKOFFICE_UI_ROOT = REPO_ROOT / "uis" / "backoffice"
 KNOWLEDGE_UI_ROOT = REPO_ROOT / "uis" / "knowledge"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
@@ -97,6 +100,8 @@ app.include_router(inventory_router)
 app.include_router(knowledge_router)
 app.include_router(auth_router)
 app.include_router(tickets_router)
+app.include_router(reporting_router)
+app.include_router(telemetry_router)
 _register_analyze_routes(app, "anylayze")
 _register_analyze_routes(app, "analyze")
 
@@ -113,5 +118,8 @@ if BACKOFFICE_UI_ROOT.exists():
 if KNOWLEDGE_UI_ROOT.exists():
     app.mount("/knowledge", StaticFiles(directory=KNOWLEDGE_UI_ROOT, html=True), name="knowledge-ui")
 
-if UI_ROOT.exists():
-    app.mount("/", StaticFiles(directory=UI_ROOT, html=True), name="web-ui")
+if INCIDENTS_UI_ROOT.exists():
+    app.mount("/incidents", StaticFiles(directory=INCIDENTS_UI_ROOT, html=True), name="incidents-ui")
+
+if WEBSITE_UI_ROOT.exists():
+    app.mount("/", StaticFiles(directory=WEBSITE_UI_ROOT, html=True), name="website-ui")

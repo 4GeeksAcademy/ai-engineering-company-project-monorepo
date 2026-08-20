@@ -25,4 +25,5 @@ def _load_services_api_app():
     return module.app
 
 
-app = _load_services_api_app()
+app = _load_services_api_app()  # re-export FastAPI app from services/api/app.py
+

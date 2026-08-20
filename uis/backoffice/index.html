@@ -135,7 +135,10 @@
                 }
 
                 const data = await res.json();
-                weekLabel.textContent = `Performance for week starting: ${data.week_start || 'N/A'}`;
+                weekLabel.textContent = `Performance for week starting: ${data.week_start || 'N/A'} · source: ${data.source || 'unknown'}`;
+                if (data.source_error) {
+                    weekLabel.textContent += ` (${data.source_error})`;
+                }
 
                 if (!data.locations || data.locations.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7">No data available for this period.</td></tr>';

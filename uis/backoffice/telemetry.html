@@ -59,8 +59,9 @@
 
                 const data = await response.json();
 
+                const sourceNote = data.source_error ? ` (${data.source_error})` : '';
                 periodDisplay.innerHTML =
-                    `<strong>Period:</strong> ${new Date(data.period.from).toLocaleString()} &mdash; ${new Date(data.period.to).toLocaleString()}`;
+                    `<strong>Period:</strong> ${new Date(data.period.from).toLocaleString()} &mdash; ${new Date(data.period.to).toLocaleString()} · <strong>Source:</strong> ${data.source || 'unknown'}${sourceNote}`;
 
                 const volumeBody = document.querySelector('#volume-table tbody');
                 volumeBody.innerHTML = data.metrics.events_per_day.map((row) =>
