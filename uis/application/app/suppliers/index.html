@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Directorio de Proveedores</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../../backoffice/styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <header class="topbar">
+      <h1>Backoffice Operaciones</h1>
+      <nav>
+        <a href="../../../backoffice/index.html">Menu</a>
+        <a class="active" href="./index.html">Directorio de Proveedores</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Crear proveedor</h2>
+        <form id="supplier-form" class="form-grid">
+          <label>
+            Nombre
+            <input name="nombre" type="text" required maxlength="120" />
+          </label>
+          <label>
+            Pais
+            <select name="pais" required>
+              <option value="Colombia">Colombia</option>
+              <option value="Estados Unidos">Estados Unidos</option>
+            </select>
+          </label>
+          <label>
+            Categorias (coma separadas)
+            <input
+              name="categorias"
+              type="text"
+              required
+              placeholder="ingredientes, logistica"
+            />
+          </label>
+          <label>
+            Tarifa
+            <input name="tarifa" type="number" min="0.01" step="0.01" required />
+          </label>
+          <label>
+            Estado
+            <select name="estado" required>
+              <option value="activo">activo</option>
+              <option value="suspendido">suspendido</option>
+            </select>
+          </label>
+          <button type="submit">Registrar proveedor</button>
+        </form>
+        <p id="form-message" class="hint"></p>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Listado</h2>
+          <div class="filters">
+            <label>
+              Filtrar por pais
+              <input id="filter-country" type="text" placeholder="Ej: Colombia" />
+            </label>
+            <label>
+              Filtrar por categoria
+              <select id="filter-category">
+                <option value="">Todas</option>
+                <option value="ingredientes">ingredientes</option>
+                <option value="empaques">empaques</option>
+                <option value="logistica">logistica</option>
+                <option value="tecnologia">tecnologia</option>
+                <option value="mantenimiento">mantenimiento</option>
+                <option value="limpieza">limpieza</option>
+              </select>
+            </label>
+            <button id="apply-filters" type="button">Aplicar</button>
+            <button id="clear-filters" type="button" class="ghost">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Pais</th>
+                <th>Categorias</th>
+                <th>Tarifa</th>
+                <th>Estado</th>
+                <th>Updated At</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="../../../backoffice/suppliers.js" type="module"></script>
+  </body>
+</html>

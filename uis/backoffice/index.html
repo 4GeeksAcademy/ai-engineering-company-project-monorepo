@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backoffice | Brasaland</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f4efe7;
+        --card: #fffdfa;
+        --ink: #1d2432;
+        --line: #dad2c6;
+        --accent: #c2512e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", sans-serif;
+        background: radial-gradient(circle at 10% 10%, #f8f4ec 0%, var(--bg) 45%, #ece5db 100%);
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+      }
+
+      .panel {
+        width: min(720px, 92vw);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--card);
+        padding: 28px;
+        box-shadow: 0 15px 40px rgba(43, 34, 21, 0.12);
+      }
+
+      h1 {
+        margin-top: 0;
+        margin-bottom: 8px;
+      }
+
+      p {
+        margin-top: 0;
+        color: #4d5668;
+      }
+
+      .menu {
+        margin-top: 16px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .menu a {
+        display: inline-block;
+        width: fit-content;
+        text-decoration: none;
+        border-radius: 10px;
+        padding: 11px 14px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="panel">
+      <h1>Backoffice Brasaland</h1>
+      <p>Menu operativo para herramientas internas.</p>
+      <div class="menu">
+        <a href="../application/app/suppliers/index.html">Directorio de Proveedores</a>
+      </div>
+    </section>
+  </body>
+</html>
