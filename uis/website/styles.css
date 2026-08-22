@@ -122,13 +122,15 @@ img {
 }
 
 .theme-toggle,
-.nav-toggle {
+.nav-toggle,
+.lang-toggle {
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
     border-radius: 8px;
     padding: 0.4rem 0.7rem;
     cursor: pointer;
+    min-width: 2.6rem;
 }
 
 .nav-toggle {
@@ -138,23 +140,25 @@ img {
 .hero {
     background: var(--char);
     color: #faf5ef;
-    padding: 3.2rem 1.4rem 3rem;
+    padding: 2.4rem 1.4rem 2.2rem;
 }
 
 .hero-split {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr) 168px;
+    gap: 1.5rem;
     align-items: center;
 }
 
 .hero-photo {
-    width: 100%;
-    aspect-ratio: 4 / 3;
+    width: 168px;
+    height: 168px;
+    aspect-ratio: 1;
     object-fit: cover;
     object-position: center;
-    border-radius: 12px;
+    border-radius: 10px;
     display: block;
+    justify-self: end;
     background: #292524;
 }
 
@@ -217,7 +221,7 @@ img {
 }
 
 .section {
-    padding: 3.2rem 1.4rem;
+    padding: 2.4rem 1.4rem;
 }
 
 .section h2 {
@@ -238,80 +242,68 @@ img {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.menu-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.menu-grid-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: 44rem;
-}
-
-.menu-feature {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    padding: 0;
-    overflow: hidden;
-    margin: 0 0 1.1rem;
-}
-
-.menu-card {
-    padding: 0;
-    overflow: hidden;
+.menu-list {
     display: flex;
     flex-direction: column;
+    gap: 0.65rem;
+    margin: 0 0 0.4rem;
 }
 
-.menu-card img {
-    width: 100%;
-    aspect-ratio: 4 / 3;
+.menu-row {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 0.9rem 1rem;
+    align-items: start;
+    padding: 0.7rem 0.85rem;
+}
+
+.menu-row img {
+    width: 88px;
+    height: 88px;
+    aspect-ratio: 1;
     object-fit: cover;
     object-position: center;
+    border-radius: 8px;
     display: block;
     background: var(--char);
 }
 
-.menu-feature img {
-    width: 100%;
-    height: 100%;
-    min-height: 280px;
-    aspect-ratio: auto;
-    object-fit: cover;
-    object-position: center 40%;
+.menu-row .menu-body {
+    padding: 0;
+    min-width: 0;
 }
 
-.menu-card .menu-body {
-    padding: 1.1rem 1.15rem 1.2rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+.menu-row h3 {
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    margin: 0 0 0.2rem;
 }
 
-.menu-card .chips {
-    margin-top: auto;
-    padding-top: 0.85rem;
+.menu-row .chips {
+    margin-top: 0.55rem;
+    padding-top: 0;
 }
 
 .menu-kind {
-    margin: 0 0 0.35rem;
-    font-size: 0.72rem;
+    margin: 0 0 0.2rem;
+    font-size: 0.68rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--ember);
 }
 
-.menu-card .menu-also {
-    margin: 0.15rem 0 0.55rem;
-    font-size: 0.9rem;
+.menu-row .menu-also {
+    margin: 0 0 0.35rem;
+    font-size: 0.88rem;
     color: var(--muted);
 }
 
-.menu-card .menu-facts {
-    margin: 0.4rem 0 0;
+.menu-row .menu-facts {
+    margin: 0;
     padding: 0;
     list-style: none;
     color: var(--muted);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
 }
 
 .menu-facts li {
@@ -332,7 +324,11 @@ img {
 }
 
 .section-head {
-    margin: 1.5rem 0 1rem;
+    margin: 1.15rem 0 0.65rem;
+}
+
+.section-head .lede {
+    margin-bottom: 0;
 }
 
 .section-head h3 {
@@ -351,11 +347,6 @@ img {
 .card h3 {
     margin: 0 0 0.4rem;
     font-size: 1.12rem;
-}
-
-.menu-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.28rem;
 }
 
 .card p,
@@ -457,12 +448,6 @@ tr:last-child td {
     margin-top: 0.4rem;
 }
 
-@media (max-width: 960px) {
-    .menu-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
 @media (max-width: 760px) {
     .nav-toggle {
         display: inline-block;
@@ -485,16 +470,24 @@ tr:last-child td {
         flex-wrap: wrap;
     }
 
-    .hero-split,
-    .menu-feature,
-    .menu-grid,
-    .menu-grid-2 {
+    .hero-split {
         grid-template-columns: 1fr;
-        max-width: none;
     }
 
-    .menu-feature img {
-        min-height: 220px;
-        aspect-ratio: 4 / 3;
+    .hero-photo {
+        justify-self: start;
+        width: 120px;
+        height: 120px;
+    }
+
+    .menu-row {
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 0.65rem 0.7rem;
+    }
+
+    .menu-row img {
+        width: 72px;
+        height: 72px;
     }
 }

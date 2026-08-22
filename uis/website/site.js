@@ -7,6 +7,9 @@
     toggle.addEventListener("click", () => {
         const open = nav.classList.toggle("is-open");
         toggle.setAttribute("aria-expanded", String(open));
-        toggle.textContent = open ? "Close" : "Pages";
+        const lang = (window.BrasalandLang && window.BrasalandLang.resolveLang()) || "en";
+        const close = lang === "es" ? "Cerrar" : "Close";
+        const pages = lang === "es" ? "Páginas" : "Pages";
+        toggle.textContent = open ? close : pages;
     });
 })();

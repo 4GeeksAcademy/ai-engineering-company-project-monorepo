@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-page="404">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Page not found — Brasaland</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
 </head>
 <body>
     <main class="section">
         <div class="wrap">
-            <h2>Page not found</h2>
-            <p class="lede">That address is not part of the Brasaland public site.</p>
-            <p><a class="btn btn-primary" href="index.html">Back to home</a></p>
+            <h2 data-i18n="nf.h2">Page not found</h2>
+            <p class="lede" data-i18n="nf.lede">That address is not part of the Brasaland public site.</p>
+            <p><a class="btn btn-primary" href="index.html" data-i18n="nf.cta">Back to home</a></p>
+            <p><button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button></p>
         </div>
     </main>
+    <script src="lang.js"></script>
     <script src="capture.js"></script>
 </body>
 </html>

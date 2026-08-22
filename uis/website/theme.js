@@ -17,7 +17,12 @@
         }
 
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-            button.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+            const spanish = document.documentElement.lang === "es";
+            if (theme === "dark") {
+                button.textContent = spanish ? "Modo claro" : "Light mode";
+            } else {
+                button.textContent = spanish ? "Modo oscuro" : "Dark mode";
+            }
         });
     }
 

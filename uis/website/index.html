@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-page="home">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,23 +7,33 @@
     <meta name="description" content="Brasaland is a grilled-food restaurant chain in Colombia and Florida. Menu, locations, Brasa Points loyalty, and allergen information." />
     <link rel="stylesheet" href="styles.css" />
     <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
 </head>
 <body>
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
         </a>
         <nav id="primary-nav" class="nav" aria-label="Primary">
-            <a href="index.html" class="is-current">Home</a>
-            <a href="menu.html">Menu</a>
-            <a href="locations.html">Locations</a>
-            <a href="loyalty.html">Brasa Points</a>
-            <a href="allergens.html">Allergens</a>
+            <a href="index.html" class="is-current" data-i18n="nav.home">Home</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" data-i18n="nav.allergens">Allergens</a>
         </nav>
         <div class="header-actions">
-            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" aria-label="Open site pages">Pages</button>
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
         </div>
     </header>
@@ -32,105 +42,105 @@
         <section class="hero">
             <div class="hero-inner hero-split">
                 <div>
-                    <p class="kicker">Grilled food · Colombia + Florida</p>
-                    <h1>Fire, protein, and the same table on both sides of the map.</h1>
-                    <p>Brasaland is a grilled-food restaurant chain. We cook sirloin, ribs, and chicken over the brasa, serve them with house sauce and arepas, and keep Brasa Points valid at every location in Colombia and Florida.</p>
+                    <p class="kicker" data-i18n="home.kicker">Grilled food · Colombia + Florida</p>
+                    <h1 data-i18n="home.h1">Fire, protein, and the same table on both sides of the map.</h1>
+                    <p data-i18n="home.hero">Brasaland is a grilled-food restaurant chain. We cook sirloin, ribs, and chicken over the brasa, serve them with house sauce and arepas, and keep Brasa Points valid at every location in Colombia and Florida.</p>
                     <div class="cta-row">
-                        <a class="btn btn-primary" href="menu.html">See the menu</a>
-                        <a class="btn btn-ghost" href="loyalty.html">Join Brasa Points</a>
+                        <a class="btn btn-primary" href="menu.html" data-i18n="home.cta.menu">See the menu</a>
+                        <a class="btn btn-ghost" href="loyalty.html" data-i18n="home.cta.loyalty">Join Brasa Points</a>
                     </div>
                 </div>
-                <img class="hero-photo" src="images/menu-grilled-sirloin.jpg" alt="Grilled sirloin, Lomo a la Brasa" width="1200" height="900" />
+                <img class="hero-photo" src="images/menu-grilled-sirloin.jpg" alt="Grilled sirloin, Lomo a la Brasa" width="168" height="168" data-i18n-alt="alt.sirloin" />
             </div>
         </section>
 
         <section class="section">
             <div class="wrap">
-                <h2>What we cook</h2>
-                <p class="lede">The disclosed guest menu is six items. The first row is the grill. The second row is salad, arepa, and house sauce. Full allergen wording is on the menu page.</p>
+                <h2 data-i18n="home.cook.h2">What we cook</h2>
+                <p class="lede" data-i18n="home.cook.lede">The disclosed guest menu is six items. The first row is the grill. The second row is salad, arepa, and house sauce. Full allergen wording is on the menu page.</p>
 
                 <div class="section-head">
-                    <h3>From the grill</h3>
-                    <p class="lede">Sirloin, ribs, and chicken cooked over the brasa.</p>
+                    <h3 data-i18n="home.grill.h3">From the grill</h3>
+                    <p class="lede" data-i18n="home.grill.lede">Sirloin, ribs, and chicken cooked over the brasa.</p>
                 </div>
-                <div class="grid menu-grid">
-                    <article class="card menu-card">
-                        <img src="images/menu-grilled-sirloin.jpg" alt="Grilled sirloin, Lomo a la Brasa" width="1200" height="900" />
+                <div class="menu-list">
+                    <article class="card menu-row">
+                        <img src="images/menu-grilled-sirloin.jpg" alt="Grilled sirloin, Lomo a la Brasa" width="176" height="176" data-i18n-alt="alt.sirloin" />
                         <div class="menu-body">
-                            <p class="menu-kind">Main</p>
-                            <h3>Grilled Sirloin</h3>
-                            <p class="menu-also">Lomo a la Brasa</p>
-                            <p>Gluten-free and dairy-free. The marinade contains soy.</p>
+                            <p class="menu-kind" data-i18n="kind.main">Main</p>
+                            <h3 data-i18n="dish.sirloin">Grilled Sirloin</h3>
+                            <p class="menu-also" data-i18n="dish.sirloinAlso">Lomo a la Brasa</p>
+                            <p data-i18n="dish.sirloinHome">Gluten-free and dairy-free. The marinade contains soy.</p>
                         </div>
                     </article>
-                    <article class="card menu-card">
-                        <img src="images/menu-bbq-ribs.jpg" alt="Brasaland BBQ ribs" width="1200" height="900" loading="lazy" />
+                    <article class="card menu-row">
+                        <img src="images/menu-bbq-ribs.jpg" alt="Brasaland BBQ ribs" width="176" height="176" loading="lazy" data-i18n-alt="alt.ribs" />
                         <div class="menu-body">
-                            <p class="menu-kind">Main</p>
-                            <h3>Brasaland BBQ Ribs</h3>
-                            <p>Contains soy. The imported sauce may contain trace peanuts. Not certified gluten-free.</p>
+                            <p class="menu-kind" data-i18n="kind.main">Main</p>
+                            <h3 data-i18n="dish.ribs">Brasaland BBQ Ribs</h3>
+                            <p data-i18n="dish.ribsHome">Contains soy. The imported sauce may contain trace peanuts. Not certified gluten-free.</p>
                         </div>
                     </article>
-                    <article class="card menu-card">
-                        <img src="images/menu-grilled-chicken.jpg" alt="Classic grilled chicken" width="1200" height="900" loading="lazy" />
+                    <article class="card menu-row">
+                        <img src="images/menu-grilled-chicken.jpg" alt="Classic grilled chicken" width="176" height="176" loading="lazy" data-i18n-alt="alt.chicken" />
                         <div class="menu-body">
-                            <p class="menu-kind">Main</p>
-                            <h3>Classic Grilled Chicken</h3>
-                            <p>Gluten-free, dairy-free, and nut-free.</p>
+                            <p class="menu-kind" data-i18n="kind.main">Main</p>
+                            <h3 data-i18n="dish.chicken">Classic Grilled Chicken</h3>
+                            <p data-i18n="dish.chickenHome">Gluten-free, dairy-free, and nut-free.</p>
                         </div>
                     </article>
                 </div>
 
                 <div class="section-head">
-                    <h3>Salad, side, and sauce</h3>
-                    <p class="lede">The remaining disclosed items, with their own allergens.</p>
+                    <h3 data-i18n="home.sides.h3">Salad, side, and sauce</h3>
+                    <p class="lede" data-i18n="home.sides.lede">The remaining disclosed items, with their own allergens.</p>
                 </div>
-                <div class="grid menu-grid">
-                    <article class="card menu-card">
-                        <img src="images/menu-tropical-salad.jpg" alt="Tropical salad with feta and cashews" width="1200" height="900" loading="lazy" />
+                <div class="menu-list">
+                    <article class="card menu-row">
+                        <img src="images/menu-tropical-salad.jpg" alt="Tropical salad with feta and cashews" width="176" height="176" loading="lazy" data-i18n-alt="alt.salad" />
                         <div class="menu-body">
-                            <p class="menu-kind">Main</p>
-                            <h3>Tropical Salad</h3>
-                            <p>Contains nuts (cashew) and dairy (feta cheese).</p>
+                            <p class="menu-kind" data-i18n="kind.main">Main</p>
+                            <h3 data-i18n="dish.salad">Tropical Salad</h3>
+                            <p data-i18n="dish.saladHome">Contains nuts (cashew) and dairy (feta cheese).</p>
                         </div>
                     </article>
-                    <article class="card menu-card">
-                        <img src="images/menu-corn-arepa.jpg" alt="Corn arepa" width="1200" height="900" loading="lazy" />
+                    <article class="card menu-row">
+                        <img src="images/menu-corn-arepa.jpg" alt="Corn arepa" width="176" height="176" loading="lazy" data-i18n-alt="alt.arepa" />
                         <div class="menu-body">
-                            <p class="menu-kind">Side</p>
-                            <h3>Corn Arepa</h3>
-                            <p>Contains dairy and egg.</p>
+                            <p class="menu-kind" data-i18n="kind.side">Side</p>
+                            <h3 data-i18n="dish.arepa">Corn Arepa</h3>
+                            <p data-i18n="dish.arepaHome">Contains dairy and egg.</p>
                         </div>
                     </article>
-                    <article class="card menu-card">
-                        <img src="images/menu-house-sauce.jpg" alt="Brasaland house sauce" width="1200" height="900" loading="lazy" />
+                    <article class="card menu-row">
+                        <img src="images/menu-house-sauce.jpg" alt="Brasaland house sauce" width="176" height="176" loading="lazy" data-i18n-alt="alt.sauce" />
                         <div class="menu-body">
-                            <p class="menu-kind">Sauce</p>
-                            <h3>House Sauce</h3>
-                            <p>Contains soy and sulfites.</p>
+                            <p class="menu-kind" data-i18n="kind.sauce">Sauce</p>
+                            <h3 data-i18n="dish.sauce">House Sauce</h3>
+                            <p data-i18n="dish.sauceHome">Contains soy and sulfites.</p>
                         </div>
                     </article>
                 </div>
-                <p class="cta-row"><a class="btn btn-primary" href="menu.html">Open the full menu</a></p>
+                <p class="cta-row"><a class="btn btn-primary" href="menu.html" data-i18n="home.fullmenu">Open the full menu</a></p>
             </div>
         </section>
 
         <section class="section">
             <div class="wrap">
-                <h2>Two markets, one program</h2>
-                <p class="lede">Florida prices and redemptions are in USD. Colombia prices and redemptions are in COP. We never convert one into the other on this site.</p>
+                <h2 data-i18n="home.markets.h2">Two markets, one program</h2>
+                <p class="lede" data-i18n="home.markets.lede">Florida prices and redemptions are in USD. Colombia prices and redemptions are in COP. We never convert one into the other on this site.</p>
                 <div class="grid">
                     <article class="card">
-                        <h3>Florida</h3>
-                        <p><strong>miami-downtown</strong> — USD market. Earn 1 Brasa Point for every 10 USD spent.</p>
+                        <h3 data-i18n="home.florida.h3">Florida</h3>
+                        <p data-i18n="home.florida.p">miami-downtown — USD market. Earn 1 Brasa Point for every 10 USD spent.</p>
                     </article>
                     <article class="card">
-                        <h3>Colombia</h3>
-                        <p><strong>bogota-norte</strong> plus locations COL-01 through COL-10 — COP market. Earn 1 Brasa Point for every 10,000 COP spent.</p>
+                        <h3 data-i18n="home.colombia.h3">Colombia</h3>
+                        <p data-i18n="home.colombia.p">bogota-norte plus locations COL-01 through COL-10 — COP market. Earn 1 Brasa Point for every 10,000 COP spent.</p>
                     </article>
                     <article class="card">
-                        <h3>Allergen protocol</h3>
-                        <p>Servers notify the kitchen before prep. Separate utensils and surfaces are used. We never claim zero cross-contamination risk.</p>
+                        <h3 data-i18n="home.protocol.h3">Allergen protocol</h3>
+                        <p data-i18n="home.protocol.p">Servers notify the kitchen before prep. Separate utensils and surfaces are used. We never claim zero cross-contamination risk.</p>
                     </article>
                 </div>
             </div>
@@ -141,14 +151,15 @@
         <div class="footer-inner">
             <div>
                 <strong>Brasaland</strong>
-                <p>Public site for guests. Operations tools stay behind sign-in.</p>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
             </div>
             <div class="staff-links">
-                <a href="staff.html">Staff tools</a>
-                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo">GitHub repository</a>
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
             </div>
         </div>
     </footer>
+    <script src="lang.js"></script>
     <script src="site.js"></script>
     <script src="capture.js"></script>
 </body>

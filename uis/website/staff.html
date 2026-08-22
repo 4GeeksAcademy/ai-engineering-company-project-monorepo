@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-page="staff">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,55 +7,65 @@
     <meta name="description" content="Brasaland internal tools used with the company API: leadership KPIs, telemetry, knowledge assistant, and incident analysis." />
     <link rel="stylesheet" href="styles.css" />
     <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
 </head>
 <body>
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
         </a>
         <nav id="primary-nav" class="nav" aria-label="Primary">
-            <a href="index.html">Home</a>
-            <a href="menu.html">Menu</a>
-            <a href="locations.html">Locations</a>
-            <a href="loyalty.html">Brasa Points</a>
-            <a href="allergens.html">Allergens</a>
+            <a href="index.html" data-i18n="nav.home">Home</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" data-i18n="nav.allergens">Allergens</a>
         </nav>
         <div class="header-actions">
-            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" aria-label="Open site pages">Pages</button>
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
         </div>
     </header>
 
     <main id="main" class="section">
         <div class="wrap">
-            <p class="kicker">Class presentation</p>
-            <h2>Internal tools</h2>
-            <p class="lede">The guest site is this public URL. Operations tools run on the FastAPI app in the same repository. Sign-in for those screens is <code>mariana</code> / <code>brasaland</code>.</p>
+            <p class="kicker" data-i18n="staff.kicker">Class presentation</p>
+            <h2 data-i18n="staff.h2">Internal tools</h2>
+            <p class="lede" data-i18n="staff.lede">The guest site is this public URL. Operations tools run on the FastAPI app in the same repository. Sign-in for those screens is mariana / brasaland.</p>
             <div class="grid">
                 <article class="card">
-                    <h3>Leadership dashboard</h3>
-                    <p>Weekly purchase cost, waste cost, waste ratio, stockouts, and price alerts by location. Live tickets over SSE.</p>
+                    <h3 data-i18n="staff.kpi.h">Leadership dashboard</h3>
+                    <p data-i18n="staff.kpi.p">Weekly purchase cost, waste cost, waste ratio, stockouts, and price alerts by location. Live tickets over SSE.</p>
                 </article>
                 <article class="card">
-                    <h3>Telemetry</h3>
-                    <p>Events per day, api_error / user_login_failed counts, and authentication failure rate. Guest pages send page_view when this site is served by the API. Login attempts are recorded on /auth/login. Live query against Supabase when the host is reachable.</p>
+                    <h3 data-i18n="staff.tel.h">Telemetry</h3>
+                    <p data-i18n="staff.tel.p">Events per day, api_error / user_login_failed counts, and authentication failure rate. Guest pages send page_view when this site is served by the API. Login attempts are recorded on /auth/login. Live query against Supabase when the host is reachable.</p>
                 </article>
                 <article class="card">
-                    <h3>Knowledge assistant</h3>
-                    <p>WebSocket chat over the Brasaland knowledge base: ordering, waste protocol, Brasa Points, and allergens.</p>
+                    <h3 data-i18n="staff.know.h">Knowledge assistant</h3>
+                    <p data-i18n="staff.know.p">WebSocket chat over the Brasaland knowledge base: ordering, waste protocol, Brasa Points, and allergens.</p>
                 </article>
                 <article class="card">
-                    <h3>Incident analysis</h3>
-                    <p>Upload or analyze a CSV, show summary metrics, and export results.</p>
+                    <h3 data-i18n="staff.inc.h">Incident analysis</h3>
+                    <p data-i18n="staff.inc.p">Upload or analyze a CSV, show summary metrics, and export results.</p>
                 </article>
                 <article class="card">
-                    <h3>MCP and n8n</h3>
-                    <p>Stdio MCP at mcps/brasaland-ops. Weekly waste watch workflow at workflows/brasaland-weekly-kpi for import into n8n.</p>
+                    <h3 data-i18n="staff.mcp.h">MCP and n8n</h3>
+                    <p data-i18n="staff.mcp.p">Stdio MCP at mcps/brasaland-ops. Weekly waste watch workflow at workflows/brasaland-weekly-kpi for import into n8n.</p>
                 </article>
             </div>
-            <p class="note">Class launch from the repo root: <code>./scripts/start_presentation.sh</code> then open local <code>/backoffice/</code>, <code>/knowledge/</code>, and <code>/incidents/</code>. Guest menu with photos: <a href="https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/menu.html">GitHub Pages menu</a>.</p>
+            <p class="note" data-i18n="staff.note" data-i18n-html>Class launch from the repo root: ./scripts/start_presentation.sh then open local /backoffice/, /knowledge/, and /incidents/. Guest menu with photos: <a href="https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/menu.html">GitHub Pages menu</a>.</p>
         </div>
     </main>
 
@@ -63,14 +73,15 @@
         <div class="footer-inner">
             <div>
                 <strong>Brasaland</strong>
-                <p>Public site for guests. Operations tools stay behind sign-in.</p>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
             </div>
             <div class="staff-links">
-                <a href="staff.html">Staff tools</a>
-                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo">GitHub repository</a>
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
             </div>
         </div>
     </footer>
+    <script src="lang.js"></script>
     <script src="site.js"></script>
     <script src="capture.js"></script>
 </body>
