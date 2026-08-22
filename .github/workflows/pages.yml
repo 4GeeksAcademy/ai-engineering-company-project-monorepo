@@ -1,4 +1,5 @@
-name: Deploy Brasaland public site
+# GitHub Pages environment allows `main` and `feature/websocket-chat`.
+# A deploy from any other branch is rejected by environment protection rules.
 
 on:
   push:

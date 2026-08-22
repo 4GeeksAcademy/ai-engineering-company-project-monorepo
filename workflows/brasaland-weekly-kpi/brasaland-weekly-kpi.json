@@ -1,0 +1,117 @@
+{
+  "name": "Brasaland weekly waste watch",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": 1,
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "cron-weekly",
+      "name": "Monday 10:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.BRASALAND_API}}/reporting/weekly-location-performance",
+        "options": {}
+      },
+      "id": "get-kpis",
+      "name": "Get weekly KPIs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json;\nconst rows = payload.locations || [];\nconst hot = rows.filter((row) => Number(row.waste_ratio) > 0.06);\nreturn hot.map((row) => ({ json: { ...row, week_start: payload.week_start } }));"
+      },
+      "id": "filter-waste",
+      "name": "Locations over 6% waste",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.waste_ratio}}",
+              "operation": "larger",
+              "value2": 0.06
+            }
+          ]
+        }
+      },
+      "id": "if-waste",
+      "name": "Waste above threshold?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BRASALAND_API}}/tickets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ticket_type: 'waste_escalation', location_id: $json.location_id, category: 'unexplained_shrinkage', kg: 5.1, consecutive_shrinkage_weeks: 3 }) }}",
+        "options": {}
+      },
+      "id": "open-ticket",
+      "name": "Open waste ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, -80]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Weekly KPI fetch or ticket create failed"
+      },
+      "id": "error-stop",
+      "name": "Stop on error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [1040, 160]
+    }
+  ],
+  "connections": {
+    "Monday 10:00": {
+      "main": [[{ "node": "Get weekly KPIs", "type": "main", "index": 0 }]]
+    },
+    "Get weekly KPIs": {
+      "main": [[{ "node": "Locations over 6% waste", "type": "main", "index": 0 }]],
+      "error": [[{ "node": "Stop on error", "type": "main", "index": 0 }]]
+    },
+    "Locations over 6% waste": {
+      "main": [[{ "node": "Waste above threshold?", "type": "main", "index": 0 }]]
+    },
+    "Waste above threshold?": {
+      "main": [
+        [{ "node": "Open waste ticket", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "brasaland-weekly-kpi-error"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "versionId": "1"
+}

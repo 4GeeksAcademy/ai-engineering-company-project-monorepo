@@ -2,7 +2,11 @@
 
 Guest-facing site for the grilled-food chain (Colombia + Florida).
 
-**Run:** from the repo root, `uv run uvicorn api.app:app --reload --host 127.0.0.1 --port 8000`
+**Class URL:** https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/
+
+**Local demo (menu photos + staff tools):** from the repo root, `./scripts/start_presentation.sh`
+
+**Run API only:** `uv run uvicorn api.app:app --reload --host 127.0.0.1 --port 8000`
 
 | Path | Page |
 |------|------|
