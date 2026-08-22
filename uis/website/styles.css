@@ -221,6 +221,81 @@ img {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.menu-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.menu-card {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-card img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: var(--char);
+}
+
+.menu-card .menu-body {
+    padding: 1.1rem 1.15rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.menu-kind {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ember);
+}
+
+.menu-card .menu-also {
+    margin: 0.15rem 0 0.55rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.menu-card .menu-facts {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.menu-facts li {
+    margin: 0 0 0.35rem;
+    padding-left: 0.9rem;
+    position: relative;
+}
+
+.menu-facts li::before {
+    content: "";
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--ember);
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+}
+
+.section-head {
+    margin: 2.2rem 0 1rem;
+}
+
+.section-head h3 {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    margin: 0 0 0.35rem;
+}
+
 .card {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -231,6 +306,11 @@ img {
 .card h3 {
     margin: 0 0 0.4rem;
     font-size: 1.12rem;
+}
+
+.menu-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.28rem;
 }
 
 .card p,

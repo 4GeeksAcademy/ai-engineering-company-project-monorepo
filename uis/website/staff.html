@@ -40,7 +40,7 @@
                 </article>
                 <article class="card">
                     <h3>Telemetry</h3>
-                    <p>Events per day, api_error / user_login_failed counts, and authentication failure rate. Live query against Supabase when the host is reachable.</p>
+                    <p>Events per day, api_error / user_login_failed counts, and authentication failure rate. Guest pages send page_view when this site is served by the API. Login attempts are recorded on /auth/login. Live query against Supabase when the host is reachable.</p>
                 </article>
                 <article class="card">
                     <h3>Knowledge assistant</h3>
@@ -49,6 +49,10 @@
                 <article class="card">
                     <h3>Incident analysis</h3>
                     <p>Upload or analyze a CSV, show summary metrics, and export results.</p>
+                </article>
+                <article class="card">
+                    <h3>MCP and n8n</h3>
+                    <p>Stdio MCP at mcps/brasaland-ops. Weekly waste watch workflow at workflows/brasaland-weekly-kpi for import into n8n.</p>
                 </article>
             </div>
             <p class="note">Local launch from the repo root: <code>uv run uvicorn api.app:app --reload --host 127.0.0.1 --port 8000</code> then open <code>/backoffice/</code>, <code>/knowledge/</code>, and <code>/incidents/</code>.</p>
@@ -68,5 +72,6 @@
         </div>
     </footer>
     <script src="site.js"></script>
+    <script src="capture.js"></script>
 </body>
 </html>
