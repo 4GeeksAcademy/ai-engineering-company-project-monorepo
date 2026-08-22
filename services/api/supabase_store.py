@@ -129,3 +129,19 @@ def fetch_telemetry_events(start_iso: str, end_iso: str) -> list[dict[str, Any]]
             }
         )
     return events
+
+
+def insert_telemetry_event(event: dict[str, Any]) -> None:
+    client = get_client()
+    if client is None:
+        raise LiveUnavailable("Supabase credentials are not configured")
+    payload = {
+        "event_type": event["event_type"],
+        "timestamp": event["timestamp"],
+        "created_at": event["timestamp"],
+        "tags": event.get("tags") or {},
+    }
+    try:
+        client.table("telemetry_events").insert(payload).execute()
+    except Exception as error:
+        raise LiveUnavailable(str(error)) from error

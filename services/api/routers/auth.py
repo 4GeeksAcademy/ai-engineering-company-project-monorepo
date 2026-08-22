@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from auth import authenticate_user, create_access_token
 from fastapi import APIRouter, HTTPException, status
+from telemetry_capture import record_event
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -29,11 +30,13 @@ class LoginResponse(BaseModel):
 def login(payload: LoginRequest) -> LoginResponse:
     user = authenticate_user(payload.username, payload.password)
     if user is None:
+        record_event("user_login_failed", {"username": payload.username})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
     token = create_access_token(user["username"])
+    record_event("user_login_succeeded", {"username": user["username"], "role": user["role"]})
     return LoginResponse(
         access_token=token,
         username=user["username"],

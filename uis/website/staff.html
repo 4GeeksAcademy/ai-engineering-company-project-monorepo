@@ -20,6 +20,7 @@
 <body>
     <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
+        <div class="header-inner">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
@@ -36,14 +37,19 @@
             <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
         </div>
+        </div>
     </header>
 
-    <main id="main" class="section">
+    <main id="main" class="page">
         <div class="wrap">
+            <header class="page-intro">
             <p class="kicker" data-i18n="staff.kicker">Class presentation</p>
-            <h2 data-i18n="staff.h2">Internal tools</h2>
+            <h1 class="page-title" data-i18n="staff.h2">Internal tools</h1>
             <p class="lede" data-i18n="staff.lede">The guest site is this public URL. Operations tools run on the FastAPI app in the same repository. Sign-in for those screens is mariana / brasaland.</p>
-            <div class="grid">
+            </header>
+
+            <section class="page-block">
+            <div class="grid grid-2">
                 <article class="card">
                     <h3 data-i18n="staff.kpi.h">Leadership dashboard</h3>
                     <p data-i18n="staff.kpi.p">Weekly purchase cost, waste cost, waste ratio, stockouts, and price alerts by location. Live tickets over SSE.</p>
@@ -65,6 +71,7 @@
                     <p data-i18n="staff.mcp.p">Stdio MCP at mcps/brasaland-ops. Weekly waste watch workflow at workflows/brasaland-weekly-kpi for import into n8n.</p>
                 </article>
             </div>
+            </section>
             <p class="note" data-i18n="staff.note" data-i18n-html>Class launch from the repo root: ./scripts/start_presentation.sh then open local /backoffice/, /knowledge/, and /incidents/. Guest menu with photos: <a href="https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/menu.html">GitHub Pages menu</a>.</p>
         </div>
     </main>

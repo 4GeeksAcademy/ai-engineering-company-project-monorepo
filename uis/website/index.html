@@ -20,6 +20,7 @@
 <body>
     <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
+        <div class="header-inner">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
@@ -35,6 +36,7 @@
             <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
             <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
+        </div>
         </div>
     </header>
 
@@ -56,9 +58,11 @@
 
         <section class="section">
             <div class="wrap">
+                <section class="page-block">
                 <h2 data-i18n="home.cook.h2">What we cook</h2>
                 <p class="lede" data-i18n="home.cook.lede">The disclosed guest menu is six items. The first row is the grill. The second row is salad, arepa, and house sauce. Full allergen wording is on the menu page.</p>
-
+                </section>
+                <section class="page-block">
                 <div class="section-head">
                     <h3 data-i18n="home.grill.h3">From the grill</h3>
                     <p class="lede" data-i18n="home.grill.lede">Sirloin, ribs, and chicken cooked over the brasa.</p>
@@ -90,7 +94,9 @@
                         </div>
                     </article>
                 </div>
+                </section>
 
+                <section class="page-block">
                 <div class="section-head">
                     <h3 data-i18n="home.sides.h3">Salad, side, and sauce</h3>
                     <p class="lede" data-i18n="home.sides.lede">The remaining disclosed items, with their own allergens.</p>
@@ -122,11 +128,13 @@
                     </article>
                 </div>
                 <p class="cta-row"><a class="btn btn-primary" href="menu.html" data-i18n="home.fullmenu">Open the full menu</a></p>
+                </section>
             </div>
         </section>
 
         <section class="section">
             <div class="wrap">
+                <section class="page-block">
                 <h2 data-i18n="home.markets.h2">Two markets, one program</h2>
                 <p class="lede" data-i18n="home.markets.lede">Florida prices and redemptions are in USD. Colombia prices and redemptions are in COP. We never convert one into the other on this site.</p>
                 <div class="grid">
@@ -143,6 +151,7 @@
                         <p data-i18n="home.protocol.p">Servers notify the kitchen before prep. Separate utensils and surfaces are used. We never claim zero cross-contamination risk.</p>
                     </article>
                 </div>
+                </section>
             </div>
         </section>
     </main>

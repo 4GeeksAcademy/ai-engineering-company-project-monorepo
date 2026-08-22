@@ -20,6 +20,7 @@
 <body>
     <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
+        <div class="header-inner">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
@@ -36,14 +37,18 @@
             <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
         </div>
+        </div>
     </header>
 
-    <main id="main" class="section">
+    <main id="main" class="page">
         <div class="wrap">
+            <header class="page-intro">
             <p class="kicker" data-i18n="menu.kicker">Guest menu</p>
-            <h2 data-i18n="home.cook.h2">What we cook</h2>
+            <h1 class="page-title" data-i18n="home.cook.h2">What we cook</h1>
             <p class="lede" data-i18n="menu.lede">Brasaland is a grilled-food chain. These six dishes are the ones the company discloses to guests. Allergen wording is copied from the menu allergen guide under INVIMA (Colombia) and FDA (United States) rules. This page does not list prices — Florida checks are in USD and Colombia checks are in COP, and we never convert one into the other.</p>
+            </header>
 
+            <section class="page-block">
             <div class="section-head">
                 <h3 data-i18n="home.grill.h3">From the grill</h3>
                 <p class="lede" data-i18n="menu.grill.lede">Silver Brasa Points members get 10% off a main dish once a month. Gold members (50+ points) get 15% off and early access to the seasonal menu.</p>
@@ -103,7 +108,9 @@
                     </div>
                 </article>
             </div>
+            </section>
 
+            <section class="page-block">
             <div class="section-head">
                 <h3 data-i18n="home.sides.h3">Salad, side, and sauce</h3>
                 <p class="lede" data-i18n="menu.sides.lede">Tropical salad is listed with the mains in the allergen guide. The corn arepa is a side. House sauce is disclosed separately because it carries its own allergens.</p>
@@ -158,6 +165,7 @@
                     </div>
                 </article>
             </div>
+            </section>
 
             <p class="note" data-i18n="menu.note" data-i18n-html>If you have a severe allergy, tell your server before the kitchen starts. The server informs the kitchen, the kitchen uses clean utensils and a separate surface, and Brasaland never guarantees zero cross-contamination risk. Full protocol: <a href="allergens.html">Allergens</a>.</p>
         </div>

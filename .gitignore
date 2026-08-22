@@ -8,4 +8,5 @@ scripts/results.csv
 conversation_log.csv
 conversation_log.csv.bak
 data/uploads/
+data/process/captured_telemetry.jsonl
 **/__pycache__/

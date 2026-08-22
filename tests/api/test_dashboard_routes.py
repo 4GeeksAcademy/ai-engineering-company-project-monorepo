@@ -74,3 +74,30 @@ def test_telemetry_report_uses_live_supabase_events(client: TestClient, monkeypa
     assert payload["source"] == "supabase"
     assert payload["metrics"]["events_per_day"] == [{"date": "2026-08-18", "event_count": 4}]
     assert {row["event_type"] for row in payload["metrics"]["error_rate_by_type"]} == {"api_error", "user_login_failed"}
+
+
+def test_telemetry_event_is_captured_and_merged_into_report(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr("routers.telemetry.use_seed_source", lambda: True)
+    created = client.post(
+        "/telemetry/events",
+        json={"event_type": "page_view", "tags": {"page": "index.html", "surface": "public_website"}},
+    )
+    assert created.status_code == 201
+    rejected = client.post("/telemetry/events", json={"event_type": "password_dump"})
+    assert rejected.status_code == 400
+    report = client.get("/telemetry/report")
+    assert report.status_code == 200
+    payload = report.json()
+    assert payload["source"] == "captured+seed"
+    assert any(row["event_count"] >= 1 for row in payload["metrics"]["events_per_day"])
+
+
+def test_login_records_auth_telemetry(client: TestClient) -> None:
+    client.post("/auth/login", json={"username": "mariana", "password": "wrong"})
+    client.post("/auth/login", json={"username": "mariana", "password": "brasaland"})
+    from telemetry_capture import load_captured
+
+    events = load_captured("1970-01-01T00:00:00Z", "9999-01-01T00:00:00Z")
+    types = {row["event_type"] for row in events}
+    assert "user_login_failed" in types
+    assert "user_login_succeeded" in types

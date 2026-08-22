@@ -5,10 +5,33 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from dashboard_seed import auth_failure_rate, error_rate_by_type, events_per_day, telemetry_events
-from fastapi import APIRouter, Query
-from supabase_store import LiveUnavailable, fetch_telemetry_events, use_seed_source
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
+from supabase_store import LiveUnavailable, fetch_telemetry_events, insert_telemetry_event, use_seed_source
+from telemetry_capture import load_captured, record_event
 
 router = APIRouter(tags=["telemetry"])
+
+
+class TelemetryEventIn(BaseModel):
+    event_type: str = Field(min_length=1)
+    tags: dict = Field(default_factory=dict)
+
+
+@router.post("/telemetry/events", status_code=201)
+def capture_telemetry_event(payload: TelemetryEventIn) -> dict:
+    try:
+        event = record_event(payload.event_type, dict(payload.tags or {}))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    if not use_seed_source():
+        try:
+            insert_telemetry_event(event)
+        except LiveUnavailable:
+            pass
+        except Exception:
+            pass
+    return {"accepted": True, "event": event}
 
 
 def _parse_bound(value: str | None, default: datetime) -> datetime:
@@ -43,6 +66,17 @@ def get_telemetry_report(
             source_error = str(error)
         except Exception as error:
             source_error = str(error)
+    captured = load_captured(_iso(start), _iso(end))
+    if captured:
+        known = {(str(row.get("id")), row.get("timestamp"), row.get("event_type")) for row in events}
+        for row in captured:
+            key = (str(row.get("id")), row.get("timestamp"), row.get("event_type"))
+            if key not in known:
+                events.append(row)
+        if source == "seed":
+            source = "captured+seed"
+        elif source == "supabase":
+            source = "supabase+captured"
     payload = {
         "period": {"from": _iso(start), "to": _iso(end)},
         "source": source,

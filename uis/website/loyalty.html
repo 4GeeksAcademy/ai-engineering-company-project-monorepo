@@ -20,6 +20,7 @@
 <body>
     <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
     <header class="site-header">
+        <div class="header-inner">
         <a class="brand" href="index.html">
             <span class="brand-mark">Brasaland</span>
             <span class="brand-sub">Colombia · Florida</span>
@@ -36,14 +37,18 @@
             <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
             <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
         </div>
+        </div>
     </header>
 
-    <main id="main" class="section">
+    <main id="main" class="page">
         <div class="wrap">
+            <header class="page-intro">
             <p class="kicker" data-i18n="loy.kicker">Loyalty</p>
-            <h2>Brasa Points</h2>
+            <h1 class="page-title">Brasa Points</h1>
             <p class="lede" data-i18n="loy.lede">For every 10,000 COP (or 10 USD in Florida) spent, you earn 1 point. Points do not expire while the account stays active (at least one purchase every 12 months).</p>
+            </header>
 
+            <section class="page-block">
             <div class="grid">
                 <article class="card">
                     <h3 data-i18n="loy.bronze">Bronze · 0–19 points</h3>
@@ -58,8 +63,11 @@
                     <p data-i18n="loy.gold.p">15% permanent discount and early access to the seasonal menu before the general public.</p>
                 </article>
             </div>
+            </section>
 
-            <h2 style="margin-top:2.2rem" data-i18n="loy.how">How redemption works</h2>
+            <section class="page-block">
+            <h2 data-i18n="loy.how">How redemption works</h2>
+            <div class="steps-panel">
             <ul class="steps">
                 <li data-i18n="loy.how.1">Redeem starting at 15 accumulated points, in increments of 5.</li>
                 <li data-i18n="loy.how.2">Every 5 points redeemed equal 20,000 COP (20 USD) of discount on the bill.</li>
@@ -67,8 +75,11 @@
                 <li data-i18n="loy.how.4">The program exists on physical stamp cards (being phased out) and in the digital app.</li>
                 <li data-i18n="loy.how.5">A physical card can be transferred to the app only once, by presenting the completed card at any location.</li>
             </ul>
+            </div>
+            </section>
 
-            <h2 style="margin-top:2.2rem" data-i18n="loy.faq">Guest questions</h2>
+            <section class="page-block">
+            <h2 data-i18n="loy.faq">Guest questions</h2>
             <div class="grid">
                 <article class="card">
                     <h3 data-i18n="loy.faq1.h">Can points be used on delivery?</h3>
@@ -83,6 +94,7 @@
                     <p data-i18n="loy.faq3.p">Points are valid at any Brasaland location in Colombia and Florida, at the day’s exchange rate.</p>
                 </article>
             </div>
+            </section>
         </div>
     </main>
 

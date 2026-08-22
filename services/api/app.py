@@ -8,6 +8,7 @@ from typing import Literal
 
 from analyzer import IncidentAnalyzer
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from inventory import router as inventory_router
@@ -96,6 +97,18 @@ def _register_analyze_routes(app: FastAPI, route_prefix: str) -> None:
         return summary
 
 app = FastAPI(title="Company Incident File Analyzer", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8002",
+        "http://127.0.0.1:8003",
+        "https://rickycastro1940.github.io",
+    ],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Last-Event-ID"],
+)
 app.include_router(inventory_router)
 app.include_router(knowledge_router)
 app.include_router(auth_router)
