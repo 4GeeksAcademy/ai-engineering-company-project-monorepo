@@ -534,6 +534,120 @@ tr:last-child td {
     margin-top: 0.4rem;
 }
 
+.reserve-open {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 30;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ember);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.75rem 1.05rem;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(28, 20, 16, 0.2);
+}
+
+.reserve-panel {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 4.2rem;
+    z-index: 30;
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(32rem, calc(100vh - 6rem));
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(28, 20, 16, 0.18);
+}
+
+.reserve-panel[hidden] {
+    display: none;
+}
+
+.reserve-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.reserve-x,
+.reserve-reset {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.reserve-reset {
+    padding: 0.35rem 0.9rem 0.7rem;
+    text-align: left;
+}
+
+.reserve-log {
+    overflow: auto;
+    padding: 0.75rem 0.9rem;
+    flex: 1;
+    min-height: 10rem;
+}
+
+.reserve-msg {
+    margin: 0 0 0.55rem;
+    font-size: 0.92rem;
+}
+
+.reserve-msg-user {
+    color: var(--ember);
+}
+
+.reserve-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0 0.9rem 0.45rem;
+}
+
+.reserve-chips button {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.reserve-form {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0 0.9rem 0.7rem;
+}
+
+.reserve-form input {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.reserve-form button[type="submit"] {
+    border: 0;
+    border-radius: 8px;
+    background: var(--ember);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+}
+
 @media (max-width: 960px) {
     .header-inner {
         grid-template-areas:

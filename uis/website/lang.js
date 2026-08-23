@@ -178,6 +178,28 @@
             "nf.h2": "Page not found",
             "nf.lede": "That address is not part of the Brasaland public site.",
             "nf.cta": "Back to home",
+            "bot.open": "Table request",
+            "bot.title": "Table request",
+            "bot.close": "Close",
+            "bot.send": "Send",
+            "bot.reset": "New request",
+            "bot.placeholder": "Type here…",
+            "bot.hello": "I can take a table request. The company files do not describe online reservations, so this is a note on this device — not a confirmed booking.",
+            "bot.ask.location": "Which location ID? miami-downtown (USD), bogota-norte, or COL-01 to COL-10 (COP).",
+            "bot.ask.party": "How many people?",
+            "bot.ask.date": "What date? Use YYYY-MM-DD.",
+            "bot.ask.time": "What time? Use HH:MM.",
+            "bot.ask.name": "What name should go on the request?",
+            "bot.bad.location": "Use a published ID: miami-downtown, bogota-norte, or COL-01 through COL-10.",
+            "bot.bad.party": "Enter how many people, as a number.",
+            "bot.bad.date": "Use a date like 2026-08-30.",
+            "bot.bad.time": "Use a time like 19:00.",
+            "bot.bad.name": "Enter a name.",
+            "bot.saved": "Request saved on this device. Brasaland has not confirmed a table.",
+            "bot.summary": "{location} ({currency}). {party} people. {date} {time}. Name: {name}.",
+            "bot.chip.miami": "miami-downtown",
+            "bot.chip.bogota": "bogota-norte",
+            "bot.chip.col": "COL-01",
         },
         es: {
             "meta.home.title": "Brasaland — Comida a la brasa en Colombia y Florida",
@@ -356,6 +378,28 @@
             "nf.h2": "Página no encontrada",
             "nf.lede": "Esa dirección no forma parte del sitio público de Brasaland.",
             "nf.cta": "Volver al inicio",
+            "bot.open": "Pedir mesa",
+            "bot.title": "Pedir mesa",
+            "bot.close": "Cerrar",
+            "bot.send": "Enviar",
+            "bot.reset": "Nueva solicitud",
+            "bot.placeholder": "Escribe aquí…",
+            "bot.hello": "Puedo tomar una solicitud de mesa. Los archivos de la empresa no describen reservas en línea, así que esto es una nota en este dispositivo — no una reserva confirmada.",
+            "bot.ask.location": "¿Qué ID de sede? miami-downtown (USD), bogota-norte o COL-01 a COL-10 (COP).",
+            "bot.ask.party": "¿Cuántas personas?",
+            "bot.ask.date": "¿Qué fecha? Use AAAA-MM-DD.",
+            "bot.ask.time": "¿Qué hora? Use HH:MM.",
+            "bot.ask.name": "¿Qué nombre va en la solicitud?",
+            "bot.bad.location": "Use un ID publicado: miami-downtown, bogota-norte o COL-01 a COL-10.",
+            "bot.bad.party": "Indique cuántas personas, en número.",
+            "bot.bad.date": "Use una fecha como 2026-08-30.",
+            "bot.bad.time": "Use una hora como 19:00.",
+            "bot.bad.name": "Indique un nombre.",
+            "bot.saved": "Solicitud guardada en este dispositivo. Brasaland no ha confirmado una mesa.",
+            "bot.summary": "{location} ({currency}). {party} personas. {date} {time}. Nombre: {name}.",
+            "bot.chip.miami": "miami-downtown",
+            "bot.chip.bogota": "bogota-norte",
+            "bot.chip.col": "COL-01",
         },
     };
 
@@ -440,6 +484,7 @@
             /* ignore */
         }
         applyLang(next);
+        document.dispatchEvent(new CustomEvent("brasaland-lang"));
     }
 
     function wire() {
@@ -455,5 +500,14 @@
         wire();
     }
 
-    window.BrasalandLang = { applyLang: function () { applyLang(resolveLang()); }, resolveLang, toggleLang };
+    window.BrasalandLang = {
+        applyLang: function () {
+            applyLang(resolveLang());
+        },
+        resolveLang,
+        toggleLang,
+        t: function (key) {
+            return t(resolveLang(), key);
+        },
+    };
 })();
