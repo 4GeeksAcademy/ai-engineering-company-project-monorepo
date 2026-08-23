@@ -361,7 +361,7 @@ img {
 }
 
 .menu-copy {
-    margin: 0 0 0.5rem;
+    margin: 0;
     color: var(--ink);
     font-size: 0.95rem;
 }
