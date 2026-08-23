@@ -1,6 +1,6 @@
 # Brasaland public website
 
-Guest-facing site for the grilled-food chain (Colombia + Florida).
+Guest-facing site for the grilled food chain (Colombia + Florida).
 
 **Class URL:** https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/
 

@@ -89,6 +89,7 @@
         date: "",
         time: "",
         name: "",
+        code: "",
     };
 
     function addMsg(role, text) {
@@ -160,13 +161,22 @@
         state.date = "";
         state.time = "";
         state.name = "";
+        state.code = "";
         addMsg("bot", tr("bot.hello"));
         addMsg("bot", tr("bot.ask.location"));
         showChips(true);
     }
 
+    function confirmationCode() {
+        const n = Math.floor(Math.random() * 1000000)
+            .toString()
+            .padStart(6, "0");
+        return "BRS-" + n;
+    }
+
     function finish() {
         const currency = LOCATIONS[state.location] || "";
+        const code = confirmationCode();
         const summary = fill(tr("bot.summary"), {
             location: state.location,
             currency: currency,
@@ -175,22 +185,26 @@
             time: state.time,
             name: state.name,
         });
+        addMsg("bot", tr("bot.confirmed"));
+        addMsg("bot", fill(tr("bot.code"), { code: code }));
         addMsg("bot", summary);
-        addMsg("bot", tr("bot.saved"));
+        addMsg("bot", tr("bot.keep"));
         state.step = "done";
+        state.code = code;
         showChips(false);
         try {
             localStorage.setItem(
                 STORAGE_KEY,
                 JSON.stringify({
+                    confirmation_code: code,
                     location_id: state.location,
                     currency: currency,
                     party: state.party,
                     date: state.date,
                     time: state.time,
                     name: state.name,
+                    confirmed: true,
                     saved_at: new Date().toISOString(),
-                    confirmed: false,
                 })
             );
         } catch (error) {
@@ -200,7 +214,12 @@
 
     function handle(text) {
         const value = String(text || "").trim();
-        if (!value || state.step === "done") {
+        if (!value) {
+            return;
+        }
+        if (state.step === "done") {
+            addMsg("user", value);
+            addMsg("bot", tr("bot.already"));
             return;
         }
         addMsg("user", value);
