@@ -360,6 +360,12 @@ img {
     color: var(--muted);
 }
 
+.menu-copy {
+    margin: 0 0 0.5rem;
+    color: var(--ink);
+    font-size: 0.95rem;
+}
+
 .menu-row .menu-facts {
     margin: 0;
     padding: 0;
@@ -383,6 +389,14 @@ img {
     position: absolute;
     left: 0;
     top: 0.45rem;
+}
+
+.menu-allergens {
+    margin: 0.7rem 0 0;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--muted);
 }
 
 .section-head {
