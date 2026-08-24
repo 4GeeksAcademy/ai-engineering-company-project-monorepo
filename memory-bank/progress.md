@@ -1,5 +1,38 @@
 # Progress
 
+## Incident analyzer CORS fix (2026-08-23)
+
+Updated `backrooms/services/APIs/analyzer-api.py` with explicit CORS support for the local backoffice origins on ports `3000` and `3001`. Additional origins can be supplied through `ANALYZER_ALLOWED_ORIGINS` as a comma-separated list.
+
+Validation performed:
+1. Python syntax compilation passed.
+2. FastAPI CORS preflight for `http://localhost:3000` returned `200` with the expected `Access-Control-Allow-Origin` header.
+
+Remaining risk: deployed frontend origins must be included in `ANALYZER_ALLOWED_ORIGINS`.
+
+## Dedicated incident analyzer route (2026-08-23)
+
+Added `uis/backoffice/app/incidents/page.tsx` as a separate Nexova backoffice page for incident CSV intake and analysis. The page supports file selection and drag/drop, calls the FastAPI analyzer through `NEXT_PUBLIC_ANALYZER_API_URL` (default `http://localhost:8000`), shows loading, validation error, completion, quality, category, status, and satisfaction states, and links to the aggregate `results.csv` export. Added route-specific responsive styling to `uis/backoffice/app/globals.css`.
+
+Validation performed:
+1. `npm run lint` inside `uis/backoffice` passed.
+2. `npm run build` inside `uis/backoffice` passed and generated `/` plus `/incidents`.
+3. Pylance diagnostics reported no errors for either route.
+
+Remaining risk: the browser needs the FastAPI analyzer running and, when hosted on another origin, matching CORS configuration and `NEXT_PUBLIC_ANALYZER_API_URL`.
+
+## Nexova incident analyzer API (2026-08-21)
+
+Added `backrooms/services/APIs/api.py` with FastAPI endpoints for multipart CSV analysis and aggregate CSV export. The API reuses `scripts/CSV_analyzer/analyze.py`, returns JSON-safe metrics, keeps the latest successful result in memory, rejects empty or invalid UTF-8/CSV uploads with descriptive `400` responses, and returns `404` when no result is available to export.
+
+Validation performed:
+1. `python -m py_compile backrooms/services/APIs/api.py` passed.
+2. Pylance diagnostics for the API file reported no errors.
+3. In-process route smoke test passed for valid analysis, downloadable export, and empty-file rejection.
+4. Added repository-root path bootstrap after FastAPI CLI reported `ModuleNotFoundError: No module named 'scripts'` when launched with `fastapi dev api.py`.
+
+Remaining risk: the latest analysis is process-local and will be lost on restart or split across workers until persistent storage is introduced.
+
 ## Backend architecture proposal (2026-08-17)
 
 Added `docs/Backend-Architecture-Proposal.md` as a Nexova-specific proposal for a modular layered FastAPI monolith. The document covers domain and module boundaries, candidate and notes routers, future vacancy and selection-process domains, persistence and API contract decisions, frontend/backend separation, environment configuration, CORS, security, observability, risks, and an evolution path. It cites official FastAPI and MDN CORS guidance and anchors decisions in the current tracker API consumer and selection models.
@@ -147,6 +180,19 @@ Gaps and risks:
 1. No automated test suite found for pages, components, or API integration.
 2. Workspace currently includes `.next/` and `node_modules/` inside this app path; this can hide real diffs and slow audits.
 3. Environment setup depends on `PROJECT_API_URL`; missing variable causes runtime failure by design.
+
+## Nexova CSV analyzer implementation (2026-08-19)
+
+Added `scripts/CSV_analyzer/analyze.py` to process the Nexova support incident CSV export. The script validates the documented record rules, reports valid/invalid totals and breakdowns, calculates category/status/satisfaction metrics from valid records, prompts for optional aggregate export to `results.csv`, and never includes customer email values in output.
+
+Validation performed:
+1. `python -m py_compile scripts/CSV_analyzer/analyze.py` passed.
+2. Exact synthetic distribution check passed for 100 total rows, 96 valid rows, 4 invalid rows, all category/status counts, score histogram, and 3.84 average satisfaction.
+3. Generator-input check passed after making the analyzer materialize its input once.
+4. The provided `scripts/CSV_analyzer/incidents-nexova.csv` produced the exact documented totals and metric values.
+5. The real CSV export branch passed and produced aggregate-only output without email fields or addresses.
+
+Remaining risk: no known functional risk remains for the documented CSV input. The generated `results.csv` was created in a temporary directory for validation and removed afterward.
 
 ## Recommended next steps
 
