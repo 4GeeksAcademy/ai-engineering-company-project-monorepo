@@ -2,3 +2,5 @@
 __pycache__/
 *.py[cod]
 results.csv
+services_auth/api/data/db.json
+.env
