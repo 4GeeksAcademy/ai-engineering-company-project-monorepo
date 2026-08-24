@@ -2,8 +2,25 @@
 //
 // Renderiza el formulario de creación de incidencias.
 // Ruta PROTEGIDA — solo usuarios autenticados (el formulario usa JWT).
+//
+// Lazy Loading: incident-form se carga bajo demanda porque:
+//   - Es un formulario completo con validaciones, solo se monta al navegar a crear incidencia
+//   - No está en la ruta de inicio ni en la carga inicial
+//   - Diferir su carga reduce el bundle JS inicial
 
-import IncidentForm from "@/components/incident-form";
+import dynamic from "next/dynamic";
+
+const IncidentForm = dynamic(
+  () => import("@/components/incident-form"),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-16">
+        <p className="text-sm text-slate-400">Cargando formulario...</p>
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 export default function NewIncidentPage() {
   return (
