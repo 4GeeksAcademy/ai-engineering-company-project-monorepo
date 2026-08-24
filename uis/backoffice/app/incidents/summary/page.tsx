@@ -2,8 +2,25 @@
 //
 // Muestra métricas agregadas con gráficos de barras.
 // Ruta PROTEGIDA — el componente usa JWT para autenticación.
+//
+// Lazy Loading: incident-summary se carga bajo demanda porque:
+//   - Contiene gráficos de barras (BarChart) y procesamiento de datos agregados
+//   - No está en la ruta principal ni en la carga inicial del backoffice
+//   - Diferir su carga reduce el bundle JS inicial y el tiempo de interactividad (TTI)
 
-import IncidentSummary from "@/components/incident-summary";
+import dynamic from "next/dynamic";
+
+const IncidentSummary = dynamic(
+  () => import("@/components/incident-summary"),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-16">
+        <p className="text-sm text-slate-400">Cargando resumen estadístico...</p>
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 export default function IncidentsSummaryPage() {
   return (

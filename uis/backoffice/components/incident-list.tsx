@@ -4,6 +4,10 @@
 // Incluye filtros por estado, categoría y sede, además de acciones
 // para cambiar el estado de cada incidencia.
 //
+// Optimización de caché:
+//   - useMemo para computar el resumen por estado (statusCounts):
+//     evita recalcular en cada render, solo se actualiza cuando cambia incidents.
+//
 // Checklist:
 //   #26: 3 estados (cargando, vacío, con datos)
 //   #27: Error con opción de reintentar
@@ -12,7 +16,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   fetchIncidents,
@@ -88,6 +92,21 @@ export default function IncidentList() {
     loadIncidents();
   }, [filterStatus, filterCategory, filterBranch]);
 
+  // ─────────────────────────────────────────────────────────
+  // useMemo: resumen de incidencias por estado
+  // Recorre el array incidents y calcula cuántas hay en cada estado.
+  // Es un cálculo O(n) que se ejecuta en cada render — con useMemo solo
+  // se recalcula cuando cambia el array incidents, no en cada re-render
+  // por cambio de filtro, hover, etc.
+  // ─────────────────────────────────────────────────────────
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const inc of incidents) {
+      counts[inc.status] = (counts[inc.status] || 0) + 1;
+    }
+    return counts;
+  }, [incidents]);
+
   const handleOpenStatusModal = (incident: Incident) => {
     const transitions = getAllowedTransitions(incident.status);
     if (transitions.length === 0) {
@@ -143,6 +162,23 @@ export default function IncidentList() {
           }`}
         >
           {actionMsg}
+        </div>
+      )}
+
+      {/* Resumen por estado — derivado con useMemo */}
+      {incidents.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <div
+              key={status}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm"
+            >
+              <span className="mr-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                {STATUS_LABELS[status] ?? status}
+              </span>
+              <span className="text-lg font-semibold text-slate-900">{count}</span>
+            </div>
+          ))}
         </div>
       )}
 
