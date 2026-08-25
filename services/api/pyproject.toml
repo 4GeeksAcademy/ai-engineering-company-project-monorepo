@@ -1,0 +1,21 @@
+[project]
+name = "supplier-directory-api"
+version = "0.1.0"
+description = "TrackFlow Supplier Directory API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "tinydb>=4.9.0",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[project.scripts]
+seed = "seed:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "seed", "database", "constants", "seed_data"]

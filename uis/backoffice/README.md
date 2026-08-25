@@ -2,7 +2,10 @@
 
 Panel interno realizado con Next.js, React y TypeScript.
 
-Permite cargar el CSV de incidencias de Brasaland, visualizar métricas y descargar los resultados.
+Incluye:
+
+- Módulo de incidencias: carga de CSV, métricas y descarga de resultados.
+- Módulo de proveedores: listado, filtros por país/categoría, alta de proveedor, actualización de tarifa y cambio de estado.
 
 ## Ejecutar
 

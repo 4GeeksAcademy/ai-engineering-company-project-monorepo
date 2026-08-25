@@ -12,8 +12,8 @@ body {
 
 body {
   font-family:
-    Arial,
-    Helvetica,
+    "IBM Plex Sans",
+    "Segoe UI",
     sans-serif;
 
   background:
@@ -187,6 +187,18 @@ button {
 }
 
 
+.secondaryButton {
+  background:
+    #e8ecf2;
+
+  color:
+    #1f2937;
+
+  border:
+    1px solid #cdd5df;
+}
+
+
 button:disabled {
   opacity:
     0.55;
@@ -286,6 +298,24 @@ button:disabled {
 
   color:
     #a12020;
+}
+
+
+.successMessage {
+  margin-top:
+    20px;
+
+  padding:
+    14px;
+
+  border-radius:
+    8px;
+
+  background:
+    #ecf8ee;
+
+  color:
+    #0e6a2a;
 }
 
 
@@ -445,6 +475,230 @@ button:disabled {
 }
 
 
+.supplierForm {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      1fr
+    );
+
+  gap:
+    16px;
+}
+
+
+.supplierForm label {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    8px;
+
+  font-weight:
+    700;
+}
+
+
+.supplierForm input,
+.supplierForm select,
+.supplierForm textarea,
+.filters select,
+.rateEditor input {
+  border:
+    1px solid #cfd6df;
+
+  border-radius:
+    8px;
+
+  padding:
+    9px 10px;
+
+  background:
+    #fff;
+}
+
+
+.supplierForm textarea {
+  min-height:
+    84px;
+
+  resize:
+    vertical;
+}
+
+
+.supplierForm small {
+  font-weight:
+    400;
+
+  color:
+    #5e6875;
+}
+
+
+.fullWidth {
+  grid-column:
+    1 / -1;
+}
+
+
+.filterRow {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    16px;
+
+  flex-wrap:
+    wrap;
+}
+
+
+.filters {
+  display:
+    flex;
+
+  gap:
+    10px;
+
+  flex-wrap:
+    wrap;
+}
+
+
+.resultLabel {
+  margin:
+    10px 0 18px;
+
+  color:
+    #546070;
+}
+
+
+.suppliersTableWrap {
+  overflow-x:
+    auto;
+}
+
+
+.suppliersTable {
+  width:
+    100%;
+
+  border-collapse:
+    collapse;
+}
+
+
+.suppliersTable th,
+.suppliersTable td {
+  text-align:
+    left;
+
+  padding:
+    12px 10px;
+
+  border-bottom:
+    1px solid #e7ebf0;
+
+  vertical-align:
+    top;
+}
+
+
+.suppliersTable th {
+  color:
+    #566273;
+
+  font-size:
+    13px;
+
+  letter-spacing:
+    0.3px;
+}
+
+
+.rateEditor {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+}
+
+
+.rateEditor input {
+  width:
+    110px;
+}
+
+
+.statusBadge {
+  display:
+    inline-flex;
+
+  border-radius:
+    999px;
+
+  padding:
+    4px 10px;
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+}
+
+
+.statusBadge.active {
+  background:
+    #e9f8ee;
+
+  color:
+    #127237;
+}
+
+
+.statusBadge.suspended {
+  background:
+    #fbecec;
+
+  color:
+    #a72424;
+}
+
+
+.actionStack {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    8px;
+}
+
+
 @media (
   max-width: 750px
 ) {
@@ -486,6 +740,19 @@ button:disabled {
   .pageHeader h1 {
     font-size:
       34px;
+  }
+
+
+  .supplierForm {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .suppliersTable th,
+  .suppliersTable td {
+    min-width:
+      140px;
   }
 
 }

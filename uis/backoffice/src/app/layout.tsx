@@ -61,6 +61,10 @@ export default function RootLayout({
                 Incidencias
               </Link>
 
+              <Link href="/suppliers">
+                Proveedores
+              </Link>
+
             </div>
 
           </div>

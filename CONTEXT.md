@@ -1,203 +1,248 @@
-# CONTEXT — Utilidad de Análisis de Datos: Procesador de Reportes de Incidentes
+# CONTEXT — Directorio de Proveedores · TrackFlow
 
-## Empresa: TrackFlow
+_These instructions are also available in [English](./CONTEXT-trackflow.en.md)._
+
+> **Milestone:** 09 — Lightweight Storage API  
+> **Ruta en el repositorio:** `09-lightweight-storage/CONTEXT-trackflow.md`
 
 ---
 
 ## Tu empresa
 
-**TrackFlow** es una empresa de logística de última milla y gestión de almacenes que opera en Los Ángeles (EE. UU.) y Zaragoza (España). Sus clientes son marcas de e-commerce que externalizan toda su operación logística.
+Eres parte del equipo **TrackFlow Tech**, la unidad tecnológica interna de TrackFlow, una empresa de logística de última milla y gestión de almacenes con operaciones en **Los Ángeles (USA) y Zaragoza (España)**. Tu tech lead es **Andrés Kim**, CTO, y el proyecto ha sido solicitado por **Carlos Vega**, Head of Carrier Operations, con el respaldo de **Ana Whitfield**, Head of Warehouse Operations.
 
-Formas parte de la unidad interna **TrackFlow Tech**, bajo la dirección de **Thomas Harry (CEO)** y **el tech lead interno**. Tu contacto para este proyecto es **Valentina Cruz (CX Manager)**.
-
-El equipo de Valentina (15 agentes) gestiona incidentes de dos tipos de clientes: **marcas (B2B)** que contratan servicios de TrackFlow y **consumidores finales (B2C)** que reciben los paquetes. Todos los incidentes se registran actualmente en un helpdesk legado. Se exportó un mes de datos en CSV para análisis y tu archivo de prueba tiene **1,000 filas**.
-
-El volumen de incidencias es alto: el 80% de las consultas podría automatizarse, pero primero el equipo necesita entender qué está llegando. Este análisis es la base del agente de soporte de primera línea que se construirá en una fase posterior. Tu script debe dar a Valentina una visión clara del volumen, la calidad y la satisfacción antes de empezar ese trabajo.
+TrackFlow trabaja con una red de proveedores que incluye carriers, suministros de almacén, embalaje y software operacional. Cada país negocia con sus propios proveedores y gestiona los contratos de forma independiente. El resultado es que ni Carlos ni Ana tienen visibilidad del directorio completo — cada uno lleva su propia hoja de cálculo. Este proyecto crea el registro centralizado que unifica ambos mercados.
 
 ---
 
-## Estructura del CSV
+## Modelo de proveedor
 
-**Nombre de archivo:** `incidents.csv`  
-**Codificación:** UTF-8  
-**Separador:** coma (`,`)  
-**Fila de encabezado:** sí (fila 1)
+Cada proveedor en el directorio de TrackFlow tiene la siguiente estructura:
 
-| Campo                | Tipo    | Requerido | Valores permitidos / formato                        |
-| -------------------- | ------- | --------- | --------------------------------------------------- |
-| `incident_id`        | string  | ✅        | ID único, formato `TRF-XXXXXX` (ej.: `TRF-000001`)  |
-| `date`               | string  | ✅        | `YYYY-MM-DD`                                        |
-| `country`            | string  | ✅        | `US` o `ES`                                         |
-| `customer_type`      | string  | ✅        | `B2B` o `B2C`                                       |
-| `tracking_number`    | string  | ✅        | Número de tracking del carrier, mínimo 8 caracteres |
-| `carrier`            | string  | ✅        | Ver carriers abajo                                  |
-| `category`           | string  | ✅        | Ver categorías abajo                                |
-| `description`        | string  | ✅        | Texto libre, mínimo 5 caracteres                    |
-| `status`             | string  | ✅        | `OPEN`, `CLOSED`, `DISCARDED`                       |
-| `customer_email`     | string  | ✅        | Email válido del cliente que reporta (**sensible**) |
-| `satisfaction_score` | integer | ❌\*      | Entero 1–5. **Requerido si** `status = CLOSED`      |
-
-\*`satisfaction_score` es opcional en la estructura, pero un registro `CLOSED` sin este valor se considera **incompleto**.
-
-> ⚠️ El campo `customer_email` contiene correos reales y por eso este archivo no puede compartirse con herramientas de IA externas. Tu script nunca debe imprimir, registrar ni exportar correos individuales en ninguna salida.
-
-### Carriers válidos
-
-| País | Carriers                            |
-| ---- | ----------------------------------- |
-| `US` | `UPS`, `FEDEX`, `DHL_US`            |
-| `ES` | `MRW`, `SEUR`, `DHL_ES`, `LOCAL_ES` |
-
-Un registro es **inválido** si el carrier no pertenece a la lista válida para su país declarado.
+| Campo               | Tipo                                  | Descripción                                                             |
+| ------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
+| `name`              | string, requerido                     | Nombre comercial del proveedor                                          |
+| `country`           | string, requerido                     | País del contrato: `"USA"` o `"Spain"`                                  |
+| `categories`        | lista de strings, requerido, mínimo 1 | Tipo de servicio o producto que provee (ver lista válida)               |
+| `rate_per_shipment` | float, requerido, > 0                 | Tarifa vigente por envío o unidad de servicio en la moneda del contrato |
+| `currency`          | string, requerido                     | `"USD"` para USA, `"EUR"` para Spain                                    |
+| `updated_at`        | datetime, generado por el sistema     | Timestamp de la última actualización de tarifa                          |
+| `status`            | string, requerido                     | `"active"` o `"suspended"`                                              |
+| `service_zone`      | string, opcional                      | Zona de cobertura del proveedor (ej. `"West Coast"`, `"Aragón"`)        |
+| `contact_email`     | string, opcional                      | Email de contacto del proveedor                                         |
+| `notes`             | string, opcional                      | Observaciones del equipo de operaciones                                 |
 
 ### Categorías válidas
 
-| Código             | Descripción                            |
-| ------------------ | -------------------------------------- |
-| `LOST_PARCEL`      | Paquete reportado como perdido         |
-| `DELAYED_DELIVERY` | Entrega fuera de la fecha esperada     |
-| `WRONG_ADDRESS`    | Paquete enviado a dirección incorrecta |
-| `RETURN_REQUEST`   | Cliente solicita devolución            |
-| `DAMAGE`           | Producto recibido con daños            |
-
----
-
-## Reglas de registros inválidos
-
-Un registro debe marcarse como **inválido** si ocurre cualquiera de estos casos:
-
-| Regla                                        | Descripción                                                    |
-| -------------------------------------------- | -------------------------------------------------------------- |
-| `country` faltante o inválido                | Vacío o distinto de `US` / `ES`                                |
-| `carrier` faltante o inválido                | Vacío, desconocido o carrier que no opera en el país declarado |
-| Falta `tracking_number`                      | Vacío o con menos de 8 caracteres                              |
-| `category` faltante o inválida               | Vacía o fuera de las 5 categorías válidas                      |
-| `description` vacía                          | Vacía o con menos de 5 caracteres                              |
-| `customer_email` faltante o inválido         | Vacío o sin `@`                                                |
-| `status = CLOSED` y sin `satisfaction_score` | Incidente cerrado sin puntaje                                  |
-| `satisfaction_score` fuera de rango          | Hay valor, pero no está entre 1 y 5 (inclusive)                |
-
-Tu script debe reportar cuántos registros caen en cada tipo de regla.
-
----
-
-## Distribución de datos (archivo de prueba provisto)
-
-El archivo `incidents-trackflow.csv` se envió como adjunto (ver ficheros `incidents-trackflow.csv`). Los siguientes valores describen su contenido y son los que tu script debe producir exactamente.
-
-**Total de filas:** 100
-
-**Registros válidos: 95**
-| Categoría | Cantidad |
-|---|---|
-| `LOST_PARCEL` | 14 |
-| `DELAYED_DELIVERY` | 38 |
-| `WRONG_ADDRESS` | 19 |
-| `RETURN_REQUEST` | 17 |
-| `DAMAGE` | 7 |
-
-| Estado      | Cantidad |
-| ----------- | -------- |
-| `OPEN`      | 29       |
-| `CLOSED`    | 52       |
-| `DISCARDED` | 14       |
-
-**Métrica recomendada (no obligatoria para aprobar):**
-
-| País | Cantidad |
-| ---- | -------- |
-| `US` | 50       |
-| `ES` | 45       |
-
-**Registros inválidos: 5**
-| Regla activada | Cantidad |
-|---|---|
-| `tracking_number` faltante o inválido | 1 |
-| Carrier inválido para el país declarado | 1 |
-| `category` faltante o inválida | 1 |
-| `customer_email` faltante o inválido | 1 |
-| `status = CLOSED` sin `satisfaction_score` | 1 |
-
-**Puntajes de satisfacción (52 registros cerrados)**
-| Puntaje | Cantidad |
-|---|---|
-| 1 | 6 |
-| 2 | 11 |
-| 3 | 15 |
-| 4 | 14 |
-| 5 | 6 |
-Promedio: **3.06**
-
----
-
-## Salida esperada
-
-Cuando el estudiante ejecute `python analyze.py incidents-trackflow.csv` con el archivo provisto, la salida en consola debe mostrar los valores siguientes en todas las secciones **obligatorias** (totales, desglose de inválidos, categoría, estado y satisfacción). El bloque `BREAKDOWN BY COUNTRY` es **recomendado** para TrackFlow — contexto útil para stakeholders, pero no obligatorio para aprobar.
-
-```
-============================================================
-  TRACKFLOW — INCIDENT REPORT ANALYSIS
-  Source file: incidents-trackflow.csv
-============================================================
-
-TOTAL RECORDS IN FILE .......... 100
-  ├─ Valid records ................ 95
-  └─ Invalid / incomplete .......... 5
-
-INVALID RECORDS BREAKDOWN
-  ├─ Invalid tracking number ....... 1
-  ├─ Carrier/country mismatch ...... 1
-  ├─ Invalid or missing category ... 1
-  ├─ Invalid or missing email ...... 1
-  └─ Closed incident, no score ..... 1
-
-BREAKDOWN BY CATEGORY (valid records)
-  ├─ LOST_PARCEL .................. 14  (14.7%)
-  ├─ DELAYED_DELIVERY ............. 38  (40.0%)
-  ├─ WRONG_ADDRESS ................ 19  (20.0%)
-  ├─ RETURN_REQUEST ............... 17  (17.9%)
-  └─ DAMAGE ........................ 7   (7.4%)
-
-BREAKDOWN BY STATUS (valid records)
-  ├─ OPEN ......................... 29  (30.5%)
-  ├─ CLOSED ....................... 52  (54.7%)
-  └─ DISCARDED .................... 14  (14.7%)
-
-BREAKDOWN BY COUNTRY (valid records) — recomendado, no obligatorio
-  ├─ US ........................... 50  (52.6%)
-  └─ ES ........................... 45  (47.4%)
-
-SATISFACTION INDEX (closed incidents)
-  Scored incidents: 52 of 52
-  Average score: 3.06 / 5.00
-  ├─ Score 1 (Very dissatisfied) ... 6
-  ├─ Score 2 (Dissatisfied) ....... 11
-  ├─ Score 3 (Neutral) ............ 15
-  ├─ Score 4 (Satisfied) .......... 14
-  └─ Score 5 (Very satisfied) ...... 6
-
-============================================================
-Export results to CSV? [y / n]:
+```python
+VALID_CATEGORIES = [
+    "carrier_last_mile",
+    "carrier_international",
+    "warehouse_supplies",
+    "packaging_materials",
+    "reverse_logistics",
+    "fleet_maintenance",
+    "it_and_wms_software",
+    "cleaning_and_facilities"
+]
 ```
 
-> **Nota:** Se aceptan diferencias menores de formato (espaciado, caracteres de caja), pero todos los valores numéricos de las secciones **obligatorias** deben coincidir exactamente. El desglose por país es una extensión **recomendada** de TrackFlow — inclúyelo si quieres salida lista para stakeholders, pero no se evalúa contra la rúbrica del README del proyecto.
+### Estados válidos
 
----
-
-## Nota de stakeholders
-
-> **De Valentina Cruz (CX Manager):**
-> _"Los puntajes de satisfacción en logística suelen ser más bajos que el promedio, eso es normal en nuestro sector. Lo que necesito entender es si el problema es más grave en EE. UU. o en España, y si está concentrado en categorías como_ `DELAYED_DELIVERY` _o_ `LOST_PARCEL`_. Un desglose por país en consola me ayudaría — inclúyelo si puedes. La exportación CSV debe tener una fila por métrica; la usaré en el reporte para clientes. Y como siempre: ningún correo de cliente en la salida, nunca."_
-
----
-
-## Ruta en el repositorio
-
-```
-incidents-analysis/CONTEXT-trackflow.md
+```python
+VALID_STATUSES = ["active", "suspended"]
 ```
 
 ---
 
-_Documento interno — 4Geeks Academy · AI Engineering Track_  
-_Para uso exclusivo en la generación de proyectos del programa_
+## Datos iniciales del seeder
+
+El seeder debe cargar exactamente los siguientes proveedores, que representan el directorio actual de Carlos y Ana combinado.
+
+```python
+SUPPLIERS_SEED = [
+    {
+        "name": "UPS Ground",
+        "country": "USA",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 7.45,
+        "currency": "USD",
+        "status": "active",
+        "service_zone": "West Coast",
+        "contact_email": "business@ups.com",
+        "notes": "Carrier principal para entregas locales en Los Ángeles y alrededores."
+    },
+    {
+        "name": "FedEx Ground",
+        "country": "USA",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 7.90,
+        "currency": "USD",
+        "status": "active",
+        "service_zone": "Continental USA",
+        "contact_email": "business.solutions@fedex.com"
+    },
+    {
+        "name": "DHL Express USA",
+        "country": "USA",
+        "categories": ["carrier_last_mile", "carrier_international"],
+        "rate_per_shipment": 14.20,
+        "currency": "USD",
+        "status": "active",
+        "service_zone": "Continental USA + International",
+        "contact_email": "business.us@dhl.com",
+        "notes": "Usado para envíos urgentes y exportaciones a Europa."
+    },
+    {
+        "name": "OnTrac",
+        "country": "USA",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 6.10,
+        "currency": "USD",
+        "status": "active",
+        "service_zone": "West Coast",
+        "contact_email": "solutions@ontrac.com",
+        "notes": "Carrier regional. Mejor tarifa en la zona de Los Ángeles."
+    },
+    {
+        "name": "Laser Ship",
+        "country": "USA",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 5.80,
+        "currency": "USD",
+        "status": "suspended",
+        "service_zone": "East Coast",
+        "contact_email": "business@lasership.com",
+        "notes": "Suspendido. Tasa de incidencias superior al 8% en Q3."
+    },
+    {
+        "name": "PackSource LA",
+        "country": "USA",
+        "categories": ["packaging_materials"],
+        "rate_per_shipment": 0.42,
+        "currency": "USD",
+        "status": "active",
+        "contact_email": "orders@packsource.com",
+        "notes": "Cajas, relleno y precinto para el almacén de Los Ángeles."
+    },
+    {
+        "name": "CleanTeam West",
+        "country": "USA",
+        "categories": ["cleaning_and_facilities"],
+        "rate_per_shipment": 1800.0,
+        "currency": "USD",
+        "status": "active",
+        "contact_email": "accounts@cleanteamwest.com",
+        "notes": "Tarifa mensual por servicio de limpieza del almacén de LA."
+    },
+    {
+        "name": "MRW España",
+        "country": "Spain",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 4.90,
+        "currency": "EUR",
+        "status": "active",
+        "service_zone": "Península Ibérica",
+        "contact_email": "clientes.empresa@mrw.es",
+        "notes": "Carrier principal para entregas en España. Contrato negociado por volumen."
+    },
+    {
+        "name": "SEUR",
+        "country": "Spain",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 5.20,
+        "currency": "EUR",
+        "status": "active",
+        "service_zone": "Península Ibérica + Baleares",
+        "contact_email": "grandes.cuentas@seur.com"
+    },
+    {
+        "name": "DHL Express España",
+        "country": "Spain",
+        "categories": ["carrier_last_mile", "carrier_international"],
+        "rate_per_shipment": 12.80,
+        "currency": "EUR",
+        "status": "active",
+        "service_zone": "España + Internacional",
+        "contact_email": "business.es@dhl.com",
+        "notes": "Envíos urgentes y exportaciones desde Zaragoza."
+    },
+    {
+        "name": "Nacex",
+        "country": "Spain",
+        "categories": ["carrier_last_mile"],
+        "rate_per_shipment": 4.60,
+        "currency": "EUR",
+        "status": "active",
+        "service_zone": "Aragón y zona norte",
+        "contact_email": "empresas@nacex.es",
+        "notes": "Carrier regional con buena cobertura en Aragón."
+    },
+    {
+        "name": "Logística Inversa Iberia",
+        "country": "Spain",
+        "categories": ["reverse_logistics"],
+        "rate_per_shipment": 6.30,
+        "currency": "EUR",
+        "status": "active",
+        "contact_email": "operaciones@liiberia.es",
+        "notes": "Gestión de devoluciones para el almacén de Zaragoza."
+    },
+    {
+        "name": "Embalajes Zaragoza S.L.",
+        "country": "Spain",
+        "categories": ["packaging_materials"],
+        "rate_per_shipment": 0.28,
+        "currency": "EUR",
+        "status": "active",
+        "contact_email": "pedidos@embalajeszgz.es"
+    },
+    {
+        "name": "SAP WM Cloud",
+        "country": "USA",
+        "categories": ["it_and_wms_software"],
+        "rate_per_shipment": 2200.0,
+        "currency": "USD",
+        "status": "suspended",
+        "contact_email": "enterprise@sap.com",
+        "notes": "Suspendido. Andrés está evaluando alternativas más ligeras para el almacén de LA."
+    },
+    {
+        "name": "ReturnBear",
+        "country": "USA",
+        "categories": ["reverse_logistics"],
+        "rate_per_shipment": 4.15,
+        "currency": "USD",
+        "status": "active",
+        "service_zone": "West Coast",
+        "contact_email": "partnerships@returnbear.com",
+        "notes": "Gestión de devoluciones para clientes de Los Ángeles."
+    }
+]
+```
+
+---
+
+## Restricciones de negocio
+
+- **Moneda por país:** Un proveedor de `"USA"` debe tener `currency = "USD"`. Un proveedor de `"Spain"` debe tener `currency = "EUR"`. La API rechaza combinaciones inconsistentes.
+- **Trazabilidad de tarifas:** Cada actualización de `rate_per_shipment` debe registrar `updated_at` automáticamente. Carlos usa este histórico para revisar la evolución de costes por carrier.
+- **Suspensión por incidencias:** El flujo habitual en TrackFlow es suspender proveedores con alta tasa de incidencias, no eliminarlos. El historial de suspensiones es información operativa relevante.
+- **Carriers con doble categoría:** Es válido que un carrier opere tanto en última milla como en internacional (como DHL). El campo `categories` admite múltiples valores simultáneamente.
+
+---
+
+## Lo que verá Carlos en el frontend
+
+La página del directorio debe permitirle a Carlos:
+
+1. Ver todos los proveedores con sus categorías, tarifa y estado de un vistazo.
+2. Filtrar por país (USA / Spain) para gestionar cada mercado por separado.
+3. Filtrar por categoría para responder preguntas como "¿qué carriers activos tenemos en España?".
+4. Registrar un proveedor nuevo desde un formulario.
+5. Actualizar la tarifa por envío de un proveedor y ver el cambio reflejado de inmediato.
+6. Suspender o reactivar un proveedor con un control visible en la fila.
+
+---
+
+_Documento interno — 4Geeks Academy · AI Engineering Track_
