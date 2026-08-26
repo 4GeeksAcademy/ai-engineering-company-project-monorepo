@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
         source: "/api/incidents/:path*",
         destination: "http://localhost:8000/api/incidents/:path*",
       },
+      {
+        source: "/telemetry/:path*",
+        destination: "http://localhost:8000/telemetry/:path*",
+      },
     ];
   },
 };

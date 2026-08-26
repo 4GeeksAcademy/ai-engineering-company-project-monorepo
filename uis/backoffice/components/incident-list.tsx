@@ -26,6 +26,7 @@ import {
   getAllowedTransitions,
 } from "@/lib/incident-actions";
 import type { Incident } from "@/lib/incident-actions";
+import { track } from "@/lib/telemetry";
 
 const VALID_BRANCHES = [
   { value: "", label: "Todas" },
@@ -82,6 +83,14 @@ export default function IncidentList() {
       });
       setIncidents(data);
     } catch (err: any) {
+      // Track: fallo de red al cargar incidencias
+      track("network_request_failed", {
+        endpoint: "/incidents/",
+        method: "GET",
+        error_type: "http_error",
+        http_status: err?.status || 0,
+        retry_attempted: true,
+      });
       setError(err?.detail?.detail ?? err?.detail ?? err?.message ?? "Error al cargar incidencias");
     } finally {
       setLoading(false);
@@ -136,10 +145,27 @@ export default function IncidentList() {
 
     try {
       await updateIncidentStatus(statusModal.incident.id, newStatus);
+      
+      // Track: usuario usó la funcionalidad de cambio de estado
+      track("feature_used", {
+        feature_name: "change_incident_status",
+        page: "/incidents",
+        action: "submit",
+      });
+      
       setActionMsgType("success");
       setActionMsg(`Incidencia #${statusModal.incident.id} actualizada a "${STATUS_LABELS[newStatus] ?? newStatus}".`);
       setTimeout(() => setActionMsg(null), 3000);
     } catch (err: any) {
+      // Track: fallo de red al cambiar estado
+      track("network_request_failed", {
+        endpoint: `/incidents/${statusModal.incident.id}/status`,
+        method: "PATCH",
+        error_type: "http_error",
+        http_status: err?.status || 0,
+        retry_attempted: false,
+      });
+      
       // Revert visual change on failure (Checklist #29)
       setIncidents(previousIncidents);
       statusModal.incident.status = prevStatus;

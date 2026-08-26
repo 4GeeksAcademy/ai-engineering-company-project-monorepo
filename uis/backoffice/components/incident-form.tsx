@@ -13,6 +13,7 @@
 
 import { useState, FormEvent } from "react";
 import { createIncident, VALID_CATEGORIES } from "@/lib/incident-actions";
+import { track } from "@/lib/telemetry";
 
 const VALID_ORIGINS = ["customer", "branch", "internal"] as const;
 const VALID_BRANCHES = [
@@ -77,6 +78,14 @@ export default function IncidentForm() {
         origin,
         branch,
       });
+      
+      // Track: usuario creó una incidencia
+      track("feature_used", {
+        feature_name: "create_incident",
+        page: "/incidents/new",
+        action: "submit",
+      });
+      
       setSuccess(true);
       // Reset form
       setTitle("");
