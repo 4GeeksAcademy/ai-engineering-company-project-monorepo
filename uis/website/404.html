@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-page="404">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found — Brasaland</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="site-header">
+        <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">Brasaland</span>
+            <span class="brand-sub">Colombia · Florida</span>
+        </a>
+        <nav id="primary-nav" class="nav" aria-label="Primary">
+            <a href="index.html" data-i18n="nav.home">Home</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" data-i18n="nav.allergens">Allergens</a>
+        </nav>
+        <div class="header-actions">
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
+            <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
+        </div>
+        </div>
+    </header>
+    <main id="main" class="page">
+        <div class="wrap">
+            <header class="page-intro">
+                <h1 class="page-title" data-i18n="nf.h2">Page not found</h1>
+                <p class="lede" data-i18n="nf.lede">That address is not part of the Brasaland public site.</p>
+            </header>
+            <p class="cta-row"><a class="btn btn-primary" href="index.html" data-i18n="nf.cta">Back to home</a></p>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Brasaland</strong>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <div class="staff-links">
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
+            </div>
+        </div>
+    </footer>
+    <script src="lang.js"></script>
+    <script src="reserve.js"></script>
+    <script src="site.js"></script>
+    <script src="capture.js"></script>
+</body>
+</html>

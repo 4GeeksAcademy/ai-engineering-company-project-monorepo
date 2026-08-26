@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasaland Knowledge Assistant</title>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
+</head>
+<body>
+    <main class="page">
+        <div class="page-header">
+            <h1>Brasaland Knowledge Assistant</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Application menu">
+            <a href="/backoffice/">KPI Dashboard</a>
+            <a href="/application/suppliers/">Supplier Directory</a>
+            <a href="/backoffice/telemetry.html">Telemetry</a>
+            <a href="/knowledge/" aria-current="page">Knowledge Assistant</a>
+        </nav>
+
+        <div id="login-panel" class="card">
+            <h2>Backoffice sign-in</h2>
+            <p class="subtitle">Same JWT as tickets and SSE. Browsers pass it as <code>?token=</code> on the WebSocket (not an Authorization header). Default local users: <code>mariana</code>, <code>felipe</code>, <code>lucia</code> / <code>brasaland</code>.</p>
+            <form id="login-form">
+                <label for="login-username">Username</label>
+                <input id="login-username" name="username" value="mariana" required>
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" value="brasaland" required>
+                <button type="submit" class="btn-primary">Sign in</button>
+                <p id="login-status" class="status-busy" role="status"></p>
+            </form>
+        </div>
+
+        <div id="chat-panel" hidden>
+            <p class="subtitle">Ask about supplier ordering, waste protocol, loyalty program, and menu allergens. Answers stream live. Click <strong>Interrupt</strong> to stop, or send another question while it is answering to abort and redirect — the partial reply stays visible.</p>
+            <p class="subtitle" id="session-meta">Connecting…</p>
+
+            <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+
+            <form id="query-form" class="chat-form">
+                <label for="question" class="subtitle">Your question</label>
+                <textarea id="question" placeholder="e.g., What is the minimum stock rule for proteins? Send while it is answering to redirect." required></textarea>
+                <div class="chat-actions">
+                    <button type="submit" class="btn-primary" id="submit-btn" disabled>Ask Assistant</button>
+                    <button type="button" class="btn-secondary" id="interrupt-btn" disabled>Interrupt</button>
+                </div>
+            </form>
+            <p id="status" class="status-busy" role="status" aria-live="polite"></p>
+            <div id="error" class="alert-error" role="alert" aria-live="assertive" style="display:none;"></div>
+        </div>
+    </main>
+
+    <script src="/knowledge/chat.js"></script>
+</body>
+</html>

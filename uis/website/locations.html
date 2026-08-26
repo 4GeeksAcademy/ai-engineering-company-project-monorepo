@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-page="locations">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Locations — Brasaland</title>
+    <meta name="description" content="Brasaland locations in Florida (miami-downtown) and Colombia (bogota-norte and COL-01 through COL-10)." />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="site-header">
+        <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">Brasaland</span>
+            <span class="brand-sub">Colombia · Florida</span>
+        </a>
+        <nav id="primary-nav" class="nav" aria-label="Primary">
+            <a href="index.html" data-i18n="nav.home">Home</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" class="is-current" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" data-i18n="nav.allergens">Allergens</a>
+        </nav>
+        <div class="header-actions">
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
+            <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
+        </div>
+        </div>
+    </header>
+
+    <main id="main" class="page">
+        <div class="wrap">
+            <header class="page-intro">
+            <p class="kicker" data-i18n="loc.kicker">Company locations</p>
+            <h1 class="page-title" data-i18n="loc.h2">Where we operate</h1>
+            <p class="lede" data-i18n="loc.lede">Location identifiers match operations (tickets, stock, and loyalty). Street addresses are not published in the company knowledge base, so they are not listed here.</p>
+            </header>
+
+            <section class="page-block">
+            <div class="grid grid-2">
+                <article class="card">
+                    <h3 data-i18n="loc.fl.h3">Florida · USD</h3>
+                    <p><strong>miami-downtown</strong></p>
+                    <p data-i18n="loc.fl.p">Spend and Brasa Points redemption use USD. 1 point for every 10 USD spent.</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="loc.co.h3">Colombia · COP</h3>
+                    <p><strong>bogota-norte</strong></p>
+                    <p data-i18n="loc.co.p">Spend and Brasa Points redemption use COP. 1 point for every 10,000 COP spent.</p>
+                </article>
+            </div>
+            </section>
+
+            <section class="page-block">
+            <h2 data-i18n="loc.ids.h2">All location IDs</h2>
+            <p class="lede" data-i18n="loc.ids.lede">Colombia sites COL-01 through COL-10 use COP. bogota-norte also uses COP. miami-downtown uses USD.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-i18n="loc.th.id">Location ID</th>
+                            <th data-i18n="loc.th.country">Country</th>
+                            <th data-i18n="loc.th.currency">Market currency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>bogota-norte</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-01</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-02</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-03</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-04</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-05</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-06</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-07</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-08</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-09</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>COL-10</td><td data-i18n="loc.country.co">Colombia</td><td>COP</td></tr>
+                        <tr><td>miami-downtown</td><td data-i18n="loc.country.us">United States (Florida)</td><td>USD</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="note" data-i18n="loc.note">Brasa Points earned in one country remain valid at any Brasaland location in Colombia and Florida, using that day’s exchange rate at redemption — we do not convert amounts on this page.</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Brasaland</strong>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <div class="staff-links">
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
+            </div>
+        </div>
+    </footer>
+    <script src="lang.js"></script>
+    <script src="reserve.js"></script>
+    <script src="site.js"></script>
+    <script src="capture.js"></script>
+</body>
+</html>

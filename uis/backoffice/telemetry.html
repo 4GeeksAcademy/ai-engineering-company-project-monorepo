@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health - Telemetry Report</title>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
+</head>
+<body>
+    <main class="page">
+        <div class="page-header">
+            <h1>Engineering Telemetry Dashboard</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Application menu">
+            <a href="/backoffice/">KPI Dashboard</a>
+            <a href="/application/suppliers/">Supplier Directory</a>
+            <a href="/backoffice/telemetry.html" aria-current="page">Telemetry</a>
+            <a href="/knowledge/">Knowledge Assistant</a>
+        </nav>
+
+        <div class="info-banner" id="period-display">Loading time window...</div>
+
+        <section class="card">
+            <h3>Traffic Volume (Events Per Day)</h3>
+            <table id="volume-table">
+                <thead><tr><th>Date</th><th>Total Events</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <h3>System Errors by Type</h3>
+            <table id="errors-table">
+                <thead><tr><th>Error Type</th><th>Occurrences</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <h3>Authentication Failure Rate</h3>
+            <table id="auth-table">
+                <thead><tr><th>Date</th><th>Successes</th><th>Failures</th><th>Failure Rate</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        async function loadTelemetry() {
+            const periodDisplay = document.getElementById('period-display');
+
+            try {
+                const response = await fetch('/telemetry/report');
+                if (!response.ok) {
+                    throw new Error(`Request failed (${response.status})`);
+                }
+
+                const data = await response.json();
+
+                const sourceNote = data.source_error ? ` (${data.source_error})` : '';
+                periodDisplay.innerHTML =
+                    `<strong>Period:</strong> ${new Date(data.period.from).toLocaleString()} &mdash; ${new Date(data.period.to).toLocaleString()} · <strong>Source:</strong> ${data.source || 'unknown'}${sourceNote}`;
+
+                const volumeBody = document.querySelector('#volume-table tbody');
+                volumeBody.innerHTML = data.metrics.events_per_day.map((row) =>
+                    `<tr><td>${row.date}</td><td>${row.event_count}</td></tr>`
+                ).join('');
+
+                const errorsBody = document.querySelector('#errors-table tbody');
+                if (data.metrics.error_rate_by_type.length === 0) {
+                    errorsBody.innerHTML = '<tr><td colspan="2">No technical errors detected in this period.</td></tr>';
+                } else {
+                    errorsBody.innerHTML = data.metrics.error_rate_by_type.map((row) =>
+                        `<tr><td class="text-error">${row.event_type}</td><td>${row.error_count}</td></tr>`
+                    ).join('');
+                }
+
+                const authBody = document.querySelector('#auth-table tbody');
+                if (data.metrics.auth_failure_rate.length === 0) {
+                    authBody.innerHTML = '<tr><td colspan="4">No authentication events in this period.</td></tr>';
+                } else {
+                    authBody.innerHTML = data.metrics.auth_failure_rate.map((row) => {
+                        const ratePercent = (row.failure_rate * 100).toFixed(1) + '%';
+                        return `<tr>
+                            <td>${row.date}</td>
+                            <td>${row.user_login_succeeded}</td>
+                            <td class="text-error">${row.user_login_failed}</td>
+                            <td>${ratePercent}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            } catch (error) {
+                periodDisplay.innerHTML = `<span class="text-error">Failed to load telemetry data: ${error.message}</span>`;
+            }
+        }
+
+        loadTelemetry();
+    </script>
+</body>
+</html>

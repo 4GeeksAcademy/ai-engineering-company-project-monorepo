@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasaland Business KPIs</title>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
+    <script src="/backoffice/tickets-stream.js"></script>
+</head>
+<body>
+    <main class="page">
+        <div class="page-header">
+            <h1>Brasaland Leadership Dashboard</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Application menu">
+            <a href="/backoffice/" aria-current="page">KPI Dashboard</a>
+            <a href="/application/suppliers/">Supplier Directory</a>
+            <a href="/backoffice/telemetry.html">Telemetry</a>
+            <a href="/knowledge/">Knowledge Assistant</a>
+        </nav>
+
+        <div id="login-panel" class="card">
+            <h2>Backoffice sign-in</h2>
+            <p class="subtitle">Same JWT protects ticket polling and the SSE stream. Default local users: <code>mariana</code>, <code>felipe</code>, <code>lucia</code> / <code>brasaland</code>.</p>
+            <form id="login-form">
+                <label for="login-username">Username</label>
+                <input id="login-username" name="username" value="mariana" required>
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" value="brasaland" required>
+                <button type="submit" class="btn-primary">Sign in</button>
+                <p id="login-status" class="status-busy" role="status"></p>
+            </form>
+        </div>
+
+        <div id="ops-panel" hidden>
+        <p class="subtitle" id="week-label">Loading KPIs...</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Country</th>
+                    <th>Total Purchase Cost</th>
+                    <th>Total Waste Cost</th>
+                    <th>Waste Ratio</th>
+                    <th>Stockout Events</th>
+                    <th>Price Alerts</th>
+                </tr>
+            </thead>
+            <tbody id="kpi-body">
+                <tr><td colspan="7">Loading data...</td></tr>
+            </tbody>
+        </table>
+
+        <section class="card" aria-labelledby="tickets-heading">
+            <div class="section-header">
+                <h2 id="tickets-heading">Operational tickets</h2>
+                <span class="live-badge" id="stream-status" data-state="connecting">Connecting</span>
+            </div>
+            <p class="subtitle">Emergency orders and waste escalations arrive live over SSE (<code>fetch</code> + JWT). Missed events replay with <code>Last-Event-ID</code>.</p>
+            <div id="live-notice" class="live-notice" hidden role="status"></div>
+
+            <form id="ticket-form" class="ticket-form">
+                <label for="ticket-type">Type</label>
+                <select id="ticket-type" name="ticket_type" required>
+                    <option value="emergency_order">Emergency order</option>
+                    <option value="waste_escalation">Waste escalation</option>
+                </select>
+
+                <label for="location-id">Location</label>
+                <select id="location-id" name="location_id" required>
+                    <option value="miami-downtown">miami-downtown (USD)</option>
+                    <option value="bogota-norte">bogota-norte (COP)</option>
+                    <option value="COL-01">COL-01 (COP)</option>
+                    <option value="COL-02">COL-02 (COP)</option>
+                    <option value="COL-03">COL-03 (COP)</option>
+                    <option value="COL-04">COL-04 (COP)</option>
+                    <option value="COL-05">COL-05 (COP)</option>
+                    <option value="COL-06">COL-06 (COP)</option>
+                    <option value="COL-07">COL-07 (COP)</option>
+                    <option value="COL-08">COL-08 (COP)</option>
+                    <option value="COL-09">COL-09 (COP)</option>
+                    <option value="COL-10">COL-10 (COP)</option>
+                </select>
+
+                <div id="emergency-fields">
+                    <label for="amount-usd">Amount (USD, for approval threshold)</label>
+                    <input id="amount-usd" name="amount_usd" type="number" min="0.01" step="0.01" value="620">
+                    <label for="currency">Market currency (never converted)</label>
+                    <select id="currency" name="currency">
+                        <option value="USD">USD</option>
+                        <option value="COP">COP</option>
+                    </select>
+                    <label for="protein-days">Protein days remaining</label>
+                    <input id="protein-days" name="protein_days_remaining" type="number" min="0" step="0.1" value="2">
+                </div>
+
+                <div id="waste-fields" hidden>
+                    <label for="waste-category">Category</label>
+                    <select id="waste-category" name="category">
+                        <option value="expiration">expiration</option>
+                        <option value="kitchen_error">kitchen_error</option>
+                        <option value="unexplained_shrinkage">unexplained_shrinkage</option>
+                    </select>
+                    <label for="waste-kg">Kilograms</label>
+                    <input id="waste-kg" name="kg" type="number" min="0.01" step="0.01" value="6.2">
+                    <label for="waste-protein">Protein (optional)</label>
+                    <input id="waste-protein" name="protein" placeholder="tenderloin or ribs escalate above 5 kg">
+                    <label for="shrinkage-weeks">Consecutive shrinkage weeks</label>
+                    <input id="shrinkage-weeks" name="consecutive_shrinkage_weeks" type="number" min="0" step="1" value="0">
+                </div>
+
+                <button type="submit" class="btn-primary">File ticket</button>
+                <p id="ticket-form-status" class="status-busy" role="status"></p>
+            </form>
+
+            <ul class="ticket-list" id="ticket-list">
+                <li class="ticket-empty">No operational tickets yet.</li>
+            </ul>
+        </section>
+        </div>
+    </main>
+
+    <script>
+        async function loadKPIs() {
+            const weekLabel = document.getElementById('week-label');
+            const tbody = document.getElementById('kpi-body');
+
+            try {
+                const res = await fetch('/reporting/weekly-location-performance');
+                if (!res.ok) {
+                    throw new Error(`Request failed (${res.status})`);
+                }
+
+                const data = await res.json();
+                weekLabel.textContent = `Performance for week starting: ${data.week_start || 'N/A'} · source: ${data.source || 'unknown'}`;
+                if (data.source_error) {
+                    weekLabel.textContent += ` (${data.source_error})`;
+                }
+
+                if (!data.locations || data.locations.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7">No data available for this period.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.locations.map((loc) => `
+                    <tr>
+                        <td><strong>${loc.location_id}</strong></td>
+                        <td>${loc.country}</td>
+                        <td>${loc.currency} ${loc.total_purchase_cost}</td>
+                        <td>${loc.currency} ${loc.total_waste_cost}</td>
+                        <td>${(loc.waste_ratio * 100).toFixed(1)}%</td>
+                        <td>${loc.stockout_events_count}</td>
+                        <td>${loc.price_alert_events_count}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                weekLabel.textContent = '';
+                tbody.innerHTML = `<tr><td colspan="7" class="text-error">Error loading KPIs: ${err.message}</td></tr>`;
+            }
+        }
+
+        const TOKEN_KEY = 'brasaland-backoffice-token';
+        const loginPanel = document.getElementById('login-panel');
+        const opsPanel = document.getElementById('ops-panel');
+        const loginForm = document.getElementById('login-form');
+        const loginStatus = document.getElementById('login-status');
+        const ticketList = document.getElementById('ticket-list');
+        const streamStatus = document.getElementById('stream-status');
+        const ticketForm = document.getElementById('ticket-form');
+        const ticketType = document.getElementById('ticket-type');
+        const locationId = document.getElementById('location-id');
+        const currencySelect = document.getElementById('currency');
+        const emergencyFields = document.getElementById('emergency-fields');
+        const wasteFields = document.getElementById('waste-fields');
+        const LOCATION_CURRENCY = {
+            'miami-downtown': 'USD',
+            'bogota-norte': 'COP',
+            'COL-01': 'COP',
+            'COL-02': 'COP',
+            'COL-03': 'COP',
+            'COL-04': 'COP',
+            'COL-05': 'COP',
+            'COL-06': 'COP',
+            'COL-07': 'COP',
+            'COL-08': 'COP',
+            'COL-09': 'COP',
+            'COL-10': 'COP',
+        };
+        const formStatus = document.getElementById('ticket-form-status');
+        const liveNotice = document.getElementById('live-notice');
+        const ticketsById = new Map();
+        let lastEventId = '';
+        let streamClient = null;
+        let recoverInFlight = null;
+
+        function getToken() {
+            return sessionStorage.getItem(TOKEN_KEY) || '';
+        }
+
+        function authHeaders(extra) {
+            const headers = extra ? { ...extra } : {};
+            const token = getToken();
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+            return headers;
+        }
+
+        function showOps() {
+            loginPanel.hidden = true;
+            opsPanel.hidden = false;
+            loadKPIs();
+            recoverTickets().finally(connectTicketStream);
+        }
+
+        function showLogin(message) {
+            if (streamClient) {
+                streamClient.stop();
+                streamClient = null;
+            }
+            sessionStorage.removeItem(TOKEN_KEY);
+            loginPanel.hidden = false;
+            opsPanel.hidden = true;
+            if (message) {
+                loginStatus.textContent = message;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function setStreamState(state, label) {
+            streamStatus.dataset.state = state;
+            streamStatus.textContent = label;
+        }
+
+        function ticketDetails(ticket) {
+            if (ticket.ticket_type === 'emergency_order') {
+                return `${ticket.currency} threshold check on $${ticket.amount_usd} USD · ${ticket.protein_days_remaining ?? '—'} protein days left`;
+            }
+            const protein = ticket.protein ? ` · ${ticket.protein}` : '';
+            const weeks = ticket.consecutive_shrinkage_weeks
+                ? ` · ${ticket.consecutive_shrinkage_weeks} shrinkage weeks`
+                : '';
+            return `${ticket.category} · ${ticket.kg} kg${protein}${weeks}`;
+        }
+
+        function ticketTypeLabel(ticketType) {
+            if (ticketType === 'emergency_order') return 'Emergency order';
+            if (ticketType === 'waste_escalation') return 'Waste escalation';
+            return ticketType;
+        }
+
+        function rememberEventId(ticketId) {
+            if (ticketId && ticketId > lastEventId) {
+                lastEventId = ticketId;
+            }
+        }
+
+        function announceLiveTicket(ticket) {
+            const label = ticketTypeLabel(ticket.ticket_type);
+            liveNotice.hidden = false;
+            liveNotice.className = `live-notice live-notice--${ticket.ticket_type}`;
+            liveNotice.textContent = `Live ${label}: ${ticket.ticket_id} · ${ticket.status} at ${ticket.location_id}`;
+        }
+
+        function ticketItemHtml(ticket, extraClass) {
+            const liveClass = extraClass ? ` ${extraClass}` : '';
+            return `
+                <li class="ticket-item ticket-item--${escapeHtml(ticket.ticket_type)}${liveClass}" data-ticket-id="${escapeHtml(ticket.ticket_id)}">
+                    <div>
+                        <strong>${escapeHtml(ticket.ticket_id)}</strong>
+                        <span class="status-pill status-${escapeHtml(ticket.status)}">${escapeHtml(ticket.status)}</span>
+                        ${extraClass ? '<span class="live-chip">New</span>' : ''}
+                    </div>
+                    <div>${escapeHtml(ticketTypeLabel(ticket.ticket_type))} · ${escapeHtml(ticket.location_id)} · ${escapeHtml(ticket.company)}</div>
+                    <div class="ticket-meta">${escapeHtml(ticketDetails(ticket))}</div>
+                    <div class="ticket-meta">${ticket.assignee ? `Assignee: ${escapeHtml(ticket.assignee)}` : 'No assignee'} · ${escapeHtml(ticket.created_at)}</div>
+                </li>
+            `;
+        }
+
+        function renderTicketItem(ticket, { fromStream = false } = {}) {
+            const empty = ticketList.querySelector('.ticket-empty');
+            if (empty) {
+                empty.remove();
+            }
+            const selector = `[data-ticket-id="${CSS.escape(ticket.ticket_id)}"]`;
+            const existing = ticketList.querySelector(selector);
+            const extraClass = fromStream && !existing ? 'is-live-new' : (existing && existing.classList.contains('is-live-new') ? 'is-live-new' : '');
+            const html = ticketItemHtml(ticket, extraClass);
+            if (existing) {
+                existing.outerHTML = html.trim();
+                return;
+            }
+            ticketList.insertAdjacentHTML('afterbegin', html.trim());
+        }
+
+        function upsertTicket(ticket, { fromStream = false } = {}) {
+            if (!ticket || !ticket.ticket_id) return false;
+            const isNew = !ticketsById.has(ticket.ticket_id);
+            ticketsById.set(ticket.ticket_id, ticket);
+            rememberEventId(ticket.ticket_id);
+            renderTicketItem(ticket, { fromStream: fromStream && isNew });
+            return isNew;
+        }
+
+        async function recoverTickets(options) {
+            const highlightNew = Boolean(options && options.highlightNew);
+            const token = getToken();
+            if (!token) return;
+            if (recoverInFlight) {
+                return recoverInFlight;
+            }
+            recoverInFlight = (async () => {
+                const response = await fetch('/tickets', { headers: authHeaders() });
+                if (response.status === 401) {
+                    showLogin('Session expired. Sign in again.');
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`Request failed (${response.status})`);
+                }
+                const data = await response.json();
+                (data.tickets || []).forEach((ticket) => {
+                    const isNew = upsertTicket(ticket, { fromStream: highlightNew });
+                    if (highlightNew && isNew) {
+                        announceLiveTicket(ticket);
+                    }
+                });
+            })();
+            try {
+                await recoverInFlight;
+            } catch (error) {
+                console.error(error);
+            } finally {
+                recoverInFlight = null;
+            }
+        }
+
+        function connectTicketStream() {
+            const token = getToken();
+            if (!token || !window.BrasalandTicketStream) return;
+            if (streamClient) {
+                streamClient.stop();
+            }
+            streamClient = window.BrasalandTicketStream.connect({
+                url: '/notifications/stream',
+                getToken,
+                getLastEventId: () => lastEventId,
+                onTicket(ticket) {
+                    const isNew = upsertTicket(ticket, { fromStream: true });
+                    if (isNew) {
+                        announceLiveTicket(ticket);
+                    }
+                },
+                onStatus: setStreamState,
+                onUnauthorized() {
+                    showLogin('Session expired. Sign in again.');
+                },
+                onBeforeReconnect: () => recoverTickets({ highlightNew: true }),
+            });
+        }
+
+        function syncCurrencyToLocation() {
+            currencySelect.value = LOCATION_CURRENCY[locationId.value] || 'USD';
+        }
+
+        ticketType.addEventListener('change', () => {
+            const isEmergency = ticketType.value === 'emergency_order';
+            emergencyFields.hidden = !isEmergency;
+            wasteFields.hidden = isEmergency;
+        });
+        locationId.addEventListener('change', syncCurrencyToLocation);
+        syncCurrencyToLocation();
+
+        ticketForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            formStatus.textContent = 'Filing ticket...';
+            const isEmergency = ticketType.value === 'emergency_order';
+            const payload = isEmergency
+                ? {
+                    ticket_type: 'emergency_order',
+                    location_id: locationId.value,
+                    amount_usd: Number(document.getElementById('amount-usd').value),
+                    currency: document.getElementById('currency').value,
+                    protein_days_remaining: Number(document.getElementById('protein-days').value),
+                }
+                : {
+                    ticket_type: 'waste_escalation',
+                    location_id: locationId.value,
+                    category: document.getElementById('waste-category').value,
+                    kg: Number(document.getElementById('waste-kg').value),
+                    protein: document.getElementById('waste-protein').value.trim() || null,
+                    consecutive_shrinkage_weeks: Number(document.getElementById('shrinkage-weeks').value),
+                };
+
+            try {
+                const response = await fetch('/tickets', {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                const body = await response.json().catch(() => ({}));
+                if (response.status === 401) {
+                    showLogin('Session expired. Sign in again.');
+                    return;
+                }
+                if (!response.ok) {
+                    const detail = body.detail;
+                    throw new Error(typeof detail === 'string' ? detail : `Request failed (${response.status})`);
+                }
+                upsertTicket(body);
+                formStatus.textContent = `Filed ${body.ticket_id} as ${body.status}.`;
+            } catch (error) {
+                formStatus.textContent = error.message || 'Could not file ticket.';
+            }
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginStatus.textContent = 'Signing in...';
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('login-username').value.trim(),
+                        password: document.getElementById('login-password').value,
+                    }),
+                });
+                const body = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(body.detail || 'Sign-in failed');
+                }
+                sessionStorage.setItem(TOKEN_KEY, body.access_token);
+                loginStatus.textContent = '';
+                showOps();
+            } catch (error) {
+                loginStatus.textContent = error.message || 'Sign-in failed';
+            }
+        });
+
+        if (getToken()) {
+            showOps();
+        }
+    </script>
+</body>
+</html>
+

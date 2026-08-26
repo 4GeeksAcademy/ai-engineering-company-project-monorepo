@@ -1,0 +1,81 @@
+{
+  "suppliers": {
+    "1": {
+      "name": "Carnes del Valle",
+      "country": "Colombia",
+      "product_categories": [
+        "proteins"
+      ],
+      "emergency_surcharge_pct": 12.0,
+      "status": "preferred",
+      "supplier_id": "SUP-001",
+      "updated_at": "2026-08-26T17:45:35Z"
+    },
+    "2": {
+      "name": "Florida Prime Meats",
+      "country": "United States",
+      "product_categories": [
+        "proteins"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "active",
+      "supplier_id": "SUP-002",
+      "updated_at": "2026-08-26T17:49:37Z"
+    },
+    "3": {
+      "name": "Huerta Andina",
+      "country": "Colombia",
+      "product_categories": [
+        "vegetables_and_fruit"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "active",
+      "supplier_id": "SUP-003",
+      "updated_at": "2026-08-26T17:09:51Z"
+    },
+    "4": {
+      "name": "Gulf Coast Produce",
+      "country": "United States",
+      "product_categories": [
+        "vegetables_and_fruit"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "preferred",
+      "supplier_id": "SUP-004",
+      "updated_at": "2026-08-26T17:09:51Z"
+    },
+    "5": {
+      "name": "Empaques Caribe",
+      "country": "Colombia",
+      "product_categories": [
+        "beverages_and_packaging"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "active",
+      "supplier_id": "SUP-005",
+      "updated_at": "2026-08-26T17:09:51Z"
+    },
+    "6": {
+      "name": "Sabores Importados",
+      "country": "Colombia",
+      "product_categories": [
+        "imported_sauces_and_condiments"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "inactive",
+      "supplier_id": "SUP-006",
+      "updated_at": "2026-08-26T17:09:51Z"
+    },
+    "7": {
+      "name": "Andean Bottling",
+      "country": "Colombia",
+      "product_categories": [
+        "proteins"
+      ],
+      "emergency_surcharge_pct": 8.0,
+      "status": "active",
+      "supplier_id": "SUP-007",
+      "updated_at": "2026-08-26T17:43:07Z"
+    }
+  }
+}

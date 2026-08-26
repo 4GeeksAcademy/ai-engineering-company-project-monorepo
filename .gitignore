@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.env
+.env.local
+.venv/
+results.csv
+scripts/results.csv
+conversation_log.csv
+conversation_log.csv.bak
+data/uploads/
+data/process/captured_telemetry.jsonl
+**/__pycache__/
+uis/application/node_modules/
+uis/application/.next/
+uis/application/out/

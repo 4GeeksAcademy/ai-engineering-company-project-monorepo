@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" data-page="allergens">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Allergens — Brasaland</title>
+    <meta name="description" content="Brasaland allergen protocol: INVIMA and FDA disclosure, kitchen steps, and gluten-free limitations for BBQ Ribs." />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="site-header">
+        <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">Brasaland</span>
+            <span class="brand-sub">Colombia · Florida</span>
+        </a>
+        <nav id="primary-nav" class="nav" aria-label="Primary">
+            <a href="index.html" data-i18n="nav.home">Home</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" class="is-current" data-i18n="nav.allergens">Allergens</a>
+        </nav>
+        <div class="header-actions">
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
+            <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
+        </div>
+        </div>
+    </header>
+
+    <main id="main" class="page">
+        <div class="wrap">
+            <header class="page-intro">
+            <p class="kicker" data-i18n="all.kicker">Customer safety</p>
+            <h1 class="page-title" data-i18n="all.h2">Allergen information</h1>
+            <p class="lede" data-i18n="all.lede">Brasaland discloses allergens according to INVIMA in Colombia and the FDA in the United States. Floor staff must be able to answer allergen questions without hesitation.</p>
+            </header>
+
+            <section class="page-block">
+            <h2 data-i18n="all.report">If you report an allergy</h2>
+            <div class="steps-panel">
+            <ol class="steps">
+                <li data-i18n="all.1">The server informs the kitchen before preparation begins.</li>
+                <li data-i18n="all.2">The kitchen uses clean utensils and a surface separate from the general prep area.</li>
+                <li data-i18n="all.3">“Zero cross-contamination risk” is never guaranteed — the server must say this explicitly if you have a severe allergy.</li>
+            </ol>
+            </div>
+            </section>
+
+            <section class="page-block">
+            <h2 data-i18n="all.byDish">Declared allergens by dish</h2>
+            <div class="grid grid-2">
+                <article class="card">
+                    <h3 data-i18n="dish.sirloin">Grilled Sirloin</h3>
+                    <p data-i18n="all.dish.sirloin">Gluten-free and dairy-free. Marinade contains soy.</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="dish.ribs">Brasaland BBQ Ribs</h3>
+                    <p data-i18n="all.dish.ribs">Sauce contains soy. Some production lines of the imported sauce may contain trace peanuts. There is no certified gluten-free version.</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="dish.chicken">Classic Grilled Chicken</h3>
+                    <p data-i18n="all.dish.chicken">Gluten-free, dairy-free, and nut-free.</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="dish.salad">Tropical Salad</h3>
+                    <p data-i18n="all.dish.salad">Contains nuts (cashew) and dairy (feta cheese).</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="dish.arepa">Corn Arepa</h3>
+                    <p data-i18n="all.dish.arepa">Contains dairy and egg.</p>
+                </article>
+                <article class="card">
+                    <h3 data-i18n="dish.sauce">House Sauce</h3>
+                    <p data-i18n="all.dish.sauce">Contains soy and sulfites.</p>
+                </article>
+            </div>
+            </section>
+
+            <p class="note" data-i18n="all.note">There is no certified gluten-free version of the BBQ Ribs because of the imported sauce. Ask a server about that dish every time.</p>
+            <p class="cta-row"><a class="btn btn-primary" href="menu.html" data-i18n="all.cta">Open the guest menu</a></p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Brasaland</strong>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <div class="staff-links">
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
+            </div>
+        </div>
+    </footer>
+    <script src="lang.js"></script>
+    <script src="reserve.js"></script>
+    <script src="site.js"></script>
+    <script src="capture.js"></script>
+</body>
+</html>

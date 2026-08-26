@@ -28,6 +28,62 @@ This repository is the **starter template** for transversal projects. You will w
 5. **Start implementing** in the right folder — do not dump everything in the root.
 6. **Document** what you add: each new app, service, agent, or pipeline gets a subfolder + README.
 
+### Run locally (API + Agent)
+
+**The API must be running before the agent starts.** The agent calls FastAPI over HTTP; if the server is down, `python agent.py` exits immediately.
+
+**Entry points:** [`api/app.py`](api/app.py) (FastAPI inventory API) and [`agent.py`](agent.py) (CLI agent).
+
+#### 1. Install dependencies
+
+From the repository root:
+
+```bash
+pip install -r requirements.txt
+```
+
+Or: `uv sync`
+
+#### 2. Configure environment
+
+Create a `.env` file at the repository root (never commit it — it is in `.gitignore`):
+
+```env
+GROQ_API_KEY=your_key_here
+```
+
+#### 3. Launch both processes (two terminals)
+
+**Terminal 1 — API (start this first):**
+
+```bash
+uvicorn api.app:app --reload
+```
+
+Wait until you see `Application startup complete` (API at `http://127.0.0.1:8000`).
+
+**Terminal 2 — agent (only after the API is up):**
+
+```bash
+python agent.py
+```
+
+If the agent starts too early, it prints:
+
+```text
+Could not reach the API. Start it first with: uvicorn api.app:app --reload
+```
+
+Then it exits. Start Terminal 1, wait, then start Terminal 2 again.
+
+Type a question at `You:` and press Enter. Type `exit` or `quit` to stop the agent. Stop the API with Ctrl+C in Terminal 1.
+
+**Agent implementation:** [`agent.py`](./agent.py) is a **manual Observe → Think → Act → Update loop in plain Python**. It does **not** use LangChain, LlamaIndex, AutoGen, CrewAI, or any other agent framework. LLM calls use the `openai` package against Groq; HTTP uses the standard library (`urllib`).
+
+Full details (inventory endpoints, supplier directory, conversation log, curl examples): [`services/api/README.md`](./services/api/README.md). Supplier records live in [`data/suppliers.json`](./data/suppliers.json); schema and seed data are in [`CONTEXT-company.md`](./CONTEXT-company.md).
+
+**Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md`.
+
 ---
 
 ## How to think about this monorepo

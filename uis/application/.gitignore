@@ -1,0 +1,4 @@
+# Next.js application UI
+.next/
+out/
+node_modules/

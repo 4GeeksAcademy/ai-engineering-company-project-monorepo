@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Incident Analysis Web UI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+      background: #f4f1e8;
+      color: #1b2a41;
+    }
+    .wrap {
+      max-width: 860px;
+      margin: 36px auto;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #d8ccb6;
+      border-radius: 12px;
+      padding: 18px;
+      background: #fffaf1;
+    }
+    h1 {
+      margin-top: 0;
+      color: #b84f2a;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid #bfae93;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 12px;
+      background: #b84f2a;
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    .upload-zone {
+      margin-top: 12px;
+      border: 2px dashed #bfae93;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      color: #5b6878;
+      background: #fff;
+    }
+    .upload-zone.dragover {
+      border-color: #b84f2a;
+      background: #fff2ea;
+      color: #1b2a41;
+    }
+    .summary {
+      margin-top: 18px;
+      display: none;
+      border-top: 1px solid #d8ccb6;
+      padding-top: 12px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .metric-card {
+      border: 1px solid #d8ccb6;
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+    .metric-card .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #5b6878;
+      letter-spacing: 0.04em;
+    }
+    .metric-card .value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #d8ccb6;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f3e7d8;
+    }
+    #status {
+      margin-top: 12px;
+      min-height: 18px;
+      color: #5b6878;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Incident Analysis</h1>
+      <p>Upload or select a CSV, run analysis, visualize summary, and export CSV.</p>
+
+      <label for="input">Input CSV path</label>
+      <input id="input" value="scripts/incidents-COMPANY.csv" />
+
+      <label for="output">Output CSV path</label>
+      <input id="output" value="results.csv" />
+
+      <label for="engine">Engine</label>
+      <select id="engine">
+        <option value="native">native</option>
+        <option value="pandas">pandas</option>
+      </select>
+
+      <button id="run">Analyze and Download CSV</button>
+
+      <div id="upload-zone" class="upload-zone" role="button" tabindex="0">
+        Drop CSV file here or click to select
+      </div>
+      <input id="file-input" type="file" accept=".csv,text/csv" style="display:none" />
+      <button id="upload-run" type="button">Upload CSV and Analyze</button>
+      <button id="download-last" type="button">Download Last Results CSV</button>
+      <p id="selected-file">No file selected.</p>
+      <p id="status"></p>
+
+      <section id="summary" class="summary">
+        <h2>General Metrics</h2>
+        <div id="general-metrics" class="summary-grid"></div>
+
+        <h2>Category Breakdown</h2>
+        <table>
+          <thead><tr><th>Category</th><th>Count</th></tr></thead>
+          <tbody id="category-breakdown"></tbody>
+        </table>
+
+        <h2>Satisfaction Index</h2>
+        <div id="satisfaction-metrics" class="summary-grid"></div>
+        <table>
+          <thead><tr><th>Score</th><th>Count</th></tr></thead>
+          <tbody id="satisfaction-breakdown"></tbody>
+        </table>
+
+        <button id="download-summary-csv" type="button">Download Results as CSV</button>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const runButton = document.getElementById('run');
+    const uploadButton = document.getElementById('upload-run');
+    const downloadLastButton = document.getElementById('download-last');
+    const downloadSummaryButton = document.getElementById('download-summary-csv');
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const selectedFileNode = document.getElementById('selected-file');
+    const statusNode = document.getElementById('status');
+    const summarySection = document.getElementById('summary');
+    const generalMetricsNode = document.getElementById('general-metrics');
+    const categoryBreakdownNode = document.getElementById('category-breakdown');
+    const satisfactionMetricsNode = document.getElementById('satisfaction-metrics');
+    const satisfactionBreakdownNode = document.getElementById('satisfaction-breakdown');
+
+    let selectedFile = null;
+
+    const setSelectedFile = (file) => {
+      selectedFile = file;
+      selectedFileNode.textContent = file ? `Selected: ${file.name}` : 'No file selected.';
+    };
+
+    const renderSummary = (payload) => {
+      const metrics = payload.general_metrics || {};
+      generalMetricsNode.innerHTML = '';
+      [['Total Processed', metrics.total_processed], ['Valid Records', metrics.valid_records], ['Invalid Records', metrics.invalid_records]].forEach(([label, value]) => {
+        const card = document.createElement('div');
+        card.className = 'metric-card';
+        card.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>`;
+        generalMetricsNode.appendChild(card);
+      });
+
+      categoryBreakdownNode.innerHTML = '';
+      Object.entries(payload.category_breakdown || {}).sort((a, b) => a[0].localeCompare(b[0])).forEach(([category, count]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${category}</td><td>${count}</td>`;
+        categoryBreakdownNode.appendChild(row);
+      });
+
+      const index = payload.satisfaction_index || {};
+      satisfactionMetricsNode.innerHTML = '';
+      [['Scored Cases', index.scored_cases], ['Average Score', Number(index.average_score || 0).toFixed(2)]].forEach(([label, value]) => {
+        const card = document.createElement('div');
+        card.className = 'metric-card';
+        card.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>`;
+        satisfactionMetricsNode.appendChild(card);
+      });
+
+      satisfactionBreakdownNode.innerHTML = '';
+      Object.entries(index.score_distribution || {}).forEach(([score, count]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${score}</td><td>${count}</td>`;
+        satisfactionBreakdownNode.appendChild(row);
+      });
+
+      summarySection.style.display = 'block';
+    };
+
+    const downloadOutput = (outputFile) => {
+      const encoded = encodeURIComponent(outputFile || document.getElementById('output').value || 'results.csv');
+      window.location.href = `/api/incidents/results/export?output_file=${encoded}`;
+    };
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        fileInput.click();
+      }
+    });
+    uploadZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const files = event.dataTransfer && event.dataTransfer.files;
+      setSelectedFile(files && files.length ? files[0] : null);
+    });
+    fileInput.addEventListener('change', () => {
+      setSelectedFile(fileInput.files && fileInput.files.length ? fileInput.files[0] : null);
+    });
+
+    runButton.addEventListener('click', async () => {
+      statusNode.textContent = 'Running analysis...';
+      const payload = {
+        input_file: document.getElementById('input').value,
+        output_file: document.getElementById('output').value,
+        engine: document.getElementById('engine').value,
+      };
+      try {
+        const response = await fetch('/api/incidents/anylayze/summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.detail || 'Analysis failed');
+        }
+        const summary = await response.json();
+        renderSummary(summary);
+        downloadOutput(summary.output_file || payload.output_file);
+        statusNode.textContent = 'Analysis complete. CSV downloaded.';
+      } catch (error) {
+        statusNode.textContent = String(error.message || error);
+      }
+    });
+
+    uploadButton.addEventListener('click', async () => {
+      if (!selectedFile) {
+        statusNode.textContent = 'Please select a CSV file first.';
+        return;
+      }
+      statusNode.textContent = 'Uploading and analyzing CSV...';
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('output_file', document.getElementById('output').value || 'results.csv');
+        formData.append('engine', document.getElementById('engine').value || 'native');
+
+        const response = await fetch('/api/incidents/anylayze/upload/summary', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.detail || 'Upload analysis failed');
+        }
+        const summary = await response.json();
+        renderSummary(summary);
+        downloadOutput(summary.output_file);
+        statusNode.textContent = 'Upload analysis complete. CSV downloaded.';
+      } catch (error) {
+        statusNode.textContent = String(error.message || error);
+      }
+    });
+
+    downloadLastButton.addEventListener('click', () => downloadOutput());
+    downloadSummaryButton.addEventListener('click', () => downloadOutput());
+  </script>
+</body>
+</html>

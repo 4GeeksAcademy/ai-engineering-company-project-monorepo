@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-page="menu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Menu — Brasaland</title>
+    <meta name="description" content="Brasaland guest menu: grilled sirloin (Lomo a la Brasa), BBQ ribs, classic grilled chicken, tropical salad, corn arepa, and house sauce." />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="site-header">
+        <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">Brasaland</span>
+            <span class="brand-sub">Colombia · Florida</span>
+        </a>
+        <nav id="primary-nav" class="nav" aria-label="Primary">
+            <a href="index.html" data-i18n="nav.home">Home</a>
+            <a href="menu.html" class="is-current" data-i18n="nav.menu">Menu</a>
+            <a href="locations.html" data-i18n="nav.locations">Locations</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a>
+            <a href="allergens.html" data-i18n="nav.allergens">Allergens</a>
+        </nav>
+        <div class="header-actions">
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" data-i18n="nav.pages" data-i18n-aria="nav.pagesAria">Pages</button>
+            <button type="button" class="theme-toggle lang-toggle" data-lang-toggle aria-label="Switch to Spanish">ES</button>
+            <button type="button" class="theme-toggle" data-theme-toggle>Dark mode</button>
+        </div>
+        </div>
+    </header>
+
+    <main id="main" class="page">
+        <div class="wrap">
+            <header class="page-intro">
+            <p class="kicker" data-i18n="menu.kicker">Guest menu</p>
+            <h1 class="page-title" data-i18n="home.cook.h2">What we cook</h1>
+            <p class="lede" data-i18n="menu.lede">Six dishes. No prices here — Florida is USD, Colombia is COP.</p>
+            </header>
+
+            <section class="page-block">
+            <div class="section-head">
+                <h3 data-i18n="home.grill.h3">From the grill</h3>
+                <p class="lede" data-i18n="menu.grill.lede">Sirloin, ribs, and chicken.</p>
+            </div>
+            <div class="menu-list">
+                <article class="card menu-row">
+                    <img src="images/menu-grilled-sirloin.jpg" alt="Grilled sirloin, Lomo a la Brasa, sliced with grill marks" width="176" height="176" data-i18n-alt="alt.sirloinLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.mainGrill">Main · grilled</p>
+                        <h3 data-i18n="dish.sirloin">Grilled Sirloin</h3>
+                        <p class="menu-also" data-i18n="dish.sirloinAlso">Lomo a la Brasa</p>
+                        <p class="menu-copy" data-i18n="menu.sirloin.copy">Beef sirloin over the brasa, with a marinade.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.sirloin">Contains soy.</p>
+                    </div>
+                </article>
+                <article class="card menu-row">
+                    <img src="images/menu-bbq-ribs.jpg" alt="Brasaland BBQ ribs with house barbecue glaze" width="176" height="176" data-i18n-alt="alt.ribsLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.mainGrill">Main · grilled</p>
+                        <h3 data-i18n="dish.ribs">Brasaland BBQ Ribs</h3>
+                        <p class="menu-also" data-i18n="menu.ribsAlso">With imported sauce</p>
+                        <p class="menu-copy" data-i18n="menu.ribs.copy">Grilled ribs with imported sauce.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.ribs">Contains soy. Not certified gluten-free.</p>
+                    </div>
+                </article>
+                <article class="card menu-row">
+                    <img src="images/menu-grilled-chicken.jpg" alt="Classic grilled chicken with charcoal grill marks" width="176" height="176" loading="lazy" data-i18n-alt="alt.chickenLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.mainGrill">Main · grilled</p>
+                        <h3 data-i18n="dish.chicken">Classic Grilled Chicken</h3>
+                        <p class="menu-copy" data-i18n="menu.chicken.copy">Chicken cooked over the brasa.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.chicken">Gluten-free, dairy-free, nut-free.</p>
+                    </div>
+                </article>
+            </div>
+            </section>
+
+            <section class="page-block">
+            <div class="section-head">
+                <h3 data-i18n="home.sides.h3">Salad, side, and sauce</h3>
+            </div>
+            <div class="menu-list">
+                <article class="card menu-row">
+                    <img src="images/menu-tropical-salad.jpg" alt="Tropical salad with feta cheese and cashews" width="176" height="176" loading="lazy" data-i18n-alt="alt.saladLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.main">Main</p>
+                        <h3 data-i18n="dish.salad">Tropical Salad</h3>
+                        <p class="menu-copy" data-i18n="menu.salad.copy">With cashew and feta.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.salad">Contains nuts and dairy.</p>
+                    </div>
+                </article>
+                <article class="card menu-row">
+                    <img src="images/menu-corn-arepa.jpg" alt="Corn arepa, toasted golden corn cake" width="176" height="176" loading="lazy" data-i18n-alt="alt.arepaLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.side">Side</p>
+                        <h3 data-i18n="dish.arepa">Corn Arepa</h3>
+                        <p class="menu-copy" data-i18n="menu.arepa.copy">Served with the grill.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.arepa">Contains dairy and egg.</p>
+                    </div>
+                </article>
+                <article class="card menu-row">
+                    <img src="images/menu-house-sauce.jpg" alt="Brasaland house sauce in a small ramekin" width="176" height="176" loading="lazy" data-i18n-alt="alt.sauceLong" />
+                    <div class="menu-body">
+                        <p class="menu-kind" data-i18n="kind.sauce">Sauce</p>
+                        <h3 data-i18n="dish.sauce">House Sauce</h3>
+                        <p class="menu-copy" data-i18n="menu.sauce.copy">Brasaland house sauce.</p>
+                        <p class="menu-allergens" data-i18n="menu.allergens.sauce">Contains soy and sulfites.</p>
+                    </div>
+                </article>
+            </div>
+            </section>
+
+            <p class="note" data-i18n="menu.note" data-i18n-html>Allergens and kitchen steps: <a href="allergens.html">Allergens</a>.</p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Brasaland</strong>
+                <p data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <div class="staff-links">
+                <a href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo" data-i18n="footer.github">GitHub repository</a>
+            </div>
+        </div>
+    </footer>
+    <script src="lang.js"></script>
+    <script src="reserve.js"></script>
+    <script src="site.js"></script>
+    <script src="capture.js"></script>
+</body>
+</html>
