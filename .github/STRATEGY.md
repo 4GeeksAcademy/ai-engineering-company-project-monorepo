@@ -1,83 +1,76 @@
-# 📌 El reto
+# README - Propuesta de Arquitectura de Backend
 
-Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
+## 🎯 Tu reto
 
-El departamento de People & Talent de tu empresa está en medio de una campaña de selección activa. La posición abierta ha recibido más de 100 candidaturas en menos de dos semanas y el equipo está desbordado: llevan el seguimiento de los candidatos en una hoja de cálculo compartida, escriben las notas de las entrevistas en documentos separados y actualizan los estados manualmente por hilos de correo. El proceso se está desmoronando.
+Acabas de completar el cuarto hito: el sitio corporativo de tu empresa ya está desplegado, estructurado y gestionado con agentes de IA. Ahora el equipo de ingeniería tiene que dar el siguiente paso: construir el backend.
 
-El equipo de Tecnología ya ha construido y expuesto una API REST para gestionar el pipeline de candidaturas. Tu trabajo es construir el frontend que el equipo de People empezará a usar el lunes. El sistema debe permitir ver todas las candidaturas de un vistazo, filtrarlas por estado y por etapa, y acceder al detalle de cada una sin perder el contexto del listado.
+Antes de escribir una sola línea de código, tu CTO quiere asegurarse de que el equipo tenga claridad arquitectónica. Nadie va a comenzar a programar sin un criterio compartido sobre cómo organizar el proyecto. Por eso, te ha pedido a ti que redactes el primer borrador del documento de arquitectura.
 
-La responsable de People ha compartido lo que necesitan con urgencia:
+Llevas cuatro milestones trabajando con esta empresa. Conoces su sector, sus operaciones, los datos que maneja, los usuarios que va a tener y los flujos críticos de su negocio. Y acabas de aprender que no existe una arquitectura universalmente correcta: la elección depende de la naturaleza del sistema y de las necesidades del negocio.
 
-### Lo que la herramienta debe hacer
-Mostrar todas las candidaturas en un listado — nombre, puesto, estado actual y etapa actual de un vistazo. Permitir filtrar por estado y por etapa, y buscar por nombre o email sin recargar la página. Abrir la vista de detalle de un candidato y, desde ahí, cambiar su estado o etapa con una sola interacción. Añadir notas internas a una candidatura y eliminarlas cuando ya no sean relevantes. Registrar nuevas candidaturas directamente desde la interfaz y editar los datos de una cuando haya que corregir algo. La API ya está lista y está documentada en `https://playground.4geeks.com/tracker/api/v1/docs`. Todas las peticiones deben gestionarse de forma asíncrona — la interfaz debe comunicar los estados de carga y manejar los errores con claridad. El equipo no puede permitirse una herramienta que falle en silencio o que deje al usuario sin saber qué está pasando.
+Este es el momento de conectar esas dos cosas.
 
-Esta es una herramienta interna real que va a usar gente real desde el primer día. Constrúyela como tal.
+Tu CTO te ha enviado el siguiente mensaje por Slack:
+
+> ### 💬 Mensaje de tu CTO
+>
+> Hola, antes de que el equipo empiece a configurar el entorno y los primeros endpoints, necesito que me mandes un documento con tus consideraciones sobre cómo deberíamos estructurar el backend.
+>
+> No necesito código todavía. Necesito entender tu razonamiento: qué patrón arquitectónico propones, por qué encaja con lo que estamos construyendo, cómo organizarías los módulos y dominios del proyecto, y qué decisiones técnicas iniciales tomarías.
+>
+> Basa tu análisis en lo que sabemos de la empresa y en lo que has aprendido sobre arquitecturas de backend. Si detectas riesgos o puntos donde podría haber confusión en el equipo, inclúyelos también.
+>
+> Antes de redactar, te recomiendo que investigues cómo se estructuran habitualmente los proyectos en FastAPI y cómo se organiza una aplicación cuando el frontend y el backend son sistemas separados. Eso te va a dar contexto concreto para fundamentar tus decisiones.
+>
+> Necesito el documento antes del inicio del próximo sprint. Un Markdown está bien.
+
+---
+
+## ❓ ¿Qué hace una buena propuesta de arquitectura?
+
+Un documento de arquitectura no es una lista de tecnologías. Es un razonamiento técnico documentado: explica qué, por qué, y anticipa consecuencias. Un buen documento de arquitectura permite que cualquier miembro del equipo entienda las decisiones tomadas sin necesidad de preguntar. Incluye al menos:
+- El patrón elegido con su justificación.
+- La estructura de carpetas y módulos propuesta.
+- La organización de rutas y dominios.
+- Los riesgos o puntos de atención identificados.
+
+Esta es tu oportunidad de demostrar que sabes pensar en un sistema antes de construirlo.
+
+---
+
+## 🌱 Cómo iniciar el proyecto
+
+Este proyecto no parte de un template de código: el entregable es un documento técnico que vive dentro de tu proyecto transversal existente.
+
+1. Abre el repositorio de tu proyecto transversal (el monorepo que has venido construyendo desde el Hito 1).
+2. Crea el archivo `ARCHITECTURE_PROPOSAL.md` dentro del directorio `/docs` del repositorio.
+3. Redacta tu propuesta en ese archivo.
 
 ---
 
 ## 💻 Qué debes hacer
 
-### Vistas y navegación
-- [ ] Crea una **página de listado de candidaturas** (`/`) que muestre todos los candidatos obtenidos desde `GET /records`.
-- [ ] Crea una **página de detalle de candidatura** (`/candidates/[id]`) que obtenga y muestre los datos completos desde `GET /records/:id`.
-- [ ] La navegación entre listado y detalle debe usar el sistema de rutas de Next.js — sin recargas completas de página.
+- [x] Crear el archivo `ARCHITECTURE_PROPOSAL.md` dentro del directorio `/docs` de tu repositorio transversal.
+- [x] En el documento, identificar y justificar el patrón arquitectónico más adecuado para tu empresa (MVC, arquitectura en capas, serverless u otro). La justificación debe estar vinculada a las características reales de tu empresa, no a una preferencia genérica.
+- [x] Proponer y describir la estructura de carpetas y módulos del proyecto backend, explicando el criterio de separación por dominio o responsabilidad utilizado.
+- [x] Incluir una sección sobre cómo organizarías los endpoints y routers de FastAPI según los dominios identificados. No es necesario escribir código: basta con describir qué rutas existirían y bajo qué criterio se agruparían.
+- [x] Investigar cómo se estructuran habitualmente los proyectos en FastAPI (convenciones de carpetas, separación de routers, modelos y configuración) y documentar en el proposal cómo esa estructura estándar influye en tus decisiones.
+- [x] Investigar cómo se organiza una aplicación cuando el frontend y el backend son sistemas separados (separación de repositorios o monorepo, comunicación por API, variables de entorno, CORS) y reflejar esas consideraciones en el documento.
+- [x] Incluir una sección de riesgos o puntos de atención con al menos dos consideraciones sobre lo que podría salir mal si el equipo no sigue la estructura propuesta.
 
-### Listado de candidaturas
-- [ ] Muestra el nombre completo, el puesto, el estado actual y la etapa actual de cada candidato.
-- [ ] Implementa **filtro por estado** y **filtro por etapa** usando query parameters (`useSearchParams`).
-- [ ] Implementa un **campo de búsqueda** que filtre por nombre o email sin recargar la página.
-- [ ] Muestra un estado de carga mientras se obtienen los datos y un mensaje de error si la petición falla.
-
-### Detalle de candidatura
-- [ ] Muestra todos los campos disponibles: nombre, email, teléfono, puesto, LinkedIn, enlace al CV, años de experiencia, estado, etapa y fecha de aplicación.
-- [ ] Incluye un control para **actualizar el estado** mediante `PATCH /records/:id`.
-- [ ] Incluye un control para **actualizar la etapa** mediante `PATCH /records/:id`.
-- [ ] Muestra el listado de notas obtenidas desde `GET /records/:id/notes`.
-- [ ] Permite añadir una nueva nota mediante `POST /records/:id/notes`.
-- [ ] Permite eliminar una nota mediante `DELETE /records/:id/notes/:note_id`.
-
-### Gestión de candidaturas
-- [ ] Incluye un **formulario para registrar una nueva candidatura** (`POST /records`).
-- [ ] Incluye un **formulario para editar los datos de una candidatura** (`PUT /records/:id`).
-- [ ] Ambos formularios deben validar los campos requeridos antes de enviarse.
-- [ ] Muestra feedback de éxito o error tras cada envío.
-
-### Estado y manejo asíncrono
-- [ ] Todas las llamadas a la API deben gestionarse con `async/await`.
-- [ ] Cada operación de obtención de datos debe tener al menos tres estados en la UI: cargando, éxito y error.
-- [ ] Tras un `PATCH`, `PUT` o `POST`, actualiza la interfaz para reflejar el cambio sin requerir una recarga completa de página.
-
-### Estructura del código
-- [ ] Organiza el proyecto con una estructura de carpetas clara: `/components`, `/hooks` (si aplica), `/types`, `/lib` o `/services`.
-- [ ] Define tipos TypeScript para todas las estructuras de datos recibidas de la API.
-
-> ⚠️ **IMPORTANTE:** Los nombres de campos, etiquetas visibles, estados y valores específicos del dominio en tu implementación deben coincidir con lo especificado en tu **CONTEXT.md**. Por ejemplo, si tu empresa es TrackFlow, la interfaz debe sentirse como una herramienta interna del equipo de People & Talent de TrackFlow, aunque los nombres de campos de la API sigan siendo los definidos por el tracker backend. Una implementación genérica que ignore el contexto de tu empresa no será aceptada.
-
-> ⚠️ **IMPORTANTE:** Usa únicamente Next.js (App Router), React y TypeScript. No uses librerías externas de gestión de estado (Redux, Zustand, Jotai, etc.). El estado a nivel de componente con hooks es suficiente para este hito.
+> [!IMPORTANT]
+> El entregable de este proyecto es un documento Markdown, no código funcional. No se evaluará si FastAPI está instalado ni si el proyecto arranca. Se evaluará la calidad del razonamiento técnico documentado.
 
 ---
 
 ## ✅ Qué vamos a evaluar
 
-- [ ] La página de listado renderiza correctamente los datos obtenidos de la API.
-- [ ] Los filtros por estado y etapa funcionan usando query parameters sin recargas de página.
-- [ ] La búsqueda por nombre o email funciona sin recargar la página.
-- [ ] La página de detalle carga y muestra todos los campos del candidato correcto por ID.
-- [ ] El estado y la etapa se pueden actualizar desde el detalle usando `PATCH`.
-- [ ] Las notas se pueden listar, añadir y eliminar desde el detalle.
-- [ ] Las nuevas candidaturas se pueden registrar mediante un formulario usando `POST`.
-- [ ] Los datos de una candidatura existente se pueden editar mediante un formulario usando `PUT`.
-- [ ] Los estados de carga, éxito y error son visibles para el usuario en todas las operaciones asíncronas.
-- [ ] Los tipos TypeScript están definidos y se usan para las estructuras de datos de la API.
-- [ ] La estructura de carpetas separa componentes, tipos y lógica de acceso a datos.
-- [ ] El App Router de Next.js se usa correctamente para navegación y rutas dinámicas.
-- [ ] No hay prop drilling — el estado está correctamente acotado a nivel de componente.
-- [ ] La implementación refleja el contexto de la empresa asignada (nombres de campo, etiquetas, valores del dominio).
+- [x] El patrón arquitectónico elegido está justificado con argumentos vinculados a la naturaleza del negocio y del sistema, no por preferencia genérica.
+- [x] La estructura de carpetas propuesta es coherente con el patrón elegido y refleja una separación clara de responsabilidades o dominios.
+- [x] La organización de routers y endpoints es reconocible como una aplicación FastAPI válida (rutas agrupadas por dominio, no todas en un único archivo).
+- [x] Las decisiones técnicas documentadas son concretas, justificadas y no contradicen los contenidos del curso.
+- [x] La propuesta refleja investigación real sobre la estructura estándar de proyectos FastAPI: las convenciones identificadas están presentes en la estructura propuesta y se menciona explícitamente su origen.
+- [x] El documento aborda cómo frontend y backend coexisten como sistemas separados: se identifican al menos las implicaciones de comunicación por API y la gestión de CORS o variables de entorno.
 
-> **Nota:** El diseño visual y el estilado no se evaluarán formalmente en este hito, pero la interfaz debe ser usable y mostrar toda la información requerida con claridad.
-
----
-
-## 📦 Cómo entregar
-
-Sube los cambios a tu repositorio del monorepo en GitHub y comparte el enlace siguiendo las instrucciones de entrega de tu instructor. Asegúrate de que el archivo `.env.local` no está commiteado e incluye un `.env.example` para documentar las variables de entorno necesarias.
+> [!NOTE]
+> No se evalúa el uso de frameworks, librerías ni herramientas que no hayan sido cubiertas hasta este punto del curso.
