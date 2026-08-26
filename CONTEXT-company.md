@@ -56,7 +56,7 @@ services/api/models.py
 services/api/database.py
 services/api/routes/suppliers.py
 services/api/seed.py
-uis/application/app/suppliers/
+uis/application/app/suppliers/   Next.js (React + TypeScript) App Router page
 ```
 
 

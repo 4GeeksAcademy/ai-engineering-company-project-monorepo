@@ -1,5 +1,5 @@
 # Supplier directory UI
 
-Page for the Brasaland supplier directory. Served at `/application/app/suppliers/`.
+Next.js App Router page (`page.tsx`) plus the client directory (`supplier-directory.tsx`).
 
-Fields, categories, and statuses come from [`CONTEXT.md`](../../../../CONTEXT.md). The page calls `GET`/`POST`/`PATCH /suppliers` on the FastAPI app in [`services/api/main.py`](../../../../services/api/main.py).
+CONTEXT fields, categories, and statuses: [`CONTEXT.md`](../../../../CONTEXT.md). API: FastAPI in [`services/api/main.py`](../../../../services/api/main.py).

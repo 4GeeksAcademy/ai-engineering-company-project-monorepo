@@ -5,8 +5,8 @@ This folder contains **all projects with a user interface** for the cross-functi
 The two main projects stored here are:
 
 - **`website`** — the company's public-facing web presence (Brasaland guest site: home, menu, locations, Brasa Points, allergens). Served at `/`.
-- **`backoffice`** — the internal admin application (KPI dashboard, telemetry). The **supplier directory** lives at [`application/app/suppliers/`](application/app/suppliers/) and is linked from the application menu.
-- **`application`** — supplier directory page at `/application/app/suppliers/`.
+- **`backoffice`** — the internal admin application (KPI dashboard, telemetry). The **supplier directory** is the Next.js app at [`application/app/suppliers/`](application/app/suppliers/) and is linked from the application menu.
+- **`application`** — Next.js + TypeScript app. Supplier directory: [`application/app/suppliers/`](application/app/suppliers/) at `/application/suppliers/`.
 
 Also in this folder:
 

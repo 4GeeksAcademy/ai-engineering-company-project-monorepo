@@ -98,7 +98,7 @@ Supplier directory layout:
 | [`routes/suppliers.py`](routes/suppliers.py) | Supplier directory endpoints |
 | [`seed.py`](seed.py) | Initial data loading (`uv run seed`) |
 
-UI: [`uis/application/app/suppliers/`](../../uis/application/app/suppliers/).
+UI: Next.js App Router at [`uis/application/app/suppliers/`](../../uis/application/app/suppliers/). URL: `/application/suppliers/`.
 
 ## Supplier directory
 
@@ -124,7 +124,7 @@ The seeder checks TinyDB before each insert. Existing `supplier_id` values are s
 
 Unknown category or status returns **400**. `PATCH /suppliers/{id}/status` with `suspend` keeps the row; `DELETE` removes it.
 
-Backoffice UI: `http://127.0.0.1:8000/application/app/suppliers/` (list / filter / create / activate / suspend). The KPI dashboard menu links here.
+Backoffice UI: `http://127.0.0.1:8000/application/suppliers/` after `npm run build` in `uis/application` (or `npm run dev` on port 3000 with `NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000`). The KPI dashboard menu links here.
 
 ```bash
 curl http://127.0.0.1:8000/suppliers

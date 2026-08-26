@@ -56,7 +56,7 @@ services/api/models.py            Pydantic supplier models
 services/api/database.py          TinyDB initialisation
 services/api/routes/suppliers.py  supplier directory endpoints
 services/api/seed.py              initial data loading (`uv run seed`)
-uis/application/app/suppliers/    supplier directory page
+uis/application/app/suppliers/    Next.js + TypeScript supplier directory page
 ```
 
 

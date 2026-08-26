@@ -1,44 +1,47 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SUPPLIERS_PAGE = REPO_ROOT / "uis" / "application" / "app" / "suppliers" / "page.tsx"
+SUPPLIERS_UI = REPO_ROOT / "uis" / "application" / "app" / "suppliers" / "supplier-directory.tsx"
+PACKAGE_JSON = REPO_ROOT / "uis" / "application" / "package.json"
 
-def test_backoffice_serves_supplier_directory(client: TestClient) -> None:
+
+def test_supplier_ui_is_next_typescript(client: TestClient) -> None:
+    package = PACKAGE_JSON.read_text(encoding="utf-8")
+    assert '"next"' in package
+    assert '"react"' in package
+    assert '"typescript"' in package
+
+    page = SUPPLIERS_PAGE.read_text(encoding="utf-8")
+    ui = SUPPLIERS_UI.read_text(encoding="utf-8")
+    assert "SupplierDirectory" in page
+    assert "emergency_surcharge_pct" in ui
+    assert 'id="filter-country"' in ui
+    assert 'id="filter-category"' in ui
+    assert 'id="supplier-form"' in ui
+    assert "Register a new supplier" in ui
+    assert 'id="register-supplier"' in ui
+    assert "noValidate" in ui
+    assert 'id="form-status"' in ui
+    assert 'role="alert"' in ui
+    assert 'id="supplier-table"' in ui
+    assert "<th>Name</th>" in ui
+    assert "<th>Country</th>" in ui
+    assert "<th>Categories</th>" in ui
+    assert "Emergency surcharge %" in ui
+    assert "Activate" in ui
+    assert "Suspend" in ui
+    assert 'data-action="update-rate"' in ui
+    assert 'data-status="active"' in ui
+    assert 'data-status="suspend"' in ui
+    assert "supplier-row--" in ui
+    assert "status-suspended" in ui
+    assert "/rate" in ui
+    assert "/status" in ui
+
     menu = client.get("/backoffice/")
     assert menu.status_code == 200
     assert 'aria-label="Application menu"' in menu.text
-    assert 'href="/application/app/suppliers/"' in menu.text
-
-    response = client.get("/application/app/suppliers/")
-    assert response.status_code == 200
-    html = response.text
-    assert "Supplier Directory" in html
-    assert 'aria-label="Application menu"' in html
-    assert 'id="filter-country"' in html
-    assert 'id="filter-category"' in html
-    assert 'id="supplier-form"' in html
-    assert "Register a new supplier" in html
-    assert 'id="register-supplier"' in html
-    assert "novalidate" in html
-    assert 'id="form-status"' in html
-    assert 'role="alert"' in html
-    assert 'id="supplier-table"' in html
-    assert "<th>Name</th>" in html
-    assert "<th>Country</th>" in html
-    assert "<th>Categories</th>" in html
-    assert "Emergency surcharge %" in html
-    assert 'id="status-lifecycle"' in html
-    assert "Activate" in html
-    assert "Suspend" in html
-    assert "emergency_surcharge_pct" in html
-    assert "/application/app/suppliers/suppliers.js" in html
-
-    script = client.get("/application/app/suppliers/suppliers.js")
-    assert script.status_code == 200
-    assert "/rate" in script.text
-    assert "emergency_surcharge_pct" in script.text
-    assert 'data-action="update-rate"' in script.text
-    assert "/status" in script.text
-    assert 'data-action="set-status"' in script.text
-    assert 'data-status="active"' in script.text
-    assert 'data-status="suspend"' in script.text
-    assert "supplier-row--" in script.text
-    assert "status-suspended" in script.text
+    assert 'href="/application/suppliers/"' in menu.text

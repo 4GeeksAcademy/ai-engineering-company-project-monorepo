@@ -32,6 +32,7 @@ WEBSITE_UI_ROOT = REPO_ROOT / "uis" / "website"
 INCIDENTS_UI_ROOT = REPO_ROOT / "uis" / "web"
 BACKOFFICE_UI_ROOT = REPO_ROOT / "uis" / "backoffice"
 APPLICATION_UI_ROOT = REPO_ROOT / "uis" / "application"
+APPLICATION_EXPORT_ROOT = APPLICATION_UI_ROOT / "out"
 KNOWLEDGE_UI_ROOT = REPO_ROOT / "uis" / "knowledge"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -117,6 +118,8 @@ app.add_middleware(
         "http://localhost:8000",
         "http://127.0.0.1:8002",
         "http://127.0.0.1:8003",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
         "https://rickycastro1940.github.io",
     ],
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
@@ -141,8 +144,8 @@ def export_results(output_file: str = "results.csv"):
         raise HTTPException(status_code=404, detail=f"Results file not found: {output_file}")
     return FileResponse(path=output_path, filename=output_path.name, media_type="text/csv")
 
-if APPLICATION_UI_ROOT.exists():
-    app.mount("/application", StaticFiles(directory=APPLICATION_UI_ROOT, html=True), name="application-ui")
+if APPLICATION_EXPORT_ROOT.exists():
+    app.mount("/application", StaticFiles(directory=APPLICATION_EXPORT_ROOT, html=True), name="application-ui")
 
 if BACKOFFICE_UI_ROOT.exists():
     app.mount("/backoffice", StaticFiles(directory=BACKOFFICE_UI_ROOT, html=True), name="backoffice-ui")
