@@ -4,7 +4,13 @@
 // Lee el token del query string y permite establecer nueva contraseña.
 
 import ResetPasswordForm from "@/components/reset-password-form";
+import PageTracker from "@/components/PageTracker";
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordForm />;
+  return (
+    <>
+      <PageTracker page="/reset-password" />
+      <ResetPasswordForm />
+    </>
+  );
 }
