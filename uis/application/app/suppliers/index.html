@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasaland Supplier Directory</title>
+    <link rel="stylesheet" href="/backoffice/theme.css">
+    <script src="/backoffice/theme.js"></script>
+</head>
+<body>
+    <main class="page page-wide">
+        <div class="page-header">
+            <h1>Supplier Directory</h1>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle light or dark mode">Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Application menu">
+            <a href="/backoffice/">KPI Dashboard</a>
+            <a href="/application/app/suppliers/" aria-current="page">Supplier Directory</a>
+            <a href="/backoffice/telemetry.html">Telemetry</a>
+            <a href="/knowledge/">Knowledge Assistant</a>
+        </nav>
+
+        <p class="subtitle">Brasaland procurement directory. Columns use CONTEXT fields: <code>name</code>, <code>country</code>, <code>product_categories</code>, <code>emergency_surcharge_pct</code> (rate), and <code>status</code>.</p>
+
+        <div id="directory-panel">
+            <section class="card" aria-labelledby="list-heading">
+                <div class="section-header">
+                    <h2 id="list-heading">All suppliers</h2>
+                    <span id="list-status" class="status-busy" role="status"></span>
+                </div>
+                <div class="filter-row">
+                    <label for="filter-country">Country
+                        <select id="filter-country"></select>
+                    </label>
+                    <label for="filter-category">Product category
+                        <select id="filter-category"></select>
+                    </label>
+                    <label for="filter-status">Status
+                        <select id="filter-status"></select>
+                    </label>
+                    <div class="filter-actions">
+                        <button type="button" class="btn-primary" id="apply-filters">Apply filters</button>
+                        <button type="button" class="btn-secondary" id="reset-filters">Reset</button>
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table id="supplier-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Country</th>
+                                <th>Categories</th>
+                                <th>Emergency surcharge % (<code>emergency_surcharge_pct</code>)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supplier-body">
+                            <tr><td colspan="6">Loading suppliers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="form-title">
+                <div class="section-header">
+                    <h2 id="form-title">Register a new supplier</h2>
+                    <button type="button" class="btn-secondary" id="cancel-edit" hidden>Cancel edit</button>
+                </div>
+                <form id="supplier-form" class="ticket-form" novalidate>
+                    <input type="hidden" id="editing-id" value="">
+                    <label for="name">Name</label>
+                    <input id="name" name="name">
+                    <label for="country">Country</label>
+                    <select id="country" name="country"></select>
+                    <fieldset class="location-fieldset">
+                        <legend>Product categories</legend>
+                        <div id="category-checkboxes" class="checkbox-grid"></div>
+                    </fieldset>
+                    <label for="emergency_surcharge_pct">Emergency surcharge % (<code>emergency_surcharge_pct</code>)</label>
+                    <input id="emergency_surcharge_pct" name="emergency_surcharge_pct" type="number" step="0.01">
+                    <label for="status">Status</label>
+                    <select id="status" name="status"></select>
+                    <div id="status-lifecycle" class="status-controls" hidden>
+                        <button type="button" class="btn-primary btn-compact" id="activate-supplier" data-action="set-status" data-status="active">Activate</button>
+                        <button type="button" class="btn-secondary btn-compact" id="suspend-supplier" data-action="set-status" data-status="suspend">Suspend</button>
+                    </div>
+                    <button type="submit" class="btn-primary" id="register-supplier">Register supplier</button>
+                    <p id="form-status" class="status-busy" role="alert" aria-live="polite"></p>
+                </form>
+            </section>
+        </div>
+    </main>
+    <script src="/application/app/suppliers/suppliers.js"></script>
+</body>
+</html>

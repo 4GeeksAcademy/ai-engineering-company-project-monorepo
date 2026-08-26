@@ -21,9 +21,9 @@ def _load_services_api_app():
     if str(_SERVICES_API_DIR) not in sys.path:
         sys.path.insert(0, str(_SERVICES_API_DIR))
 
-    spec = importlib.util.spec_from_file_location(_MODULE_NAME, _SERVICES_API_DIR / "app.py")
+    spec = importlib.util.spec_from_file_location(_MODULE_NAME, _SERVICES_API_DIR / "main.py")
     if spec is None or spec.loader is None:
-        raise ImportError(f"Unable to load FastAPI app from {_SERVICES_API_DIR / 'app.py'}")
+        raise ImportError(f"Unable to load FastAPI app from {_SERVICES_API_DIR / 'main.py'}")
 
     module = importlib.util.module_from_spec(spec)
     sys.modules[_MODULE_NAME] = module
@@ -31,5 +31,5 @@ def _load_services_api_app():
     return module.app
 
 
-app = _load_services_api_app()  # re-export FastAPI app from services/api/app.py
+app = _load_services_api_app()  # re-export FastAPI app from services/api/main.py
 

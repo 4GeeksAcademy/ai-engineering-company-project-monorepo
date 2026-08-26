@@ -5,7 +5,8 @@ This folder contains **all projects with a user interface** for the cross-functi
 The two main projects stored here are:
 
 - **`website`** — the company's public-facing web presence (Brasaland guest site: home, menu, locations, Brasa Points, allergens). Served at `/`.
-- **`backoffice`** — the internal admin application. This is the ideal place to develop multiple solutions within a single project: authentication, people management, operations management, internal communication, and other back-office capabilities.
+- **`backoffice`** — the internal admin application (KPI dashboard, telemetry). The **supplier directory** lives at [`application/app/suppliers/`](application/app/suppliers/) and is linked from the application menu.
+- **`application`** — supplier directory page at `/application/app/suppliers/`.
 
 Also in this folder:
 

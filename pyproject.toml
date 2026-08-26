@@ -5,6 +5,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["shared", "data"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"services/api/seed.py" = "seed.py"
+
 [project]
 name = "ai-engineering-company-project"
 version = "0.1.0"
@@ -22,7 +25,11 @@ dependencies = [
     "qdrant-client>=1.18.0",
     "supabase>=2.31.0",
     "uvicorn[standard]>=0.39.0",
+    "tinydb>=4.8.0",
 ]
+
+[project.scripts]
+seed = "seed:main"
 
 [dependency-groups]
 dev = [

@@ -4,6 +4,7 @@ python-multipart>=0.0.9
 pandas>=2.2.0
 openai>=1.0.0
 python-dotenv>=1.0.0
+tinydb>=4.8.0
 
 # Inventory agent uses a manual Python loop only (no LangChain, LlamaIndex, AutoGen).
 

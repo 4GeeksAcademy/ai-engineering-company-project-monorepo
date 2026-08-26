@@ -42,6 +42,77 @@ Binding names: [`docs/10-realtime/communication/CONTEXT-company.md`](docs/10-rea
 
 The assistant must not invent company facts. It does not file emergency orders or waste escalations.
 
+## Supplier directory (lightweight storage API)
+
+Use these names **exactly**. Do not substitute generic fields such as `category`, `rate`, or `email`.
+
+Canonical copy (same contract): [`CONTEXT-company.md`](CONTEXT-company.md#supplier-directory-lightweight-storage-api). Storage: [`data/suppliers.json`](data/suppliers.json) (TinyDB JSON file only).
+
+Monorepo layout for this slice:
+
+```
+services/api/main.py              FastAPI application
+services/api/models.py            Pydantic supplier models
+services/api/database.py          TinyDB initialisation
+services/api/routes/suppliers.py  supplier directory endpoints
+services/api/seed.py              initial data loading (`uv run seed`)
+uis/application/app/suppliers/    supplier directory page
+```
+
+
+### Fields
+
+| Field | Type | On input | On response | Notes |
+|-------|------|----------|-------------|--------|
+| `name` | string | yes | yes | Legal or trade name |
+| `country` | string | yes | yes | `Colombia` or `United States` |
+| `product_categories` | string[] | yes | yes | One or more **valid categories** below |
+| `emergency_surcharge_pct` | number | yes | yes | Emergency-order **rate** from the ordering procedure (`8` for proteins). Must be `> 0`. |
+| `status` | string | yes | yes | One of the **allowed statuses** below |
+| `id` | integer | no | yes | TinyDB document id |
+| `supplier_id` | string | no (ignored) | yes | `SUP-001`, … |
+| `updated_at` | string | no (ignored) | yes | ISO-8601 UTC, system-generated |
+
+### Valid categories
+
+From [`brasaland-supplier-ordering.en.md`](docs/company-knowledge-base/brasaland-supplier-ordering.en.md):
+
+| `category` | Order frequency | Lead time |
+|------------|-----------------|-----------|
+| `proteins` | weekly | 48 hours |
+| `vegetables_and_fruit` | twice_weekly | 24 hours |
+| `beverages_and_packaging` | biweekly | 5 business days (120 hours) |
+| `imported_sauces_and_condiments` | monthly | 10–15 business days (use 288 hours) |
+
+### Allowed statuses
+
+| `status` | Meaning | Equivalents accepted then stored as |
+|----------|---------|-------------------------------------|
+| `active` | Approved for new orders | — |
+| `preferred` | Primary vendor (still active for orders) | — |
+| `inactive` | Do not use for new orders (keep the record) | `suspend`, `suspended` |
+
+`PATCH /suppliers/{id}/status` accepts only `active` and `suspend`.
+
+### HTTP list filters
+
+Optional query params use CONTEXT field values, not generic names:
+
+- `?country=` — `Colombia` or `United States`
+- `?category=` — a **valid category** (matched against `product_categories`)
+- `?status=` — an **allowed status** (`suspend` is treated as `inactive`)
+
+### Initial seed data
+
+| supplier_id | name | country | product_categories | emergency_surcharge_pct | status |
+|-------------|------|---------|--------------------|-------------------------|--------|
+| SUP-001 | Carnes del Valle | Colombia | proteins | 8 | preferred |
+| SUP-002 | Florida Prime Meats | United States | proteins | 8 | active |
+| SUP-003 | Huerta Andina | Colombia | vegetables_and_fruit | 8 | active |
+| SUP-004 | Gulf Coast Produce | United States | vegetables_and_fruit | 8 | preferred |
+| SUP-005 | Empaques Caribe | Colombia | beverages_and_packaging | 8 | active |
+| SUP-006 | Sabores Importados | Colombia | imported_sauces_and_condiments | 8 | inactive |
+
 ## Chat session fields
 
 | Field | Domain value |

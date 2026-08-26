@@ -80,7 +80,7 @@ Type a question at `You:` and press Enter. Type `exit` or `quit` to stop the age
 
 **Agent implementation:** [`agent.py`](./agent.py) is a **manual Observe → Think → Act → Update loop in plain Python**. It does **not** use LangChain, LlamaIndex, AutoGen, CrewAI, or any other agent framework. LLM calls use the `openai` package against Groq; HTTP uses the standard library (`urllib`).
 
-Full details (inventory endpoints, conversation log, curl examples): [`services/api/README.md`](./services/api/README.md).
+Full details (inventory endpoints, supplier directory, conversation log, curl examples): [`services/api/README.md`](./services/api/README.md). Supplier records live in [`data/suppliers.json`](./data/suppliers.json); schema and seed data are in [`CONTEXT-company.md`](./CONTEXT-company.md).
 
 **Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md`.
 

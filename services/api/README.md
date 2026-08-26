@@ -86,7 +86,70 @@ tool   | [{"product_id":1,...}]         | list_inventory | 2026-...
 agent  | We have Tomatoes, Mozzarella... |              | 2026-...
 ```
 
-The root-level `api/` package is a compatibility shim that re-exports this service's FastAPI app so `uvicorn api.app:app` works from the repo root.
+The root-level `api/` package is a compatibility shim that re-exports this service's FastAPI app (`services/api/main.py`) so `uvicorn api.app:app` works from the repo root.
+
+Supplier directory layout:
+
+| File | Role |
+|------|------|
+| [`main.py`](main.py) | FastAPI application |
+| [`models.py`](models.py) | Pydantic supplier models |
+| [`database.py`](database.py) | TinyDB initialisation (`data/suppliers.json`) |
+| [`routes/suppliers.py`](routes/suppliers.py) | Supplier directory endpoints |
+| [`seed.py`](seed.py) | Initial data loading (`uv run seed`) |
+
+UI: [`uis/application/app/suppliers/`](../../uis/application/app/suppliers/).
+
+## Supplier directory
+
+Lightweight JSON storage at [`data/suppliers.json`](../../data/suppliers.json) via TinyDB. Field names, valid categories, allowed statuses, and seed rows must match [`CONTEXT.md`](../../CONTEXT.md) and [`CONTEXT-company.md`](../../CONTEXT-company.md) exactly. The rate field is `emergency_surcharge_pct` (must be **greater than 0**).
+
+Load the six CONTEXT suppliers without changing application code:
+
+```bash
+uv run seed
+```
+
+The seeder checks TinyDB before each insert. Existing `supplier_id` values are skipped so it never creates duplicates. When it finishes it prints how many records were inserted (and how many were skipped).
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/suppliers` | List all when unfiltered. Optional `?country=` (`Colombia` or `United States`), `?category=` (valid CONTEXT category), and `?status=` |
+| `GET` | `/suppliers/{id}` | One supplier by TinyDB `id` (or CONTEXT `supplier_id`). **404** if missing |
+| `POST` | `/suppliers` | Register a supplier; response includes TinyDB `id`. Invalid input → **422**. |
+| `PATCH` | `/suppliers/{id}/status` | Activate (`active`) or suspend (`suspend`) only. Other statuses → **422**. Stamps `updated_at` |
+| `PATCH` | `/suppliers/{id}/rate` | Update `emergency_surcharge_pct` only (must be `> 0`). Stamps `updated_at`. **422** if rate ≤ 0 |
+| `PATCH` | `/suppliers/{supplier_id}` | Partial update (inactivate with `"status": "inactive"`) |
+| `DELETE` | `/suppliers/{id}` | Remove the supplier. **404** if missing |
+
+Unknown category or status returns **400**. `PATCH /suppliers/{id}/status` with `suspend` keeps the row; `DELETE` removes it.
+
+Backoffice UI: `http://127.0.0.1:8000/application/app/suppliers/` (list / filter / create / activate / suspend). The KPI dashboard menu links here.
+
+```bash
+curl http://127.0.0.1:8000/suppliers
+curl "http://127.0.0.1:8000/suppliers?category=proteins&status=active"
+curl http://127.0.0.1:8000/suppliers/1
+curl http://127.0.0.1:8000/suppliers/SUP-001
+
+curl -X POST http://127.0.0.1:8000/suppliers \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Andean Bottling","country":"Colombia","product_categories":["beverages_and_packaging"],"emergency_surcharge_pct":8,"status":"active"}'
+
+curl -X PATCH http://127.0.0.1:8000/suppliers/1/rate \
+  -H "Content-Type: application/json" \
+  -d '{"emergency_surcharge_pct":12}'
+
+curl -X PATCH http://127.0.0.1:8000/suppliers/1/status \
+  -H "Content-Type: application/json" \
+  -d '{"status":"suspend"}'
+
+curl -X PATCH http://127.0.0.1:8000/suppliers/SUP-002 \
+  -H "Content-Type: application/json" \
+  -d '{"status":"inactive"}'
+
+curl -X DELETE http://127.0.0.1:8000/suppliers/1
+```
 
 ## Alternative run command
 
