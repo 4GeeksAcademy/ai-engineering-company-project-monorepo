@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""FastAPI entrypoint: uvicorn api.app:app --reload
+
+Inventory is stored in products.csv (see api.inventory). This module also
+loads the rest of the company API so existing routes keep working.
+"""
+
 import importlib.util
 import sys
 from pathlib import Path

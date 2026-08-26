@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from inventory import router as inventory_router
+from inventory import register_error_handlers, router as inventory_router
 from routers.auth import router as auth_router
 from routers.knowledge import router as knowledge_router
 from routers.reporting import router as reporting_router
@@ -96,7 +96,11 @@ def _register_analyze_routes(app: FastAPI, route_prefix: str) -> None:
             await file.close()
         return summary
 
-app = FastAPI(title="Company Incident File Analyzer", version="1.0.0")
+app = FastAPI(
+    title="Coffee Shop Inventory API",
+    description="Inventory persists in products.csv. Also hosts company services.",
+    version="1.0.0",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -106,10 +110,11 @@ app.add_middleware(
         "http://127.0.0.1:8003",
         "https://rickycastro1940.github.io",
     ],
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Last-Event-ID"],
 )
 app.include_router(inventory_router)
+register_error_handlers(app)
 app.include_router(knowledge_router)
 app.include_router(auth_router)
 app.include_router(tickets_router)

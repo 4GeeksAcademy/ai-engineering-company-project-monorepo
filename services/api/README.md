@@ -100,26 +100,29 @@ Inventory data is stored in [`products.csv`](../../products.csv) at the reposito
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/inventory` | List all products |
-| `POST` | `/inventory` | Add a product (`name`, `quantity`, `unit`) |
-| `PATCH` | `/inventory/{product_id}` | Update stock by `delta` (+ incoming, − outgoing) |
-| `GET` | `/inventory/alerts` | Products below threshold (default `10`) |
+| `GET` | `/inventory` | List all products (`?location=Downtown` or `Riverside`) |
+| `POST` | `/inventory/{product_id}` | Add a product (`name`, `quantity`, `unit`) |
+| `PATCH` | `/inventory/{product_id}` | Update stock by `delta` (+ delivery, − sale) |
+| `GET` | `/inventory/alerts` | Products with quantity below `threshold` (default `10`) |
+
+CSV columns in [`products.csv`](../../products.csv): `product_id,name,quantity,unit,location,weekly_demand`. Locations are **Downtown** and **Riverside**.
 
 ### Examples
 
 ```bash
 curl http://127.0.0.1:8000/inventory
+curl "http://127.0.0.1:8000/inventory?location=Downtown"
 
-curl -X POST http://127.0.0.1:8000/inventory \
+curl -X POST http://127.0.0.1:8000/inventory/9 \
   -H "Content-Type: application/json" \
-  -d '{"name":"Olive Oil","quantity":15,"unit":"liters"}'
+  -d '{"name":"Oat milk","quantity":15,"unit":"liters"}'
 
 curl -X PATCH http://127.0.0.1:8000/inventory/1 \
   -H "Content-Type: application/json" \
   -d '{"delta":5}'
 
 curl http://127.0.0.1:8000/inventory/alerts
-curl "http://127.0.0.1:8000/inventory/alerts?threshold=20"
+curl "http://127.0.0.1:8000/inventory/alerts?threshold=20&location=Riverside"
 ```
 
 Interactive docs: `http://127.0.0.1:8000/docs`
@@ -144,11 +147,11 @@ How to verify each rubric item:
 |---|-----------|---------------|
 | 1 | Four FastAPI inventory endpoints | `curl` examples above + `http://127.0.0.1:8000/docs` |
 | 2 | `products.csv` survives restart | `POST` a product, restart `uvicorn`, `GET /inventory` — product still present |
-| 3 | Agent loop (Observe → Think → Act → Update → Repeat) | See `run_agent_turn()` in [`agent.py`](../../agent.py) |
+| 3 | Agent loop (Observe → Think → Act → Update → Repeat) | See `run_agent_loop()` in [`agent.py`](../../agent.py) |
 | 4 | Tools with name, description, typed params | `TOOLS` constant in [`agent.py`](../../agent.py) |
-| 5 | Agent calls correct API on tool selection | `execute_tool()` maps each tool to `/inventory` routes |
-| 6 | Tool result injected before next LLM call | `messages.append({"role": "tool", ...})` in `run_agent_turn()` |
+| 5 | Agent calls correct API on tool selection | `execute_tool()` / `tool_to_api_request()` map each tool to `/inventory` routes |
+| 6 | Tool result injected before next LLM call | `inject_tool_result()` in [`agent.py`](../../agent.py) |
 | 7 | `conversation_log.csv` with 4 fields per event | Run agent; check `actor,message,tool_call,timestamp` columns |
 | 8 | Log append-only across sessions | Run `python agent.py` twice; rows accumulate, never overwritten |
-| 9 | Multi-step interaction | Ask: *"Add 3 units of Olive Oil in liters, then tell me which products are low on stock."* — log shows `add_product` then `get_low_stock_alerts` |
-| 10 | No agent framework | Plain Python loop only; no LangChain/LlamaIndex/AutoGen in `requirements.txt` |
+| 9 | Multi-step interaction | Ask: *"Log a delivery of 5 kg of Arabica beans at Downtown, then tell me what cannot cover the week."* — log shows `list_inventory`/`update_stock` then `get_low_stock_alerts` |
+| 10 | No agent framework | Manual loop in `agent.py`; no LangChain/LlamaIndex/AutoGen in `requirements.txt` |

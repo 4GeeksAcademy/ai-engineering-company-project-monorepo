@@ -1,4 +1,9 @@
-product_id,name,quantity,unit
-1,Tomatoes,25,kg
-2,Mozzarella,8,kg
-3,Napkins,120,boxes
+product_id,name,quantity,unit,location,weekly_demand
+1,Arabica beans,42,kg,Downtown,30
+2,Whole milk,18,liters,Downtown,40
+3,Paper cups,220,sleeves,Downtown,80
+4,Vanilla syrup,6,bottles,Downtown,10
+5,Arabica beans,28,kg,Riverside,25
+6,Oat milk,9,liters,Riverside,20
+7,Paper cups,55,sleeves,Riverside,70
+8,Chocolate syrup,14,bottles,Riverside,8

@@ -30,19 +30,23 @@ This repository is the **starter template** for transversal projects. You will w
 
 ### Run locally (API + Agent)
 
-**Entry points:** [`api/app.py`](api/app.py) (FastAPI inventory API) and [`agent.py`](agent.py) (Groq CLI agent).
+**The API must be running before the agent starts.** The agent calls FastAPI over HTTP; if the server is down, `python agent.py` exits immediately.
 
-**The API must be running before you start the agent.** Start Terminal 1 first, wait until the server is up, then start Terminal 2.
+**Entry points:** [`api/app.py`](api/app.py) (FastAPI inventory API) and [`agent.py`](agent.py) (CLI agent).
 
 #### 1. Install dependencies
+
+From the repository root:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+Or: `uv sync`
+
 #### 2. Configure environment
 
-Create a `.env` file at the repository root (never commit it):
+Create a `.env` file at the repository root (never commit it — it is in `.gitignore`):
 
 ```env
 GROQ_API_KEY=your_key_here
@@ -50,21 +54,35 @@ GROQ_API_KEY=your_key_here
 
 #### 3. Launch both processes (two terminals)
 
-```bash
-# Terminal 1 — start the API first
-uvicorn api.app:app --reload
+**Terminal 1 — API (start this first):**
 
-# Terminal 2 — start the agent after the API is running
+```bash
+uvicorn api.app:app --reload
+```
+
+Wait until you see `Application startup complete` (API at `http://127.0.0.1:8000`).
+
+**Terminal 2 — agent (only after the API is up):**
+
+```bash
 python agent.py
 ```
 
-The agent checks that `http://127.0.0.1:8000` is reachable on startup. If the API is not running, it exits with an error instead of continuing.
+If the agent starts too early, it prints:
+
+```text
+Could not reach the API. Start it first with: uvicorn api.app:app --reload
+```
+
+Then it exits. Start Terminal 1, wait, then start Terminal 2 again.
+
+Type a question at `You:` and press Enter. Type `exit` or `quit` to stop the agent. Stop the API with Ctrl+C in Terminal 1.
+
+**Agent implementation:** [`agent.py`](./agent.py) is a **manual Observe → Think → Act → Update loop in plain Python**. It does **not** use LangChain, LlamaIndex, AutoGen, CrewAI, or any other agent framework. LLM calls use the `openai` package against Groq; HTTP uses the standard library (`urllib`).
 
 Full details (inventory endpoints, conversation log, curl examples): [`services/api/README.md`](./services/api/README.md).
 
-**Agent implementation:** [`agent.py`](./agent.py) uses a **manual agent loop in plain Python** (observe → think → act → update). It does **not** use LangChain, LlamaIndex, AutoGen, or any other agent framework — only the OpenAI-compatible Groq client for LLM calls.
-
-**Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md` for how to verify all rubric criteria.
+**Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md`.
 
 ---
 
