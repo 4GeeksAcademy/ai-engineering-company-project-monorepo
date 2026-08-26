@@ -20,6 +20,7 @@ from routes.users import router as users_router
 from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
+from routes.telemetry import router as telemetry_router
 
 
 
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
 
     app_name: str = "TrackFlow Incidents API"
     cors_origins: str = "http://localhost:3000"
+    telemetry_endpoint: str = ""
 
 
 settings = Settings()
@@ -106,6 +108,10 @@ app.include_router(auth_router)
 # Registrar router de incidencias (Centralized Incident Manager)
 app.include_router(incidents_router)
 
+# Registrar router de telemetría (Telemetry Capture — Phase 2)
+# POST /telemetry/events — Stub endpoint para recepción de eventos
+app.include_router(telemetry_router)
+
 
 _last_analysis: dict | None = None
 
@@ -120,6 +126,7 @@ def root() -> dict:
             "suppliers": "/suppliers/",
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_export": "/api/incidents/results/export",
+            "telemetry_events": "/telemetry/events",
         },
     }
 

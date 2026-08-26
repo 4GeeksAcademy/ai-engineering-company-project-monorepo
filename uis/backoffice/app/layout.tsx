@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import NavbarAuth from "@/components/navbar-auth";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -29,8 +30,10 @@ export default function RootLayout({
       className={`${jakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NavbarAuth />
-        {children}
+        <ErrorBoundary>
+          <NavbarAuth />
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   );

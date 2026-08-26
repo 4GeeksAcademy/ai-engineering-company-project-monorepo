@@ -11,6 +11,9 @@
 // 4. Si OK → guarda token + redirige a /suppliers
 // 5. Si error → muestra errores por campo
 //
+// Telemetría:
+// - user_registered (O9): después de registro exitoso
+//
 // NOTA: El registro requiere autenticación del servidor.
 // La acción de registro es: POST /users (público) + POST /auth/login.
 
@@ -20,6 +23,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerUser } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
 
 export default function RegisterForm() {
   // ── Estado del formulario ─────────────────────────────────
@@ -41,6 +45,9 @@ export default function RegisterForm() {
    * 1. POST /users (crear usuario)
    * 2. POST /auth/login (login automático)
    * 3. Redirige a /suppliers
+   * 
+   * Telemetría:
+   * - user_registered: tras registro exitoso (rol "user", método "self_service")
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,6 +67,13 @@ export default function RegisterForm() {
         password,
         name: name || undefined,
       });
+
+      // Track: usuario registrado (rol por defecto "user" desde registro público)
+      track("user_registered", {
+        role: "user",
+        registration_method: "self_service",
+      });
+
       router.push("/suppliers");
     } catch (err: unknown) {
       const apiError = err as { status?: number; detail?: { detail?: string } };

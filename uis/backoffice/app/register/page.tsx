@@ -4,7 +4,13 @@
 // Ruta PÚBLICA — no requiere autenticación.
 
 import RegisterForm from "@/components/register-form";
+import PageTracker from "@/components/PageTracker";
 
 export default function RegisterPage() {
-  return <RegisterForm />;
+  return (
+    <>
+      <PageTracker page="/register" />
+      <RegisterForm />
+    </>
+  );
 }

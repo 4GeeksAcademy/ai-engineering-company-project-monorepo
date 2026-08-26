@@ -7,6 +7,10 @@
 // - Si el usuario está autenticado: muestra Perfil + Cerrar sesión
 // - Si NO está autenticado: muestra Iniciar sesión
 //
+// Telemetría:
+// - page_navigated (O16): cuando el usuario hace clic en un enlace interno
+// - session_expired (O8): cuando el usuario cierra sesión explícitamente
+//
 // NOTA: Este componente es "use client" porque necesita acceder a
 // localStorage para verificar el token y manejar logout.
 
@@ -16,6 +20,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { isAuthenticated, logoutUser } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
 
 export default function NavbarAuth() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -29,7 +34,31 @@ export default function NavbarAuth() {
     setAuthenticated(isAuthenticated());
   }, [pathname]);
 
+  /**
+   * Maneja el logout con telemetría.
+   *
+   * 1. Track: session_expired con motivo "logout"
+   * 2. Llama a logoutUser() que limpia localStorage y redirige a /login
+   */
   const handleLogout = () => {
+    // Track: sesión cerrada por logout
+    // Nota: No podemos calcular session_duration_seconds real
+    // porque no almacenamos el timestamp de inicio de sesión.
+    // En una versión futura, podríamos guardar loginTimestamp en sessionStorage.
+    try {
+      const loginTimestamp = sessionStorage.getItem("telemetry_login_timestamp");
+      const sessionDuration = loginTimestamp
+        ? Math.floor((Date.now() - parseInt(loginTimestamp, 10)) / 1000)
+        : 0;
+
+      track("session_expired", {
+        session_duration_seconds: sessionDuration,
+        expired_reason: "logout",
+      });
+    } catch {
+      // Si falla la telemetría, no bloquear el logout
+    }
+
     logoutUser();
     // logoutUser ya redirige a /login
   };

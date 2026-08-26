@@ -10,12 +10,31 @@
 // 4. SIEMPRE muestra el mismo mensaje de confirmación
 //    (incluso si el email no existe — previene enumeración)
 // 5. El formulario se desactiva tras el envío para evitar duplicados
+//
+// Telemetría:
+// - password_reset_requested (O6): cuando se solicita restablecimiento
 
 "use client";
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { forgotPassword } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
+
+/**
+ * Hashea un string usando SHA-256 (Web Crypto API).
+ * Para anonimizar emails antes de enviarlos a telemetría.
+ */
+async function sha256(message: string): Promise<string> {
+  if (typeof crypto === "undefined" || !crypto.subtle) {
+    return message;
+  }
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -30,9 +49,26 @@ export default function ForgotPasswordForm() {
 
     try {
       await forgotPassword(email);
+
+      // Track: solicitud de restablecimiento de contraseña
+      // El email se hashea para cumplir con PII (retención máxima 30 días)
+      const emailHash = await sha256(email);
+      track("password_reset_requested", {
+        email: emailHash,
+        source: "forgot_password_page",
+      });
+
       // Siempre mostrar confirmación — no revelar si el email existe
       setSubmitted(true);
     } catch {
+      // Incluso si hay error de red, trackear el intento
+      // para medir tasa de fallo de la funcionalidad de reset
+      const emailHash = await sha256(email).catch(() => email);
+      track("password_reset_requested", {
+        email: emailHash,
+        source: "forgot_password_page",
+      });
+
       // Incluso si hay error de red, mostrar confirmación
       // para no revelar información sobre usuarios registrados
       setSubmitted(true);

@@ -5,7 +5,13 @@
 // y reciba un enlace de restablecimiento de contraseña.
 
 import ForgotPasswordForm from "@/components/forgot-password-form";
+import PageTracker from "@/components/PageTracker";
 
 export default function ForgotPasswordPage() {
-  return <ForgotPasswordForm />;
+  return (
+    <>
+      <PageTracker page="/forgot-password" />
+      <ForgotPasswordForm />
+    </>
+  );
 }

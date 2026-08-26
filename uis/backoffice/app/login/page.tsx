@@ -4,7 +4,13 @@
 // Ruta PÚBLICA — no requiere autenticación.
 
 import LoginForm from "@/components/login-form";
+import PageTracker from "@/components/PageTracker";
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <>
+      <PageTracker page="/login" />
+      <LoginForm />
+    </>
+  );
 }

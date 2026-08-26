@@ -20,6 +20,7 @@ import {
   updateProfile,
   logoutUser,
 } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
 
 export default function ProfileForm() {
   // ── Estado del formulario ─────────────────────────────────
@@ -52,6 +53,11 @@ export default function ProfileForm() {
       } catch (err: unknown) {
         const apiError = err as { status?: number };
         if (apiError.status === 401) {
+          // Track: sesión expirada
+          track("session_expired", {
+            session_duration_seconds: 0,
+            expired_reason: "token_expired",
+          });
           logoutUser();
         } else {
           setError("Error al cargar el perfil");
@@ -79,6 +85,14 @@ export default function ProfileForm() {
 
     try {
       await updateProfile({ name, phone: phone || undefined, address: address || undefined });
+      
+      // Track: usuario actualizó su perfil
+      track("feature_used", {
+        feature_name: "update_profile",
+        page: "/account/profile",
+        action: "submit",
+      });
+      
       setSuccess("Perfil actualizado correctamente");
       // Ocultar el mensaje después de 3 segundos
       setTimeout(() => setSuccess(null), 3000);

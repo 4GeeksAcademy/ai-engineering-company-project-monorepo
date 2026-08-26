@@ -16,6 +16,7 @@
 
 import { useState, FormEvent } from "react";
 import { changePassword } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
 
 export default function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -46,6 +47,14 @@ export default function ChangePasswordForm() {
 
     try {
       await changePassword(currentPassword, newPassword);
+      
+      // Track: cambio de contraseña exitoso
+      track("feature_used", {
+        feature_name: "change_password",
+        page: "/account/change-password",
+        action: "submit",
+      });
+      
       setSuccess("Contraseña actualizada correctamente");
       // Limpiar formulario
       setCurrentPassword("");

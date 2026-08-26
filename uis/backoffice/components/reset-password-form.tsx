@@ -18,6 +18,7 @@ import { useState, FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resetPassword } from "@/lib/auth-actions";
+import { track } from "@/lib/telemetry";
 
 // ── Componente interno (usa useSearchParams, necesita Suspense) ──
 
@@ -76,6 +77,13 @@ function ResetPasswordFormInner() {
 
     try {
       await resetPassword(token, password);
+      
+      // Track: contraseña restablecida exitosamente
+      track("password_reset_requested", {
+        email: "reset_completed",
+        source: "login_page",
+      });
+      
       // Redirigir a login con mensaje de éxito
       router.push("/login?reset=success");
     } catch (err: unknown) {

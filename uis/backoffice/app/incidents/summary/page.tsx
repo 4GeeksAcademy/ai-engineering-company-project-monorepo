@@ -9,6 +9,7 @@
 //   - Diferir su carga reduce el bundle JS inicial y el tiempo de interactividad (TTI)
 
 import dynamic from "next/dynamic";
+import PageTracker from "@/components/PageTracker";
 
 const IncidentSummary = dynamic(
   () => import("@/components/incident-summary"),
@@ -24,7 +25,9 @@ const IncidentSummary = dynamic(
 
 export default function IncidentsSummaryPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <>
+      <PageTracker page="/incidents/summary" />
+      <main className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
       <section className="mb-8 rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 px-6 py-8 shadow-sm md:px-10">
         <p className="inline-block rounded-full border border-indigo-200 bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-900">
           Métricas
