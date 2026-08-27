@@ -8,6 +8,8 @@ from io import StringIO
 
 import traceback
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +23,7 @@ from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
-
+from core.database import init_db, close_db
 
 
 class Settings(BaseSettings):
@@ -33,7 +35,21 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-app = FastAPI(title=settings.app_name)
+
+
+# ─────────────────────────────────────────────────────────────
+# Lifespan — Inicializar/cerrar pool de PostgreSQL
+# ─────────────────────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Inicializa el pool de BD al arrancar, lo cierra al detener."""
+    await init_db()
+    yield
+    await close_db()
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 logger = logging.getLogger("api.timing")
 
 @app.middleware("http")

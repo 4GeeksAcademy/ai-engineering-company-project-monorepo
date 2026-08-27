@@ -1,0 +1,14 @@
+# ============================================
+# .dockerignore - services/api
+# ============================================
+# Excluir archivos innecesarios del contexto de build
+
+__pycache__
+*.pyc
+.env
+db.json
+.git
+.gitignore
+README.md
+*.md
+.DS_Store
