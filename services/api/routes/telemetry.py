@@ -1,8 +1,9 @@
 """
-routes/telemetry.py — Endpoint de telemetría con persistencia en PostgreSQL
+routes/telemetry.py — Endpoint de telemetría con persistencia PostgreSQL y consulta
 
 Propósito: Endpoint real que recibe eventos de telemetría desde el frontend,
-los valida uno por uno y persiste los válidos en PostgreSQL (telemetry_events).
+los valida uno por uno, persiste los válidos en PostgreSQL (telemetry_events),
+y expone endpoints GET para consulta y reporte técnico.
 
 Fase 3 — Telemetría de tu compañía: Almacenamiento
 - Validación por evento (no batch-level 422)
@@ -10,13 +11,21 @@ Fase 3 — Telemetría de tu compañía: Almacenamiento
 - Respuesta { received, stored, rejected }
 - Tabla write-only (append-only)
 
+Fase 4 — Telemetría de tu compañía: Reporte técnico
+- GET /telemetry/events → Consultar eventos con filtros
+- GET /telemetry/summary → Datos agregados para dashboard
+
 Endpoints:
 - POST /telemetry/events → Recibe, valida y persiste eventos
+- GET  /telemetry/events → Consulta eventos (filtros: event_type, service, level, from_date, to_date, limit, offset)
+- GET  /telemetry/summary  → Resumen agregado (conteos por tipo, servicio, nivel, día)
 
 Uso:
     curl -X POST http://localhost:8000/telemetry/events \
       -H "Content-Type: application/json" \
       -d '{"events": [{"eventId": "...", "event_type": "session_started", ...}]}'
+    curl "http://localhost:8000/telemetry/events?event_type=login_attempted&limit=10"
+    curl "http://localhost:8000/telemetry/summary"
 """
 
 from __future__ import annotations
@@ -272,4 +281,257 @@ async def receive_events(batch: TelemetryBatchRequest) -> TelemetryBatchResponse
         received=total_received,
         stored=stored_count,
         rejected=rejected_count,
+    )
+
+
+# ─────────────────────────────────────────────────────────────
+# Modelos para respuesta de consulta (GET)
+# ─────────────────────────────────────────────────────────────
+
+class TelemetryEventRecord(BaseModel):
+    """Un registro de telemetría tal como se devuelve desde la BD."""
+    id: str
+    timestamp: str
+    service: str
+    event_type: str
+    level: str
+    value: float | None
+    message: str | None
+    tags: dict[str, Any]
+
+
+class TelemetryQueryResponse(BaseModel):
+    """Respuesta paginada de eventos."""
+    events: list[TelemetryEventRecord]
+    total: int
+    limit: int
+    offset: int
+
+
+class TelemetrySummaryItem(BaseModel):
+    """Elemento individual en un resumen agregado."""
+    label: str
+    count: int
+
+
+class TelemetrySummaryResponse(BaseModel):
+    """Resumen completo de telemetría para el dashboard."""
+    total_events: int
+    by_event_type: list[TelemetrySummaryItem]
+    by_service: list[TelemetrySummaryItem]
+    by_level: list[TelemetrySummaryItem]
+    by_day: list[TelemetrySummaryItem]
+    recent_events: list[TelemetryEventRecord]
+
+
+# ─────────────────────────────────────────────────────────────
+# GET /telemetry/events — Consultar eventos con filtros
+# ─────────────────────────────────────────────────────────────
+
+@router.get("/events", response_model=TelemetryQueryResponse)
+async def query_events(
+    event_type: str | None = None,
+    service: str | None = None,
+    level: str | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> TelemetryQueryResponse:
+    """
+    Consulta eventos de telemetría con filtros opcionales.
+
+    - event_type: Filtrar por tipo de evento (ej. login_attempted)
+    - service: Filtrar por servicio (backoffice, api)
+    - level: Filtrar por nivel (info, warn, error)
+    - from_date: Filtro desde (ISO 8601)
+    - to_date: Filtro hasta (ISO 8601)
+    - limit: Máximo de registros (default 50, max 1000)
+    - offset: Paginación
+    """
+    try:
+        pool = await get_pool()
+    except RuntimeError:
+        return TelemetryQueryResponse(events=[], total=0, limit=limit, offset=offset)
+
+    limit = min(limit, 1000)
+
+    # Construir WHERE dinámico
+    conditions: list[str] = []
+    params: list[Any] = []
+    param_idx = 0
+
+    if event_type:
+        param_idx += 1
+        conditions.append(f"event_type = ${param_idx}::text")
+        params.append(event_type)
+    if service:
+        param_idx += 1
+        conditions.append(f"service = ${param_idx}::text")
+        params.append(service)
+    if level:
+        param_idx += 1
+        conditions.append(f"level = ${param_idx}::text")
+        params.append(level)
+    if from_date:
+        param_idx += 1
+        conditions.append(f'"timestamp" >= ${param_idx}::timestamptz')
+        params.append(from_date)
+    if to_date:
+        param_idx += 1
+        conditions.append(f'"timestamp" <= ${param_idx}::timestamptz')
+        params.append(to_date)
+
+    where_clause = " AND ".join(conditions) if conditions else "TRUE"
+
+    async with pool.acquire() as conn:
+        # Count total
+        count_sql = f"SELECT COUNT(*) FROM telemetry_events WHERE {where_clause}"
+        total_row = await conn.fetchrow(count_sql, *params)
+        total = total_row[0]
+
+        # Query rows
+        param_idx += 1
+        query_sql = f"""
+            SELECT id, "timestamp", service, event_type, level, value, message, tags
+            FROM telemetry_events
+            WHERE {where_clause}
+            ORDER BY "timestamp" DESC
+            LIMIT ${param_idx}::integer
+        """
+        params.append(limit)
+        param_idx += 1
+        query_sql += f" OFFSET ${param_idx}::integer"
+        params.append(offset)
+
+        rows = await conn.fetch(query_sql, *params)
+
+    events = [
+        TelemetryEventRecord(
+            id=str(row["id"]),
+            timestamp=row["timestamp"].isoformat(),
+            service=row["service"],
+            event_type=row["event_type"],
+            level=row["level"],
+            value=float(row["value"]) if row["value"] is not None else None,
+            message=row["message"],
+            tags=row["tags"] if isinstance(row["tags"], dict) else {},
+        )
+        for row in rows
+    ]
+
+    return TelemetryQueryResponse(
+        events=events,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+# ─────────────────────────────────────────────────────────────
+# GET /telemetry/summary — Resumen agregado para dashboard
+# ─────────────────────────────────────────────────────────────
+
+@router.get("/summary", response_model=TelemetrySummaryResponse)
+async def get_summary() -> TelemetrySummaryResponse:
+    """
+    Retorna un resumen agregado de todos los eventos de telemetría.
+
+    Incluye:
+    - total_events: Conteo total
+    - by_event_type: Conteo agrupado por tipo de evento
+    - by_service: Conteo agrupado por servicio (backoffice, api)
+    - by_level: Conteo agrupado por nivel (info, warn, error)
+    - by_day: Conteo agrupado por día (últimos 30 días)
+    - recent_events: Últimos 10 eventos
+    """
+    try:
+        pool = await get_pool()
+    except RuntimeError:
+        return TelemetrySummaryResponse(
+            total_events=0,
+            by_event_type=[],
+            by_service=[],
+            by_level=[],
+            by_day=[],
+            recent_events=[],
+        )
+
+    async with pool.acquire() as conn:
+        # Total
+        total_row = await conn.fetchval("SELECT COUNT(*) FROM telemetry_events")
+
+        # By event_type (top 20)
+        type_rows = await conn.fetch("""
+            SELECT event_type AS label, COUNT(*) AS count
+            FROM telemetry_events
+            GROUP BY event_type
+            ORDER BY count DESC
+            LIMIT 20
+        """)
+
+        # By service
+        service_rows = await conn.fetch("""
+            SELECT service AS label, COUNT(*) AS count
+            FROM telemetry_events
+            GROUP BY service
+            ORDER BY count DESC
+        """)
+
+        # By level
+        level_rows = await conn.fetch("""
+            SELECT level AS label, COUNT(*) AS count
+            FROM telemetry_events
+            GROUP BY level
+            ORDER BY count DESC
+        """)
+
+        # By day (últimos 30 días)
+        day_rows = await conn.fetch("""
+            SELECT DATE("timestamp")::text AS label, COUNT(*) AS count
+            FROM telemetry_events
+            WHERE "timestamp" >= NOW() - INTERVAL '30 days'
+            GROUP BY DATE("timestamp")
+            ORDER BY label DESC
+        """)
+
+        # Recent events (últimos 10)
+        recent_rows = await conn.fetch("""
+            SELECT id, "timestamp", service, event_type, level, value, message, tags
+            FROM telemetry_events
+            ORDER BY "timestamp" DESC
+            LIMIT 10
+        """)
+
+    return TelemetrySummaryResponse(
+        total_events=total_row,
+        by_event_type=[
+            TelemetrySummaryItem(label=r["label"], count=r["count"])
+            for r in type_rows
+        ],
+        by_service=[
+            TelemetrySummaryItem(label=r["label"], count=r["count"])
+            for r in service_rows
+        ],
+        by_level=[
+            TelemetrySummaryItem(label=r["label"], count=r["count"])
+            for r in level_rows
+        ],
+        by_day=[
+            TelemetrySummaryItem(label=r["label"], count=r["count"])
+            for r in day_rows
+        ],
+        recent_events=[
+            TelemetryEventRecord(
+                id=str(r["id"]),
+                timestamp=r["timestamp"].isoformat(),
+                service=r["service"],
+                event_type=r["event_type"],
+                level=r["level"],
+                value=float(r["value"]) if r["value"] is not None else None,
+                message=r["message"],
+                tags=r["tags"] if isinstance(r["tags"], dict) else {},
+            )
+            for r in recent_rows
+        ],
     )
