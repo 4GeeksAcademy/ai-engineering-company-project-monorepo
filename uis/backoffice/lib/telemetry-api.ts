@@ -51,6 +51,28 @@ export interface TelemetrySummaryResponse {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Tipos para GET /telemetry/report (Fase 4 — Reporte técnico)
+// ─────────────────────────────────────────────────────────────
+
+export interface PeriodInfo {
+  from: string;
+  to: string;
+}
+
+export interface TelemetryReportMetrics {
+  events_per_day: Array<{ date: string; count: number }>;
+  error_rate_by_type: Array<{ event_type: string; count: number; percentage: number }>;
+  events_by_service: Array<{ service: string; count: number; avg_value: number }>;
+  level_distribution: Array<{ level: string; count: number }>;
+  daily_error_trend: Array<{ date: string; error_count: number }>;
+}
+
+export interface TelemetryReportResponse {
+  period: PeriodInfo;
+  metrics: TelemetryReportMetrics;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Funciones de consulta
 // ─────────────────────────────────────────────────────────────
 
@@ -94,6 +116,34 @@ export async function fetchTelemetrySummary(): Promise<TelemetrySummaryResponse>
   const response = await fetch("/telemetry/summary");
   if (!response.ok) {
     throw new Error(`Telemetry summary fetch failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Obtiene el reporte técnico de telemetría con análisis Pandas.
+ * GET /telemetry/report
+ *
+ * Fase 4 — Reporte técnico: usa el pipeline analysis.py en backend
+ * que aplica cargar (SQL) → refinar (Pandas) → convertir tipos → agrupar → agregar.
+ *
+ * @param start_date ISO 8601 opcional (default: 7 días atrás)
+ * @param end_date   ISO 8601 opcional (default: ahora)
+ */
+export async function fetchTelemetryReport(
+  start_date?: string,
+  end_date?: string,
+): Promise<TelemetryReportResponse> {
+  const searchParams = new URLSearchParams();
+  if (start_date) searchParams.set("start_date", start_date);
+  if (end_date) searchParams.set("end_date", end_date);
+
+  const qs = searchParams.toString();
+  const url = `/telemetry/report${qs ? `?${qs}` : ""}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Telemetry report fetch failed: ${response.status}`);
   }
   return response.json();
 }

@@ -9,8 +9,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { fetchTelemetrySummary, fetchTelemetryEvents } from "@/lib/telemetry-api";
-import type { TelemetrySummaryResponse, TelemetryEventRecord, TelemetryQueryResponse } from "@/lib/telemetry-api";
+import { fetchTelemetrySummary, fetchTelemetryEvents, fetchTelemetryReport } from "@/lib/telemetry-api";
+import type { TelemetrySummaryResponse, TelemetryEventRecord, TelemetryQueryResponse, TelemetryReportResponse } from "@/lib/telemetry-api";
 
 // ─────────────────────────────────────────────────────────────
 // Constantes de UI
@@ -84,6 +84,7 @@ function BarRow({ label, count, max, color }: { label: string; count: number; ma
 
 export default function TelemetryDashboard() {
   const [summary, setSummary] = useState<TelemetrySummaryResponse | null>(null);
+  const [report, setReport] = useState<TelemetryReportResponse | null>(null);
   const [events, setEvents] = useState<TelemetryEventRecord[]>([]);
   const [eventsTotal, setEventsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -99,6 +100,16 @@ export default function TelemetryDashboard() {
       setSummary(data);
     } catch (err) {
       console.error("Failed to load telemetry summary:", err);
+    }
+  }, []);
+
+  // Cargar reporte técnico (Pandas analysis pipeline)
+  const loadReport = useCallback(async () => {
+    try {
+      const data = await fetchTelemetryReport();
+      setReport(data);
+    } catch (err) {
+      console.error("Failed to load telemetry report:", err);
     }
   }, []);
 
@@ -121,10 +132,10 @@ export default function TelemetryDashboard() {
   // Carga inicial
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadSummary(), loadEvents()])
+    Promise.all([loadSummary(), loadEvents(), loadReport()])
       .catch((err) => setError(err instanceof Error ? err.message : "Error al cargar datos"))
       .finally(() => setLoading(false));
-  }, [loadSummary, loadEvents]);
+  }, [loadSummary, loadEvents, loadReport]);
 
   // ─── Estados de carga ─────────────────────────────────
 
@@ -141,7 +152,7 @@ export default function TelemetryDashboard() {
       <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center">
         <p className="text-rose-700 font-medium">{error}</p>
         <button
-          onClick={() => { setLoading(true); Promise.all([loadSummary(), loadEvents()]).finally(() => setLoading(false)); }}
+          onClick={() => { setLoading(true); Promise.all([loadSummary(), loadEvents(), loadReport()]).finally(() => setLoading(false)); }}
           className="mt-3 rounded-lg bg-rose-100 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-200"
         >
           Reintentar
@@ -176,6 +187,24 @@ export default function TelemetryDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* ── Período del reporte (Fase 4 — Reporte técnico) ── */}
+      {report && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="font-medium">Período del reporte:</span>
+            <span>{new Date(report.period.from).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}</span>
+            <span>—</span>
+            <span>{new Date(report.period.to).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}</span>
+            <span className="ml-auto text-xs text-slate-400">
+              {report.metrics.events_per_day.reduce((sum, d) => sum + d.count, 0)} eventos en el período
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Tarjetas de resumen ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
@@ -283,6 +312,89 @@ export default function TelemetryDashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Métricas del reporte técnico (Pandas analysis pipeline) ── */}
+      {report && report.metrics.error_rate_by_type.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Reporte técnico — Errores por tipo
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500">
+                  <th className="pb-2 pr-4 font-medium">Tipo de evento</th>
+                  <th className="pb-2 pr-4 font-medium">Conteo errores</th>
+                  <th className="pb-2 font-medium">Porcentaje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.metrics.error_rate_by_type.map((item) => (
+                  <tr key={item.event_type} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="py-2 pr-4 text-slate-700 font-medium">{item.event_type}</td>
+                    <td className="py-2 pr-4 text-slate-600">{item.count}</td>
+                    <td className="py-2">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-slate-600">{item.percentage}%</span>
+                        <span className={`inline-block h-2 w-16 rounded-full ${item.percentage > 10 ? "bg-rose-400" : "bg-amber-300"}`}
+                          style={{ width: `${Math.min(item.percentage * 3, 100)}%` }} />
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Distribución por servicio (Pandas analysis) ── */}
+      {report && report.metrics.events_by_service.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Distribución por servicio
+            </h3>
+            <div className="space-y-2">
+              {report.metrics.events_by_service.map((item) => {
+                const maxSvc = Math.max(...report.metrics.events_by_service.map(s => s.count), 1);
+                return (
+                  <BarRow
+                    key={item.service}
+                    label={item.service}
+                    count={item.count}
+                    max={maxSvc}
+                    color="bg-violet-500"
+                  />
+                );
+              })}
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Tendencia diaria de errores
+            </h3>
+            <div className="space-y-2">
+              {report.metrics.daily_error_trend.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-4">No se detectaron errores en el período</p>
+              ) : (
+                report.metrics.daily_error_trend.map((item) => {
+                  const maxErr = Math.max(...report.metrics.daily_error_trend.map(d => d.error_count), 1);
+                  return (
+                    <BarRow
+                      key={item.date}
+                      label={item.date}
+                      count={item.error_count}
+                      max={maxErr}
+                      color="bg-rose-500"
+                    />
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Filtros de eventos recientes ── */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -6,7 +6,7 @@ export default function SuppliersPage() {
     <>
       <PageTracker page="/suppliers" />
       <main className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
-      <section className="mb-8 rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 px-6 py-8 shadow-sm md:px-10">
+      <section className="mb-8 rounded-3xl border border-indigo-200 bg-linear-to-r from-indigo-50 via-white to-cyan-50 px-6 py-8 shadow-sm md:px-10">
         <p className="inline-block rounded-full border border-indigo-200 bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-900">
           Directorio Centralizado
         </p>
@@ -21,5 +21,6 @@ export default function SuppliersPage() {
 
       <SuppliersClient />
     </main>
+    </>
   );
 }

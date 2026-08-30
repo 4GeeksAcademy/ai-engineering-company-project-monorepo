@@ -32,13 +32,32 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+import os
+import sys
+import time
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from core.database import get_pool
+
+# Asegurar que services/ esté en sys.path para importar analysis.py
+# Instructor requirement: services/telemetry/analysis.py con Pandas
+_services_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _services_path not in sys.path:
+    sys.path.insert(0, _services_path)
+
+from telemetry.analysis import (
+    load_events,
+    pandas_refine,
+    events_per_day,
+    error_rate_by_type,
+    events_by_service,
+    level_distribution,
+    daily_error_trend,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -535,3 +554,149 @@ async def get_summary() -> TelemetrySummaryResponse:
             for r in recent_rows
         ],
     )
+
+
+# ═══════════════════════════════════════════════════════════════
+# GET /telemetry/report — Reporte técnico con Pandas + cache
+# ═══════════════════════════════════════════════════════════════
+#
+# Instructor requirements (Fase 4 — Reporte técnico):
+#   - Usa services/telemetry/analysis.py con Pandas
+#   - Endpoint: GET /telemetry/report (NO /telemetry/summary)
+#   - Cache en memoria con TTL de 60 segundos
+#   - Respuesta: { "period": {...}, "metrics": {...} }
+#   - Filtros: start_date / end_date (ISO 8601), default últimos 7 días
+# ─────────────────────────────────────────────────────────────
+
+# Cache simple en memoria (instructor requirement: 60s TTL)
+_report_cache: dict[str, Any] = {
+    "data": None,
+    "expires_at": 0.0,
+    "params_hash": "",
+}
+
+
+def _cache_hash(from_date: str | None, to_date: str | None) -> str:
+    """Genera un hash de los parámetros para invalidar cache."""
+    return f"{from_date or ''}|{to_date or ''}"
+
+
+class PeriodInfo(BaseModel):
+    """Información del período consultado. Serializa 'from_' como 'from' en JSON."""
+    model_config = {"populate_by_name": True}
+
+    from_: str = Field(..., serialization_alias="from")
+    to: str
+
+
+class TelemetryReportMetrics(BaseModel):
+    """Todas las métricas del reporte técnico."""
+    events_per_day: list[dict[str, Any]]
+    error_rate_by_type: list[dict[str, Any]]
+    events_by_service: list[dict[str, Any]]
+    level_distribution: list[dict[str, Any]]
+    daily_error_trend: list[dict[str, Any]]
+
+
+class TelemetryReportResponse(BaseModel):
+    """Respuesta completa del reporte técnico con período y métricas."""
+    period: PeriodInfo
+    metrics: TelemetryReportMetrics
+
+
+@router.get("/report", response_model=TelemetryReportResponse)
+async def get_telemetry_report(
+    start_date: str | None = Query(
+        None,
+        description="ISO 8601 — Inicio del período (default: 7 días atrás)",
+    ),
+    end_date: str | None = Query(
+        None,
+        description="ISO 8601 — Fin del período (default: ahora)",
+    ),
+) -> TelemetryReportResponse:
+    """
+    Reporte técnico de telemetría basado en Pandas analysis pipeline.
+
+    Instructor requirement:
+    - Pipeline: cargar (SQL) → refinar (Pandas) → convertir tipos → agrupar → agregar
+    - Cache en memoria con TTL de 60 segundos
+    - Sin bucles Python — solo Pandas operations
+    - Retorna { "period": {...}, "metrics": {...} }
+
+    Filtros opcionales (ISO 8601):
+    - start_date: Inicio del período (default: 7 días atrás)
+    - end_date: Fin del período (default: ahora)
+    """
+    # ─── Parsear fechas con defaults ───
+    now = datetime.now(timezone.utc)
+
+    if end_date:
+        to_date = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+    else:
+        to_date = now
+
+    if start_date:
+        from_date = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+    else:
+        from_date = to_date - timedelta(days=7)
+
+    current_hash = _cache_hash(start_date, end_date)
+    now_ts = time.time()
+
+    # ─── Cache hit? ───
+    if (
+        _report_cache["data"] is not None
+        and now_ts < _report_cache["expires_at"]
+        and _report_cache["params_hash"] == current_hash
+    ):
+        logger.info("Telemetry report — cache HIT (expires in %.0fs)", _report_cache["expires_at"] - now_ts)
+        return _report_cache["data"]
+
+    logger.info(
+        "Telemetry report — cache MISS, computing Pandas analysis"
+        " from=%s to=%s",
+        from_date.isoformat(),
+        to_date.isoformat(),
+    )
+
+    # ─── Obtener pool ───
+    try:
+        pool = await get_pool()
+    except RuntimeError:
+        return TelemetryReportResponse(
+            period=PeriodInfo(from_=from_date.isoformat(), to=to_date.isoformat()),
+            metrics=TelemetryReportMetrics(
+                events_per_day=[],
+                error_rate_by_type=[],
+                events_by_service=[],
+                level_distribution=[],
+                daily_error_trend=[],
+            ),
+        )
+
+    # ─── Pipeline: cargar (SQL) → refinar (Pandas) ───
+    rows = await load_events(pool, from_date=from_date, to_date=to_date)
+    df = pandas_refine(rows)
+
+    # ─── Pipeline: agrupar → agregar (5 métricas) ───
+    metrics = TelemetryReportMetrics(
+        events_per_day=events_per_day(df, from_date, to_date),
+        error_rate_by_type=error_rate_by_type(df, from_date, to_date),
+        events_by_service=events_by_service(df, from_date, to_date),
+        level_distribution=level_distribution(df, from_date, to_date),
+        daily_error_trend=daily_error_trend(df, from_date, to_date),
+    )
+
+    result = TelemetryReportResponse(
+        period=PeriodInfo(from_=from_date.isoformat(), to=to_date.isoformat()),
+        metrics=metrics,
+    )
+
+    # ─── Almacenar en cache (60s TTL) ───
+    _report_cache["data"] = result
+    _report_cache["expires_at"] = now_ts + 60.0
+    _report_cache["params_hash"] = current_hash
+
+    logger.info("Telemetry report — analysis complete, cached for 60s")
+    return result
