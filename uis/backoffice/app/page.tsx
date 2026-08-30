@@ -26,5 +26,6 @@ export default function Home() {
         <SmokeChecksPanel report={report} />
       </div>
     </main>
-  );
-}
+    </>
+    );
+  }

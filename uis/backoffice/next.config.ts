@@ -6,27 +6,27 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/suppliers/:path*",
-        destination: "http://localhost:8000/suppliers/:path*",
+        destination: "http://localhost:8004/suppliers/:path*",
       },
       {
         source: "/auth/:path*",
-        destination: "http://localhost:8000/auth/:path*",
+        destination: "http://localhost:8004/auth/:path*",
       },
       {
         source: "/users/:path*",
-        destination: "http://localhost:8000/users/:path*",
+        destination: "http://localhost:8004/users/:path*",
       },
       {
         source: "/profiles/:path*",
-        destination: "http://localhost:8000/profiles/:path*",
+        destination: "http://localhost:8004/profiles/:path*",
       },
       {
         source: "/api/incidents/:path*",
-        destination: "http://localhost:8000/api/incidents/:path*",
+        destination: "http://localhost:8004/api/incidents/:path*",
       },
       {
         source: "/telemetry/:path*",
-        destination: "http://localhost:8000/telemetry/:path*",
+        destination: "http://localhost:8004/telemetry/:path*",
       },
     ];
   },

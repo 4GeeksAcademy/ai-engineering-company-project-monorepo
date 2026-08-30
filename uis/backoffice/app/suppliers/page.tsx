@@ -20,6 +20,7 @@ export default function SuppliersPage() {
       </section>
 
       <SuppliersClient />
-    </main>
-  );
-}
+      </main>
+      </>
+    );
+  }
