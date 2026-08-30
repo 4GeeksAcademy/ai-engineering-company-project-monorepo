@@ -121,8 +121,8 @@ def pandas_refine(rows: list[dict[str, Any]]) -> pd.DataFrame:
     # value: float, NaN → 0.0
     df["value"] = pd.to_numeric(df["value"], errors="coerce").fillna(0.0)
 
-    # level: categoría con orden (info < warn < error)
-    level_order = pd.CategoricalDtype(["info", "warn", "error"], ordered=True)
+    # level: categoría con orden (info < warning < error)
+    level_order = pd.CategoricalDtype(["info", "warning", "error"], ordered=True)
     df["level"] = df["level"].astype(level_order)
 
     logger.debug(
