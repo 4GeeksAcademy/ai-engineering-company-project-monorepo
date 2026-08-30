@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from analyzer import analyze_incidents, build_export_rows, parse_csv_text
+from models import AnalysisResponse, AppInfo, HealthResponse
 from routes.suppliers import router as suppliers_router
 from routes.users import router as users_router
 from routes.profiles import router as profiles_router
@@ -116,28 +117,28 @@ app.include_router(telemetry_router)
 _last_analysis: dict | None = None
 
 
-@app.get("/")
-def root() -> dict:
-    return {
-        "app": settings.app_name,
-        "docs": "/docs",
-        "health": "/health",
-        "endpoints": {
+@app.get("/", response_model=AppInfo)
+def root() -> AppInfo:
+    return AppInfo(
+        app=settings.app_name,
+        docs="/docs",
+        health="/health",
+        endpoints={
             "suppliers": "/suppliers/",
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_export": "/api/incidents/results/export",
             "telemetry_events": "/telemetry/events",
         },
-    }
+    )
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+@app.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
+    return HealthResponse(status="ok")
 
 
-@app.post("/api/incidents/analyze")
-async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> dict:
+@app.post("/api/incidents/analyze", response_model=AnalysisResponse)
+async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> AnalysisResponse:
     global _last_analysis
 
     if not file.filename:
@@ -167,7 +168,7 @@ async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=400, detail="CSV has no data rows")
 
     _last_analysis = analyze_incidents(rows)
-    return _last_analysis
+    return AnalysisResponse(**_last_analysis)
 
 
 @app.get("/api/incidents/results/export")

@@ -21,12 +21,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from database import profiles_table, users_table, User as UserQuery
-from models.profile_models import ProfileCreate, ProfileUpdate
-from models.user_models import UserCreate, UserUpdate
+from models.profile_models import ProfileCreate, ProfileUpdate, ProfileResponse
+from models.user_models import UserCreate, UserUpdate, UserResponse
 from services.auth_service import hash_password
 
 
-def create_user(user_data: UserCreate, profile_data: Optional[ProfileCreate] = None) -> dict:
+def create_user(user_data: UserCreate, profile_data: Optional[ProfileCreate] = None) -> UserResponse:
     """
     Crea un nuevo usuario y su perfil vinculado.
 
@@ -78,11 +78,14 @@ def create_user(user_data: UserCreate, profile_data: Optional[ProfileCreate] = N
     # Devolver sin hashed_password
     user_dict = {"id": user_id, **user_doc}
     del user_dict["hashed_password"]
-    return user_dict
+    return UserResponse(**user_dict)
 
 
 def get_user_by_id(user_id: int) -> Optional[dict]:
-    """Obtiene un usuario por su ID. Devuelve None si no existe."""
+    """Obtiene un usuario por su ID. Devuelve None si no existe.
+    NOTA: Devuelve dict con hashed_password incluido.
+          Usado internamente por auth y servicios.
+    """
     doc = users_table.get(doc_id=user_id)
     if doc is None:
         return None
@@ -90,7 +93,10 @@ def get_user_by_id(user_id: int) -> Optional[dict]:
 
 
 def get_user_by_email(email: str) -> Optional[dict]:
-    """Obtiene un usuario por su email. Devuelve None si no existe."""
+    """Obtiene un usuario por su email. Devuelve None si no existe.
+    NOTA: Devuelve dict con hashed_password incluido.
+          Usado internamente por auth y servicios.
+    """
     docs = users_table.search(UserQuery.email == email)
     if not docs:
         return None
@@ -98,18 +104,18 @@ def get_user_by_email(email: str) -> Optional[dict]:
     return {"id": doc.doc_id, **dict(doc)}
 
 
-def get_all_users() -> list[dict]:
+def get_all_users() -> list[UserResponse]:
     """Devuelve todos los usuarios (sin hashed_password)."""
     all_docs = users_table.all()
     users = []
     for doc in all_docs:
-        user = {"id": doc.doc_id, **dict(doc)}
-        user.pop("hashed_password", None)
-        users.append(user)
+        user_dict = {"id": doc.doc_id, **dict(doc)}
+        user_dict.pop("hashed_password", None)
+        users.append(UserResponse(**user_dict))
     return users
 
 
-def update_user(user_id: int, update_data: UserUpdate) -> Optional[dict]:
+def update_user(user_id: int, update_data: UserUpdate) -> Optional[UserResponse]:
     """
     Actualiza los campos de un usuario.
 
@@ -135,7 +141,12 @@ def update_user(user_id: int, update_data: UserUpdate) -> Optional[dict]:
     if update_dict:
         users_table.update(update_dict, doc_ids=[user_id])
 
-    return get_user_by_id(user_id)
+    # get_user_by_id devuelve dict (con hashed_password), convertimos a UserResponse
+    user_dict = get_user_by_id(user_id)
+    if user_dict is None:
+        return None
+    user_dict.pop("hashed_password", None)
+    return UserResponse(**user_dict)
 
 
 def delete_user(user_id: int) -> bool:
@@ -158,16 +169,16 @@ def delete_user(user_id: int) -> bool:
     return True
 
 
-def get_profile_by_user_id(user_id: int) -> Optional[dict]:
+def get_profile_by_user_id(user_id: int) -> Optional[ProfileResponse]:
     """Obtiene el perfil vinculado a un user_id."""
     docs = profiles_table.search(UserQuery.user_id == user_id)
     if not docs:
         return None
     doc = docs[0]
-    return {"id": doc.doc_id, **dict(doc)}
+    return ProfileResponse(id=doc.doc_id, **dict(doc))
 
 
-def update_profile(user_id: int, profile_data: ProfileUpdate) -> Optional[dict]:
+def update_profile(user_id: int, profile_data: ProfileUpdate) -> Optional[ProfileResponse]:
     """
     Actualiza el perfil vinculado a un usuario.
 
@@ -187,6 +198,6 @@ def update_profile(user_id: int, profile_data: ProfileUpdate) -> Optional[dict]:
         update_dict["address"] = profile_data.address
 
     if update_dict:
-        profiles_table.update(update_dict, doc_ids=[profile["id"]])
+        profiles_table.update(update_dict, doc_ids=[profile.id])
 
     return get_profile_by_user_id(user_id)

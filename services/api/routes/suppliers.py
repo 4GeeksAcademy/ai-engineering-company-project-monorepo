@@ -28,7 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from database import suppliers_table, Supplier as SupplierQuery
 from dependencies.auth_deps import get_current_user
-from models import Supplier, SupplierCreate, RateUpdate, StatusUpdate
+from models import Supplier, SupplierCreate, RateUpdate, StatusUpdate, MessageResponse
 from core.cache import cache_get, cache_set, cache_invalidate_prefix
 
 router = APIRouter(
@@ -38,16 +38,17 @@ router = APIRouter(
 
 
 # ─────────────────────────────────────────────────────────────
-# HELPER — convierte un registro de TinyDB en dict con id
+# HELPER — construye un Supplier Pydantic desde un doc de TinyDB
 # ─────────────────────────────────────────────────────────────
 
-def _with_id(doc_id: int, data: dict) -> dict:
+def _doc_to_supplier(doc_id: int, doc: dict) -> Supplier:
     """
-    TinyDB guarda el id del documento separado del contenido.
-    Este helper los une para que la respuesta siempre incluya el id.
-    Ejemplo: {"id": 3, "name": "UPS Ground", "country": "USA", ...}
+    Convierte un documento TinyDB en una instancia de Supplier Pydantic.
+    TinyDB guarda los valores como strings (ISO dates, Enum values),
+    model_validate los parsea al tipo correcto (datetime, Enum).
     """
-    return {"id": doc_id, **data}
+    data = {"id": doc_id, **dict(doc)}
+    return Supplier.model_validate(data)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ def _with_id(doc_id: int, data: dict) -> dict:
 def create_supplier(
     supplier: SupplierCreate,
     current_user: dict = Depends(get_current_user),
-) -> dict:
+) -> Supplier:
     """
     Registra un nuevo proveedor en el directorio.
 
@@ -70,23 +71,15 @@ def create_supplier(
 
     Si todo es válido, inserta en TinyDB y devuelve el proveedor con su id.
     """
-    data = supplier.model_dump()
+    # mode="json" serializa Enums y tipos a sus representaciones JSON
+    data = supplier.model_dump(mode="json")
 
     # updated_at lo genera el servidor, no el cliente
     data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    # Convertir Enums a sus valores string para guardar en TinyDB
-    # TinyDB no conoce los Enum de Python — necesita strings normales
-    data["status"] = data["status"].value if hasattr(data["status"], "value") else data["status"]
-    data["country"] = data["country"].value if hasattr(data["country"], "value") else data["country"]
-    data["currency"] = data["currency"].value if hasattr(data["currency"], "value") else data["currency"]
-    data["categories"] = [
-        c.value if hasattr(c, "value") else c for c in data["categories"]
-    ]
-
     doc_id = suppliers_table.insert(data)
     cache_invalidate_prefix("suppliers:")
-    return _with_id(doc_id, data)
+    return _doc_to_supplier(doc_id, data)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -98,7 +91,7 @@ def list_suppliers(
     country: Optional[str] = None,
     category: Optional[str] = None,
     current_user: dict = Depends(get_current_user),
-) -> list[dict]:
+) -> list[Supplier]:
     """
     Devuelve todos los proveedores.
     Acepta parámetros de query opcionales:
@@ -134,7 +127,7 @@ def list_suppliers(
         if category and category not in doc.get("categories", []):
             continue
 
-        results.append(_with_id(doc.doc_id, dict(doc)))
+        results.append(_doc_to_supplier(doc.doc_id, doc))
 
     cache_set(cache_key, results, 60)
     return results
@@ -147,7 +140,7 @@ def list_suppliers(
 def get_supplier(
     supplier_id: int,
     current_user: dict = Depends(get_current_user),
-) -> dict:
+) -> Supplier:
     """
     Devuelve el detalle de un proveedor por su ID de TinyDB.
     Si el ID no existe → 404 (no inventamos datos).
@@ -165,7 +158,7 @@ def get_supplier(
             detail=f"Proveedor con id {supplier_id} no encontrado."
         )
 
-    result = _with_id(supplier_id, dict(doc))
+    result = _doc_to_supplier(supplier_id, doc)
     cache_set(cache_key, result, 60)
     return result
 
@@ -179,7 +172,7 @@ def update_rate(
     supplier_id: int,
     payload: RateUpdate,
     current_user: dict = Depends(get_current_user),
-) -> dict:
+) -> Supplier:
     """
     Actualiza la tarifa de un proveedor y registra automáticamente
     el timestamp de la actualización en updated_at.
@@ -209,7 +202,7 @@ def update_rate(
 
     updated_doc = suppliers_table.get(doc_id=supplier_id)
     cache_invalidate_prefix("suppliers:")
-    return _with_id(supplier_id, dict(updated_doc))
+    return _doc_to_supplier(supplier_id, updated_doc)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -221,7 +214,7 @@ def update_status(
     supplier_id: int,
     payload: StatusUpdate,
     current_user: dict = Depends(get_current_user),
-) -> dict:
+) -> Supplier:
     """
     Activa o suspende un proveedor.
 
@@ -249,14 +242,14 @@ def update_status(
 
     updated_doc = suppliers_table.get(doc_id=supplier_id)
     cache_invalidate_prefix("suppliers:")
-    return _with_id(supplier_id, dict(updated_doc))
+    return _doc_to_supplier(supplier_id, updated_doc)
 
 
 # ─────────────────────────────────────────────────────────────
 # DELETE /suppliers/{id} — Eliminar proveedor
 # ─────────────────────────────────────────────────────────────
 
-@router.delete("/{supplier_id}", status_code=200)
+@router.delete("/{supplier_id}", response_model=MessageResponse, status_code=200)
 def delete_supplier(
     supplier_id: int,
     current_user: dict = Depends(get_current_user),
@@ -279,4 +272,4 @@ def delete_supplier(
 
     suppliers_table.remove(doc_ids=[supplier_id])
     cache_invalidate_prefix("suppliers:")
-    return {"deleted": supplier_id, "message": "Proveedor eliminado correctamente."}
+    return MessageResponse(message="Proveedor eliminado correctamente.")

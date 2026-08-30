@@ -16,6 +16,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from dependencies.auth_deps import get_current_user
+from models import MessageResponse
 from models.profile_models import ProfileCreate
 from models.user_models import UserCreate, UserResponse, UserUpdate
 from services.user_service import (
@@ -168,7 +169,7 @@ def update_user_endpoint(
 # DELETE /users/{user_id} — ELIMINAR (PROTEGIDO — owner o admin)
 # ─────────────────────────────────────────────────────────────
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", response_model=MessageResponse)
 def delete_user_endpoint(
     user_id: int,
     current_user: dict = Depends(get_current_user),
@@ -203,4 +204,4 @@ def delete_user_endpoint(
             detail=f"Usuario con id {user_id} no encontrado.",
         )
 
-    return {"message": "Usuario y perfil eliminados correctamente"}
+    return MessageResponse(message="Usuario y perfil eliminados correctamente")
