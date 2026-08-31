@@ -1,0 +1,24 @@
+[project]
+name = "api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "tinydb>=4.9.0",
+]
+
+[project.scripts]
+seed = "seed:main"
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "models", "database", "seed"]
+packages = ["routers"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
