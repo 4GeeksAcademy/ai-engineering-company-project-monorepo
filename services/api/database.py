@@ -11,6 +11,8 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 db = TinyDB(DB_PATH)
 suppliers_table = db.table("suppliers")
+users_table = db.table("users")
+profiles_table = db.table("profiles")
 
 
 def document_to_dict(document):

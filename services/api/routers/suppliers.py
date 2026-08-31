@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from tinydb import Query
 
 from database import document_to_dict, suppliers_table
@@ -12,11 +12,13 @@ from models import (
     SupplierResponse,
     SupplierStatusUpdate,
 )
+from security import get_current_user
 
 
 router = APIRouter(
     prefix="/suppliers",
     tags=["Suppliers"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
