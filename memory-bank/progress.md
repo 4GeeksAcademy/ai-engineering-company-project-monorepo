@@ -76,3 +76,13 @@
   - [x] Obtenido CONTEXT-trackflow.md (data-pipelines) del syllabus 4Geeks: entregable "Weekly Warehouse & Client Performance Report", 4 KPIs (Inbound Volume, Outbound Throughput, Stockout Frequency, Discrepancy Rate), grain warehouse×client_id×ISO week, tabla destino `reporting.weekly_warehouse_client_performance` con UNIQUE(warehouse, client_id, week_start)
   - [x] `data/pipelines/PIPELINE_DESIGN.md` creado con: Current State + brecha de negocio, propósito en una frase, formato de extracción (telemetry_events read-only + cadencia semanal lunes 06:00 UTC), diagrama Mermaid 3 etapas con nombres reales, estrategia de updates (UPSERT), idempotencia explícita (ON CONFLICT), log de ejecución con 10 campos, mapping Prefect (1 flow + 3 tasks + estados), 3 endpoints en services/reporting/ con funciones de data/pipelines/ que importan
   - [x] Diseño cumple los 13 criterios de evaluación del Hito
+  - [x] **Auditoría de precisión (schema real) — Correcciones aplicadas**:
+    - [x] Verificado el DDL real de `telemetry_events` en branch `feature/telemetry-storage`: columnas `id` (PK), `timestamp`, `service`, `event_type`, `level`, `value`, `message`, `tags` (jsonb) + 3 índices (timestamp BTREE, event_type BTREE, tags GIN)
+    - [x] Verificado el INSERT real: 7 columnas, tags jsonb con envelope + payload dentro
+    - [x] Verificado `profiles` en `services/api/models/profile_models.py`: solo `name`, `phone`, `address` (TinyDB) — NO existe `company_name` ni `client_id` como tabla
+    - [x] Verificada la función `_build_tags`: escribe en tags eventId, sessionId, userId, schemaVersion, requestId + allowlist (warehouse, client_id, product_id, product_category, quantity, etc.)
+    - [x] Verificado `value` numérico extraído por `_extract_value` desde `properties.get("quantity")` en el stub actual
+    - [x] **15 correcciones aplicadas** a `data/pipelines/PIPELINE_DESIGN.md`:
+      - 13 reemplazos: `properties →` → `tags->>`, eliminar `company_name`, corregir dedup (PK es `id`, no UNIQUE eventId), checkpoint con `last_event_id`, etc.
+      - 2 reemplazos adicionales: eliminar enriquecimiento falso (`profiles` como clientes), B3 del diagrama simplificado
+    - [x] Documento validado: 419 líneas, 12 fences balanceados, 0 referencias a columnas inexistentes

@@ -17,7 +17,7 @@ The monorepo currently has a **technical telemetry pipeline** at `services/telem
 | Dimension | Current capability |
 |-----------|-------------------|
 | Source | `telemetry_events` table (PostgreSQL / Supabase) |
-| Format | Raw events with envelope (eventId, timestamp, sessionId, userId, event_type, schemaVersion, requestId, properties) and mandatory metrics (M1–M5) |
+| Format | Filas en tabla `telemetry_events` — columnas: `id` (PK), `timestamp`, `service`, `event_type`, `level`, `value`, `message`, `tags` (jsonb). El envelope (eventId, sessionId, userId, schemaVersion, requestId) y el payload de negocio (warehouse, client_id, product_id, product_category, quantity) viven **dentro de `tags`** |
 | Aggregation | Grouped by event_type, day, service, level |
 | Output | Technical metrics: events_per_day, error_rate_by_type, event_type_distribution |
 | Consumer | Engineering team (system health, error rates) |
@@ -54,7 +54,7 @@ The technical report answers *how many events occurred* (e.g., 500 `inbound_orde
 | **Source** | `telemetry_events` (PostgreSQL / Supabase) — **read-only**, no se escribe nunca en esta tabla |
 | **Filter** | `event_type IN ('inbound_order_created', 'outbound_order_created', 'stock_threshold_triggered', 'inventory_discrepancy_detected')` |
 | **Time range** | Semana ISO anterior: `timestamp >= week_start_monday AND timestamp < next_monday` (UTC) |
-| **Payload fields consumed** | `properties → warehouse`, `properties → client_id`, `properties → product_id`, `properties → product_category`, `properties → quantity` |
+| **Payload fields consumed** | De la columna `tags` (jsonb): `tags->>'warehouse'`, `tags->>'client_id'`, `tags->>'product_id'`, `tags->>'product_category'`, `tags->'quantity'` (la columna `value` ya guarda el `quantity` numérico extraído por `_extract_value`) |
 | **Cadence** | **Semanal**, ejecutado cada **lunes a las 06:00 UTC** (listo para las 08:00 hora de oficina) |
 | **Trigger** | Programado (cron) + manual (`POST /reporting/pipeline-runs`) |
 
@@ -64,12 +64,12 @@ The technical report answers *how many events occurred* (e.g., 500 `inbound_orde
 flowchart TD
     subgraph Extracción["Extracción (Extract)"]
         A1[("telemetry_events<br/>(PostgreSQL / Supabase)")] --> A2[Filter events by<br/>event_type & week]
-        A2 --> A3[Extract properties:<br/>warehouse, client_id,<br/>product_id, quantity]
+        A2 --> A3[Extract from tags (jsonb):<br/>warehouse, client_id,<br/>product_id, quantity]
     end
 
     subgraph Transformación["Transformación (Transform)"]
         B1[Group by:<br/>warehouse + client_id + week_start] --> B2[Compute KPIs:<br/>SUM quantity → inbound_units_count<br/>COUNT orders → outbound_orders_count<br/>COUNT stockout → stockout_events_count<br/>COUNT discrepancies → discrepancy_events_count<br/>Ratio → discrepancy_rate]
-        B2 --> B3[Enrich with domain data:<br/>client name from profiles,<br/>warehouse location label]
+        B2 --> B3[Build record:<br/>warehouse + client_id + week_start<br/>+ 5 KPI fields]
     end
 
     subgraph Carga["Carga (Load)"]
@@ -86,7 +86,7 @@ flowchart TD
 **Tablas reales de TrackFlow mencionadas:**
 - `telemetry_events` — fuente de eventos (esquema `public`)
 - `inventory_items` — dominio: `sku`, `warehouse` (`los_angeles` / `zaragoza`), `min_stock`, `category`
-- `profiles` — dominio: `client_id`, `company_name` (para enriquecer el reporte con nombre de cliente)
+- `profiles` — dominio (TinyDB): `name`, `phone`, `address` — fuera de alcance para este reporte: contiene **operadores**, no clientes. La dimensión de negocio del reporte es `client_id` (en `tags->>'client_id'` del evento), que en v1 no se enriquece con nombre (no existe tabla de clientes en el CONTEXT)
 - `reporting.weekly_warehouse_client_performance` — **destino** (esquema `reporting`, tabla nueva)
 - `pipeline_runs` — tabla de log de ejecución (esquema `reporting`)
 
@@ -96,9 +96,9 @@ Los eventos en `telemetry_events` son **insert-only** (append): una vez creados 
 
 | Escenario | Mecanismo |
 |-----------|-----------|
-| **Evento duplicado** (mismo `eventId`) | `eventId` tiene UNIQUE constraint → segundo INSERT falla; la capa de extracción ignora el duplicado |
+| **Evento duplicado** (mismo `eventId`, reenvío tras reintento) | La tabla es **append-only** y su PK es `id` (autogenerado), no hay UNIQUE sobre `eventId`. La deduplicación se hace en la **capa de extracción**: `SELECT DISTINCT ON (tags->>'eventId')` y en agregación no se duplica porque el UPSERT destino recalcula la misma semana |
 | **Evento corregido** (corrección manual, nuevo evento) | Se emite un nuevo evento con nuevo `eventId` y `timestamp` posterior; la agregación semanal lo incluye en la semana correspondiente |
-| **Actualización de client_id** (perfil renombrado) | El reporte en `reporting.weekly_warehouse_client_performance` usa el `client_id` del evento, no el nombre actual; si se desea el nombre actual, se enriquece desde `profiles` en tiempo de transformación y se actualiza en cada corrida (upsert) |
+| **Renombrado de cliente / ajuste de dimensión** | El reporte usa el `client_id` del evento (en `tags->>'client_id'`), no el nombre. Si un `client_id` se corrige en origen, el evento nuevo entra en la semana correspondiente y el UPSERT sobre `(warehouse, client_id, week_start)` recalcula la fila |
 | **Corrección de cantidad** (ajuste manual) | Se emite un nuevo evento del tipo adecuado (ej. `inventory_discrepancy_detected`); el pipeline recalcula en la siguiente corrida semanal |
 
 ---
@@ -163,7 +163,7 @@ Cada corrida del pipeline registra una entrada en la tabla `reporting.pipeline_r
 
 **Duplicados en el origen — ¿Cómo evitas contar la misma acción dos veces en `telemetry_events` y en tus agregados de negocio? ¿Qué campo del envelope es tu clave de deduplicación, y en qué capa?**
 
-El campo `eventId` (UUID v4) del event envelope es la clave de deduplicación. En la capa de **extracción**, el pipeline selecciona eventos con `DISTINCT eventId` (o, si la BD ya tiene UNIQUE sobre eventId, simplemente no hay duplicados en origen). En la capa de **agregación**, la suma por `warehouse` + `client_id` + `week_start` es naturalmente idempotente porque la operación UPSERT en destino actualiza en lugar de insertar duplicados.
+El campo `eventId` (UUID v4) del envelope, almacenado en `telemetry_events.tags->>'eventId'`, es la clave lógica de deduplicación (la tabla no tiene UNIQUE sobre él; su PK física es `id`). En la capa de **extracción**, el pipeline selecciona `DISTINCT ON (tags->>'eventId')` para descartar reenvíos duplicados que pudieran llegar por reintentos de `POST /telemetry`. En la capa de **agregación**, la suma por `warehouse` + `client_id` + `week_start` es naturalmente idempotente porque el UPSERT en destino actualiza en lugar de insertar duplicados.
 
 **Reintento después de un fallo — Si el pipeline muere durante la carga con datos parciales insertados, ¿qué pasa cuando lo vuelves a correr?**
 
@@ -174,7 +174,7 @@ Descrito en la **sección 3.1** (idempotencia explícita): el UPSERT sobre `UNIQ
 El pipeline tiene granularidad **semanal** (no diaria), lo que reduce la ventana de eventos tardíos. Si un evento con `timestamp` de la semana anterior llega durante la semana actual (ej. martes), el pipeline lo ignorará en la corrida de la semana actual porque filtra por `week_start`. Para manejar esto:
 
 1. El pipeline guarda un **watermark** (la semana ISO máxima procesada) en `reporting.pipeline_runs`
-2. Un **job de backfill** (manual o automático) detecta semanas con eventos tardíos comparando `eventId` no procesados contra el watermark
+2. Un **job de backfill** (manual o automático) detecta semanas con eventos tardíos comparando `tags->>'eventId'` no procesados contra el watermark
 3. El backfill recalcula esa semana específica y actualiza las filas existentes vía UPSERT
 4. Un campo `recomputed_at` adicional (opcional) en la tabla destino marca cuándo se recalculó cada fila
 
@@ -191,12 +191,12 @@ El pipeline tiene granularidad **semanal** (no diaria), lo que reduce la ventana
 - Cada fila en `reporting.weekly_warehouse_client_performance` tiene `computed_at`
 - La tabla `pipeline_runs` almacena `rows_read` por corrida → una caída repentina de 50k a 5k filas detecta un hueco
 - Un aumento anómalo de 5k a 50k detecta una ráfaga o posible duplicación
-- Cada evento tiene `eventId` → se puede reconstruir qué eventos alimentaron cada fila del reporte
+- Cada evento expone `tags->>'eventId'` → se puede reconstruir qué eventos alimentaron cada fila del reporte
 
 **Crecimiento vs. pérdida de datos — Si el volumen de eventos varía de un día a otro, ¿cómo sabes si el negocio está creciendo o si estás perdiendo o duplicando mediciones?**
 
 - La tendencia semanal de `rows_read` en `pipeline_runs` (comparando semana a semana) muestra si el volumen sube o baja
-- Un conteo de `eventId` únicos por semana en `telemetry_events` (independiente del pipeline) sirve como baseline
+- Un conteo de `DISTINCT tags->>'eventId'` por semana en `telemetry_events` (independiente del pipeline) sirve como baseline
 - Si `rows_read` cae un 80% pero los eventos únicos en origen no, hay un bug en el pipeline (filtro incorrecto)
 - Si ambos suben simultáneamente, el negocio está creciendo
 
@@ -208,14 +208,14 @@ El pipeline tiene granularidad **semanal** (no diaria), lo que reduce la ventana
   1. La transacción actual se revierte (PostgreSQL maneja el rollback automático)
   2. La corrida se registra como `Failed` en `pipeline_runs` (si es posible; si no, se detecta por ausencia de `Completed`)
   3. En la siguiente corrida programada (o en un reintento manual), el pipeline procesa la misma semana completa
-- Para pipelines más largos (ej. históricos con meses de datos), se podría persistir un checkpoint simple: `(week_start, last_eventId)` en una tabla de control
+- Para pipelines más largos (ej. históricos con meses de datos), se podría persistir un checkpoint simple: `(week_start, last_event_id)` en una tabla de control, donde `last_event_id` = último `tags->>'eventId'` procesado
 
 **Buffer en el frontend — ¿Tiene sentido bufferear eventos offline en el navegador? ¿Qué riesgos introduce, y qué capa debería asumirlos?**
 
 Sí, tiene sentido si los operadores de almacén pierden conectividad (ej. zonas sin cobertura en Zaragoza). El navegador (frontend) debería:
 1. Almacenar eventos en `localStorage` o IndexedDB con `eventId` + `timestamp`
 2. Reintentar el envío vía `POST /telemetry` cuando recupere conexión
-3. El backend (servicio de telemetría) rechaza duplicados por `eventId` con HTTP `409 Conflict` → el frontend interpreta "ya almacenado" y descarta el evento
+3. El backend (servicio de telemetría) rechaza duplicados por `eventId` con HTTP `409 Conflict` → el frontend interpreta "ya almacenado" y descarta el evento (el stub actual de `routes/telemetry.py` no persiste, pero el contrato previsto en Fase 3 del plan de telemetría lo establece)
 
 **Riesgos:** Overflow de almacenamiento local, eventos que caducan si el dispositivo no se reconecta en días, desorden cronológico al reenviar.
 
@@ -251,7 +251,7 @@ from prefect.states import Running, Completed, Failed
 def extract_telemetry_events(week_start: str) -> list[dict]:
     """
     Lee telemetry_events filtrando por event_type y semana ISO.
-    Retorna lista de eventos crudos con properties (warehouse, client_id, quantity).
+    Retorna lista de eventos crudos con tags jsonb (warehouse, client_id, product_id, quantity).
     Estado: Running → Completed (o Failed tras 2 reintentos).
     """
     ...
