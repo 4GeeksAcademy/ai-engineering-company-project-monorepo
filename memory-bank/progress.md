@@ -71,3 +71,8 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Hito — Diseño de Pipeline de Desempeño de Negocio (Parte 1 de 3)**:
+  - [x] Rama `feature/pipeline-business-performance` creada desde `main`
+  - [x] Obtenido CONTEXT-trackflow.md (data-pipelines) del syllabus 4Geeks: entregable "Weekly Warehouse & Client Performance Report", 4 KPIs (Inbound Volume, Outbound Throughput, Stockout Frequency, Discrepancy Rate), grain warehouse×client_id×ISO week, tabla destino `reporting.weekly_warehouse_client_performance` con UNIQUE(warehouse, client_id, week_start)
+  - [x] `data/pipelines/PIPELINE_DESIGN.md` creado con: Current State + brecha de negocio, propósito en una frase, formato de extracción (telemetry_events read-only + cadencia semanal lunes 06:00 UTC), diagrama Mermaid 3 etapas con nombres reales, estrategia de updates (UPSERT), idempotencia explícita (ON CONFLICT), log de ejecución con 10 campos, mapping Prefect (1 flow + 3 tasks + estados), 3 endpoints en services/reporting/ con funciones de data/pipelines/ que importan
+  - [x] Diseño cumple los 13 criterios de evaluación del Hito
