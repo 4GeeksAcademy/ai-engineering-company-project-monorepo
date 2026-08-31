@@ -63,3 +63,90 @@ class SupplierRateUpdate(BaseModel):
 
 class SupplierStatusUpdate(BaseModel):
     status: SupplierStatus
+
+
+# ──────────────────────────────────────────────
+# UserRole
+# ──────────────────────────────────────────────
+
+UserRole = Literal["admin", "manager", "user"]
+
+
+# ──────────────────────────────────────────────
+# User models
+# ──────────────────────────────────────────────
+
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    role: UserRole = "user"
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    is_active: bool
+    role: UserRole
+    created_at: datetime
+
+
+class UserInDB(BaseModel):
+    id: int
+    email: str
+    hashed_password: str
+    is_active: bool
+    role: UserRole
+    created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    email: str | None = None
+    password: str | None = None
+    is_active: bool | None = None
+    role: UserRole | None = None
+
+
+# ──────────────────────────────────────────────
+# Profile models
+# ──────────────────────────────────────────────
+
+
+class ProfileInDB(BaseModel):
+    id: int
+    user_id: int
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None
+
+
+class ProfileResponse(BaseModel):
+    id: int
+    user_id: int
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None
+
+
+class ProfileUpdate(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None
+
+
+# ──────────────────────────────────────────────
+# Auth models
+# ──────────────────────────────────────────────
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
