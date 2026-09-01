@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from tinydb import Query
 
-from database import document_to_dict, users_table
+from database import document_to_dict, profiles_table, users_table
 from models import (
     LoginRequest,
+    ProfileResponse,
     TokenResponse,
     UserResponse,
+    UserWithProfileResponse,
 )
 from security import (
     create_access_token,
@@ -63,9 +65,15 @@ def login(payload: LoginRequest):
 
 @router.get(
     "/me",
-    response_model=UserResponse,
+    response_model=UserWithProfileResponse,
 )
 def me(
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return current_user
+    Profile = Query()
+    profile_docs = profiles_table.search(Profile.user_id == current_user.id)
+    profile = None
+    if profile_docs:
+        profile = ProfileResponse(**document_to_dict(profile_docs[0]))
+
+    return UserWithProfileResponse(**current_user.model_dump(), profile=profile)
