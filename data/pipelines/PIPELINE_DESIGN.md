@@ -1,43 +1,43 @@
-# Pipeline Design: Business Performance
+# Diseño del Pipeline: Desempeño de Negocio
 
-## Weekly Warehouse & Client Performance Report
+## Reporte Semanal de Desempeño por Almacén y Cliente
 
-> **Company:** TrackFlow — Logistics & Last-Mile Delivery
-> **Delivery:** `data/pipelines/PIPELINE_DESIGN.md`
-> **Commit message:** `feat: add business performance pipeline design document`
+> **Compañía:** TrackFlow — Logística y Entrega de Última Milla
+> **Entrega:** `data/pipelines/PIPELINE_DESIGN.md`
+> **Mensaje del commit:** `feat: add business performance pipeline design document`
 
 ---
 
 ## Fase 1 — Estado Actual y Brecha de Negocio
 
-### Current State: what the technical report already answers
+### Estado Actual: lo que el reporte técnico ya responde
 
-The monorepo currently has a **technical telemetry pipeline** at `services/telemetry/analysis.py`, exposed via `GET /telemetry/report`. This pipeline:
+El monorepo actualmente tiene un **pipeline técnico de telemetría** en `services/telemetry/analysis.py`, expuesto vía `GET /telemetry/report`. Este pipeline:
 
-| Dimension | Current capability |
+| Dimensión | Capacidad actual |
 |-----------|-------------------|
-| Source | `telemetry_events` table (PostgreSQL / Supabase) |
-| Format | Filas en tabla `telemetry_events` — columnas: `id` (PK), `timestamp`, `service`, `event_type`, `level`, `value`, `message`, `tags` (jsonb). El envelope (eventId, sessionId, userId, schemaVersion, requestId) y el payload de negocio (warehouse, client_id, product_id, product_category, quantity) viven **dentro de `tags`** |
-| Aggregation | Grouped by event_type, day, service, level |
-| Output | Technical metrics: events_per_day, error_rate_by_type, event_type_distribution |
-| Consumer | Engineering team (system health, error rates) |
-| Cadence | On-demand via API |
+| Origen | Tabla `telemetry_events` (PostgreSQL / Supabase) |
+| Formato | Filas en tabla `telemetry_events` — columnas: `id` (PK), `timestamp`, `service`, `event_type`, `level`, `value`, `message`, `tags` (jsonb). El envelope (eventId, sessionId, userId, schemaVersion, requestId) y el payload de negocio (warehouse, client_id, product_id, product_category, quantity) viven **dentro de `tags`** |
+| Agregación | Agrupado por event_type, día, service, level |
+| Salida | Métricas técnicas: eventos_por_dia, tasa_error_por_tipo, distribucion_por_tipo_evento |
+| Consumidor | Equipo de ingeniería (salud del sistema, tasas de error) |
+| Cadencia | Bajo demanda vía API |
 
-### The business gap
+### La brecha de negocio
 
-| Stakeholder | Question that remains unanswered |
+| Interesado | Pregunta que sigue sin respuesta |
 |-------------|----------------------------------|
-| **Thomas (CEO)** | "Which warehouse processed more volume for *fashion-co* this week? Are we losing or gaining throughput?" |
-| **Ana (Head of Warehouse Operations)** | "Is *los_angeles* running low on any client's stock? Which warehouse/client combo has the highest discrepancy rate?" |
-| **Miguel (Commercial)** | "How many stockout events happened this week per client — before the client calls us?" |
+| **Thomas (CEO)** | "¿Qué almacén procesó más volumen para *fashion-co* esta semana? ¿Estamos perdiendo o ganando capacidad?" |
+| **Ana (Jefa de Operaciones de Almacén)** | "¿*los_angeles* se está quedando sin stock de algún cliente? ¿Qué combinación almacén/cliente tiene la tasa de discrepancia más alta?" |
+| **Miguel (Comercial)** | "¿Cuántos eventos de falta de stock ocurrieron esta semana por cliente — antes de que el cliente nos llame?" |
 
-The technical report answers *how many events occurred* (e.g., 500 `inbound_order_created` events). It does **not** answer:
-- The **sum of units** received per warehouse per client (Inbound Volume)
-- The **count of orders** dispatched per warehouse per client (Outbound Throughput)
-- The **frequency** of stockout events per warehouse per client (Stockout Frequency)
-- The **rate** of inventory discrepancies relative to outbound activity (Discrepancy Rate)
+El reporte técnico responde *cuántos eventos ocurrieron* (ej. 500 eventos `inbound_order_created`). **No** responde:
+- La **suma de unidades** recibidas por almacén por cliente (Volumen de Entrada)
+- El **conteo de órdenes** despachadas por almacén por cliente (Rendimiento de Salida)
+- La **frecuencia** de eventos de falta de stock por almacén por cliente (Frecuencia de Desabastecimiento)
+- La **tasa** de discrepancias de inventario relativa a la actividad de salida (Tasa de Discrepancia)
 
-**This pipeline exists to close that gap.**
+**Este pipeline existe para cerrar esa brecha.**
 
 ---
 
@@ -45,35 +45,35 @@ The technical report answers *how many events occurred* (e.g., 500 `inbound_orde
 
 ### 2.1 Propósito (una sola frase)
 
-> Producir el **Weekly Warehouse & Client Performance Report** — un agregado semanal, por almacén y por cliente, de los cuatro KPIs de negocio (Inbound Volume, Outbound Throughput, Stockout Frequency, Discrepancy Rate) a partir de los eventos de telemetría, para que Thomas y Ana abran el lunes por la mañana un reporte sin depender de ingeniería.
+> Producir el **Reporte Semanal de Desempeño por Almacén y Cliente** — un agregado semanal, por almacén y por cliente, de los cuatro KPIs de negocio (Volumen de Entrada, Rendimiento de Salida, Frecuencia de Desabastecimiento, Tasa de Discrepancia) a partir de los eventos de telemetría, para que Thomas y Ana abran el lunes por la mañana un reporte sin depender de ingeniería.
 
 ### 2.2 Formato de extracción
 
 | Elemento | Especificación |
 |----------|----------------|
-| **Source** | `telemetry_events` (PostgreSQL / Supabase) — **read-only**, no se escribe nunca en esta tabla |
-| **Filter** | `event_type IN ('inbound_order_created', 'outbound_order_created', 'stock_threshold_triggered', 'inventory_discrepancy_detected')` |
-| **Time range** | Semana ISO anterior: `timestamp >= week_start_monday AND timestamp < next_monday` (UTC) |
-| **Payload fields consumed** | De la columna `tags` (jsonb): `tags->>'warehouse'`, `tags->>'client_id'`, `tags->>'product_id'`, `tags->>'product_category'`, `tags->'quantity'` (la columna `value` ya guarda el `quantity` numérico extraído por `_extract_value`) |
-| **Cadence** | **Semanal**, ejecutado cada **lunes a las 06:00 UTC** (listo para las 08:00 hora de oficina) |
-| **Trigger** | Programado (cron) + manual (`POST /reporting/pipeline-runs`) |
+| **Origen** | `telemetry_events` (PostgreSQL / Supabase) — **solo lectura**, no se escribe nunca en esta tabla |
+| **Filtro** | `event_type IN ('inbound_order_created', 'outbound_order_created', 'stock_threshold_triggered', 'inventory_discrepancy_detected')` |
+| **Rango de tiempo** | Semana ISO anterior: `timestamp >= week_start_monday AND timestamp < next_monday` (UTC) |
+| **Campos del payload consumidos** | De la columna `tags` (jsonb): `tags->>'warehouse'`, `tags->>'client_id'`, `tags->>'product_id'`, `tags->>'product_category'`, `tags->'quantity'` (la columna `value` ya guarda el `quantity` numérico extraído por `_extract_value`) |
+| **Cadencia** | **Semanal**, ejecutado cada **lunes a las 06:00 UTC** (listo para las 08:00 hora de oficina) |
+| **Disparador** | Programado (cron) + manual (`POST /reporting/pipeline-runs`) |
 
 ### 2.3 Diagrama de flujo de datos (≥3 etapas con nombres reales)
 
 ```mermaid
 flowchart TD
     subgraph Extracción["Extracción (Extract)"]
-        A1[("telemetry_events<br/>(PostgreSQL / Supabase)")] --> A2[Filter events by<br/>event_type & week]
-        A2 --> A3[Extract from tags (jsonb):<br/>warehouse, client_id,<br/>product_id, quantity]
+        A1[("telemetry_events<br/>(PostgreSQL / Supabase)")] --> A2[Filtrar eventos por<br/>event_type y semana]
+        A2 --> A3[Extraer de tags (jsonb):<br/>warehouse, client_id,<br/>product_id, quantity]
     end
 
     subgraph Transformación["Transformación (Transform)"]
-        B1[Group by:<br/>warehouse + client_id + week_start] --> B2[Compute KPIs:<br/>SUM quantity → inbound_units_count<br/>COUNT orders → outbound_orders_count<br/>COUNT stockout → stockout_events_count<br/>COUNT discrepancies → discrepancy_events_count<br/>Ratio → discrepancy_rate]
-        B2 --> B3[Build record:<br/>warehouse + client_id + week_start<br/>+ 5 KPI fields]
+        B1[Agrupar por:<br/>warehouse + client_id + week_start] --> B2[Calcular KPIs:<br/>SUM quantity → inbound_units_count<br/>COUNT orders → outbound_orders_count<br/>COUNT stockout → stockout_events_count<br/>COUNT discrepancies → discrepancy_events_count<br/>Ratio → discrepancy_rate]
+        B2 --> B3[Construir registro:<br/>warehouse + client_id + week_start<br/>+ 5 campos KPI]
     end
 
     subgraph Carga["Carga (Load)"]
-        C1[Upsert into<br/>reporting.weekly_warehouse_client_performance] --> C2[Write execution log<br/>to pipeline_runs table]
+        C1[UPSERT en<br/>reporting.weekly_warehouse_client_performance] --> C2[Escribir log de ejecución<br/>en tabla pipeline_runs]
     end
 
     A3 --> B1
