@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from tinydb import TinyDB
+from tinydb import TinyDB, Query
 
 from main import app
 import routers.auth as auth_router_module
@@ -14,6 +14,7 @@ def client(tmp_path, monkeypatch):
     test_db = TinyDB(tmp_path / "auth-test.json")
     test_users_table = test_db.table("users")
     test_profiles_table = test_db.table("profiles")
+    test_reset_tokens_table = test_db.table("reset_tokens")
 
     monkeypatch.setattr(
         users_router_module,
@@ -40,10 +41,22 @@ def client(tmp_path, monkeypatch):
         "users_table",
         test_users_table,
     )
+    monkeypatch.setattr(
+        security_module,
+        "reset_tokens_table",
+        test_reset_tokens_table,
+    )
 
     monkeypatch.setenv(
         "SECRET_KEY",
         "test-secret-key-for-testing-only",
+    )
+
+    # Prevent actual email sending during tests
+    monkeypatch.setattr(
+        auth_router_module,
+        "send_password_reset_email",
+        lambda email, token: None,
     )
 
     with TestClient(app) as test_client:
@@ -459,6 +472,260 @@ class TestAuth:
         response = client.get(
             "/auth/me",
             headers={"Authorization": "Bearer invalidtoken123"},
+        )
+
+        assert response.status_code == 401
+
+
+# ══════════════════════════════════════════════
+# Password Reset
+# ══════════════════════════════════════════════
+
+
+class TestPasswordReset:
+    def test_forgot_password_returns_200_for_existing_user(self, client):
+        client.post(
+            "/users",
+            json={
+                "email": "reset@example.com",
+                "password": "oldpass123",
+            },
+        )
+
+        response = client.post(
+            "/auth/forgot-password",
+            json={"email": "reset@example.com"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == (
+            "If an account with that email exists, a password reset link has been sent."
+        )
+
+    def test_forgot_password_returns_200_for_nonexistent_user(self, client):
+        response = client.post(
+            "/auth/forgot-password",
+            json={"email": "nobody@example.com"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == (
+            "If an account with that email exists, a password reset link has been sent."
+        )
+
+    def test_forgot_password_for_inactive_user_does_not_send_email(self, client):
+        client.post(
+            "/users",
+            json={
+                "email": "inactive@example.com",
+                "password": "pass123",
+            },
+        )
+        # Deactivate the user
+        User = Query()
+        user_docs = security_module.users_table.search(User.email == "inactive@example.com")
+        security_module.users_table.update(
+            {"is_active": False},
+            doc_ids=[user_docs[0].doc_id],
+        )
+
+        response = client.post(
+            "/auth/forgot-password",
+            json={"email": "inactive@example.com"},
+        )
+
+        # Should still return 200, but no token should be stored
+        assert response.status_code == 200
+
+        # Verify no reset token was created
+        assert len(security_module.reset_tokens_table.all()) == 0
+
+    def test_reset_password_with_valid_token_returns_200(self, client):
+        # Create user
+        client.post(
+            "/users",
+            json={
+                "email": "reset2@example.com",
+                "password": "oldpass456",
+            },
+        )
+
+        # Request reset
+        client.post(
+            "/auth/forgot-password",
+            json={"email": "reset2@example.com"},
+        )
+
+        # Get the stored token
+        stored = security_module.reset_tokens_table.all()[0]
+        token = stored["token"]
+
+        # Reset password
+        response = client.post(
+            "/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "newpass789",
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == "Password has been reset successfully."
+
+        # Verify new password works
+        login_response = client.post(
+            "/auth/login",
+            json={
+                "email": "reset2@example.com",
+                "password": "newpass789",
+            },
+        )
+
+        assert login_response.status_code == 200
+
+        # Old password does not work
+        old_login_response = client.post(
+            "/auth/login",
+            json={
+                "email": "reset2@example.com",
+                "password": "oldpass456",
+            },
+        )
+
+        assert old_login_response.status_code == 401
+
+    def test_reset_token_is_single_use(self, client):
+        # Create user
+        client.post(
+            "/users",
+            json={
+                "email": "singleuse@example.com",
+                "password": "firstpass",
+            },
+        )
+
+        # Request reset
+        client.post(
+            "/auth/forgot-password",
+            json={"email": "singleuse@example.com"},
+        )
+
+        stored = security_module.reset_tokens_table.all()[0]
+        token = stored["token"]
+
+        # First use — should work
+        first_response = client.post(
+            "/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "secondpass",
+            },
+        )
+
+        assert first_response.status_code == 200
+
+        # Second use — should fail
+        second_response = client.post(
+            "/auth/reset-password",
+            json={
+                "token": token,
+                "new_password": "thirdpass",
+            },
+        )
+
+        assert second_response.status_code == 400
+        assert second_response.json()["detail"] == "Invalid or expired reset token"
+
+    def test_reset_password_with_invalid_token_returns_400(self, client):
+        response = client.post(
+            "/auth/reset-password",
+            json={
+                "token": "invalid-token-123",
+                "new_password": "newpass123",
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid or expired reset token"
+
+    def test_reset_password_with_expired_token_returns_400(self, client):
+        from datetime import datetime, timedelta, timezone
+
+        client.post(
+            "/users",
+            json={
+                "email": "expired@example.com",
+                "password": "oldpass",
+            },
+        )
+
+        # Manually insert an expired token
+        security_module.reset_tokens_table.insert({
+            "token": "expired-token-test",
+            "user_id": 1,
+            "expires_at": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
+            "used": False,
+        })
+
+        response = client.post(
+            "/auth/reset-password",
+            json={
+                "token": "expired-token-test",
+                "new_password": "newpass",
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid or expired reset token"
+
+    def test_change_password_returns_200(self, client):
+        token = create_user_and_get_token(client)
+
+        response = client.post(
+            "/auth/change-password",
+            json={
+                "current_password": "strongpass123",
+                "new_password": "newerpass123",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == "Password changed successfully."
+
+        # Verify new password works
+        login_response = client.post(
+            "/auth/login",
+            json={
+                "email": "test@example.com",
+                "password": "newerpass123",
+            },
+        )
+
+        assert login_response.status_code == 200
+
+    def test_change_password_with_wrong_current_password_returns_400(self, client):
+        token = create_user_and_get_token(client)
+
+        response = client.post(
+            "/auth/change-password",
+            json={
+                "current_password": "wrongpass",
+                "new_password": "newpass123",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Current password is incorrect"
+
+    def test_change_password_without_token_returns_401(self, client):
+        response = client.post(
+            "/auth/change-password",
+            json={
+                "current_password": "oldpass",
+                "new_password": "newpass",
+            },
         )
 
         assert response.status_code == 401

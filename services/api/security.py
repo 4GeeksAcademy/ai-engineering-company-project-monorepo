@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
@@ -6,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from database import document_to_dict, users_table
+from database import document_to_dict, reset_tokens_table, users_table
 from models import UserResponse
 
 
@@ -113,3 +114,85 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
         )
 
     return UserResponse(**user_data)
+
+
+# ──────────────────────────────────────────────
+# Password reset token helpers
+# ──────────────────────────────────────────────
+
+
+def _get_reset_token_expire_minutes() -> int:
+    raw = os.environ.get("RESET_TOKEN_EXPIRE_MINUTES", "30")
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return 30
+
+
+def create_reset_token() -> str:
+    """Generate a cryptographically secure random token for password reset."""
+    return secrets.token_urlsafe(32)
+
+
+def store_reset_token(user_id: int) -> str:
+    """Generate and store a reset token for the given user.
+
+    Returns the token string.
+    """
+    token = create_reset_token()
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=_get_reset_token_expire_minutes(),
+    )
+
+    reset_tokens_table.insert({
+        "token": token,
+        "user_id": user_id,
+        "expires_at": expires_at.isoformat(),
+        "used": False,
+    })
+
+    return token
+
+
+def validate_reset_token(token: str) -> int | None:
+    """Validate a reset token and return the user_id if valid, None otherwise.
+
+    A token is valid if:
+    - It exists in the database
+    - It has not been used
+    - It has not expired
+    """
+    from tinydb import Query
+
+    Token = Query()
+    token_docs = reset_tokens_table.search(Token.token == token)
+
+    if not token_docs:
+        return None
+
+    token_doc = document_to_dict(token_docs[0])
+
+    if token_doc.get("used", False):
+        return None
+
+    expires_at_str = token_doc.get("expires_at")
+    if expires_at_str:
+        expires_at = datetime.fromisoformat(expires_at_str)
+        if expires_at < datetime.now(timezone.utc):
+            return None
+
+    return token_doc["user_id"]
+
+
+def mark_reset_token_used(token: str) -> None:
+    """Mark a reset token as used (single-use enforcement)."""
+    from tinydb import Query
+
+    Token = Query()
+    token_docs = reset_tokens_table.search(Token.token == token)
+
+    if token_docs:
+        reset_tokens_table.update(
+            {"used": True},
+            doc_ids=[token_docs[0].doc_id],
+        )

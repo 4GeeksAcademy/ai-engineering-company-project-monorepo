@@ -7,4 +7,13 @@ export type {
   UserResponse,
   ProfileResponse,
 } from './authApi'
-export { login, register, getMe, getProfile, updateProfile } from './authApi'
+export {
+  login,
+  register,
+  getMe,
+  getProfile,
+  updateProfile,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+} from './authApi'

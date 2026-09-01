@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 export default function ProfilePage() {
@@ -51,6 +52,9 @@ export default function ProfilePage() {
         </div>
 
         <div className="header-actions">
+          <Link to="/account/change-password" className="nav-link">
+            Change password
+          </Link>
           <button type="button" className="secondary-button" onClick={logout}>
             Sign out
           </button>
