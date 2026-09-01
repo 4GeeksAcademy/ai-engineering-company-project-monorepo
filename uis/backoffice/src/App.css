@@ -464,6 +464,20 @@ input[readonly] {
   text-decoration: underline;
 }
 
+.auth-forgot-link {
+  display: block;
+  margin-top: 4px;
+  color: #4d73ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+}
+
 /* ──────────────────────────────────────────────
    Navigation link (suppliers-to-profile)
    ────────────────────────────────────────────── */

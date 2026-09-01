@@ -1,14 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth'
+import { Link } from 'react-router-dom'
+import { forgotPassword } from '../auth'
 
-export default function LoginPage() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -17,13 +14,32 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      await login({ email, password })
-      navigate('/suppliers')
+      await forgotPassword(email)
+      setSent(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Request failed')
     } finally {
       setBusy(false)
     }
+  }
+
+  if (sent) {
+    return (
+      <main className="auth-page">
+        <div className="auth-card">
+          <div className="auth-header">
+            <p className="eyebrow">TrackFlow Operations</p>
+            <h1>Check your inbox</h1>
+            <p className="subtitle">
+              Si esa dirección está registrada, recibirás un enlace en breve.
+            </p>
+          </div>
+          <p className="auth-alt">
+            <Link to="/login">Back to sign in</Link>.
+          </p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -31,9 +47,9 @@ export default function LoginPage() {
       <div className="auth-card">
         <div className="auth-header">
           <p className="eyebrow">TrackFlow Operations</p>
-          <h1>Sign in</h1>
+          <h1>Reset password</h1>
           <p className="subtitle">
-            Enter your credentials to access the supplier directory.
+            Enter your email and we'll send you a reset link.
           </p>
         </div>
 
@@ -49,29 +65,15 @@ export default function LoginPage() {
             />
           </label>
 
-          <label>
-            Password
-            <input
-              required
-              type="password"
-              placeholder="Your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Link to="/forgot-password" className="auth-forgot-link">
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </label>
-
           {error && <div className="auth-error">{error}</div>}
 
           <button className="primary-button auth-button" disabled={busy} type="submit">
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'Sending…' : 'Send reset link'}
           </button>
         </form>
 
         <p className="auth-alt">
-          Don't have an account? <Link to="/register">Create one</Link>.
+          <Link to="/login">Back to sign in</Link>.
         </p>
       </div>
     </main>

@@ -13,6 +13,7 @@ db = TinyDB(DB_PATH)
 suppliers_table = db.table("suppliers")
 users_table = db.table("users")
 profiles_table = db.table("profiles")
+reset_tokens_table = db.table("reset_tokens")
 
 
 def document_to_dict(document):

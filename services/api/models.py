@@ -154,3 +154,26 @@ class TokenResponse(BaseModel):
 
 class UserWithProfileResponse(UserResponse):
     profile: ProfileResponse | None = None
+
+
+# ──────────────────────────────────────────────
+# Password reset models
+# ──────────────────────────────────────────────
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class PasswordChangeResponse(BaseModel):
+    detail: str
