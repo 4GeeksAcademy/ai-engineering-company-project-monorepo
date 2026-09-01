@@ -45,6 +45,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "libpass", extra = ["bcrypt"] },
+    { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "resend" },
     { name = "tinydb" },
@@ -59,6 +60,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.141.1" },
     { name = "libpass", extras = ["bcrypt"], specifier = ">=1.9.3" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5.0" },
     { name = "resend", specifier = ">=2.42.0" },
     { name = "tinydb", specifier = ">=4.9.0" },
