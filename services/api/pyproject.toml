@@ -1,0 +1,28 @@
+[project]
+name = "api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "libpass[bcrypt]>=1.9.3",
+    "python-dotenv>=1.1.0",
+    "python-jose[cryptography]>=3.5.0",
+    "resend>=2.42.0",
+    "tinydb>=4.9.0",
+]
+
+[project.scripts]
+seed = "seed:main"
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "models", "database", "security", "seed", "email_service"]
+packages = ["routers"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
