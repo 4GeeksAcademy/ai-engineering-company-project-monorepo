@@ -1,3 +1,47 @@
+// ──────────────────────────────────────────────
+// Auth helpers — Bearer token & 401 handling
+// ──────────────────────────────────────────────
+
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token')
+}
+
+function dispatchAuthExpired() {
+  localStorage.removeItem('auth_token')
+  window.dispatchEvent(new CustomEvent('auth:expired'))
+}
+
+type AuthFetchOptions = RequestInit & {
+  requireAuth?: boolean
+}
+
+async function authFetch(
+  url: string,
+  options: AuthFetchOptions = {},
+): Promise<Response> {
+  const { requireAuth = true, ...init } = options
+  const token = getAuthToken()
+
+  if (requireAuth && !token) {
+    throw new Error('Authentication required')
+  }
+
+  const headers = new Headers(init.headers)
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  const response = await fetch(url, { ...init, headers })
+
+  if (response.status === 401) {
+    dispatchAuthExpired()
+    throw new Error('Session expired')
+  }
+
+  return response
+}
+
 export type Country = 'USA' | 'Spain'
 
 export type SupplierCategory =
@@ -48,7 +92,8 @@ export async function getSuppliers(
     ? `/api/suppliers?${query}`
     : '/api/suppliers'
 
-  const response = await fetch(url)
+  // GET /suppliers requires Bearer token
+  const response = await authFetch(url, { requireAuth: true })
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`)
@@ -81,7 +126,7 @@ async function parseApiError(response: Response) {
 export async function createSupplier(
   supplier: SupplierCreateInput,
 ): Promise<Supplier> {
-  const response = await fetch('/api/suppliers', {
+  const response = await authFetch('/api/suppliers', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -100,7 +145,7 @@ export async function updateSupplierRate(
   id: number,
   ratePerShipment: number,
 ): Promise<Supplier> {
-  const response = await fetch(`/api/suppliers/${id}/rate`, {
+  const response = await authFetch(`/api/suppliers/${id}/rate`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -121,7 +166,7 @@ export async function updateSupplierStatus(
   id: number,
   status: 'active' | 'suspended',
 ): Promise<Supplier> {
-  const response = await fetch(`/api/suppliers/${id}/status`, {
+  const response = await authFetch(`/api/suppliers/${id}/status`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
