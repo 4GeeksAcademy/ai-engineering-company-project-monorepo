@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 Country = Literal["USA", "Spain"]
@@ -177,3 +177,63 @@ class ChangePasswordRequest(BaseModel):
 
 class PasswordChangeResponse(BaseModel):
     detail: str
+
+
+# ──────────────────────────────────────────────
+# Incident models
+# ──────────────────────────────────────────────
+
+IncidentCategory = Literal[
+    "lost_parcel",
+    "delivery_failure",
+    "inventory_discrepancy",
+    "carrier_issue",
+    "returns_issue",
+    "warehouse_incident",
+    "system_failure",
+    "client_complaint",
+    "other",
+]
+
+IncidentStatus = Literal["open", "in_progress", "resolved", "discarded"]
+
+IncidentOrigin = Literal["customer", "branch", "internal"]
+
+IncidentBranch = Literal[
+    "central",
+    "la_warehouse",
+    "la_office",
+    "zaragoza_warehouse",
+    "zaragoza_office",
+]
+
+
+class IncidentBase(BaseModel):
+    title: str
+    description: str
+    category: IncidentCategory
+    origin: IncidentOrigin
+    branch: IncidentBranch
+    status: IncidentStatus = "open"
+
+    @field_validator("title", "description")
+    @classmethod
+    def not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be empty")
+        return stripped
+
+
+class IncidentCreate(IncidentBase):
+    pass
+
+
+class IncidentResponse(IncidentBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class IncidentStatusUpdate(BaseModel):
+    status: IncidentStatus

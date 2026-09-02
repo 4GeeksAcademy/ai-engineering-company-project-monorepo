@@ -49,6 +49,7 @@ dependencies = [
     { name = "python-jose", extra = ["cryptography"] },
     { name = "resend" },
     { name = "tinydb" },
+    { name = "trackflow-shared" },
 ]
 
 [package.dev-dependencies]
@@ -64,6 +65,7 @@ requires-dist = [
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5.0" },
     { name = "resend", specifier = ">=2.42.0" },
     { name = "tinydb", specifier = ">=4.9.0" },
+    { name = "trackflow-shared", editable = "../../packages/shared" },
 ]
 
 [package.metadata.requires-dev]
@@ -1337,6 +1339,16 @@ sdist = { url = "https://files.pythonhosted.org/packages/01/e9/d30dd8b1b88a75ec3
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/ef/321cb77b49bc26f36ed1c85d55cd8e80f8f81e5e183b769abf67386c257a/tinydb-4.9.0-py3-none-any.whl", hash = "sha256:111f1f680978a1b7c534d698dd1d76739ff31c74c27fd26a111140b51d8b35d6", size = 25731, upload-time = "2026-08-06T15:03:43.582Z" },
 ]
+
+[[package]]
+name = "trackflow-shared"
+version = "0.1.0"
+source = { editable = "../../packages/shared" }
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.1.1" }]
 
 [[package]]
 name = "typer"

@@ -1,248 +1,158 @@
-# CONTEXT — Directorio de Proveedores · TrackFlow
-
-_These instructions are also available in [English](./CONTEXT-trackflow.en.md)._
-
-> **Milestone:** 09 — Lightweight Storage API  
-> **Ruta en el repositorio:** `09-lightweight-storage/CONTEXT-trackflow.md`
-
----
+# CONTEXT — Gestor de Incidencias Centralizado · TrackFlow
 
 ## Tu empresa
 
-Eres parte del equipo **TrackFlow Tech**, la unidad tecnológica interna de TrackFlow, una empresa de logística de última milla y gestión de almacenes con operaciones en **Los Ángeles (USA) y Zaragoza (España)**. Tu tech lead es **Andrés Kim**, CTO, y el proyecto ha sido solicitado por **Carlos Vega**, Head of Carrier Operations, con el respaldo de **Ana Whitfield**, Head of Warehouse Operations.
+**TrackFlow** es una empresa de gestión de almacenes y última milla con **130 empleados**, operando en dos mercados: **Los Ángeles (EE.UU.)** y **Zaragoza (España)**. Sus servicios son gestión de almacén para marcas de e-commerce, entrega de última milla y logística inversa (devoluciones).
 
-TrackFlow trabaja con una red de proveedores que incluye carriers, suministros de almacén, embalaje y software operacional. Cada país negocia con sus propios proveedores y gestiona los contratos de forma independiente. El resultado es que ni Carlos ni Ana tienen visibilidad del directorio completo — cada uno lleva su propia hoja de cálculo. Este proyecto crea el registro centralizado que unifica ambos mercados.
-
----
-
-## Modelo de proveedor
-
-Cada proveedor en el directorio de TrackFlow tiene la siguiente estructura:
-
-| Campo               | Tipo                                  | Descripción                                                             |
-| ------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
-| `name`              | string, requerido                     | Nombre comercial del proveedor                                          |
-| `country`           | string, requerido                     | País del contrato: `"USA"` o `"Spain"`                                  |
-| `categories`        | lista de strings, requerido, mínimo 1 | Tipo de servicio o producto que provee (ver lista válida)               |
-| `rate_per_shipment` | float, requerido, > 0                 | Tarifa vigente por envío o unidad de servicio en la moneda del contrato |
-| `currency`          | string, requerido                     | `"USD"` para USA, `"EUR"` para Spain                                    |
-| `updated_at`        | datetime, generado por el sistema     | Timestamp de la última actualización de tarifa                          |
-| `status`            | string, requerido                     | `"active"` o `"suspended"`                                              |
-| `service_zone`      | string, opcional                      | Zona de cobertura del proveedor (ej. `"West Coast"`, `"Aragón"`)        |
-| `contact_email`     | string, opcional                      | Email de contacto del proveedor                                         |
-| `notes`             | string, opcional                      | Observaciones del equipo de operaciones                                 |
-
-### Categorías válidas
-
-```python
-VALID_CATEGORIES = [
-    "carrier_last_mile",
-    "carrier_international",
-    "warehouse_supplies",
-    "packaging_materials",
-    "reverse_logistics",
-    "fleet_maintenance",
-    "it_and_wms_software",
-    "cleaning_and_facilities"
-]
-```
-
-### Estados válidos
-
-```python
-VALID_STATUSES = ["active", "suspended"]
-```
+Como parte del equipo de **TrackFlow Tech**, llevas hitos construyendo la plataforma interna. Este proyecto integra en esa plataforma un gestor centralizado de incidencias. En TrackFlow, las incidencias son el pan de cada día: paquetes perdidos, fallos de carrier, discrepancias de inventario, devoluciones mal gestionadas. Hasta ahora todo llegaba por email o WhatsApp sin ningún registro estructurado.
 
 ---
 
-## Datos iniciales del seeder
+## Quién lo usa y por qué
 
-El seeder debe cargar exactamente los siguientes proveedores, que representan el directorio actual de Carlos y Ana combinado.
+**Andrés Kim (CTO)** no tiene visibilidad de los fallos operativos hasta que alguien le escribe por WhatsApp. Con este gestor, cada incidencia queda registrada, categorizada y trazable.
 
-```python
-SUPPLIERS_SEED = [
-    {
-        "name": "UPS Ground",
-        "country": "USA",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 7.45,
-        "currency": "USD",
-        "status": "active",
-        "service_zone": "West Coast",
-        "contact_email": "business@ups.com",
-        "notes": "Carrier principal para entregas locales en Los Ángeles y alrededores."
-    },
-    {
-        "name": "FedEx Ground",
-        "country": "USA",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 7.90,
-        "currency": "USD",
-        "status": "active",
-        "service_zone": "Continental USA",
-        "contact_email": "business.solutions@fedex.com"
-    },
-    {
-        "name": "DHL Express USA",
-        "country": "USA",
-        "categories": ["carrier_last_mile", "carrier_international"],
-        "rate_per_shipment": 14.20,
-        "currency": "USD",
-        "status": "active",
-        "service_zone": "Continental USA + International",
-        "contact_email": "business.us@dhl.com",
-        "notes": "Usado para envíos urgentes y exportaciones a Europa."
-    },
-    {
-        "name": "OnTrac",
-        "country": "USA",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 6.10,
-        "currency": "USD",
-        "status": "active",
-        "service_zone": "West Coast",
-        "contact_email": "solutions@ontrac.com",
-        "notes": "Carrier regional. Mejor tarifa en la zona de Los Ángeles."
-    },
-    {
-        "name": "Laser Ship",
-        "country": "USA",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 5.80,
-        "currency": "USD",
-        "status": "suspended",
-        "service_zone": "East Coast",
-        "contact_email": "business@lasership.com",
-        "notes": "Suspendido. Tasa de incidencias superior al 8% en Q3."
-    },
-    {
-        "name": "PackSource LA",
-        "country": "USA",
-        "categories": ["packaging_materials"],
-        "rate_per_shipment": 0.42,
-        "currency": "USD",
-        "status": "active",
-        "contact_email": "orders@packsource.com",
-        "notes": "Cajas, relleno y precinto para el almacén de Los Ángeles."
-    },
-    {
-        "name": "CleanTeam West",
-        "country": "USA",
-        "categories": ["cleaning_and_facilities"],
-        "rate_per_shipment": 1800.0,
-        "currency": "USD",
-        "status": "active",
-        "contact_email": "accounts@cleanteamwest.com",
-        "notes": "Tarifa mensual por servicio de limpieza del almacén de LA."
-    },
-    {
-        "name": "MRW España",
-        "country": "Spain",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 4.90,
-        "currency": "EUR",
-        "status": "active",
-        "service_zone": "Península Ibérica",
-        "contact_email": "clientes.empresa@mrw.es",
-        "notes": "Carrier principal para entregas en España. Contrato negociado por volumen."
-    },
-    {
-        "name": "SEUR",
-        "country": "Spain",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 5.20,
-        "currency": "EUR",
-        "status": "active",
-        "service_zone": "Península Ibérica + Baleares",
-        "contact_email": "grandes.cuentas@seur.com"
-    },
-    {
-        "name": "DHL Express España",
-        "country": "Spain",
-        "categories": ["carrier_last_mile", "carrier_international"],
-        "rate_per_shipment": 12.80,
-        "currency": "EUR",
-        "status": "active",
-        "service_zone": "España + Internacional",
-        "contact_email": "business.es@dhl.com",
-        "notes": "Envíos urgentes y exportaciones desde Zaragoza."
-    },
-    {
-        "name": "Nacex",
-        "country": "Spain",
-        "categories": ["carrier_last_mile"],
-        "rate_per_shipment": 4.60,
-        "currency": "EUR",
-        "status": "active",
-        "service_zone": "Aragón y zona norte",
-        "contact_email": "empresas@nacex.es",
-        "notes": "Carrier regional con buena cobertura en Aragón."
-    },
-    {
-        "name": "Logística Inversa Iberia",
-        "country": "Spain",
-        "categories": ["reverse_logistics"],
-        "rate_per_shipment": 6.30,
-        "currency": "EUR",
-        "status": "active",
-        "contact_email": "operaciones@liiberia.es",
-        "notes": "Gestión de devoluciones para el almacén de Zaragoza."
-    },
-    {
-        "name": "Embalajes Zaragoza S.L.",
-        "country": "Spain",
-        "categories": ["packaging_materials"],
-        "rate_per_shipment": 0.28,
-        "currency": "EUR",
-        "status": "active",
-        "contact_email": "pedidos@embalajeszgz.es"
-    },
-    {
-        "name": "SAP WM Cloud",
-        "country": "USA",
-        "categories": ["it_and_wms_software"],
-        "rate_per_shipment": 2200.0,
-        "currency": "USD",
-        "status": "suspended",
-        "contact_email": "enterprise@sap.com",
-        "notes": "Suspendido. Andrés está evaluando alternativas más ligeras para el almacén de LA."
-    },
-    {
-        "name": "ReturnBear",
-        "country": "USA",
-        "categories": ["reverse_logistics"],
-        "rate_per_shipment": 4.15,
-        "currency": "USD",
-        "status": "active",
-        "service_zone": "West Coast",
-        "contact_email": "partnerships@returnbear.com",
-        "notes": "Gestión de devoluciones para clientes de Los Ángeles."
-    }
-]
-```
+**Thomas Harry (CEO)** quiere saber en tiempo real cuántas incidencias críticas hay abiertas en Los Ángeles vs. Zaragoza, y si alguna lleva más de 24 horas sin resolverse.
+
+**Carlos Vega (Head of Carrier Operations)** y **Ana Whitfield (Head of Warehouse Operations)** son los principales usuarios del formulario: ellos y sus equipos reportarán incidencias operativas desde almacén o desde coordinación de carriers.
+
+**Valentina Cruz (CX Manager)** registrará las quejas de clientes finales y empresas que lleguen por canales externos.
 
 ---
 
-## Restricciones de negocio
+## Almacenes y oficinas de TrackFlow
 
-- **Moneda por país:** Un proveedor de `"USA"` debe tener `currency = "USD"`. Un proveedor de `"Spain"` debe tener `currency = "EUR"`. La API rechaza combinaciones inconsistentes.
-- **Trazabilidad de tarifas:** Cada actualización de `rate_per_shipment` debe registrar `updated_at` automáticamente. Carlos usa este histórico para revisar la evolución de costes por carrier.
-- **Suspensión por incidencias:** El flujo habitual en TrackFlow es suspender proveedores con alta tasa de incidencias, no eliminarlos. El historial de suspensiones es información operativa relevante.
-- **Carriers con doble categoría:** Es válido que un carrier opere tanto en última milla como en internacional (como DHL). El campo `categories` admite múltiples valores simultáneamente.
+El campo `branch` debe contener exactamente uno de estos valores:
 
----
+| Valor en base de datos | Nombre para mostrar   |
+| ---------------------- | --------------------- |
+| `central`              | Central               |
+| `la_warehouse`         | Los Ángeles — Almacén |
+| `la_office`            | Los Ángeles — Oficina |
+| `zaragoza_warehouse`   | Zaragoza — Almacén    |
+| `zaragoza_office`      | Zaragoza — Oficina    |
 
-## Lo que verá Carlos en el frontend
-
-La página del directorio debe permitirle a Carlos:
-
-1. Ver todos los proveedores con sus categorías, tarifa y estado de un vistazo.
-2. Filtrar por país (USA / Spain) para gestionar cada mercado por separado.
-3. Filtrar por categoría para responder preguntas como "¿qué carriers activos tenemos en España?".
-4. Registrar un proveedor nuevo desde un formulario.
-5. Actualizar la tarifa por envío de un proveedor y ver el cambio reflejado de inmediato.
-6. Suspender o reactivar un proveedor con un control visible en la fila.
+Cuando el origen sea `internal` o `customer` y no corresponda a una instalación específica, se usará `central`.
 
 ---
 
-_Documento interno — 4Geeks Academy · AI Engineering Track_
+## Categorías de incidencias
+
+El campo `category` debe contener exactamente uno de estos valores:
+
+| Valor                   | Descripción                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `lost_parcel`           | Paquete extraviado en tránsito o en almacén                                            |
+| `delivery_failure`      | Fallo de entrega: intento fallido, dirección incorrecta, cliente ausente no gestionado |
+| `inventory_discrepancy` | Diferencia entre stock registrado y stock físico                                       |
+| `carrier_issue`         | Problema imputable a un carrier: retraso, daño, incumplimiento de SLA                  |
+| `returns_issue`         | Problema en el proceso de devolución o logística inversa                               |
+| `warehouse_incident`    | Incidente en almacén: daño de mercancía, accidente, fallo de equipamiento              |
+| `system_failure`        | Fallo en sistema tecnológico: WMS, integraciones, API de carrier                       |
+| `client_complaint`      | Queja de una empresa cliente sobre el servicio prestado por TrackFlow                  |
+| `other`                 | Cualquier incidencia que no encaje en las categorías anteriores                        |
+
+---
+
+## Estados y ciclo de vida
+
+| Valor         | Significado en TrackFlow                                          |
+| ------------- | ----------------------------------------------------------------- |
+| `open`        | Incidencia registrada, pendiente de asignar al equipo responsable |
+| `in_progress` | Coordinador o responsable de área está gestionándola activamente  |
+| `resolved`    | Resuelta: paquete entregado, stock corregido, cliente informado   |
+| `discarded`   | Registrada por error, duplicada o no accionable                   |
+
+Transiciones válidas: `open → in_progress`, `open → discarded`, `in_progress → resolved`, `in_progress → discarded`. Los estados `resolved` y `discarded` son finales.
+
+---
+
+## Orígenes
+
+| Valor      | Cuándo usarlo en TrackFlow                                           |
+| ---------- | -------------------------------------------------------------------- |
+| `customer` | Reportada por una empresa cliente o un consumidor final              |
+| `branch`   | Detectada y reportada por personal de almacén u oficina de TrackFlow |
+| `internal` | Detectada internamente por tecnología, dirección u operaciones       |
+
+---
+
+## Datos históricos — seed desde CSV
+
+El fichero CSV del proyecto **incidents-file-analyzer** (`incidents-trackflow.csv` en `content/contexts/incidents-file-analysis/`) contiene incidencias exportadas del sistema de atención al cliente de TrackFlow. Todas corresponden a incidencias comunicadas por clientes o consumidores finales (`origin: "customer"`).
+
+El esquema del CSV del analizador usa nombres de campo, estados y categorías distintos a los de este gestor. **No insertes filas del CSV directamente.** Reutiliza la lógica de validación compartida del analizador y aplica las transformaciones siguientes antes del insert.
+
+**Campo identificador para idempotencia:** usa `incident_id` del CSV. Si no existe, usa la combinación `title + created_at`.
+
+### Mapeo directo de campos
+
+| Campo CSV     | Campo del modelo | Transformación                                                                 |
+| ------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `incident_id` | —                | Solo control de duplicados — no se almacena                                    |
+| `description` | `title`          | Primeros 120 caracteres de `description`, recortados. Descartar si queda vacío |
+| `description` | `description`    | Copiar literalmente                                                            |
+| `date`        | `created_at`     | Parsear `YYYY-MM-DD` como medianoche UTC. `updated_at` igual al insertar       |
+| —             | `origin`         | Siempre `"customer"` en todos los registros del seed                           |
+
+### Mapeo de estados
+
+| CSV `status` | Modelo `status` |
+| ------------ | --------------- |
+| `OPEN`       | `open`          |
+| `CLOSED`     | `resolved`      |
+| `DISCARDED`  | `discarded`     |
+
+### Mapeo de categorías (TrackFlow)
+
+| CSV `category`     | Modelo `category`  |
+| ------------------ | ------------------ |
+| `LOST_PARCEL`      | `lost_parcel`      |
+| `DELAYED_DELIVERY` | `carrier_issue`    |
+| `WRONG_ADDRESS`    | `delivery_failure` |
+| `RETURN_REQUEST`   | `returns_issue`    |
+| `DAMAGE`           | `carrier_issue`    |
+
+### Mapeo de sede (TrackFlow)
+
+Mapea `country` del CSV a `branch` del modelo:
+
+| CSV `country` | Modelo `branch`   |
+| ------------- | ----------------- |
+| `US`          | `la_office`       |
+| `ES`          | `zaragoza_office` |
+
+Los registros que fallen la validación o no se puedan mapear se descartan y se reportan en consola.
+
+---
+
+## Valores esperados tras el seed
+
+Tras cargar el CSV, `/api/incidents/summary` debe devolver totales por `status` y `category` del **modelo** que coincidan con los siguientes conteos transformados. Corresponden a los **95 registros válidos** de `incidents-trackflow.csv` del proyecto analizador (excluidas filas inválidas).
+
+**Por `status` del modelo:**
+
+| Modelo `status` | Conteo |
+| --------------- | ------ |
+| `open`          | 29     |
+| `resolved`      | 52     |
+| `discarded`     | 14     |
+
+**Por `category` del modelo:**
+
+| Modelo `category`  | Conteo |
+| ------------------ | ------ |
+| `lost_parcel`      | 14     |
+| `carrier_issue`    | 45     |
+| `delivery_failure` | 19     |
+| `returns_issue`    | 17     |
+
+Contrasta con la salida del script analizador: el CSV crudo usa `OPEN`/`CLOSED`/`DISCARDED` y códigos como `LOST_PARCEL`/`DELAYED_DELIVERY`. Los totales anteriores son los valores **post-transformación** que debe producir tu gestor.
+
+---
+
+## Notas de implementación
+
+- TrackFlow opera en dos idiomas: inglés en Los Ángeles y español en Zaragoza. Si has implementado soporte bilingüe en hitos anteriores, el formulario y los mensajes de error deben respetarlo. Las etiquetas del desplegable de sedes deben mostrarse en el idioma del usuario.
+- Las incidencias de tipo `lost_parcel` y `carrier_issue` tienen impacto directo en el SLA con clientes: Thomas y Carlos necesitarán filtrarlas con facilidad. El modelo de datos debe facilitar ese filtro aunque la alerta automática no sea parte de este proyecto.
+- El formulario lo usarán operarios de almacén desde terminales en el suelo del almacén: diseña los campos con tamaño suficiente para uso táctil y evita campos de texto libre innecesarios.

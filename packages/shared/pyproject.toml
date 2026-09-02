@@ -1,0 +1,18 @@
+[project]
+name = "trackflow-shared"
+version = "0.1.0"
+description = "Shared domain logic for TrackFlow: historical incidents CSV validation and transformation"
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["incidents_shared"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
