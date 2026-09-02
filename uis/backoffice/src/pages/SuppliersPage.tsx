@@ -250,6 +250,9 @@ export default function SuppliersPage() {
         </div>
 
         <div className="header-actions">
+          <Link to="/incidents" className="secondary-button nav-link">
+            Incidents
+          </Link>
           <Link to="/account/profile" className="secondary-button nav-link">
             Profile
           </Link>

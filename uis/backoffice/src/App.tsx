@@ -6,6 +6,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
 import ProfilePage from './pages/ProfilePage'
 import SuppliersPage from './pages/SuppliersPage'
+import IncidentsListPage from './pages/IncidentsListPage'
+import IncidentFormPage from './pages/IncidentFormPage'
+import IncidentsSummaryPage from './pages/IncidentsSummaryPage'
 import ProtectedRoute from './pages/ProtectedRoute'
 
 export default function App() {
@@ -23,6 +26,30 @@ export default function App() {
         element={
           <ProtectedRoute>
             <SuppliersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/incidents"
+        element={
+          <ProtectedRoute>
+            <IncidentsListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/incidents/new"
+        element={
+          <ProtectedRoute>
+            <IncidentFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/incidents/summary"
+        element={
+          <ProtectedRoute>
+            <IncidentsSummaryPage />
           </ProtectedRoute>
         }
       />

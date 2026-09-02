@@ -9,6 +9,7 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "resend>=2.42.0",
     "tinydb>=4.9.0",
+    "trackflow-shared",
 ]
 
 [project.scripts]
@@ -19,10 +20,13 @@ requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["main", "models", "database", "security", "seed", "email_service"]
+py-modules = ["main", "models", "database", "security", "seed", "email_service", "error_handlers"]
 packages = ["routers"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.uv.sources]
+trackflow-shared = { path = "../../packages/shared", editable = true }
