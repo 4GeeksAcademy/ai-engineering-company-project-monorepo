@@ -75,6 +75,8 @@ The course guidance requires the repo to become a structured monorepo where:
 - `.agents/` now contains repo-specific rule coverage, starting with memory-bank maintenance.
 - The repo already contains one implemented UI in `uis/talent-pipeline-tracker`, but it is a hiring-pipeline application for executive assistant recruitment rather than a logistics-facing TrackFlow product.
 - The repo also contains standalone static assets under `src/`, including TrackFlow-branded HTML and validation logic, which appear to be separate from the Next.js app structure.
+- The repo now has TrackFlow-specific UI scaffolding under `uis/website` and `uis/backoffice`, each seeded as a valid Next.js app for public and internal product surfaces.
+- Repository hygiene is now explicitly enforced: generated Next.js directories such as `node_modules/` and `.next/` are ignored in the root `.gitignore` so large dependency outputs do not get pushed to GitHub and trigger the GH001 rejection path.
 
 ## Scope boundaries for upcoming work
 

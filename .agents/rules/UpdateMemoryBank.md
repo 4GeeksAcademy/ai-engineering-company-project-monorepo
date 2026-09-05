@@ -18,6 +18,8 @@ After making a change, the agent must decide whether any of these files now need
 
 If one or more files are now stale, update them in the same task before claiming completion.
 
+This rule is not optional. The repository enforces it through the `scripts/check_memory_bank.py` guard and the Git pre-commit hook in `.githooks/pre-commit`. A commit that changes the repo without a matching memory-bank update is rejected.
+
 ## How to choose the file
 
 Update `memory-bank/progress.md` when the change affects:

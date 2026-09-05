@@ -16,9 +16,16 @@ This project is still in the infrastructure stage described by the challenge: es
 - `.trackflow-dummy-order.txt` now exists at the repo root as the hidden simulation output file for dummy order runs.
 - `.agents/skills/dummy-return-simulation/SKILL.md` now exists as a second reusable repo skill for reverse-logistics simulations.
 - `.trackflow-dummy-return.txt` now exists at the repo root as the hidden simulation output file for dummy return runs.
+- `uis/website` and `uis/backoffice` are now present as TrackFlow-specific Next.js app scaffolds for the public site and internal operations view.
+- The root `.gitignore` now ignores `node_modules/`, `.next/`, `out/`, and `.DS_Store` so generated dependency and build artifacts are not accidentally committed again.
 - The memory bank now records both sides of the project state:
 	- the intended TrackFlow logistics platform direction
 	- the actual codebase baseline currently present in the repository
+	- the GitHub large-file issue encountered and resolved during repo publishing
+
+## Repository operations note
+
+The first attempt to push the `feature/agent-memory-bank` branch failed because local dependency and build output files were included in the commit. GitHub rejected the push with a `GH001` large-file error because some generated files in `node_modules` and `.next` exceeded the repository limit. The fix was to remove those files from Git tracking, ignore them, and push a cleaned-up commit. This is now a documented repo hygiene practice rather than a one-time recovery step.
 
 ## Existing implementation discovered during this update
 

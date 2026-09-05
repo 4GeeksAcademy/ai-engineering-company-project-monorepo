@@ -39,8 +39,7 @@ Agents must follow this workflow for every task in this repository, in this exac
 - `Evaluate Dev prompt`: verify the request against `CONTEXT.md`, the memory bank, and current repo structure before editing.
 - `get approval for modifying the various files`: identify the files likely to be changed and confirm that scope with the developer or user before editing protected or high-impact areas.
 - `Execute changes as needed`: keep edits minimal, scoped, and consistent with the existing repo structure.
-- `Audit changes in comparison for the prompt`: verify that the finished changes satisfy the request, do not drift into unrelated scope, stay aligned with TrackFlow's domain, and check whether `memory-bank/progress.md`, `memory-bank/projectbrief.md`, or `memory-bank/techContext.md` must be updated under `.agents/rules/UpdateMemoryBank.md`.
-- `Seek approval to save changes to the files`: before finalizing broad or cross-cutting edits, present what changed and confirm that the result is acceptable.
+- `Audit changes in comparison for the prompt`: verify that the finished changes satisfy the request, do not drift into unrelated scope, stay aligned with TrackFlow's domain, and check whether `memory-bank/progress.md`, `memory-bank/projectbrief.md`, or `memory-bank/techContext.md` must be updated under `.agents/rules/UpdateMemoryBank.md`.- `Audit changes in comparison to the prompt` is also a required memory-bank gate: if the task materially changes repo state, architecture, workflow, goals, or risk, the memory bank must be updated before the task is considered complete. This is enforced by the repo guard script and the Git pre-commit hook.- `Seek approval to save changes to the files`: before finalizing broad or cross-cutting edits, present what changed and confirm that the result is acceptable.
 
 ## Scope rules
 
@@ -89,8 +88,13 @@ Examples:
 - App-level `lint`, `typecheck`, or `build` commands for touched Next.js code
 - Targeted diagnostics for edited files
 - Focused behavioral verification for the changed surface
+- Running `python scripts/check_memory_bank.py --cached` before a commit, or relying on the Git pre-commit hook to enforce the same rule
 
 Validation must happen before claiming completion unless the environment makes validation impossible.
+
+### Memory-bank enforcement
+
+The repository enforces a mandatory memory-bank review gate. If a change materially alters repo state, architecture, goals, or workflow, the relevant memory-bank file(s) must also change in the same task. The commit is rejected unless the guard passes.
 
 ## Current repository reality
 

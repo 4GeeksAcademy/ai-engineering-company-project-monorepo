@@ -108,3 +108,16 @@ Implication:
 - `.agents/skills/dummy-order-simulation/SKILL.md` defines a TrackFlow order simulation workflow and writes its output to the hidden root file `.trackflow-dummy-order.txt`.
 - `.agents/skills/dummy-return-simulation/SKILL.md` defines a TrackFlow reverse-logistics simulation workflow and writes its output to the hidden root file `.trackflow-dummy-return.txt`.
 - Documentation and structure are still ahead of implementation, which makes accurate project memory especially important right now.
+
+## Git and repository hygiene lessons learned
+
+A real repository-level issue surfaced during the main UI setup: the first push of the `feature/agent-memory-bank` branch was rejected by GitHub because generated Next.js output and dependency files were accidentally included in the commit. This produced the GitHub `GH001` large-file rejection and a failed remote push.
+
+The root cause was straightforward: local installs created large `node_modules/` and `.next/` folders, and those generated artifacts were accidentally staged. The immediate fix was to remove them from Git tracking and ignore them at the repository root with the following rules:
+
+- `**/node_modules/`
+- `.next/`
+- `out/`
+- `.DS_Store`
+
+This is now part of the repo's operational baseline. In future work, generated artifacts must stay untracked while only source files, config, and documentation are committed.
