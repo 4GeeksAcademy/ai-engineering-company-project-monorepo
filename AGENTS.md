@@ -39,7 +39,7 @@ Agents must follow this workflow for every task in this repository, in this exac
 - `Evaluate Dev prompt`: verify the request against `CONTEXT.md`, the memory bank, and current repo structure before editing.
 - `get approval for modifying the various files`: identify the files likely to be changed and confirm that scope with the developer or user before editing protected or high-impact areas.
 - `Execute changes as needed`: keep edits minimal, scoped, and consistent with the existing repo structure.
-- `Audit changes in comparison for the prompt`: verify that the finished changes satisfy the request, do not drift into unrelated scope, and stay aligned with TrackFlow's domain.
+- `Audit changes in comparison for the prompt`: verify that the finished changes satisfy the request, do not drift into unrelated scope, stay aligned with TrackFlow's domain, and check whether `memory-bank/progress.md`, `memory-bank/projectbrief.md`, or `memory-bank/techContext.md` must be updated under `.agents/rules/UpdateMemoryBank.md`.
 - `Seek approval to save changes to the files`: before finalizing broad or cross-cutting edits, present what changed and confirm that the result is acceptable.
 
 ## Scope rules

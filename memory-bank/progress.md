@@ -10,6 +10,8 @@ This project is still in the infrastructure stage described by the challenge: es
 
 - `CONTEXT.md` is populated with TrackFlow's business briefing and operational pain points.
 - The three required memory-bank files are now filled with company-specific and repo-specific context.
+- `.agents/rules/UpdateMemoryBank.md` now exists as the first repo-specific agent rule.
+- `AGENTS.md` now explicitly ties memory-bank freshness checks to the `Audit changes in comparison for the prompt` workflow step.
 - The memory bank now records both sides of the project state:
 	- the intended TrackFlow logistics platform direction
 	- the actual codebase baseline currently present in the repository
@@ -20,7 +22,7 @@ This project is still in the infrastructure stage described by the challenge: es
 - That app implements candidate pipeline functionality against an external API and is not yet aligned with TrackFlow's logistics use cases.
 - Standalone TrackFlow-branded HTML/JS assets exist under `src/`.
 - `packages/shared` exists but still contains placeholder shared types.
-- `.agents/` exists but is empty.
+- `.agents/` now contains a rule requiring agents to keep the memory bank up to date after meaningful repository changes.
 
 ## Important repo-state note
 
@@ -37,15 +39,17 @@ This is not a blocker, but it is a risk for future agent sessions. Without expli
 - The project's source of truth is TrackFlow logistics, not the talent pipeline example app.
 - Future applications should follow the documented monorepo conventions, especially `uis/website` and `uis/backoffice`.
 - `memory-bank/` must be maintained as active operational context, not static documentation.
-- `AGENTS.md` and `.agents/` are the next infrastructure step before heavier feature work.
+- Memory-bank maintenance is now formalized as a repo rule inside `.agents/rules/UpdateMemoryBank.md`.
+- The AGENTS workflow keeps the required five steps, but the audit step now explicitly includes checking whether the memory bank is stale.
+- `AGENTS.md` is established, and the next infrastructure step is to expand `.agents/` with more rules and at least one reusable skill.
 
 ## What remains to do next
 
-1. Create `AGENTS.md` at the repo root with startup reading order, workflow rules, commit-preparation steps, and guardrails.
-2. Add `.agents/rules` content for repo-specific conventions and protected areas.
-3. Add at least one `.agents/skills/<skill>/SKILL.md` entry with explicit inputs and acceptance criteria.
-4. Align the UI structure with the challenge expectations by introducing or planning `uis/website` and `uis/backoffice`.
-5. Decide whether `uis/talent-pipeline-tracker` will be repurposed, archived, or left as a separate reference implementation.
+1. Add more `.agents/rules` content for repo-specific conventions beyond memory maintenance and protected areas.
+2. Add at least one `.agents/skills/<skill>/SKILL.md` entry with explicit inputs and acceptance criteria.
+3. Align the UI structure with the challenge expectations by introducing or planning `uis/website` and `uis/backoffice`.
+4. Decide whether `uis/talent-pipeline-tracker` will be repurposed, archived, or left as a separate reference implementation.
+5. Start implementing a TrackFlow-relevant interface surface so the repo has visible company-specific product output under the intended structure.
 
 ## Risks and watchouts
 

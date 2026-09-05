@@ -63,9 +63,9 @@ Implication:
 
 ## Gaps relative to the challenge requirements
 
-- `AGENTS.md` is missing.
-- `.agents/` is empty.
-- No repo-specific rule files or reusable skills are defined yet.
+- `AGENTS.md` now exists, but its promised `.agents` coverage is still only partially implemented.
+- `.agents/` now contains a `rules/UpdateMemoryBank.md` rule, but reusable skills are still not defined yet.
+- Repo-specific rule coverage has started, but the `.agents/skills/` area is still empty.
 - The implemented UI path does not yet match the recommended `uis/website` and `uis/backoffice` structure.
 - There is no `services/` directory in the current root structure, even though the challenge guidance expects backend services to live there when created.
 - There is no root workspace package manager configuration or visible monorepo task runner configuration yet.
@@ -76,7 +76,7 @@ Implication:
 - Changes should remain compatible with Windows-based local development.
 - Since there is already working Next.js code in the repo, reusing its conventions is lower risk than inventing a second frontend stack unless a milestone explicitly requires otherwise.
 - Because the existing implemented app is off-domain, future work must consciously rename, repurpose, or isolate it so agents do not infer the wrong business model.
-- Memory-bank files must act as the first source of truth for future agent sessions until `AGENTS.md` and `.agents` rules are created.
+- Memory-bank files and `AGENTS.md` now provide the first layer of source-of-truth context, but `.agents/skills/` and broader rule coverage still need to be built out.
 
 ## Recommended near-term architecture direction
 
@@ -104,4 +104,5 @@ Implication:
 
 - The Next.js app already advertises `lint`, `typecheck`, and `build` as baseline validation commands.
 - There is no evidence yet of central telemetry, automated testing infrastructure at the repo root, or cross-app orchestration.
+- `.agents/rules/UpdateMemoryBank.md` now formalizes that meaningful repo changes must be reflected in `memory-bank/progress.md`, `memory-bank/projectbrief.md`, or `memory-bank/techContext.md` as appropriate.
 - Documentation and structure are still ahead of implementation, which makes accurate project memory especially important right now.

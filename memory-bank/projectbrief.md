@@ -71,8 +71,8 @@ The course guidance requires the repo to become a structured monorepo where:
 
 - The TrackFlow business context is present in `CONTEXT.md`.
 - `memory-bank/` exists but was empty before this update.
-- `AGENTS.md` does not exist yet.
-- `.agents/` exists but is currently empty.
+- `AGENTS.md` now exists as the repo-level operating contract for agents.
+- `.agents/` now contains repo-specific rule coverage, starting with memory-bank maintenance.
 - The repo already contains one implemented UI in `uis/talent-pipeline-tracker`, but it is a hiring-pipeline application for executive assistant recruitment rather than a logistics-facing TrackFlow product.
 - The repo also contains standalone static assets under `src/`, including TrackFlow-branded HTML and validation logic, which appear to be separate from the Next.js app structure.
 
@@ -86,4 +86,4 @@ The course guidance requires the repo to become a structured monorepo where:
 
 - The repo has persistent business and technical context tailored to TrackFlow.
 - Future agent work can read the memory bank and understand both the target business and the current implementation baseline.
-- The next infrastructure steps are explicit: create `AGENTS.md`, define `.agents` rules and at least one skill, and align UI/application structure with the monorepo conventions.
+- The next infrastructure steps are explicit: expand `.agents` rules, add at least one reusable skill, and align UI/application structure with the monorepo conventions.
