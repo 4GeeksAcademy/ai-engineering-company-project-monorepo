@@ -1,0 +1,49 @@
+TRACKFLOW DUMMY ORDER
+
+Input Summary
+- Order ID: TF-ORDER-001
+- Client: Northstar Outfitters
+- Destination: Madrid, Spain
+- Urgency: Express
+- Total Weight: 4.2 kg
+- Customer Type: B2C
+- Items:
+	- SKU TF-SNK-1001 | 2 units | Running shoes
+	- SKU TF-SOC-2204 | 1 unit | Performance socks pack
+
+Assumptions
+- Order is being simulated for a future improved TrackFlow flow, not a live system.
+- The order arrived through a future automated client intake pipeline rather than the current manual email-heavy process.
+- Stock is available in Zaragoza for all listed SKUs.
+- No holiday, customs, or weather disruption affects the route.
+
+Warehouse Assignment
+- Assigned warehouse: Zaragoza
+- Reason: The destination is in Spain and stock is assumed to be available locally, which avoids unnecessary cross-border handling.
+
+Carrier Decision
+- Selected carrier: SEUR
+- Reason: The shipment is a moderate-weight domestic express order in Spain, so SEUR is the best fit under the skill's express heuristic.
+
+Operational Steps
+1. Order received from TrackFlow client intake.
+2. Destination, item list, and parcel weight validated.
+3. Zaragoza warehouse assigned based on destination and assumed stock availability.
+4. Picking scheduled in the next warehouse wave.
+5. Items picked from inventory and checked for completeness.
+6. Parcel packed for final-mile shipment.
+7. SEUR selected as the domestic express carrier.
+8. Shipping label created and attached.
+9. Shipment dispatched from Zaragoza.
+10. Tracking shared with customer experience and the brand client.
+11. Expected delivery window calculated.
+
+Tracking and Delivery
+- Dummy tracking ID: TF-SEUR-0001
+- Expected delivery window: 1 to 2 business days
+- CX note: Customer can be told the parcel has left the Zaragoza warehouse and is moving through a domestic express route in Spain.
+
+Risks or Exceptions
+- ETA depends on stock actually being available in Zaragoza at the time of fulfillment.
+- No live carrier API, label service, or inventory confirmation was used.
+- If the order misses the current picking wave, the delivery window may shift by one business day.

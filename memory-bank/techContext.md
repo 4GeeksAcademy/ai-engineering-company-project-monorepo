@@ -64,8 +64,8 @@ Implication:
 ## Gaps relative to the challenge requirements
 
 - `AGENTS.md` now exists, but its promised `.agents` coverage is still only partially implemented.
-- `.agents/` now contains a `rules/UpdateMemoryBank.md` rule, but reusable skills are still not defined yet.
-- Repo-specific rule coverage has started, but the `.agents/skills/` area is still empty.
+- `.agents/` now contains a `rules/UpdateMemoryBank.md` rule plus reusable skills at `.agents/skills/dummy-order-simulation/SKILL.md` and `.agents/skills/dummy-return-simulation/SKILL.md`.
+- Repo-specific skill coverage has started, but the `.agents/skills/` area still needs additional capabilities beyond dummy order and reverse-logistics simulations.
 - The implemented UI path does not yet match the recommended `uis/website` and `uis/backoffice` structure.
 - There is no `services/` directory in the current root structure, even though the challenge guidance expects backend services to live there when created.
 - There is no root workspace package manager configuration or visible monorepo task runner configuration yet.
@@ -105,4 +105,6 @@ Implication:
 - The Next.js app already advertises `lint`, `typecheck`, and `build` as baseline validation commands.
 - There is no evidence yet of central telemetry, automated testing infrastructure at the repo root, or cross-app orchestration.
 - `.agents/rules/UpdateMemoryBank.md` now formalizes that meaningful repo changes must be reflected in `memory-bank/progress.md`, `memory-bank/projectbrief.md`, or `memory-bank/techContext.md` as appropriate.
+- `.agents/skills/dummy-order-simulation/SKILL.md` defines a TrackFlow order simulation workflow and writes its output to the hidden root file `.trackflow-dummy-order.txt`.
+- `.agents/skills/dummy-return-simulation/SKILL.md` defines a TrackFlow reverse-logistics simulation workflow and writes its output to the hidden root file `.trackflow-dummy-return.txt`.
 - Documentation and structure are still ahead of implementation, which makes accurate project memory especially important right now.

@@ -1,0 +1,15 @@
+TRACKFLOW DUMMY RETURN
+
+No return simulation has been generated yet.
+
+This hidden file is reserved for outputs produced by the `.agents/skills/dummy-return-simulation/SKILL.md` workflow.
+
+Expected sections:
+- Input Summary
+- Assumptions
+- Approval Decision
+- Warehouse Assignment
+- Operational Steps
+- Inspection and Disposition
+- Tracking and CX Notes
+- Risks or Exceptions
