@@ -1,0 +1,95 @@
+:root {
+  --flow-blue: #2563eb;
+  --ink: #0f172a;
+  --paper: #f8fbff;
+  --line: #cddbf6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(160deg, #eef4ff 0%, #ffffff 50%, #eef9ff 100%);
+}
+
+.site {
+  margin: 0 auto;
+  max-width: 1080px;
+  padding: 2rem 1rem 3rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.hero {
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.eyebrow {
+  color: var(--flow-blue);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 0;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  border: 1px solid #dbe7fb;
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: #f9fcff;
+}
+
+.meta {
+  color: var(--flow-blue);
+  font-weight: 600;
+}
+
+ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+li + li {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 800px) {
+  .grid.three,
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+}
