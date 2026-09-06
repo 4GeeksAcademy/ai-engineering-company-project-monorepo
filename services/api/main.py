@@ -21,6 +21,7 @@ from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
+from routes.pipeline import router as pipeline_router
 
 
 
@@ -112,6 +113,10 @@ app.include_router(incidents_router)
 # POST /telemetry/events — Stub endpoint para recepción de eventos
 app.include_router(telemetry_router)
 
+# Registrar router del pipeline ETL (Pipeline Dashboard)
+# GET /pipeline/runs, /pipeline/latest-runs, /pipeline/kpis, /pipeline/stats
+app.include_router(pipeline_router)
+
 
 _last_analysis: dict | None = None
 
@@ -127,6 +132,10 @@ def root() -> dict:
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_export": "/api/incidents/results/export",
             "telemetry_events": "/telemetry/events",
+            "pipeline_runs": "/pipeline/runs",
+            "pipeline_latest_runs": "/pipeline/latest-runs",
+            "pipeline_kpis": "/pipeline/kpis",
+            "pipeline_stats": "/pipeline/stats",
         },
     }
 

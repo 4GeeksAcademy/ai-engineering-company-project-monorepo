@@ -239,87 +239,157 @@ Sí, tiene sentido si los operadores de almacén pierden conectividad (ej. zonas
 
 ---
 
-## Fase 4 — Mapeo a Prefect
+## Fase 4 — Mapeo a Prefect (Implementacion Real)
 
-### 4.1 Flow principal: `weekly_warehouse_client_performance`
+La implementacion actual (Parte 3) usa **4 subflows** (`@flow`) en lugar de 4 tasks directas, permitiendo que cada subflow sea ejecutable de forma independiente y que el flujo principal tolere fallos parciales.
 
-```python
-from prefect import flow, task
-from prefect.states import Running, Completed, Failed
+### 4.1 Arquitectura de subflows
 
-@task(name="extract_telemetry_events", retries=2)
-def extract_telemetry_events(week_start: str) -> list[dict]:
-    """
-    Lee telemetry_events filtrando por event_type y semana ISO.
-    Retorna lista de eventos crudos con tags jsonb (warehouse, client_id, product_id, quantity).
-    Estado: Running → Completed (o Failed tras 2 reintentos).
-    """
-    ...
-
-@task(name="transform_to_warehouse_client_grain")
-def transform_to_warehouse_client_grain(events: list[dict]) -> list[dict]:
-    """
-    Agrupa por warehouse + client_id + week_start.
-    Calcula los 5 campos agregados y la tasa de discrepancia.
-    Estado: Running → Completed (o Failed si datos inconsistentes).
-    """
-    ...
-
-@task(name="load_weekly_performance", retries=1)
-def load_weekly_performance(rows: list[dict]) -> int:
-    """
-    UPSERT en reporting.weekly_warehouse_client_performance.
-    Retorna número de filas insertadas/actualizadas.
-    Estado: Running → Completed (o Failed si la BD rechaza la transacción).
-    """
-    ...
-
-@flow(name="weekly_warehouse_client_performance")
-def weekly_warehouse_client_performance(week_start: str | None = None):
-    """
-    Flow principal: extrae → transforma → carga.
-    Si week_start es None, calcula la última semana ISO completa.
-    """
-    target_week = week_start or last_complete_iso_week()
-    events = extract_telemetry_events(target_week)
-    rows = transform_to_warehouse_client_grain(events)
-    count = load_weekly_performance(rows)
-    return {"week_start": target_week, "rows_upserted": count}
+```
+run_pipeline()  @flow (orquestador)
+  +-- subflow_extract_telemetry()  -> task extract()     [retries=2]
+  +-- subflow_transform_kpis()     -> task transform()    [cache_key_fn=task_input_hash]
+  +-- subflow_load_reporting()     -> task load()         [retries=1, UPSERT]
+  +-- subflow_notify()             -> task notify()       [return_state=True, opcional]
 ```
 
-**Estados de Prefect mapeados:**
+Cada subflow envuelve una unica task Prefect. La separacion en subflows permite:
 
-| Estado | Cuándo ocurre |
+- **Resiliencia**: Si load falla, extract y transform ya completaron
+- **Observabilidad**: El dashboard de Prefect muestra 4 flows
+- **Independencia**: Cada subflow puede ejecutarse por separado
+- **Notificacion opcional**: subflow_notify usa return_state=True para fallos no bloqueantes
+
+### 4.2 Flow principal: run_pipeline
+
+```python
+@flow(name="weekly_warehouse_client_performance", log_prints=True)
+def run_pipeline(week_start: str | None = None) -> dict[str, Any]:
+    target_week = week_start or _default_week_start()
+    events = subflow_extract_telemetry(target_week)
+    kpi_rows = subflow_transform_kpis(events, target_week)
+    rows_upserted = subflow_load_reporting(kpi_rows)
+    notify_result = subflow_notify.with_options(return_state=True)(
+        rows_upserted, target_week
+    )
+    if notify_result and notify_result.is_failed():
+        logger.warning("Notification failed, pipeline continues")
+    return {
+        "status": "completed",
+        "week_start": target_week,
+        "rows_read": len(events),
+        "rows_upserted": rows_upserted,
+    }
+```
+
+### 4.3 Subflows detallados
+
+#### subflow_extract_telemetry
+
+```python
+@flow(name="subflow-extract-telemetry")
+def subflow_extract_telemetry(week_start: str) -> list[dict]:
+    return extract(week_start)
+
+
+@task(name="extract_telemetry_events", retries=2, retry_delay_seconds=10)
+def extract(week_start: str) -> list[dict]:
+    """Lee telemetry_events filtrando por event_type y semana ISO."""
+```
+
+#### subflow_transform_kpis
+
+```python
+@flow(name="subflow-transform-kpis")
+def subflow_transform_kpis(events: list[dict], week_start: str) -> list[dict]:
+    return transform(events, week_start)
+
+
+@task(
+    name="transform_to_warehouse_client_grain",
+    cache_key_fn=task_input_hash,
+    cache_expiration=timedelta(hours=1),
+)
+def transform(events: list[dict], week_start: str) -> list[dict]:
+    """Agrupa por warehouse + client_id + week_start. Calcula 5 KPIs."""
+```
+
+#### subflow_load_reporting
+
+```python
+@flow(name="subflow-load-reporting")
+def subflow_load_reporting(kpi_rows: list[dict]) -> int:
+    return load(kpi_rows)
+
+
+@task(name="load_weekly_performance", retries=1, retry_delay_seconds=5)
+def load(kpi_rows: list[dict]) -> int:
+    """UPSERT con ON CONFLICT (warehouse, client_id, week_start) DO UPDATE."""
+```
+
+#### subflow_notify
+
+```python
+@flow(name="subflow-notify")
+def subflow_notify(rows_upserted: int, week_start: str) -> None:
+    return notify(rows_upserted, week_start)
+
+
+@task(name="notify_team")
+def notify(rows_upserted: int, week_start: str) -> None:
+    """Simula fallo 30% de las veces. return_state=True evita detener el pipeline."""
+    if random.random() < 0.3:
+        raise RuntimeError("Simulated notification failure")
+```
+
+### 4.4 Estados de Prefect
+
+| Estado | Cuando ocurre |
 |--------|---------------|
-| `Running` | Cada task en ejecución |
-| `Completed` | Task finaliza sin error |
-| `Failed` | Task lanza excepción (tras agotar reintentos) |
-| `Pending` | Task espera dependencia |
-| `Retrying` | Task falló pero tiene reintentos disponibles |
+| Running | Task/subflow en ejecucion |
+| Completed | Finaliza sin error |
+| Failed | Excepcion tras agotar reintentos |
+| Pending | Espera dependencia |
+| Retrying | Fallo pero tiene reintentos |
+| Cached | Resultado servido desde cache (transform) |
 
-### 4.2 Flow de backfill (opcional): `backfill_weekly_performance`
+### 4.5 CLI preservada
 
-```python
-@flow(name="backfill_weekly_performance")
-def backfill_weekly_performance(from_week: str, to_week: str):
-    """
-    Recalcula un rango de semanas (semana a semana).
-    Útil para eventos tardíos o reprocesamiento histórico.
-    Cada semana ejecuta el flow principal como subflow.
-    """
-    ...
+```bash
+python data/pipelines/pipeline.py                         # Corrida completa
+python data/pipelines/pipeline.py --week-start 2026-09-07 # Semana especifica
+python data/pipelines/pipeline.py --db-path /custom/path  # DB personalizada
+python data/pipelines/pipeline.py --help                  # Ayuda completa
 ```
 
-### 4.3 Prefect Blocks
+### 4.6 Tests (40 tests, todos verdes)
 
-| Block | Propósito | Variables |
-|-------|-----------|-----------|
-| `SupabaseConnection` | Conexión a la base de datos Supabase/PostgreSQL | `host`, `port`, `database`, `user`, `password`, `sslmode` |
-| `SlackWebhook` (opcional) | Notificar fallos del pipeline al equipo | `webhook_url` |
-| `ISOWeekSchedule` (opcional) | Schedule semanal para el cron | `cron: "0 6 * * 1"` (lunes 06:00 UTC) |
+| Archivo | Tests | Cobertura |
+|---------|-------|-----------|
+| tests/test_database.py | 15 | Conexiones, tablas, seed data, indices, constraints |
+| tests/test_pipeline.py | 25 | Extract, Transform, Load, Notify, 4 subflows, integracion |
+| conftest.py | -- | Fixtures: sample_events, sample_kpi_record, temp_db_dir, week_start |
+
+Todos los tests usan PIPELINES_DB_DIR temporal (aislamiento total de BD reales). La semana se calcula dinamicamente.
+
+### 4.7 Dashboard en Backoffice
+
+| Componente | Ruta | Proposito |
+|-----------|------|-----------|
+| app/pipeline/page.tsx | /pipeline | Pagina del dashboard ETL |
+| components/PipelineStatusPanel.tsx | -- | Panel con stats, historico y KPIs |
+| lib/pipeline-actions.ts | -- | Cliente API para endpoints del pipeline |
+
+### 4.8 API Endpoints del Pipeline
+
+| Endpoint | Metodo | Proposito |
+|----------|--------|-----------|
+| /pipeline/stats | GET | Estadisticas resumidas (total runs, tasa exito, filas) |
+| /pipeline/latest-runs?limit=N | GET | Ultimas N ejecuciones |
+| /pipeline/kpis?week_start= | GET | KPIs semanales (opcional filtro por semana) |
+| /pipeline/runs | GET | Historial completo de ejecuciones |
 
 ---
-
 ## Fase 5 — Integración con la aplicación (endpoints planeados)
 
 Los siguientes endpoints vivirán en el nuevo módulo `services/reporting/` (separado de `services/telemetry/`). Ninguno contiene lógica ETL; cada uno importa funciones desde `data/pipelines/`.
@@ -418,3 +488,66 @@ services/telemetry/           ← NO MODIFICAR
 - **Protección de zonas:** No se modifican `.github/`, `package.json`, `tsconfig.json`, `DESIGN.md`, `memory-bank/` (excepto progress.md), `uis/`
 - **Separación ETL:** Toda la lógica de pipeline vive en `data/pipelines/`; `services/reporting/` solo importa y expone
 - **Estructura de `data/`:** `pipelines/` orquestación, `process/` transformaciones reutilizables, `raw/` datos crudos, `eval/` evaluaciones
+---
+
+## Fase 6 — Comandos de Ejecución
+
+### 6.1 Seed (generar datos de prueba)
+
+```bash
+# Desde la raíz del monorepo:
+cd /home/jonathan/Documentos/Proyectos/monorepo/jesteban1983-ai-engineering-company-project-monorepo
+
+# Activar el entorno virtual y generar datos de ejemplo (~280 eventos)
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/seed_pipeline.py
+```
+
+### 6.2 Ejecutar pipeline ETL
+
+```bash
+# Pipeline completo: Extract → Transform → Load → Notify
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/pipeline.py
+
+# Especificar semana (por defecto: lunes de esta semana)
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/pipeline.py --week-start 2026-09-07
+```
+
+### 6.3 Verificar resultados
+
+```bash
+# Revisar KPIs cargados en reporting.db
+.venv/bin/python3 -c "
+import sqlite3
+conn = sqlite3.connect('data/pipelines/reporting.db')
+rows = conn.execute('SELECT * FROM reporting_weekly_warehouse_client_performance').fetchall()
+print(f'📊 KPIs: {len(rows)} registros')
+runs = conn.execute('SELECT * FROM reporting_pipeline_runs').fetchall()
+print(f'📋 Runs: {len(runs)} registros')
+conn.close()
+"
+```
+
+### 6.4 Servicio reporting (FastAPI)
+
+```bash
+PYTHONPATH="${PWD}" .venv/bin/uvicorn services.reporting.main:app --host 0.0.0.0 --port 8004
+```
+
+### 6.5 Resumen de componentes
+
+| Componente | Archivo | Propósito |
+|-----------|---------|-----------|
+| Seed | `data/pipelines/seed_pipeline.py` | Genera ~280 eventos de prueba |
+| DB Layer | `data/pipelines/database.py` | Conexiones SQLite + creación de tablas |
+| Pipeline | `data/pipelines/pipeline.py` | Flow Prefect con 4 tasks |
+| Routes | `services/reporting/reporting_routes.py` | 3 endpoints FastAPI |
+| Service | `services/reporting/main.py` | Servidor FastAPI (puerto 8004) |
+
+### 6.6 Ejecución real verificada
+
+```
+📊 KPIs cargados: 6 registros (2 warehouses × 3 clients)
+📋 Pipeline runs: 3 registros (2 fallos → 1 éxito)
+60 eventos leídos → 6 registros KPI upsertados
+Flow: weekly_warehouse_client_performance → Completed ✅
+```
