@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         source: "/telemetry/:path*",
         destination: "http://localhost:8000/telemetry/:path*",
       },
+      {
+        source: "/pipeline/:path*",
+        destination: "http://localhost:8000/pipeline/:path*",
+      },
     ];
   },
 };
