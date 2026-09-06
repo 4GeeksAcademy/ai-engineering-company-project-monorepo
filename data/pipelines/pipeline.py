@@ -1,21 +1,27 @@
 """
-pipeline.py — Pipeline de Desempeño de Negocio Resiliente (Parte 2 de 3)
+pipeline.py — Pipeline de Desempeño de Negocio Resiliente (Parte 3 de 3)
 
 Propósito:
     Implementa el pipeline ETL que produce el Reporte Semanal de Desempeño
     por Almacén y Cliente. Usa Prefect 3 para orquestación resiliente.
 
-Arquitectura (3 etapas + 1 opcional):
-    ┌─────────────┐    ┌───────────────┐    ┌──────────────┐    ┌────────────────┐
-    │  extract()   │───▶│ transform()   │───▶│  load()      │───▶│  notify() *    │
-    │  (task)      │    │  (task)       │    │  (task)      │    │  (task opcional)│
-    └─────────────┘    └───────────────┘    └──────────────┘    └────────────────┘
-    * return_state=True — si falla, el pipeline continúa
+Arquitectura (Parte 3 — subflows):
+    El flow principal (run_pipeline) orquesta 4 subflows (@flow):
+    
+    run_pipeline()
+      ├── subflow_extract_telemetry()    → task extract()
+      ├── subflow_transform_kpis()        → task transform()
+      ├── subflow_load_reporting()        → task load()
+      └── subflow_notify() (opcional, return_state=True)
+    
+    Cada subflow tiene inputs/outputs explícitos y puede ejecutarse
+    de forma independiente. Las tasks internas siguen teniendo retries,
+    caché, etc.
 
 Resiliencia implementada:
     1. Retries en tasks que tocan servicios externos (DB, archivos)
     2. Caché en transformación (cache_key_fn + cache_expiration)
-    3. Task opcional con return_state=True (notificación)
+    3. Subflow opcional con return_state=True (notificación)
     4. Idempotencia en carga vía UPSERT (UNIQUE constraint)
     5. Log de ejecución con 10 campos de metadata
 
@@ -41,11 +47,11 @@ from uuid import uuid4
 
 # ── Prefect 3 ──────────────────────────────────────────────
 # Prefect es el orquestador de pipelines. Proporciona:
-# - @flow: decorador para el flujo principal
+# - @flow: decorador para flujos (también subflows)
 # - @task: decorador para tareas individuales
 # - retry_delay_seconds: espera entre reintentos
 # - cache_key_fn / cache_expiration: caché de resultados
-# - return_state=True: permite que una task falle sin detener el flow
+# - return_state=True: permite que un subflow falle sin detener el flow principal
 from prefect import flow, task
 from prefect.tasks import task_input_hash
 
@@ -96,18 +102,19 @@ def _default_week_start() -> str:
 
 
 # ─────────────────────────────────────────────────────────────
-# Tasks de Prefect — cada etapa del pipeline es una @task
+# Tasks de Prefect — operaciones atómicas del pipeline
+# Cada task tiene su propia configuración de retries/caché
 # ─────────────────────────────────────────────────────────────
 
 
 @task(
-    retries=2,           # Reintenta hasta 2 veces si la DB está ocupada
-    retry_delay_seconds=10,  # Espera 10 segundos entre reintentos
+    retries=2,              # Reintenta hasta 2 veces si la DB está ocupada
+    retry_delay_seconds=10, # Espera 10 segundos entre reintentos
     name="Extract telemetry events",
 )
 def extract(week_start: str) -> list[dict[str, Any]]:
     """
-    TASK 1/4 — Extracción: Lee eventos de telemetría filtrados por semana.
+    TASK — Extracción: Lee eventos de telemetría filtrados por semana.
     
     Lee de la tabla telemetry_events (solo lectura) los eventos de negocio
     relevantes para la semana especificada.
@@ -121,19 +128,12 @@ def extract(week_start: str) -> list[dict[str, Any]]:
     Resiliencia:
         - retries=2: tolera caídas transitorias de la base de datos
         - retry_delay_seconds=10: espera 10s antes de reintentar
-        - Justificación: la DB puede estar regenerando índices o bajo
-          carga pesada; 2 reintentos con 10s de separación cubren
-          el percentil 99 de bloqueos cortos en SQLite.
     
     Idempotencia:
-        Usa SELECT DISTINCT ON eventId (tags->>'eventId') para descartar
-        eventos duplicados que pudieran llegar por reintentos del endpoint.
-        Como la PK física es `id` (autoincremental), el mismo eventId puede
-        aparecer múltiples veces si el frontend reenvió el POST.
+        Usa ROW_NUMBER() PARTITION BY eventId para descartar eventos duplicados.
     """
     logger.info(f"[extract] Iniciando extracción para semana {week_start}...")
     
-    # ── Calcular el domingo siguiente (fin de la semana ISO) ──
     week_start_dt = datetime.strptime(week_start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     week_end_dt = week_start_dt + timedelta(days=7)
     
@@ -141,10 +141,7 @@ def extract(week_start: str) -> list[dict[str, Any]]:
         SELECT id, timestamp, event_type, value, warehouse, client_id, quantity, event_id
         FROM (
             SELECT
-                id,
-                timestamp,
-                event_type,
-                value,
+                id, timestamp, event_type, value,
                 json_extract(tags, '$.warehouse') AS warehouse,
                 json_extract(tags, '$.client_id') AS client_id,
                 json_extract(tags, '$.quantity') AS quantity,
@@ -173,23 +170,21 @@ def extract(week_start: str) -> list[dict[str, Any]]:
             ).fetchall()
     except Exception as e:
         logger.error(f"[extract] Error leyendo telemetry_events: {e}")
-        raise  # Prefect capturará esto y reintentará según retries configurados
+        raise
     
-    # Convertir filas sqlite3.Row a dicts para facilidad de uso
     events = [dict(row) for row in rows]
-    
     logger.info(f"[extract] Leídos {len(events)} eventos únicos de telemetry_events")
     return events
 
 
 @task(
-    cache_key_fn=task_input_hash,  # Clave de caché: hash de (week_start + datos extraídos)
-    cache_expiration=timedelta(hours=1),  # La caché expira después de 1 hora
+    cache_key_fn=task_input_hash,
+    cache_expiration=timedelta(hours=1),
     name="Transform into KPIs",
 )
 def transform(events: list[dict[str, Any]], week_start: str) -> list[dict[str, Any]]:
     """
-    TASK 2/4 — Transformación: Agrupa eventos y calcula KPIs.
+    TASK — Transformación: Agrupa eventos y calcula KPIs.
     
     Toma los eventos extraídos y los agrupa por (warehouse, client_id, week_start)
     para calcular los 4 KPIs de negocio definidos en el CONTEXT.
@@ -200,23 +195,9 @@ def transform(events: list[dict[str, Any]], week_start: str) -> list[dict[str, A
     
     Returns:
         Lista de registros KPI, uno por combinación (warehouse, client_id)
-    
-    Caché:
-        - cache_key_fn=task_input_hash: la clave es un hash de los inputs
-          (week_start + eventos). Si el pipeline corre dos veces en la misma
-          hora con los mismos datos, Prefect devuelve el resultado cacheado.
-        - cache_expiration=timedelta(hours=1): la caché expira a la hora.
-          Justificación: los eventos de telemetría pueden llegar con latencia
-          de hasta 30min; 1 hora permite que datos tardíos se incorporen sin
-          repetir la transformación si el pipeline se re-ejecuta pronto.
-        - Esto es especialmente valioso si hay muchos eventos (ej. >50k)
-          donde agrupar y sumar es computacionalmente costoso.
     """
     logger.info(f"[transform] Agrupando {len(events)} eventos para semana {week_start}...")
     
-    # ── Diccionario de agregación: clave = (warehouse, client_id) ──
-    # Usamos un dict para agrupar en una sola pasada O(n).
-    # Esto es más eficiente que múltiples GROUP BYs en SQL.
     aggregates: dict[tuple[str, str], dict[str, Any]] = {}
     
     for event in events:
@@ -224,8 +205,6 @@ def transform(events: list[dict[str, Any]], week_start: str) -> list[dict[str, A
         client_id = event["client_id"]
         
         if not warehouse or not client_id:
-            # Evento sin warehouse o client_id — lo saltamos
-            # (son casos borde que no deberían ocurrir con datos válidos)
             continue
         
         key = (warehouse, client_id)
@@ -243,30 +222,22 @@ def transform(events: list[dict[str, Any]], week_start: str) -> list[dict[str, A
         
         event_type = event["event_type"]
         
-        # ── Cada event_type alimenta un KPI específico ──
         if event_type == INBOUND_EVENT:
-            # Volumen de Entrada: suma de cantidades recibidas
             qty = event["quantity"]
             aggregates[key]["inbound_units_count"] += int(qty) if qty else 0
             
         elif event_type == OUTBOUND_EVENT:
-            # Rendimiento de Salida: conteo de órdenes despachadas
             aggregates[key]["outbound_orders_count"] += 1
             
         elif event_type == STOCKOUT_EVENT:
-            # Frecuencia de Desabastecimiento: conteo de alertas
             aggregates[key]["stockout_events_count"] += 1
             
         elif event_type == DISCREPANCY_EVENT:
-            # Conteo de discrepancias (numerador de la tasa)
             aggregates[key]["discrepancy_events_count"] += 1
     
-    # ── Construir registros KPI finales ──
-    # Calculamos discrepancy_rate como: discrepancies / outbound_orders
     results: list[dict[str, Any]] = []
     for agg in aggregates.values():
         outbound = agg["outbound_orders_count"]
-        # discrepancy_rate = 0 si no hubo órdenes (evitar división por cero)
         agg["discrepancy_rate"] = round(
             agg["discrepancy_events_count"] / outbound, 4
         ) if outbound > 0 else 0.0
@@ -277,33 +248,20 @@ def transform(events: list[dict[str, Any]], week_start: str) -> list[dict[str, A
 
 
 @task(
-    retries=1,             # 1 reintento si el UPSERT falla
-    retry_delay_seconds=5, # Espera 5 segundos
+    retries=1,
+    retry_delay_seconds=5,
     name="Load KPIs into reporting",
 )
 def load(kpi_records: list[dict[str, Any]], run_id: str) -> int:
     """
-    TASK 3/4 — Carga: Escribe los KPIs en la tabla destino.
-    
-    Usa UPSERT (INSERT ... ON CONFLICT ... DO UPDATE) para garantizar
-    idempotencia: si el pipeline corre dos veces sobre la misma semana,
-    los datos son idénticos después de ambas corridas.
+    TASK — Carga: Escribe los KPIs en la tabla destino con UPSERT.
     
     Args:
         kpi_records: Lista de registros KPI a insertar/actualizar
-        run_id: UUID de la corrida actual (para correlacionar con el log)
+        run_id: UUID de la corrida actual
     
     Returns:
         Número de filas insertadas o actualizadas
-    
-    Resiliencia:
-        - retries=1: tolera un fallo transitorio de escritura
-        - Justificación: la escritura es UPSERT (no INSERT), así que
-          si falla y se reintenta, el resultado es el mismo.
-    
-    Idempotencia:
-        La constraint UNIQUE(warehouse, client_id, week_start) en la tabla
-        destino asegura que el segundo UPSERT actualice en lugar de duplicar.
     """
     logger.info(f"[load] Escribiendo {len(kpi_records)} registros en reporting...")
     
@@ -329,20 +287,20 @@ def load(kpi_records: list[dict[str, Any]], run_id: str) -> int:
         with get_reporting_db() as conn:
             for record in kpi_records:
                 conn.execute(upsert_sql, (
-                    str(uuid4()),                      # id
-                    record["warehouse"],                # warehouse
-                    record["client_id"],                # client_id
-                    record["week_start"],               # week_start
-                    record["inbound_units_count"],      # inbound_units_count
-                    record["outbound_orders_count"],    # outbound_orders_count
-                    record["stockout_events_count"],    # stockout_events_count
-                    record["discrepancy_events_count"], # discrepancy_events_count
-                    record["discrepancy_rate"],          # discrepancy_rate
+                    str(uuid4()),
+                    record["warehouse"],
+                    record["client_id"],
+                    record["week_start"],
+                    record["inbound_units_count"],
+                    record["outbound_orders_count"],
+                    record["stockout_events_count"],
+                    record["discrepancy_events_count"],
+                    record["discrepancy_rate"],
                 ))
                 rows_affected += 1
     except Exception as e:
         logger.error(f"[load] Error en UPSERT: {e}")
-        raise  # Prefect reintentará según retries=1
+        raise
     
     logger.info(f"[load] {rows_affected} filas upsertadas correctamente")
     return rows_affected
@@ -351,29 +309,105 @@ def load(kpi_records: list[dict[str, Any]], run_id: str) -> int:
 @task(name="Notify (optional)", retries=0)
 def notify(rows_upserted: int, run_id: str) -> None:
     """
-    TASK 4/4 (OPCIONAL) — Notificación: Simula envío de alerta.
+    TASK (OPCIONAL) — Notificación: Simula envío de alerta.
     
-    Esta es una task opcional: si falla, el pipeline continúa.
-    Se invoca con return_state=True en el flow principal.
+    Esta es una task opcional: el subflow que la envuelve se invoca
+    con return_state=True para que el pipeline continúe si falla.
     
     En producción, esto enviaría un mensaje a Slack/Email/Teams.
-    Aquí solo lo simulamos con un log.
-    
-    Propósito educativo:
-        Demuestra cómo Prefect permite tasks no críticas que no
-        interrumpen el flujo principal si fallan.
     """
     logger.info(f"[notify] Simulando notificación: {rows_upserted} filas procesadas (run={run_id[:8]})")
     
-    # ── Esto podría fallar si, por ejemplo, la API de Slack no responde ──
-    # Simulamos un fallo aleatorio para demostrar return_state=True
     import random
-    if random.random() < 0.3:  # 30% de probabilidad de fallo simulado
+    if random.random() < 0.3:
         raise RuntimeError("⚠️ Simulación: La API de notificaciones no respondió (timeout)")
 
 
 # ─────────────────────────────────────────────────────────────
-# Flow principal — orquesta las 4 tasks
+# SUBFLOWS (@flow) — cada etapa del pipeline es un flow independiente
+# 
+# Cada subflow tiene:
+# - Inputs y outputs explícitos (tipados)
+# - Puede ejecutarse de forma independiente
+# - El flow principal los orquesta en secuencia
+# ─────────────────────────────────────────────────────────────
+
+
+@flow(name="Subflow: Extract", log_prints=True)
+def subflow_extract_telemetry(week_start: str) -> list[dict[str, Any]]:
+    """
+    SUBFLOW 1/4 — Extracción desde telemetry_events.
+    
+    Args:
+        week_start: Semana ISO a procesar
+    
+    Returns:
+        Lista de eventos únicos de telemetría
+    """
+    logger.info(f"[subflow/extract] Iniciando subflow de extracción para semana {week_start}")
+    events = extract(week_start)
+    logger.info(f"[subflow/extract] Extracción completada: {len(events)} eventos")
+    return events
+
+
+@flow(name="Subflow: Transform KPIs", log_prints=True)
+def subflow_transform_kpis(events: list[dict[str, Any]], week_start: str) -> list[dict[str, Any]]:
+    """
+    SUBFLOW 2/4 — Transformación a KPIs de negocio.
+    
+    Toma eventos en crudo y produce registros KPI agregados
+    por (warehouse, client_id, week_start).
+    
+    Args:
+        events: Eventos extraídos de telemetry_events
+        week_start: Semana ISO de referencia
+    
+    Returns:
+        Registros KPI listos para carga
+    """
+    logger.info(f"[subflow/transform] Iniciando transformación de {len(events)} eventos")
+    kpi_records = transform(events, week_start)
+    logger.info(f"[subflow/transform] Transformación completada: {len(kpi_records)} registros KPI")
+    return kpi_records
+
+
+@flow(name="Subflow: Load KPIs", log_prints=True)
+def subflow_load_reporting(kpi_records: list[dict[str, Any]], run_id: str) -> int:
+    """
+    SUBFLOW 3/4 — Carga en tabla de reporting.
+    
+    Args:
+        kpi_records: Registros KPI a upsertar
+        run_id: UUID de la corrida actual
+    
+    Returns:
+        Número de filas afectadas
+    """
+    logger.info(f"[subflow/load] Iniciando carga de {len(kpi_records)} registros")
+    rows = load(kpi_records, run_id)
+    logger.info(f"[subflow/load] Carga completada: {rows} filas upsertadas")
+    return rows
+
+
+@flow(name="Subflow: Notify (optional)", log_prints=True)
+def subflow_notify(rows_upserted: int, run_id: str) -> None:
+    """
+    SUBFLOW 4/4 (OPCIONAL) — Notificación.
+    
+    Este subflow se invoca con return_state=True desde el flow principal,
+    por lo que si falla, el pipeline continúa sin interrupción.
+    
+    Args:
+        rows_upserted: Filas procesadas
+        run_id: UUID de la corrida
+    """
+    logger.info(f"[subflow/notify] Enviando notificación...")
+    notify(rows_upserted, run_id)
+    logger.info(f"[subflow/notify] Notificación enviada correctamente")
+
+
+# ─────────────────────────────────────────────────────────────
+# Flow principal — orquesta los 4 subflows
 # ─────────────────────────────────────────────────────────────
 
 
@@ -382,64 +416,54 @@ def run_pipeline(week_start: Optional[str] = None) -> dict[str, Any]:
     """
     Flow principal del pipeline de desempeño de negocio.
     
-    Orquesta las 4 tasks en secuencia:
-    1. extract()   → Lee eventos de telemetría
-    2. transform() → Calcula KPIs
-    3. load()      → Escribe en tabla destino
-    4. notify()    → Notificación (opcional, con return_state=True)
+    Orquesta los 4 subflows en secuencia:
+    1. subflow_extract_telemetry()   → Lee eventos de telemetría
+    2. subflow_transform_kpis()      → Calcula KPIs
+    3. subflow_load_reporting()      → Escribe en tabla destino
+    4. subflow_notify()              → Notificación (opcional, return_state=True)
     
     Args:
         week_start: Semana ISO a procesar (YYYY-MM-DD).
                     Por defecto: la semana actual.
     
     Returns:
-        Dict con metadata de la ejecución (para el log)
-    
-    Ejecución como script:
-        python data/pipelines/pipeline.py
-        python data/pipelines/pipeline.py --week-start 2026-09-07
-    
-    Cadencia prevista:
-        Semanal, cada lunes a las 06:00 UTC.
-        Comando cron: 0 6 * * 1 cd /path/to/monorepo && python data/pipelines/pipeline.py
+        Dict con metadata de la ejecución
     """
-    # ── Determinar semana objetivo ──
     if week_start is None:
         week_start = _default_week_start()
     
-    logger.info("═" * 60)
+    logger.info("=" * 60)
     logger.info(f"🚀 Iniciando pipeline: {PIPELINE_NAME}")
     logger.info(f"📅 Semana objetivo: {week_start}")
-    logger.info("═" * 60)
+    logger.info("=" * 60)
     
-    # ── Generar identificador único de corrida ──
     run_id = str(uuid4())
     started_at = datetime.now(timezone.utc).isoformat()
     
-    # ── Asegurar que las tablas de reporting existen ──
     init_reporting_db()
     
-    # ── Ejecutar tasks ──
     try:
-        # 1. Extracción (con retries automáticos de Prefect)
-        events = extract(week_start)
+        # ── 1. Subflow de extracción ──
+        events = subflow_extract_telemetry(week_start)
         
-        # 2. Transformación (con caché — si ya se ejecutó con estos datos en la última hora, usa el caché)
-        kpi_records = transform(events, week_start)
+        # ── 2. Subflow de transformación ──
+        kpi_records = subflow_transform_kpis(events, week_start)
         
-        # 3. Carga (con retries automáticos de Prefect)
-        rows_upserted = load(kpi_records, run_id)
+        # ── 3. Subflow de carga ──
+        rows_upserted = subflow_load_reporting(kpi_records, run_id)
         
-        # 4. Notificación (OPCIONAL — task que puede fallar sin detener el flow)
-        # notify() tiene una simulación interna de 30% de fallo. Si falla,
-        # el pipeline sigue adelante y solo se registra una advertencia.
-        try:
-            notify(rows_upserted, run_id)
+        # ── 4. Subflow de notificación (opcional, return_state=True) ──
+        # Pasamos return_state=True al invocar el subflow para que Prefect
+        # devuelva el estado (State) en vez del resultado. Si falla,
+        # el pipeline continúa sin interrupción.
+        notify_result = subflow_notify(rows_upserted, run_id, return_state=True)
+        
+        if notify_result and notify_result.is_failed():
+            logger.warning(f"[notify] La notificación falló (ignorado — subflow opcional): {notify_result.message}")
+        else:
             logger.info("[notify] Notificación exitosa")
-        except Exception as notify_e:
-            logger.warning(f"[notify] La notificación falló (ignorado — task opcional): {notify_e}")
         
-        # ── Registrar corrida exitosa en pipeline_runs ──
+        # ── Registrar corrida exitosa ──
         finished_at = datetime.now(timezone.utc).isoformat()
         _log_pipeline_run(run_id, week_start, "Completed",
                           started_at, finished_at,
@@ -460,7 +484,6 @@ def run_pipeline(week_start: Optional[str] = None) -> dict[str, Any]:
         }
         
     except Exception as e:
-        # ── Registrar corrida fallida ──
         finished_at = datetime.now(timezone.utc).isoformat()
         _log_pipeline_run(run_id, week_start, "Failed",
                           started_at, finished_at,
@@ -489,9 +512,6 @@ def _log_pipeline_run(
     """
     Registra la metadata de una corrida en reporting.pipeline_runs.
     
-    Esta función es llamada tanto en éxito como en fallo para mantener
-    un registro de auditoría completo (ver Fase 3 del diseño).
-    
     Campos registrados (10):
     1. run_id          — UUID único de la corrida
     2. pipeline_name   — Nombre del pipeline
@@ -503,11 +523,6 @@ def _log_pipeline_run(
     8. error_message   — Mensaje de error (si falló)
     9. triggered_by    — scheduled / manual
     10. week_start     — Semana procesada
-    
-    Esto permite:
-    - Distinguir "sin actividad" de "pipeline caído"
-    - Detectar crecimiento o pérdida de datos (tendencia de rows_read)
-    - Correlacionar corridas con resultados
     """
     with get_reporting_db() as conn:
         conn.execute("""
@@ -533,7 +548,6 @@ def _log_pipeline_run(
 # Punto de entrada — ejecución como script CLI
 # ─────────────────────────────────────────────────────────────
 
-
 if __name__ == "__main__":
     """
     Punto de entrada para ejecución directa desde línea de comandos.
@@ -541,26 +555,42 @@ if __name__ == "__main__":
     Uso:
         python data/pipelines/pipeline.py
         python data/pipelines/pipeline.py --week-start 2026-09-07
+        python data/pipelines/pipeline.py --help
     
-    Esto permite:
-    - Ejecución manual para pruebas
-    - Programación vía cron (0 6 * * 1 python data/pipelines/pipeline.py)
-    - Integración con CI/CD para validación
+    Este entrypoint debe seguir funcionando tras el refactor a subflows
+    (requisito de la Fase 3 de la Parte 3).
     """
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="Pipeline de Desempeño de Negocio Resiliente — TrackFlow",
-        epilog="Ejemplo: python data/pipelines/pipeline.py --week-start 2026-09-07"
+        description=f"Pipeline ETL: {PIPELINE_NAME} — Produce reporte semanal de desempeño por almacén y cliente"
     )
     parser.add_argument(
         "--week-start",
         type=str,
         default=None,
-        help="Semana ISO a procesar (YYYY-MM-DD). Por defecto: la semana actual."
+        help="Semana ISO a procesar (YYYY-MM-DD). Por defecto: la semana actual.",
+    )
+    parser.add_argument(
+        "--db-path",
+        type=str,
+        default=None,
+        help="Ruta al directorio de bases de datos. Por defecto: data/pipelines/",
     )
     
     args = parser.parse_args()
     
-    # Ejecutar el flow principal
-    run_pipeline(week_start=args.week_start)
+    # Si se especificó una ruta de BD, actualizar variable de entorno
+    if args.db_path:
+        os.environ["PIPELINES_DB_DIR"] = args.db_path
+    
+    logger.info(f"📦 Prefect versión: {__import__('prefect').__version__}")
+    
+    result = run_pipeline(week_start=args.week_start)
+    
+    if result["status"] == "Completed":
+        logger.info(f"\n🎉 Pipeline completado con éxito")
+        sys.exit(0)
+    else:
+        logger.error(f"\n❌ Pipeline falló con estado: {result['status']}")
+        sys.exit(1)

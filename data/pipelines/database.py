@@ -31,6 +31,8 @@ Estructura:
 
 from __future__ import annotations
 
+import os
+
 import json
 import sqlite3
 from contextlib import contextmanager
@@ -46,9 +48,17 @@ from uuid import uuid4
 # de PostgreSQL/Supabase.
 # ─────────────────────────────────────────────────────────────
 
-PIPELINE_DIR = Path(__file__).parent
-TELEMETRY_DB_PATH = str(PIPELINE_DIR / "telemetry_events.db")
-REPORTING_DB_PATH = str(PIPELINE_DIR / "reporting.db")
+# La variable de entorno PIPELINES_DB_DIR permite sobreescribir el directorio
+# de bases de datos (usado por --db-path en pipeline.py y por los tests).
+def _get_db_dir() -> Path:
+    _override = os.environ.get("PIPELINES_DB_DIR")
+    return Path(_override) if _override else Path(__file__).parent
+
+def get_telemetry_db_path() -> str:
+    return str(_get_db_dir() / "telemetry_events.db")
+
+def get_reporting_db_path() -> str:
+    return str(_get_db_dir() / "reporting.db")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -68,7 +78,7 @@ def get_telemetry_db() -> Generator[sqlite3.Connection, None, None]:
         with get_telemetry_db() as conn:
             events = conn.execute("SELECT * FROM telemetry_events").fetchall()
     """
-    conn = sqlite3.connect(TELEMETRY_DB_PATH)
+    conn = sqlite3.connect(get_telemetry_db_path())
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -90,7 +100,7 @@ def get_reporting_db() -> Generator[sqlite3.Connection, None, None]:
         with get_reporting_db() as conn:
             conn.execute("INSERT INTO ...")
     """
-    conn = sqlite3.connect(REPORTING_DB_PATH, isolation_level=None)
+    conn = sqlite3.connect(get_reporting_db_path(), isolation_level=None)
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -171,7 +181,7 @@ def init_telemetry_db_with_sample_data() -> None:
     
     Es seguro llamarla múltiples veces — hace DROP + CREATE y regenera.
     """
-    conn = sqlite3.connect(TELEMETRY_DB_PATH)
+    conn = sqlite3.connect(get_telemetry_db_path())
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     
