@@ -418,3 +418,66 @@ services/telemetry/           ← NO MODIFICAR
 - **Protección de zonas:** No se modifican `.github/`, `package.json`, `tsconfig.json`, `DESIGN.md`, `memory-bank/` (excepto progress.md), `uis/`
 - **Separación ETL:** Toda la lógica de pipeline vive en `data/pipelines/`; `services/reporting/` solo importa y expone
 - **Estructura de `data/`:** `pipelines/` orquestación, `process/` transformaciones reutilizables, `raw/` datos crudos, `eval/` evaluaciones
+---
+
+## Fase 6 — Comandos de Ejecución
+
+### 6.1 Seed (generar datos de prueba)
+
+```bash
+# Desde la raíz del monorepo:
+cd /home/jonathan/Documentos/Proyectos/monorepo/jesteban1983-ai-engineering-company-project-monorepo
+
+# Activar el entorno virtual y generar datos de ejemplo (~280 eventos)
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/seed_pipeline.py
+```
+
+### 6.2 Ejecutar pipeline ETL
+
+```bash
+# Pipeline completo: Extract → Transform → Load → Notify
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/pipeline.py
+
+# Especificar semana (por defecto: lunes de esta semana)
+PYTHONPATH="${PWD}" .venv/bin/python data/pipelines/pipeline.py --week-start 2026-09-07
+```
+
+### 6.3 Verificar resultados
+
+```bash
+# Revisar KPIs cargados en reporting.db
+.venv/bin/python3 -c "
+import sqlite3
+conn = sqlite3.connect('data/pipelines/reporting.db')
+rows = conn.execute('SELECT * FROM reporting_weekly_warehouse_client_performance').fetchall()
+print(f'📊 KPIs: {len(rows)} registros')
+runs = conn.execute('SELECT * FROM reporting_pipeline_runs').fetchall()
+print(f'📋 Runs: {len(runs)} registros')
+conn.close()
+"
+```
+
+### 6.4 Servicio reporting (FastAPI)
+
+```bash
+PYTHONPATH="${PWD}" .venv/bin/uvicorn services.reporting.main:app --host 0.0.0.0 --port 8004
+```
+
+### 6.5 Resumen de componentes
+
+| Componente | Archivo | Propósito |
+|-----------|---------|-----------|
+| Seed | `data/pipelines/seed_pipeline.py` | Genera ~280 eventos de prueba |
+| DB Layer | `data/pipelines/database.py` | Conexiones SQLite + creación de tablas |
+| Pipeline | `data/pipelines/pipeline.py` | Flow Prefect con 4 tasks |
+| Routes | `services/reporting/reporting_routes.py` | 3 endpoints FastAPI |
+| Service | `services/reporting/main.py` | Servidor FastAPI (puerto 8004) |
+
+### 6.6 Ejecución real verificada
+
+```
+📊 KPIs cargados: 6 registros (2 warehouses × 3 clients)
+📋 Pipeline runs: 3 registros (2 fallos → 1 éxito)
+60 eventos leídos → 6 registros KPI upsertados
+Flow: weekly_warehouse_client_performance → Completed ✅
+```
