@@ -18,4 +18,4 @@ if [[ -n "${CODESPACE_NAME:-}" ]]; then
   fi
 fi
 
-exec npx --yes http-server . -p 3000 -a 0.0.0.0 -c-1 -c-1
+exec npx --yes http-server . -p 3000 -a 0.0.0.0 -c-1

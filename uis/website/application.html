@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Supplier application — Brasaland</title>
     <meta name="description" content="Apply to join the Brasaland supplier directory. Required fields: name, country, product_categories, emergency_surcharge_pct, and status." />
+    <link rel="icon" href="images/brasaland-logo.svg" type="image/svg+xml" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -635,39 +636,32 @@
     <script src="validation.js?v=clear"></script>
     <script>
         (function () {
-            fetch("menu.html", { method: "HEAD" })
-                .then(function (response) {
-                    if (response.ok) {
-                        return;
-                    }
-                    var prefix = "uis/website/";
-                    document.querySelectorAll("a[href]").forEach(function (anchor) {
-                        var href = anchor.getAttribute("href");
-                        if (!href || href.charAt(0) === "#" || href.indexOf("http") === 0) {
-                            return;
-                        }
-                        if (href === "index.html" || href === "application.html") {
-                            return;
-                        }
-                        if (href.indexOf("uis/") === 0) {
-                            return;
-                        }
-                        anchor.setAttribute("href", prefix + href);
-                    });
-                    document.querySelectorAll("img[src]").forEach(function (image) {
-                        var src = image.getAttribute("src");
-                        if (!src || src.indexOf("http") === 0 || src.indexOf("uis/") === 0) {
-                            return;
-                        }
-                        image.setAttribute("src", prefix + src);
-                    });
-                    ["theme.js", "lang.js", "site.js"].forEach(function (file) {
-                        var script = document.createElement("script");
-                        script.src = prefix + file;
-                        document.body.appendChild(script);
-                    });
-                })
-                .catch(function () {});
+            var prefix = "uis/website/";
+            var nested = location.pathname.indexOf("/uis/website/") !== -1;
+            var pagesHost = location.hostname.indexOf("github.io") !== -1;
+            if (nested || pagesHost) {
+                return;
+            }
+            document.querySelectorAll("a[href]").forEach(function (anchor) {
+                var href = anchor.getAttribute("href");
+                if (!href || href.charAt(0) === "#" || href.indexOf("http") === 0) {
+                    return;
+                }
+                if (href === "index.html" || href === "application.html") {
+                    return;
+                }
+                if (href.indexOf("uis/") === 0) {
+                    return;
+                }
+                anchor.setAttribute("href", prefix + href);
+            });
+            document.querySelectorAll("img[src]").forEach(function (image) {
+                var src = image.getAttribute("src");
+                if (!src || src.indexOf("http") === 0 || src.indexOf("uis/") === 0) {
+                    return;
+                }
+                image.setAttribute("src", prefix + src);
+            });
         })();
     </script>
 </body>
