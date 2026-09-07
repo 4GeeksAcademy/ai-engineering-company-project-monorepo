@@ -6,6 +6,8 @@ import tempfile
 from fastapi.responses import FileResponse
 import csv
 
+from routes import suppliers
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../scripts'))
 from analyzer_core import process_incidents, calculate_metrics
 
@@ -18,6 +20,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(suppliers.router)
 
 latest_metrics = None
 
