@@ -16,7 +16,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
     try {
       const errorData = await response.json();
       if (errorData && typeof errorData === 'object') {
-        errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
+        if (Array.isArray(errorData.detail)) {
+          errorMessage = errorData.detail.map((e: any) => `Campo ${e.loc[e.loc.length - 1]}: ${e.msg}`).join(', ');
+        } else {
+          errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
+        }
       }
     } catch {
       // Si no hay cuerpo JSON en el error, mantenemos el statusText

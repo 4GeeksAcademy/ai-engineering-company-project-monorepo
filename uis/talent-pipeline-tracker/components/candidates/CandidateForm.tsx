@@ -51,14 +51,14 @@ export default function CandidateForm({
       return;
     }
 
-    const payload: CreateCandidateInput = {
-      name: name.trim(),
+    const payload: any = {
+      full_name: name.trim(),
       email: email.trim(),
       phone: phone.trim() || undefined,
       position: position.trim(),
       linkedin: linkedin.trim() || undefined,
       resume_url: resumeUrl.trim() || undefined,
-      years_of_experience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
+      experience_years: yearsOfExperience ? Number(yearsOfExperience) : undefined,
       status,
       stage,
     };

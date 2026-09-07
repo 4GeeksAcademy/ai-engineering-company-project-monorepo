@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Candidate } from '@/types/candidate';
 import { getCandidates } from '@/services/api';
@@ -63,13 +64,21 @@ function CandidatesContent() {
   return (
     <div>
       {/* Header Banner del departamento */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Pipeline de Candidaturas
-        </h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Gestión en tiempo real de los procesos de selección activos para Operaciones de Selección.
-        </p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Pipeline de Candidaturas
+          </h1>
+          <p className="text-sm text-slate-600 mt-1">
+            Gestión en tiempo real de los procesos de selección activos para Operaciones de Selección.
+          </p>
+        </div>
+        <Link 
+          href="/incidents" 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+        >
+          Analizador de Incidencias
+        </Link>
       </div>
 
       {/* Componente de Filtros y Buscador */}
