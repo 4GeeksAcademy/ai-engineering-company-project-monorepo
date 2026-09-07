@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Brasaland — Grilled food in Colombia and Florida</title>
+    <meta name="description" content="Brasaland is a grilled-food restaurant chain in Colombia and Florida. Apply to the supplier directory using the operations field names." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ember: { DEFAULT: "#92400e", hover: "#78350f" },
+                        paper: "#f7f1e8",
+                        ink: "#1b140f",
+                        muted: "#5c5148",
+                        surface: "#fffaf3",
+                    },
+                    fontFamily: {
+                        display: ['"Iowan Old Style"', '"Palatino Linotype"', "Palatino", "Georgia", "serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <!-- brasaland-jsonld -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization",
+      "name": "Brasaland",
+      "description": "Grilled-food restaurant chain operating in Colombia and Florida (US). Sirloin, ribs, and chicken over the brasa, with house sauce and corn arepas. Brasa Points are valid at every location. Florida stays in USD $; Colombia stays in COP $.",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/images/brasaland-logo.svg"
+      },
+      "sameAs": [
+        "https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo"
+      ],
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "Colombia"
+        },
+        {
+          "@type": "AdministrativeArea",
+          "name": "Florida",
+          "containedInPlace": {
+            "@type": "Country",
+            "name": "United States"
+          }
+        }
+      ],
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "subOrganization": [
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#miami-downtown"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#bogota-norte"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-01"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-02"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-03"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-04"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-05"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-06"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-07"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-08"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-09"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-10"
+        }
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#website",
+      "name": "Brasaland",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/",
+      "inLanguage": [
+        "en",
+        "es"
+      ],
+      "publisher": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      }
+    },
+    {
+      "@type": "Menu",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu",
+      "name": "Brasaland guest menu",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/menu.html",
+      "hasMenuSection": [
+        {
+          "@type": "MenuSection",
+          "name": "From the grill",
+          "hasMenuItem": [
+            {
+              "@type": "MenuItem",
+              "name": "Grilled Sirloin",
+              "alternateName": "Lomo a la Brasa",
+              "description": "Beef sirloin over the brasa, with a marinade."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Brasaland BBQ Ribs",
+              "description": "Grilled ribs with imported sauce."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Classic Grilled Chicken",
+              "description": "Chicken cooked over the brasa."
+            }
+          ]
+        },
+        {
+          "@type": "MenuSection",
+          "name": "Salad, side, and sauce",
+          "hasMenuItem": [
+            {
+              "@type": "MenuItem",
+              "name": "Tropical Salad",
+              "description": "With cashew and feta."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Corn Arepa",
+              "description": "Served with the grill."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "House Sauce",
+              "description": "Brasaland house sauce."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#miami-downtown",
+      "name": "Brasaland",
+      "branchCode": "miami-downtown",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "USD",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "Florida",
+        "addressCountry": "US"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#bogota-norte",
+      "name": "Brasaland",
+      "branchCode": "bogota-norte",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-01",
+      "name": "Brasaland",
+      "branchCode": "COL-01",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-02",
+      "name": "Brasaland",
+      "branchCode": "COL-02",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-03",
+      "name": "Brasaland",
+      "branchCode": "COL-03",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-04",
+      "name": "Brasaland",
+      "branchCode": "COL-04",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-05",
+      "name": "Brasaland",
+      "branchCode": "COL-05",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-06",
+      "name": "Brasaland",
+      "branchCode": "COL-06",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-07",
+      "name": "Brasaland",
+      "branchCode": "COL-07",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-08",
+      "name": "Brasaland",
+      "branchCode": "COL-08",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-09",
+      "name": "Brasaland",
+      "branchCode": "COL-09",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-10",
+      "name": "Brasaland",
+      "branchCode": "COL-10",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    }
+  ]
+}
+    </script>
+</head>
+<body class="min-h-screen bg-paper text-ink">
+    <a class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-20 focus:rounded focus:bg-surface focus:px-3 focus:py-2" href="#main">Skip to content</a>
+
+    <header class="border-b border-amber-200 bg-surface" role="banner">
+        <div class="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+            <div class="flex items-center justify-between gap-3">
+                <a class="flex items-center gap-3 no-underline text-ink" href="index.html" aria-label="Brasaland home">
+                    <img src="uis/website/images/brasaland-logo.svg" width="40" height="40" alt="Brasaland logo: a white flame over a grill on an ember square" class="h-9 w-9 rounded-lg sm:h-10 sm:w-10" />
+                    <span>
+                        <span class="block font-display text-xl font-semibold text-ink sm:text-2xl">Brasaland</span>
+                        <span class="block text-xs uppercase tracking-widest text-muted">Colombia · Florida</span>
+                    </span>
+                </a>
+                <a class="inline-flex shrink-0 items-center justify-center rounded-lg bg-ember px-3 py-2 text-xs font-semibold text-white no-underline shadow-sm hover:bg-ember-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ember sm:px-4 sm:text-sm lg:hidden" href="application.html" aria-label="Apply as a supplier">Apply</a>
+            </div>
+            <nav aria-label="Primary" class="w-full overflow-x-auto lg:w-auto">
+                <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0 text-sm">
+                    <li><a class="font-semibold text-ink" href="index.html" aria-current="page">Home</a></li>
+                    <li><a class="text-ember hover:underline" href="#how-it-works">How it works</a></li>
+                    <li><a class="text-ember hover:underline" href="#benefits">Benefits</a></li>
+                    <li><a class="text-ember hover:underline" href="#contact">Contact</a></li>
+                    <li><a class="text-ember hover:underline" href="application.html">Supplier apply</a></li>
+                    <li><a class="text-ember hover:underline" href="uis/website/menu.html">Menu</a></li>
+                    <li><a class="text-ember hover:underline" href="uis/website/locations.html">Locations</a></li>
+                    <li><a class="text-ember hover:underline" href="uis/website/loyalty.html">Brasa Points</a></li>
+                </ul>
+            </nav>
+            <a class="hidden lg:inline-flex items-center justify-center rounded-lg bg-ember px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm hover:bg-ember-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ember" href="application.html">Apply as a supplier</a>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+        <section class="bg-ink text-paper" aria-labelledby="home-heading">
+            <div class="mx-auto grid max-w-5xl items-center gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12 lg:grid-cols-2 lg:py-16">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-ember sm:text-sm">Grilled food · Colombia + Florida</p>
+                    <h1 id="home-heading" class="mt-3 font-display text-3xl leading-tight sm:text-4xl lg:text-5xl">Fire, protein, and the same table on both sides of the map.</h1>
+                    <p class="mt-4 text-base text-amber-100/80 sm:mt-5 sm:text-lg">
+                        Brasaland is a grilled-food restaurant chain. We cook sirloin, ribs, and chicken over the brasa, serve them with house sauce and arepas, and keep Brasa Points valid at every location in Colombia and Florida.
+                    </p>
+                    <ul class="mt-6 list-none space-y-2 p-0 text-sm" aria-label="Company value">
+                        <li class="rounded-lg border border-stone-700 bg-stone-800 px-4 py-3">One chain in Colombia and Florida — miami-downtown, bogota-norte, and COL-01 through COL-10.</li>
+                        <li class="rounded-lg border border-stone-700 bg-stone-800 px-4 py-3">Sirloin, ribs, and chicken over the brasa, with house sauce and corn arepas.</li>
+                        <li class="rounded-lg border border-stone-700 bg-stone-800 px-4 py-3">Brasa Points work at every location. Florida stays in USD $; Colombia stays in COP $ — we never convert one into the other.</li>
+                    </ul>
+                    <nav class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Hero actions">
+                        <a class="inline-flex w-full items-center justify-center rounded-lg bg-ember px-5 py-2.5 text-sm font-semibold text-white no-underline shadow-sm hover:bg-ember-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-ink sm:w-auto" href="application.html">Apply as a supplier</a>
+                        <a class="inline-flex w-full items-center justify-center rounded-lg border border-stone-500 px-5 py-2.5 text-sm font-semibold text-paper no-underline hover:bg-stone-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper sm:w-auto" href="uis/website/menu.html">See the menu</a>
+                    </nav>
+                </div>
+                <figure class="m-0">
+                    <img class="h-auto max-h-64 w-full rounded-2xl object-cover aspect-square sm:max-h-80 lg:max-h-[28rem]" src="uis/website/images/menu-grilled-sirloin.jpg" width="640" height="640" alt="Sliced grilled sirloin, Lomo a la Brasa, with grill marks and green onion" />
+                    <figcaption class="mt-2 text-sm text-amber-100/70">Grilled Sirloin — Lomo a la Brasa</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12" aria-labelledby="how-heading">
+            <h2 id="how-heading" class="font-display text-2xl">How a visit works</h2>
+            <p class="mt-3 max-w-2xl text-muted">The table is the same in Colombia and Florida: grill, sauce, arepa, and Brasa Points that follow you to every location.</p>
+            <ol class="mt-8 m-0 grid list-none grid-cols-1 gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
+                <li>
+                    <article class="rounded-xl border border-amber-200 bg-surface p-5">
+                        <p class="text-sm font-semibold uppercase tracking-widest text-ember">1</p>
+                        <h3 class="mt-2 font-display text-xl">Sit down at a Brasaland</h3>
+                        <p class="mt-2 text-sm text-muted">Walk into miami-downtown, bogota-norte, or any COL-01 through COL-10 location. Prices stay in that market’s currency.</p>
+                    </article>
+                </li>
+                <li>
+                    <article class="rounded-xl border border-amber-200 bg-surface p-5">
+                        <p class="text-sm font-semibold uppercase tracking-widest text-ember">2</p>
+                        <h3 class="mt-2 font-display text-xl">Eat from the grill</h3>
+                        <p class="mt-2 text-sm text-muted">Order sirloin, ribs, or chicken over the brasa. Add tropical salad, a corn arepa, and house sauce. Tell the server about allergies before the kitchen starts.</p>
+                    </article>
+                </li>
+                <li>
+                    <article class="rounded-xl border border-amber-200 bg-surface p-5">
+                        <p class="text-sm font-semibold uppercase tracking-widest text-ember">3</p>
+                        <h3 class="mt-2 font-display text-xl">Earn and redeem Brasa Points</h3>
+                        <p class="mt-2 text-sm text-muted">Earn 1 point for every 10 USD in Florida or every 10,000 COP in Colombia. Redeem from 15 points, in steps of 5. Five points equal 20 USD or 20,000 COP off the bill.</p>
+                    </article>
+                </li>
+            </ol>
+        </section>
+        <section id="benefits" class="border-t border-amber-200 bg-surface" aria-labelledby="benefits-heading">
+            <div class="mx-auto max-w-5xl px-4 py-12">
+                <h2 id="benefits-heading" class="font-display text-2xl">Brasa Points benefits</h2>
+                <p class="mt-3 max-w-2xl text-muted">Tiers stack as you earn. Points stay valid while the account is active — at least one purchase every 12 months. Accounts are individual and not shared.</p>
+                <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <article class="rounded-xl border border-amber-200 bg-paper p-5">
+                        <h3 class="font-display text-xl">Bronze · 0–19 points</h3>
+                        <p class="mt-2 text-sm text-muted">5% off drinks on Tuesdays.</p>
+                    </article>
+                    <article class="rounded-xl border border-amber-200 bg-paper p-5">
+                        <h3 class="font-display text-xl">Silver · 20–49 points</h3>
+                        <p class="mt-2 text-sm text-muted">10% off the main dish, once a month.</p>
+                    </article>
+                    <article class="rounded-xl border border-amber-200 bg-paper p-5">
+                        <h3 class="font-display text-xl">Gold · 50+ points</h3>
+                        <p class="mt-2 text-sm text-muted">15% permanent discount and early access to the seasonal menu.</p>
+                    </article>
+                </div>
+                <p class="mt-8"><a class="rounded-lg bg-ember px-5 py-2.5 font-medium text-white hover:bg-ember-hover" href="uis/website/loyalty.html">Read Brasa Points rules</a></p>
+            </div>
+        </section>
+
+        <section class="border-t border-amber-200 bg-surface" aria-labelledby="markets-heading">
+            <div class="mx-auto max-w-5xl px-4 py-12">
+                <h2 id="markets-heading" class="mb-6 font-display text-2xl">Two markets, one grill</h2>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <article class="rounded-xl border border-amber-200 bg-paper p-5">
+                        <h3 class="font-display text-xl">Florida</h3>
+                        <p class="mt-2 text-sm text-muted">miami-downtown — USD market. Earn 1 Brasa Point for every 10 USD spent. Prices stay in USD $.</p>
+                    </article>
+                    <article class="rounded-xl border border-amber-200 bg-paper p-5">
+                        <h3 class="font-display text-xl">Colombia</h3>
+                        <p class="mt-2 text-sm text-muted">bogota-norte plus COL-01 through COL-10 — COP market. Earn 1 Brasa Point for every 10,000 COP spent. Prices stay in COP $.</p>
+                    </article>
+                    <aside class="rounded-xl border border-amber-200 bg-paper p-5" aria-label="Supplier order cadence">
+                        <h3 class="font-display text-xl">Supplier orders</h3>
+                        <p class="mt-2 text-sm text-muted">Proteins weekly (48h). Produce twice weekly (24h). Beverages and packaging biweekly. Imported sauces monthly. Protein emergency orders carry an 8% surcharge.</p>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-ember" aria-labelledby="apply-heading">
+            <div class="mx-auto flex max-w-5xl flex-col items-stretch justify-between gap-6 px-4 py-10 sm:px-6 sm:py-12 lg:flex-row lg:items-center">
+                <div>
+                    <h2 id="apply-heading" class="font-display text-2xl text-white">Supply the grill</h2>
+                    <p class="mt-2 max-w-xl text-sm text-amber-50">Apply to the supplier directory with the same fields operations uses: name, country, product_categories, emergency_surcharge_pct, and status.</p>
+                </div>
+                <a class="inline-flex w-full items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-ember no-underline shadow-sm hover:bg-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ember lg:w-auto" href="application.html">Apply as a supplier</a>
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-5xl px-4 py-12" aria-labelledby="local-heading">
+            <h2 id="local-heading" class="font-display text-2xl">Run locally in Codespaces</h2>
+            <p class="mt-3 max-w-2xl text-muted">From the repository root, serve this site with a Codespaces-compatible command. Binding to 0.0.0.0 exposes port 3000 for port forwarding.</p>
+            <pre class="mt-4 overflow-x-auto rounded-xl bg-ink px-4 py-3 text-sm text-paper"><code>npx http-server . -p 3000 -a 0.0.0.0</code></pre>
+            <p class="mt-3 text-sm text-muted">Then open http://127.0.0.1:3000/ for the landing page and http://127.0.0.1:3000/application.html for the supplier form.</p>
+        </section>
+    </main>
+
+    <footer id="contact" class="border-t border-amber-200 bg-surface" role="contentinfo" aria-labelledby="contact-heading">
+        <div class="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-4 py-10 text-sm text-muted sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+                <p class="m-0 font-display text-lg text-ink">Brasaland</p>
+                <p class="mt-2">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <address class="not-italic" aria-label="Brasaland contact">
+                <p id="contact-heading" class="m-0 font-semibold text-ink">Contact</p>
+                <p class="mt-2">Colombia and Florida (US)</p>
+                <p>miami-downtown · bogota-norte · COL-01–COL-10</p>
+                <p class="mt-2">Street addresses and phone numbers are not published in the company knowledge base.</p>
+                <p class="mt-2"><a class="text-ember hover:underline" href="application.html">Supplier application</a></p>
+                <p><a class="text-ember hover:underline" href="uis/website/locations.html">Locations</a></p>
+                <p><a class="text-ember hover:underline" href="uis/website/allergens.html">Allergens</a></p>
+            </address>
+            <nav aria-label="Footer" class="flex flex-col gap-2">
+                <a class="text-ember hover:underline" href="uis/website/staff.html">Staff tools</a>
+                <a class="text-ember hover:underline" href="https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo">GitHub repository</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

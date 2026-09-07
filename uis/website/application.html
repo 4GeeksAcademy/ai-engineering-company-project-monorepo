@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en" data-page="apply">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Supplier application — Brasaland</title>
+    <meta name="description" content="Apply to join the Brasaland supplier directory. Required fields: name, country, product_categories, emergency_surcharge_pct, and status." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ember: { DEFAULT: "#92400e", hover: "#78350f" },
+                        paper: "#f7f1e8",
+                        ink: "#1b140f",
+                        muted: "#5c5148",
+                        surface: "#fffaf3",
+                    },
+                    fontFamily: {
+                        display: ['"Iowan Old Style"', '"Palatino Linotype"', "Palatino", "Georgia", "serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        #supplier-application [aria-invalid="true"] {
+            border-color: #b91c1c;
+            background-color: #fef2f2;
+            box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.28);
+        }
+        #supplier-application .has-error > input,
+        #supplier-application .has-error > select {
+            border-color: #b91c1c;
+            background-color: #fef2f2;
+        }
+        #supplier-application [data-error-for]:not(:empty) {
+            display: block;
+        }
+        [data-theme="dark"] body {
+            background: #1c1917;
+            color: #faf5ef;
+        }
+        [data-theme="dark"] .text-ember {
+            color: #f59e0b;
+        }
+        [data-theme="dark"] .bg-ember {
+            background-color: #f59e0b;
+            color: #1b140f;
+        }
+        [data-theme="dark"] .hover\:bg-ember-hover:hover {
+            background-color: #fbbf24;
+            color: #1b140f;
+        }
+    </style>
+    <script src="theme.js"></script>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("brasaland-lang") === "es") {
+                    document.documentElement.lang = "es";
+                }
+            } catch (error) {}
+        })();
+    </script>
+    <!-- brasaland-jsonld -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization",
+      "name": "Brasaland",
+      "description": "Grilled-food restaurant chain operating in Colombia and Florida (US). Sirloin, ribs, and chicken over the brasa, with house sauce and corn arepas. Brasa Points are valid at every location. Florida stays in USD $; Colombia stays in COP $.",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/images/brasaland-logo.svg"
+      },
+      "sameAs": [
+        "https://github.com/Rickycastro1940/ai-engineering-company-project-monorepo"
+      ],
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "Colombia"
+        },
+        {
+          "@type": "AdministrativeArea",
+          "name": "Florida",
+          "containedInPlace": {
+            "@type": "Country",
+            "name": "United States"
+          }
+        }
+      ],
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "subOrganization": [
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#miami-downtown"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#bogota-norte"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-01"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-02"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-03"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-04"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-05"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-06"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-07"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-08"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-09"
+        },
+        {
+          "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-10"
+        }
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#website",
+      "name": "Brasaland",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/",
+      "inLanguage": [
+        "en",
+        "es"
+      ],
+      "publisher": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      }
+    },
+    {
+      "@type": "Menu",
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu",
+      "name": "Brasaland guest menu",
+      "url": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/menu.html",
+      "hasMenuSection": [
+        {
+          "@type": "MenuSection",
+          "name": "From the grill",
+          "hasMenuItem": [
+            {
+              "@type": "MenuItem",
+              "name": "Grilled Sirloin",
+              "alternateName": "Lomo a la Brasa",
+              "description": "Beef sirloin over the brasa, with a marinade."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Brasaland BBQ Ribs",
+              "description": "Grilled ribs with imported sauce."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Classic Grilled Chicken",
+              "description": "Chicken cooked over the brasa."
+            }
+          ]
+        },
+        {
+          "@type": "MenuSection",
+          "name": "Salad, side, and sauce",
+          "hasMenuItem": [
+            {
+              "@type": "MenuItem",
+              "name": "Tropical Salad",
+              "description": "With cashew and feta."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "Corn Arepa",
+              "description": "Served with the grill."
+            },
+            {
+              "@type": "MenuItem",
+              "name": "House Sauce",
+              "description": "Brasaland house sauce."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#miami-downtown",
+      "name": "Brasaland",
+      "branchCode": "miami-downtown",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "USD",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "Florida",
+        "addressCountry": "US"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#bogota-norte",
+      "name": "Brasaland",
+      "branchCode": "bogota-norte",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-01",
+      "name": "Brasaland",
+      "branchCode": "COL-01",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-02",
+      "name": "Brasaland",
+      "branchCode": "COL-02",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-03",
+      "name": "Brasaland",
+      "branchCode": "COL-03",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-04",
+      "name": "Brasaland",
+      "branchCode": "COL-04",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-05",
+      "name": "Brasaland",
+      "branchCode": "COL-05",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-06",
+      "name": "Brasaland",
+      "branchCode": "COL-06",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-07",
+      "name": "Brasaland",
+      "branchCode": "COL-07",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-08",
+      "name": "Brasaland",
+      "branchCode": "COL-08",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-09",
+      "name": "Brasaland",
+      "branchCode": "COL-09",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    },
+    {
+      "@type": [
+        "Restaurant",
+        "LocalBusiness",
+        "FoodEstablishment"
+      ],
+      "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#COL-10",
+      "name": "Brasaland",
+      "branchCode": "COL-10",
+      "parentOrganization": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#organization"
+      },
+      "currenciesAccepted": "COP",
+      "hasMenu": {
+        "@id": "https://rickycastro1940.github.io/ai-engineering-company-project-monorepo/#menu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CO"
+      }
+    }
+  ]
+}
+    </script>
+</head>
+<body class="min-h-screen bg-paper text-ink flex flex-col">
+    <a class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-20 focus:bg-surface focus:px-3 focus:py-2" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="sticky top-0 z-10 border-b border-amber-200/80 bg-surface" role="banner">
+        <div class="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+            <a class="flex items-center gap-3 no-underline" href="index.html" aria-label="Brasaland home">
+                <img src="images/brasaland-logo.svg" width="40" height="40" alt="Brasaland logo: a white flame over a grill on an ember square" class="h-9 w-9 rounded-lg sm:h-10 sm:w-10" />
+                <span>
+                    <span class="block font-display text-xl font-semibold tracking-tight text-ink">Brasaland</span>
+                    <span class="block text-xs uppercase tracking-widest text-muted">Colombia · Florida</span>
+                </span>
+            </a>
+            <nav id="primary-nav" class="nav flex w-full flex-wrap gap-x-4 gap-y-2 text-sm lg:w-auto" aria-label="Primary">
+                <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
+                    <li><a class="text-ember hover:underline" href="index.html" data-i18n="nav.home">Home</a></li>
+                    <li><a class="text-ember hover:underline" href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                    <li><a class="text-ember hover:underline" href="locations.html" data-i18n="nav.locations">Locations</a></li>
+                    <li><a class="text-ember hover:underline" href="loyalty.html" data-i18n="nav.loyalty">Brasa Points</a></li>
+                    <li><a class="text-ember hover:underline" href="allergens.html" data-i18n="nav.allergens">Allergens</a></li>
+                    <li><a class="font-semibold text-ink" href="application.html" aria-current="page" data-i18n="nav.apply">Supplier apply</a></li>
+                </ul>
+            </nav>
+            <div class="flex gap-2" role="group" aria-label="Site preferences">
+                <button type="button" class="rounded border border-amber-300 px-3 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2" data-lang-toggle aria-label="Switch to Spanish">ES</button>
+                <button type="button" class="rounded border border-amber-300 px-3 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2" data-theme-toggle aria-pressed="false">Dark mode</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" class="flex-1" tabindex="-1">
+        <section class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8" aria-labelledby="apply-heading">
+            <p class="text-xs uppercase tracking-widest text-ember sm:text-sm">Supplier directory</p>
+            <h1 id="apply-heading" class="mt-2 font-display text-3xl leading-tight sm:text-4xl">Apply to supply Brasaland</h1>
+            <p class="mt-4 max-w-3xl text-sm text-muted sm:text-base" id="apply-intro">
+                Brasaland is a grilled-food chain in Colombia and Florida. New vendors use the same fields as the operations directory:
+                <code class="text-ink">name</code>,
+                <code class="text-ink">country</code>,
+                <code class="text-ink">product_categories</code>,
+                <code class="text-ink">emergency_surcharge_pct</code>,
+                and <code class="text-ink">status</code>.
+                Protein emergency orders carry an <strong>8%</strong> surcharge over list price. Currencies stay USD $ and COP $ as written — never converted here.
+            </p>
+
+            <div id="form-error-summary" class="mt-6 rounded-lg border-2 border-red-600 bg-red-50 px-4 py-3 text-sm font-medium text-red-900 sm:text-base" hidden role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+            <section id="form-success" class="mt-8 hidden rounded-xl border-2 border-emerald-600 bg-emerald-50 p-5 shadow-sm sm:p-8" hidden role="status" aria-live="polite" tabindex="-1">
+                <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-sm">Submission simulated</p>
+                <h2 id="form-success-heading" class="mt-2 font-display text-2xl text-emerald-950 sm:text-3xl">Thank you — application received</h2>
+                <p class="mt-3 text-sm text-emerald-900 sm:text-base">
+                    Validation passed. This confirmation is client-side only — the form was not posted to a server.
+                    Operations still reviews the directory before orders are placed.
+                </p>
+                <dl class="mt-6 grid grid-cols-1 gap-3 rounded-lg border border-emerald-300 bg-white/70 p-4 text-sm text-emerald-950 sm:grid-cols-2" data-success-detail></dl>
+                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button type="button" id="submit-another" class="inline-flex min-h-11 items-center justify-center rounded-lg border-2 border-emerald-700 bg-white px-5 py-2.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2">
+                        Submit another application
+                    </button>
+                    <a class="text-ember underline" href="index.html">Back to home</a>
+                </div>
+            </section>
+
+            <form id="supplier-application" class="mt-8 grid gap-6 rounded-2xl border border-amber-200 bg-surface p-4 shadow-sm sm:gap-8 sm:p-6 lg:p-8" action="#" method="post" aria-labelledby="apply-heading" aria-describedby="apply-intro required-note" novalidate>
+                <p id="required-note" class="text-sm text-muted">Required fields are marked with <span class="font-semibold text-red-700">*</span> and use the HTML <code>required</code> attribute.</p>
+
+                <fieldset class="grid gap-4 rounded-xl border border-amber-200 p-4 sm:gap-5 sm:p-6">
+                    <legend class="px-1 font-display text-lg text-ink sm:text-xl">name and country</legend>
+                    <p class="text-xs text-muted sm:text-sm">Directory fields from CONTEXT.md. <code>id</code>, <code>supplier_id</code>, and <code>updated_at</code> are assigned by operations after review — they are not collected here.</p>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                    <div data-field="name">
+                        <label class="block text-sm font-medium text-ink sm:text-base" for="name">Legal or trade name <span class="text-red-700" aria-hidden="true">*</span></label>
+                        <p class="mt-1 text-xs text-muted" id="name-hint">Field <code>name</code> — required, at least 2 characters</p>
+                        <input class="mt-2 block w-full min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-base text-ink shadow-sm transition focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface aria-[invalid=true]:border-red-700 sm:min-h-10 sm:text-sm" id="name" name="name" type="text" autocomplete="organization" minlength="2" required aria-required="true" aria-describedby="name-hint name-error" />
+                        <p class="mt-2 hidden rounded-md border border-red-400 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" id="name-error" data-error-for="name" aria-live="polite"></p>
+                    </div>
+                    <div data-field="country">
+                        <label class="block text-sm font-medium text-ink sm:text-base" for="country">Country <span class="text-red-700" aria-hidden="true">*</span></label>
+                        <p class="mt-1 text-xs text-muted" id="country-hint">Field <code>country</code> — only <code>Colombia</code> or <code>United States</code></p>
+                        <select class="mt-2 block w-full min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-base text-ink shadow-sm transition focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface aria-[invalid=true]:border-red-700 sm:min-h-10 sm:text-sm" id="country" name="country" required aria-required="true" aria-describedby="country-hint country-error">
+                            <option value="">Select country</option>
+                            <option value="Colombia">Colombia</option>
+                            <option value="United States">United States</option>
+                        </select>
+                        <p class="mt-2 hidden rounded-md border border-red-400 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" id="country-error" data-error-for="country" aria-live="polite"></p>
+                    </div>
+                    </div>
+                </fieldset>
+
+                <fieldset data-field="product_categories" class="grid gap-4 rounded-xl border border-amber-200 p-4 sm:gap-5 sm:p-6" aria-describedby="product_categories-hint product_categories-error" aria-required="true">
+                    <legend class="px-1 font-display text-lg text-ink sm:text-xl">product_categories <span class="text-red-700" aria-hidden="true">*</span></legend>
+                    <p class="text-xs text-muted sm:text-sm" id="product_categories-hint">Valid CONTEXT.md categories only. HTML <code>required</code> cannot mean “one of a group”, so this field is validated in script.</p>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div class="flex min-h-11 items-start gap-3 rounded-lg border border-amber-200 bg-paper px-3 py-3 hover:border-ember/60 focus-within:border-ember focus-within:ring-2 focus-within:ring-ember">
+                            <input class="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-300 accent-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2" id="product_categories-proteins" type="checkbox" name="product_categories" value="proteins" />
+                            <label class="cursor-pointer text-sm sm:text-base" for="product_categories-proteins"><code>proteins</code> — weekly, 48 hours</label>
+                        </div>
+                        <div class="flex min-h-11 items-start gap-3 rounded-lg border border-amber-200 bg-paper px-3 py-3 hover:border-ember/60 focus-within:border-ember focus-within:ring-2 focus-within:ring-ember">
+                            <input class="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-300 accent-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2" id="product_categories-vegetables_and_fruit" type="checkbox" name="product_categories" value="vegetables_and_fruit" />
+                            <label class="cursor-pointer text-sm sm:text-base" for="product_categories-vegetables_and_fruit"><code>vegetables_and_fruit</code> — twice_weekly, 24 hours</label>
+                        </div>
+                        <div class="flex min-h-11 items-start gap-3 rounded-lg border border-amber-200 bg-paper px-3 py-3 hover:border-ember/60 focus-within:border-ember focus-within:ring-2 focus-within:ring-ember">
+                            <input class="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-300 accent-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2" id="product_categories-beverages_and_packaging" type="checkbox" name="product_categories" value="beverages_and_packaging" />
+                            <label class="cursor-pointer text-sm sm:text-base" for="product_categories-beverages_and_packaging"><code>beverages_and_packaging</code> — biweekly, 5 business days (120 hours)</label>
+                        </div>
+                        <div class="flex min-h-11 items-start gap-3 rounded-lg border border-amber-200 bg-paper px-3 py-3 hover:border-ember/60 focus-within:border-ember focus-within:ring-2 focus-within:ring-ember">
+                            <input class="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-300 accent-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2" id="product_categories-imported_sauces_and_condiments" type="checkbox" name="product_categories" value="imported_sauces_and_condiments" />
+                            <label class="cursor-pointer text-sm sm:text-base" for="product_categories-imported_sauces_and_condiments"><code>imported_sauces_and_condiments</code> — monthly, 10–15 business days (288 hours)</label>
+                        </div>
+                    </div>
+                    <p class="mt-2 hidden rounded-md border border-red-400 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" id="product_categories-error" data-error-for="product_categories" aria-live="polite"></p>
+                </fieldset>
+
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+                <fieldset class="grid gap-4 rounded-xl border border-amber-200 p-4 sm:gap-5 sm:p-6">
+                    <legend class="px-1 font-display text-lg text-ink sm:text-xl">emergency_surcharge_pct</legend>
+                    <div data-field="emergency_surcharge_pct">
+                        <label class="block text-sm font-medium text-ink sm:text-base" for="emergency_surcharge_pct">Emergency surcharge % <span class="text-red-700" aria-hidden="true">*</span></label>
+                        <p class="mt-1 text-xs text-muted" id="surcharge-hint">Field <code>emergency_surcharge_pct</code> — <code>type="number"</code>, greater than 0. Protein emergency orders use <strong>8</strong>.</p>
+                        <input class="mt-2 block w-full min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-base text-ink shadow-sm transition focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface aria-[invalid=true]:border-red-700 sm:min-h-10 sm:text-sm" id="emergency_surcharge_pct" name="emergency_surcharge_pct" type="number" inputmode="decimal" step="any" min="0.01" required aria-required="true" aria-describedby="surcharge-hint surcharge-error" />
+                        <p class="mt-2 hidden rounded-md border border-red-400 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" id="surcharge-error" data-error-for="emergency_surcharge_pct" aria-live="polite"></p>
+                    </div>
+                </fieldset>
+                <fieldset class="grid gap-4 rounded-xl border border-amber-200 p-4 sm:gap-5 sm:p-6">
+                    <legend class="px-1 font-display text-lg text-ink sm:text-xl">status</legend>
+                    <div data-field="status">
+                        <label class="block text-sm font-medium text-ink sm:text-base" for="status">Status <span class="text-red-700" aria-hidden="true">*</span></label>
+                        <p class="mt-1 text-xs text-muted" id="status-hint">Field <code>status</code> — <code>active</code>, <code>preferred</code>, or <code>inactive</code>. <code>suspend</code> / <code>suspended</code> are stored as <code>inactive</code>.</p>
+                        <select class="mt-2 block w-full min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-base text-ink shadow-sm transition focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface aria-[invalid=true]:border-red-700 sm:min-h-10 sm:text-sm" id="status" name="status" required aria-required="true" aria-describedby="status-hint status-error">
+                            <option value="">Select status</option>
+                            <option value="active">active — approved for new orders</option>
+                            <option value="preferred">preferred — primary vendor</option>
+                            <option value="inactive">inactive — do not use for new orders</option>
+                            <option value="suspend">suspend — accepted, stored as inactive</option>
+                            <option value="suspended">suspended — accepted, stored as inactive</option>
+                        </select>
+                        <p class="mt-2 hidden rounded-md border border-red-400 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" id="status-error" data-error-for="status" aria-live="polite"></p>
+                    </div>
+                </fieldset>
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ember px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-ember-hover focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface sm:w-auto sm:text-sm" type="submit">
+                        Submit application
+                    </button>
+                    <button class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border-2 border-amber-400 bg-white px-6 py-3 text-base font-semibold text-ink shadow-sm transition hover:bg-paper focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-surface sm:w-auto sm:text-sm" id="clear-form" type="reset">
+                        Clear form
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer id="contact" class="border-t border-amber-200 bg-surface" role="contentinfo" aria-labelledby="form-contact-heading">
+        <div class="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-4 py-8 text-sm text-muted sm:grid-cols-2 sm:px-6 sm:py-10 lg:grid-cols-3">
+            <div>
+                <p class="m-0 font-display text-lg text-ink">Brasaland</p>
+                <p class="mt-2" data-i18n="footer.tagline">Public site for guests. Operations tools stay behind sign-in.</p>
+            </div>
+            <address class="not-italic" aria-label="Brasaland contact">
+                <p class="m-0 font-semibold text-ink" id="form-contact-heading" data-i18n="footer.contact.h">Contact</p>
+                <p class="mt-2" data-i18n="footer.contact.markets">Colombia and Florida (US)</p>
+                <p>miami-downtown · bogota-norte · COL-01–COL-10</p>
+                <p class="mt-2" data-i18n="footer.contact.note">Street addresses and phone numbers are not published in the company knowledge base.</p>
+                <p class="mt-2"><a class="text-ember hover:underline" href="application.html" aria-current="page" data-i18n="footer.contact.suppliers">Supplier application</a></p>
+                <p><a class="text-ember hover:underline" href="locations.html" data-i18n="nav.locations">Locations</a></p>
+                <p><a class="text-ember hover:underline" href="allergens.html" data-i18n="nav.allergens">Allergens</a></p>
+            </address>
+            <nav aria-label="Footer" class="flex flex-col gap-2">
+                <a class="text-ember hover:underline" href="staff.html" data-i18n="footer.staff">Staff tools</a>
+                <a class="text-ember hover:underline" href="index.html">Home</a>
+            </nav>
+        </div>
+    </footer>
+    <script src="lang.js"></script>
+    <script src="site.js"></script>
+    <script src="validation.js?v=clear"></script>
+    <script>
+        (function () {
+            fetch("menu.html", { method: "HEAD" })
+                .then(function (response) {
+                    if (response.ok) {
+                        return;
+                    }
+                    var prefix = "uis/website/";
+                    document.querySelectorAll("a[href]").forEach(function (anchor) {
+                        var href = anchor.getAttribute("href");
+                        if (!href || href.charAt(0) === "#" || href.indexOf("http") === 0) {
+                            return;
+                        }
+                        if (href === "index.html" || href === "application.html") {
+                            return;
+                        }
+                        if (href.indexOf("uis/") === 0) {
+                            return;
+                        }
+                        anchor.setAttribute("href", prefix + href);
+                    });
+                    document.querySelectorAll("img[src]").forEach(function (image) {
+                        var src = image.getAttribute("src");
+                        if (!src || src.indexOf("http") === 0 || src.indexOf("uis/") === 0) {
+                            return;
+                        }
+                        image.setAttribute("src", prefix + src);
+                    });
+                    ["theme.js", "lang.js", "site.js"].forEach(function (file) {
+                        var script = document.createElement("script");
+                        script.src = prefix + file;
+                        document.body.appendChild(script);
+                    });
+                })
+                .catch(function () {});
+        })();
+    </script>
+</body>
+</html>

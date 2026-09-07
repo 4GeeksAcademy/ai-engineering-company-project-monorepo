@@ -18,7 +18,9 @@
 
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
             const spanish = document.documentElement.lang === "es";
-            if (theme === "dark") {
+            const dark = theme === "dark";
+            button.setAttribute("aria-pressed", dark ? "true" : "false");
+            if (dark) {
                 button.textContent = spanish ? "Modo claro" : "Light mode";
             } else {
                 button.textContent = spanish ? "Modo oscuro" : "Dark mode";

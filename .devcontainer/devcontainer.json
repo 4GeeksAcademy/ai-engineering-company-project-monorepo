@@ -1,0 +1,13 @@
+{
+  "name": "Brasaland public website",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Brasaland website",
+      "protocol": "http",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    }
+  },
+  "postStartCommand": "npx --yes http-server . -p 3000 -a 0.0.0.0"
+}

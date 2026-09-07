@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">Brasaland</title>
+  <rect width="64" height="64" rx="14" fill="#b45309"/>
+  <path fill="#fffaf3" d="M32 12c8 8 12 14 12 22a12 12 0 1 1-24 0c0-4 2-8 5-12 1.5 4 4 6 7 6 0-6 0-11 0-16z"/>
+  <path fill="#f7f1e8" opacity=".85" d="M32 22c3 4 5 7 5 11a5 5 0 1 1-10 0c0-2 1-4 2-6 1 2 2 3 3 3 0-3 0-5 0-8z"/>
+  <rect x="18" y="48" width="28" height="3" rx="1.5" fill="#fffaf3"/>
+  <rect x="22" y="52" width="20" height="2" rx="1" fill="#fffaf3" opacity=".7"/>
+</svg>
