@@ -6,10 +6,14 @@ from datetime import datetime
 from models import SupplierCreate, SupplierResponse, SupplierUpdateRate, SupplierUpdateStatus
 from database import get_db
 
+from fastapi import Depends
+from services.api.routes.auth import get_current_user
+
+
 router = APIRouter(prefix="/suppliers", tags=["suppliers"])
 
 @router.post("", response_model=SupplierResponse, status_code=201)
-def create_supplier(supplier: SupplierCreate):
+def create_supplier(supplier: SupplierCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     now = datetime.utcnow()
     supplier_dict = supplier.dict()
@@ -23,7 +27,8 @@ def create_supplier(supplier: SupplierCreate):
 @router.get("", response_model=List[SupplierResponse])
 def get_suppliers(
     country: Optional[str] = None,
-    category: Optional[str] = None
+    category: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
 ):
     db = get_db()
     SupplierQuery = TinyQuery()
@@ -46,7 +51,7 @@ def get_suppliers(
     return response
 
 @router.get("/{id}", response_model=SupplierResponse)
-def get_supplier(id: int):
+def get_supplier(id: int, current_user: dict = Depends(get_current_user)):
     db = get_db()
     record = db.get(doc_id=id)
     if not record:
@@ -56,7 +61,7 @@ def get_supplier(id: int):
     return SupplierResponse(**data)
 
 @router.patch("/{id}/rate", response_model=SupplierResponse)
-def update_supplier_rate(id: int, rate_update: SupplierUpdateRate):
+def update_supplier_rate(id: int, rate_update: SupplierUpdateRate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     record = db.get(doc_id=id)
     if not record:
@@ -71,7 +76,7 @@ def update_supplier_rate(id: int, rate_update: SupplierUpdateRate):
     return SupplierResponse(**data)
 
 @router.patch("/{id}/status", response_model=SupplierResponse)
-def update_supplier_status(id: int, status_update: SupplierUpdateStatus):
+def update_supplier_status(id: int, status_update: SupplierUpdateStatus, current_user: dict = Depends(get_current_user)):
     db = get_db()
     record = db.get(doc_id=id)
     if not record:
@@ -86,7 +91,7 @@ def update_supplier_status(id: int, status_update: SupplierUpdateStatus):
     return SupplierResponse(**data)
 
 @router.delete("/{id}", status_code=204)
-def delete_supplier(id: int):
+def delete_supplier(id: int, current_user: dict = Depends(get_current_user)):
     db = get_db()
     record = db.get(doc_id=id)
     if not record:

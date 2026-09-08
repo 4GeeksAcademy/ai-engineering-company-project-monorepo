@@ -4,8 +4,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 from fastapi.responses import FileResponse
+from services.api.routes import users, profiles, auth
 import csv
-
 from routes import suppliers
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../scripts'))
@@ -22,6 +22,9 @@ app.add_middleware(
 )
 
 app.include_router(suppliers.router)
+app.include_router(users.router)
+app.include_router(profiles.router)
+app.include_router(auth.router)
 
 latest_metrics = None
 
