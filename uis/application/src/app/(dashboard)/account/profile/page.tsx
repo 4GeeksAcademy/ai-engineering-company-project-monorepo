@@ -1,8 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../lib/axios';
-import { useAuth } from '../../../context/AuthContext';
+import api from '@/lib/axios';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfilePage() {
   const { isAuthenticated, logout, token } = useAuth();
@@ -22,11 +22,7 @@ export default function ProfilePage() {
   
   // 3. Efecto para Cargar Datos (Se ejecuta al entrar a la página)
   useEffect(() => {
-    // Si no está autenticado y no hay token, lo echamos por la fuerza al login
-    if (!isAuthenticated && !token) {
-      router.push('/login');
-      return;
-    }
+
     const fetchProfile = async () => {
       try {
         // Hacemos un GET a la ruta protegida de nuestro backend

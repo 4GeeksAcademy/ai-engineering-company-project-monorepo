@@ -8,34 +8,51 @@ interface AuthContextType {
   login: (newToken: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  user?: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
-
-
-// 1. Al cargar la app, intentamos recuperar el token de localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       setToken(savedToken);
+      fetchUser(savedToken);
     }
   }, []);
+
+  const fetchUser = async (currentToken: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/auth/me', {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error('Failed to fetch user', err);
+    }
+  };
 
 // 2. Función para iniciar sesión (guarda el token y actualiza el estado) 
   const login = (newToken: string) => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
+    fetchUser(newToken);
   };
 
 // 3. Función para cerrar sesión (borra el token y redirige)
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
+    setUser(null);
     router.push('/login'); 
   };
 
@@ -44,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
  // 5. Retornamos el proveedor con los valores para los componentes hijos
   return (
-    <AuthContext.Provider value={{ token, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ token, login, logout, isAuthenticated, user }}>
       {children}
     </AuthContext.Provider>
   );

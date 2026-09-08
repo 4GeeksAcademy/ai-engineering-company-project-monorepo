@@ -1,45 +1,61 @@
-# Plan de Implementación: Autenticación en el Frontend (AUTH-02)
+# Implementation Plan: Refactorización a App Shell (Dashboard B2B)
 
-De acuerdo con el documento `STRATEGY.md` y aplicando el protocolo de la skill `code-refinement-suite`, la implementación de Flujos de Autenticación JWT en el Frontend se clasifica como de **Alta Complejidad (Nivel 3)**.
+## 1. Nivel de Complejidad
+- **Nivel:** 3 (Complejidad Alta / Módulo Crítico)
+- **Justificación:** Implica la reestructuración completa del sistema de enrutamiento del Frontend (Next.js App Router), la centralización de la seguridad (RBAC) y la creación de un Layout maestro que afectará a todos los departamentos de la empresa.
 
-El ciclo de desarrollo se dividirá en las siguientes fases interactivas. Como siempre, yo te guiaré paso a paso por el chat actuando como tu tutor, y tú escribirás el código.
+---
 
-## 🏛️ Fase 1: Arquitectura y Diseño (`PACK_ARCHITECT` & `PACK_PLANNER`)
-**Objetivo:** Decidir la estrategia de protección de rutas y gestión del estado del JWT antes de tocar el código.
-- [x] **Interceptor HTTP / Cliente:** Definir cómo interceptaremos cada llamada a la API para inyectar automáticamente la cabecera `Authorization: Bearer <token>` (ej. usando un wrapper de `fetch` o `axios`).
-- [x] **Estrategia de Protección (Auth Guard):** Diseñar un componente de React (HOC o Layout) o un Hook personalizado que se encargue de leer el `localStorage`, verificar la existencia del token y expulsar a los usuarios hacia `/login` si es inválido, sin romper el sitio web público.
+## 2. Análisis PACK_ARCHITECT (Tree of Thoughts & Expertos)
 
-## 💻 Fase 2: Formularios de Login y Registro (`PACK_CODER` - Parte 1)
-**Objetivo:** Construir la puerta de entrada a la aplicación.
-- [x] Construir la vista `/login` (formulario de email/password), gestionar el estado y los errores.
-- [x] Guardar el JWT recibido en `localStorage` al hacer login exitoso.
-- [x] Construir la vista `/register` (campos de credenciales + perfil opcional). Tras el éxito, hacer login automático y redirigir.
+Antes de definir el plan, hemos evaluado 3 alternativas arquitectónicas para centralizar el panel:
 
-## 💻 Fase 3: Vista de Perfil (`PACK_CODER` - Parte 2)
-**Objetivo:** Consumir los endpoints protegidos con el token real.
-- [x] Construir `/account/profile`.
-- [x] Consumir `GET /auth/me` enviando el token en la cabecera para pintar el email, nombre, teléfono y dirección.
-- [x] Implementar la edición de datos consumiendo `PUT /profiles/me`.
+| Alternativa | Análisis de Expertos (UX, Dev, Sec) | Decisión |
+|---|---|---|
+| **Rama 1: HOC (Higher Order Component)** | Envolver cada vista (`/incidents`, `/tickets`) con un componente `<WithAuth><Layout>`. **Dev:** Mucho boilerplate. **UX:** Posible parpadeo (FOUC). **Sec:** Funciona, pero propenso a olvidos si se crea una vista nueva. | ❌ Descartada |
+| **Rama 2: SPA Monolítica en `/admin`** | Mover todo a una única ruta `/admin` y renderizar componentes hijos según el estado de React. **Dev:** Rompe el paradigma de Next.js Server Components. **UX:** Tiempos de carga iniciales altos. | ❌ Descartada |
+| **Rama 3: Route Groups `(dashboard)`** | Usar la funcionalidad nativa de Next.js agrupando rutas en `app/(dashboard)`. **Dev:** Código limpio, el `layout.tsx` no añade segmentos a la URL. **UX:** Transiciones fluidas, el Sidebar no se re-renderiza. **Sec:** Protección global hermética. | ✅ **Seleccionada** |
 
-## 🛡️ Fase 4: Protección de Rutas Global y Logout (`PACK_CODER` - Parte 3)
-**Objetivo:** Cerrar el candado en todo el frontend.
-- [x] Envolver todas las páginas privadas de Next.js con el `AuthGuard` definido en la Fase 1.
-- [x] Implementar la lógica de cierre de sesión (borrar token de `localStorage` y redirigir).
-- [x] Implementar interceptor pasivo: Si en cualquier momento la API responde un `401 Unauthorized` a una petición del frontend, forzar el borrado del token y enviar al `/login`.
+---
 
-## 🔎 Fase 5: Verificación y Auditoría (`PACK_AUDITOR`)
-**Objetivo:** Pruebas E2E (End-to-End) y garantía de no regresión.
-- [x] **Flujo feliz:** Navegar Registro -> Login -> Editar Perfil -> Logout exitosamente.
-- [x] **Flujo de rechazo:** Intentar entrar manualmente por la URL a `/account/profile` sin token y ser rechazado.
-- [x] **Auditoría de regresión:** Asegurarnos de que el website público del Hito 1 siga siendo 100% accesible sin requerir autenticación.
-- [x] Preparar la rama para el Pull Request final.
+## 3. Plan de Ejecución (Paso a Paso)
+
+### Fase 1: Creación del Layout Central (App Shell)
+- [ ] Crear el directorio `uis/application/src/app/(dashboard)`.
+- [ ] Construir `uis/application/src/app/(dashboard)/layout.tsx`.
+- [ ] Diseñar el componente `Sidebar` dentro del Layout con enlaces a: Inicio, Incidencias, Tickets, Proveedores, Soporte IA, Mi Perfil.
+- [ ] Implementar la protección de rutas global: si `!isAuthenticated`, redirigir a `/login`.
+
+### Fase 2: Migración de Rutas Administrativas
+- [ ] Mover las carpetas `/admin`, `/incidents`, `/suppliers`, `/support` y `/account` al interior del grupo `(dashboard)`.
+- [ ] Eliminar los chequeos de `useAuth()` redundantes en los `page.tsx` de cada una de estas vistas, delegando la seguridad al Layout padre.
+
+### Fase 3: Integración de Roles y Permisos (RBAC)
+- [ ] Modificar el contexto de Autenticación o el Sidebar para leer el `UserRole` del perfil del usuario.
+- [ ] Ocultar o mostrar condicionalmente los enlaces del Sidebar (Ej: Solo los administradores ven el panel "Tickets" global, o los usuarios rasos solo ven "Soporte IA"). *(Ver Decisiones Requeridas)*.
+
+### Fase 4: Limpieza de la Landing Page
+- [ ] Modificar `uis/application/src/app/page.tsx` (Landing Page).
+- [ ] Eliminar los enlaces a submódulos en la barra de navegación pública.
+- [ ] Reemplazar por un botón dinámico `Entrar al Dashboard` (si está logueado) o `Login` (si es invitado).
+
+### Fase 5: Auditoría y Verificación (PACK_AUDITOR)
+- [ ] Comprobar que acceder directamente a `/incidents` sin sesión devuelve al usuario al login.
+- [ ] Comprobar que al navegar entre secciones del Dashboard el estado del Sidebar (ej: ítem activo) se mantiene y no hay parpadeos.
+
+---
+
+## 4. Decisiones Requeridas
+
+> [!IMPORTANT]
+> **Definición de Roles en el Menú (Fase 3):** Para configurar el RBAC en el Sidebar, necesito saber: ¿Quién tiene acceso a qué? 
+> Ej: ¿Puede un `user` estándar ver "Incidencias" o solo `manager` y `admin`? ¿"Soporte IA" es para todos? 
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
-Para garantizar la calidad y seguridad de esta implementación (clasificada como Nivel 3), aplicaremos conceptualmente las siguientes metodologías de nuestra suite:
 
-- **PACK 1 (ARCHITECT):** Se utilizó *Tree of Thoughts (ToT)* y el criterio de *3 Expertos* (Dev Lead para la arquitectura del interceptor HTTP, UX/UI para las redirecciones fluidas del usuario, y Sec Specialist para la custodia segura del JWT en el cliente).
-- **PACK 2 (PLANNER):** Se aplicó *Step-Back Prompting* para abstraer el problema (crear un AuthGuard global en lugar de proteger componente por componente) y estructurar este plan.
-- **PACK 3 (CODER):** Durante el desarrollo aplicaremos *Chain of Verification (CoVe)* contrastando cada paso con la API real, y simularemos *TDD* verificando los flujos paso a paso.
-- **PACK 4 (AUDITOR):** En la fase final aplicaremos *Red Teaming* (intentando evadir nuestra propia seguridad entrando directamente por URL) y un *Checklist pre-push*.
+1. **PACK_ARCHITECT (ToT + 3 Expertos):** Aplicado en la sección 2 del documento para contrastar el uso de HOCs vs Route Groups, decantándonos por el estándar moderno de Next.js para mayor seguridad (Sec Specialist) y experiencia de usuario sin re-renders (UX).
+2. **PACK_PLANNER:** Estructuración modular en 5 fases secuenciales asegurando que la migración no rompa los endpoints que ya conectamos.
+3. **PACK_CODER (Próximo paso):** Se aplicará un enfoque de *Chain of Verification (CoVe)* al mover las carpetas, asegurándonos de que los imports relativos en Next.js no se rompan tras mover los archivos a `(dashboard)`.
+4. **PACK_AUDITOR (Fase 5):** Simularemos un *Red Teaming* intentando acceder a rutas profundas sin token para asegurar el blindaje del Layout. Y recordaré **no hacer push automático** al terminar.

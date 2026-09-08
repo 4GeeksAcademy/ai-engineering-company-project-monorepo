@@ -10,6 +10,9 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "libpass[bcrypt]>=1.9.3",
     "python-multipart>=0.0.32",
+    "resend>=2.43.0",
+    "faker>=40.38.0",
+    "playwright>=1.62.0",
 ]
 
 [project.scripts]
