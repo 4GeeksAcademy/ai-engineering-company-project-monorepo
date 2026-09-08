@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+nexova_api.egg-info/PKG-INFO
+nexova_api.egg-info/SOURCES.txt
+nexova_api.egg-info/dependency_links.txt
+nexova_api.egg-info/entry_points.txt
+nexova_api.egg-info/requires.txt
+nexova_api.egg-info/top_level.txt
+services/__init__.py
+services/api/__init__.py
+services/api/database.py
+services/api/main.py
+services/api/models.py
+services/api/seed.py
