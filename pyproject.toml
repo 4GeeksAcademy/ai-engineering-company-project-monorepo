@@ -1,0 +1,16 @@
+[project]
+name = "nexova-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "tinydb",
+    "pydantic"
+]
+
+[project.scripts]
+seed = "services.api.seed:run_seed"
+
+[tool.setuptools]
+packages = ["services", "services.api"]
