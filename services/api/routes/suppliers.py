@@ -3,8 +3,8 @@ from typing import List, Optional
 from tinydb import Query as TinyQuery
 from datetime import datetime
 
-from models import SupplierCreate, SupplierResponse, SupplierUpdateRate, SupplierUpdateStatus
-from database import get_db
+from services.api.models import SupplierCreate, SupplierResponse, SupplierUpdateRate, SupplierUpdateStatus
+from services.api.database import get_db
 
 from fastapi import Depends
 from services.api.routes.auth import get_current_user
