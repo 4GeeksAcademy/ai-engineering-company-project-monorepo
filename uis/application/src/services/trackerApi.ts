@@ -53,13 +53,18 @@ export async function getCandidates(filters?: CandidateFilters): Promise<Candida
     url.searchParams.append('stage', filters.stage);
   }
 
-  const response = await fetch(url.toString(), {
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    cache: 'no-store',
-  });
+  let response;
+  try {
+    response = await fetch(url.toString(), {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      cache: 'no-store',
+    });
+  } catch (error) {
+    throw new Error("No se pudo conectar con el servidor. Verifica tu conexión a internet.");
+  }
 
   const data = await handleResponse<Candidate[] | { records: Candidate[] }>(response);
   const candidatesList = Array.isArray(data) ? data : data.records || [];
@@ -82,13 +87,18 @@ export async function getCandidates(filters?: CandidateFilters): Promise<Candida
  * Obtiene el detalle de un candidato específico (GET /records/:id).
  */
 export async function getCandidateById(id: number | string): Promise<Candidate> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    cache: 'no-store',
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      cache: 'no-store',
+    });
+  } catch (error) {
+    throw new Error("No se pudo conectar con el servidor al obtener el candidato.");
+  }
 
   return handleResponse<Candidate>(response);
 }
@@ -97,14 +107,19 @@ export async function getCandidateById(id: number | string): Promise<Candidate> 
  * Registra una nueva candidatura en la API (POST /records).
  */
 export async function createCandidate(data: CreateCandidateInput): Promise<Candidate> {
-  const response = await fetch(`${API_BASE_URL}/candidates`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    throw new Error("Error de red al intentar crear el candidato.");
+  }
 
   return handleResponse<Candidate>(response);
 }
@@ -116,14 +131,19 @@ export async function updateCandidate(
   id: number | string,
   data: UpdateCandidateInput
 ): Promise<Candidate> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    throw new Error("Error de red al intentar actualizar el candidato.");
+  }
 
   return handleResponse<Candidate>(response);
 }
@@ -135,14 +155,19 @@ export async function patchCandidateStatusStage(
   id: number | string,
   updates: PatchCandidateInput
 ): Promise<Candidate> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(updates),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(updates),
+    });
+  } catch (error) {
+    throw new Error("Error de red al intentar actualizar el estado.");
+  }
 
   return handleResponse<Candidate>(response);
 }
@@ -151,13 +176,18 @@ export async function patchCandidateStatusStage(
  * Obtiene las notas internas de un candidato (GET /records/:id/notes).
  */
 export async function getCandidateNotes(id: number | string): Promise<CandidateNote[]> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}/notes`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    cache: 'no-store',
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}/notes`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      cache: 'no-store',
+    });
+  } catch (error) {
+    throw new Error("No se pudo conectar con el servidor para obtener las notas.");
+  }
 
   const data = await handleResponse<CandidateNote[] | { notes: CandidateNote[] }>(response);
   return Array.isArray(data) ? data : data.notes || [];
@@ -170,14 +200,19 @@ export async function addCandidateNote(
   id: number | string,
   content: string
 ): Promise<CandidateNote> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}/notes`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify({ content }),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ content }),
+    });
+  } catch (error) {
+    throw new Error("Error de red al intentar agregar la nota.");
+  }
 
   return handleResponse<CandidateNote>(response);
 }
@@ -189,13 +224,18 @@ export async function deleteCandidateNote(
   id: number | string,
   noteId: number | string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}/notes/${noteId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/candidates/${id}/notes/${noteId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+  } catch (error) {
+    throw new Error("Error de red al intentar eliminar la nota.");
+  }
 
   await handleResponse<void>(response);
 }

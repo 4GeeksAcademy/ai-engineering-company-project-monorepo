@@ -85,6 +85,8 @@ def get_all_candidates_from_db(status: str = None, stage: str = None) -> list:
     notes_table = db.table('candidate_notes')
     for c in candidates:
         c['notes'] = notes_table.search(Query().candidate_id == c['id'])
+        
+    candidates.sort(key=lambda x: x.get("score_ia") or 0, reverse=True)
     return candidates
 
 def get_candidate_from_db(candidate_id: int) -> dict:

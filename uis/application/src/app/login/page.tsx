@@ -106,6 +106,16 @@ export default function LoginPage() {
                     ¿No tienes una cuenta? <Link href="/register" className="text-blue-600 hover:underline">Regístrate</Link>
                 </p>
             </div>
+
+            {/* Enlace para volver a la Web Oficial */}
+            <div className="mt-8">
+                <Link href="/" className="flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Volver a la Web Oficial
+                </Link>
+            </div>
         </div>
     );
 }

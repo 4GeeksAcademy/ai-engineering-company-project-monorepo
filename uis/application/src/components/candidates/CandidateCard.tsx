@@ -20,8 +20,18 @@ export default function CandidateCard({ candidate }: CandidateCardProps) {
             <p className="text-xs font-semibold text-blue-600 mt-0.5">{candidate.position}</p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
-            <Badge label={candidate.status} variant="status" size="sm" />
-            <Badge label={candidate.stage} variant="stage" size="sm" />
+            <div className={`px-2 py-1 rounded-md border text-xs font-bold ${
+              !candidate.score_ia ? 'bg-slate-50 text-slate-500 border-slate-200' :
+              candidate.score_ia >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+              candidate.score_ia >= 60 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+              'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>
+              Score IA: {candidate.score_ia || 0}/100
+            </div>
+            <div className="flex gap-1.5">
+              <Badge label={candidate.status} variant="status" size="sm" />
+              <Badge label={candidate.stage} variant="stage" size="sm" />
+            </div>
           </div>
         </div>
 

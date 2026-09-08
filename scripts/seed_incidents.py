@@ -98,4 +98,9 @@ def run_seed():
     print(f"Seed completado: {inserted_count} insertados, {error_count} errores.")
 
 if __name__ == "__main__":
-    run_seed()
+    import sys
+    try:
+        run_seed()
+    except Exception as e:
+        print(f"Error crítico al ejecutar el seed de incidencias: {e}", file=sys.stderr)
+        sys.exit(1)

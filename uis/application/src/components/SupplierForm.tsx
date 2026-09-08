@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import api from "@/lib/axios";
 
 interface SupplierFormProps {
   onSuccess: () => void;
@@ -28,20 +29,10 @@ export default function SupplierForm({ onSuccess, onCancel }: SupplierFormProps)
     };
 
     try {
-      const res = await fetch("http://localhost:8000/suppliers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        setError(JSON.stringify(errorData.detail) || "Error al crear proveedor");
-        return;
-      }
+      const res = await api.post("/suppliers", payload);
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Network error");
+      setError(err.response?.data?.detail || err.message || "Network error");
     }
   };
 
