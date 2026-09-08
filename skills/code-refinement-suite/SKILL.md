@@ -3,7 +3,7 @@ name: code-refinement-suite
 description: Guía y marco de trabajo modular para acompañar la creación de Implementation Plans y código por etapas (Ideación, Planificación, Código, Auditoría) adaptado según el nivel de complejidad del proyecto.
 ---
 
-# Code Refinement Suite · AgenciAlquimia
+# Code Refinement Suite
 
 Esta skill rige el ciclo de vida completo desde la concepción de un **Implementation Plan** hasta la validación previa al envío del código en AgenciAlquimia.
 
@@ -51,6 +51,7 @@ flowchart TD
 ### 📝 PACK 2: PLANNER (Estructuración del Plan de Implementación)
 - **Herramientas:** `Step-Back Prompting (Abstracción)` + `Self-Refinement Loop (3 Ciclos)`.
 - **Acción:** Define componentes desacoplados y refina el documento `implementation-plan.md` hasta dejarlo impecable.
+- **Regla de Formato Obligatoria:** SIEMPRE debes incluir al final de cualquier plan de implementación que generes una sección titulada `## ⚙️ Métodos Aplicados (Code Refinement Suite)`. En esta sección, debes explicar brevemente cómo has aplicado o aplicarás conceptualmente los métodos específicos de esta suite (ToT, CoVe, Red Teaming, etc.) adaptados a la implementación actual.
 
 ### 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
 - **Herramientas:** `Chain of Verification (CoVe)` + `Test-Driven Refinement (TDD)`.

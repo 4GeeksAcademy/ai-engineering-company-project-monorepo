@@ -6,7 +6,7 @@ import tempfile
 from fastapi.responses import FileResponse
 from services.api.routes import users, profiles, auth
 import csv
-from routes import suppliers
+from services.api.routes import suppliers
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../scripts'))
 from analyzer_core import process_incidents, calculate_metrics
