@@ -1,75 +1,112 @@
 # README
 
-## Conectando el Candado: Flujos de Autenticación en el Frontend
+## La Pieza Que Faltaba: Flujo de Restablecimiento de Contraseña
 
 ### 🎯 Tu reto
 **📌 Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
 
-En la entrega anterior aseguraste la API. Las rutas protegidas ahora devuelven `401` a cualquiera que no tenga una sesión válida — incluyendo tu propio frontend. Es momento de cerrar ese ciclo.
+El sistema de autenticación está funcionando. Los usuarios pueden registrarse, iniciar sesión y gestionar su perfil.
 
-Tu tech lead ha abierto el siguiente ticket:
+¿Pero qué ocurre cuando olvidan su contraseña — o necesitan cambiarla estando conectados?
 
-#### AUTH-02 — Flujos de autenticación y vistas protegidas en el frontend
-La API ya exige un token JWT en las rutas protegidas. Esta tarea cubre el lado frontend de ese contrato:
+Ahora mismo, un usuario que olvida su contraseña no tiene forma de recuperar su cuenta. Los usuarios con sesión iniciada no tienen un formulario para actualizar su contraseña. En cualquier sistema en producción, ambos flujos son requisitos básicos de seguridad. Tu plataforma no tiene ningún mecanismo para ninguno de los dos.
 
-- **Vistas de login y registro** — formularios que llaman a la API, reciben el token y lo almacenan correctamente.
-- **Vistas de gestión de cuenta** — página de perfil.
-- **Protección de rutas** — cualquier vista que requiera sesión debe redirigir a los usuarios no autenticados al login. Esto aplica a todas las aplicaciones del monorepo excepto el website público (Hito 1), que permanece completamente público.
-- El token debe almacenarse en `localStorage` y adjuntarse a cada llamada protegida a la API mediante la cabecera `Authorization: Bearer <token>`. Al cerrar sesión, el token se elimina y el usuario es redirigido al login.
+Tu tech lead ha abierto el ticket:
 
-> **Importante:** No construyas una aplicación de autenticación separada. Integra estos flujos en las aplicaciones Next.js existentes dentro de tu monorepo.
+#### AUTH-03 — Recuperación y cambio de contraseña
+La plataforma necesita dos mecanismos de contraseña — restablecimiento cuando el usuario la olvidó, y cambio estando conectado. Esto cubre tanto la API como el frontend:
+
+**Backend:**
+- `POST /auth/forgot-password` — recibe un email, valida que el usuario existe, genera un token de restablecimiento firmado de corta duración y envía un enlace de restablecimiento a la dirección del usuario.
+- `POST /auth/reset-password` — recibe el token de restablecimiento y una nueva contraseña, valida el token (firma + expiración), hashea la nueva contraseña y actualiza el registro del usuario. El token debe quedar invalidado tras su uso.
+- `POST /auth/change-password` — endpoint autenticado. Recibe la contraseña actual y una nueva, verifica la actual, hashea la nueva y actualiza el registro del usuario.
+
+**Frontend:**
+- `/forgot-password` — formulario donde el usuario introduce su email. Siempre muestra un mensaje de confirmación tras el envío, independientemente de si la dirección existe, para evitar la enumeración de usuarios.
+- `/reset-password` — formulario donde el usuario establece una nueva contraseña. Lee el token de restablecimiento del query string de la URL y lo envía a la API junto con la nueva contraseña. Si tiene éxito, redirige a `/login`.
+- `/account/change-password` — formulario con la contraseña actual, la nueva contraseña y la confirmación. Valida que la nueva contraseña y la confirmación coinciden antes de llamar a la API.
+
+Para el envío de correos, elige uno de los siguientes servicios e intégralo:
+- **Resend**
+- **SendGrid (Twilio)**
+
+> **¿Por qué solo estos dos?** Para este ejercicio, Resend y SendGrid son las opciones prácticas: puedes completar el flujo en desarrollo sin un dominio propio (Resend con su remitente de onboarding; SendGrid en trial/sandbox o con un remitente único verificado — revisa su documentación actual). Alternativas como Mailgun o MailerSend suelen exigir verificar tu propio dominio en DNS antes de enviar a destinatarios arbitrarios, lo que bloquea a muchos estudiantes durante el proyecto.
+
+Ambos ofrecen un tier gratuito suficiente para desarrollo. Las API keys deben almacenarse en variables de entorno — **nunca en el código fuente**.
 
 ---
 
-### Conocimiento complementario: el lado frontend del JWT
-Una vez que la API devuelve un token en el login, el trabajo del frontend es: almacenarlo, enviarlo y reaccionar a su ausencia. El patrón estándar en Next.js es:
+### Conocimiento complementario: cómo funciona un flujo de restablecimiento de contraseña
+El flujo tiene tres pasos y dos momentos separados en el tiempo:
 
-1. **Almacenar el token** en `localStorage` después de una respuesta de login exitosa.
-2. **Leer el token** en cada llamada protegida a la API y establecerlo en la cabecera `Authorization: Bearer <token>`.
-3. **Proteger rutas** — usa un *layout guard* o *hook* en el cliente que lea `localStorage` y redirija a `/login` si no hay token. El middleware de Next.js corre en el servidor y no puede leer `localStorage`; no lo uses para esta comprobación salvo que también guardes una cookie que el middleware pueda ver.
-4. **Limpiar el token** al cerrar sesión y redirigir al login.
+1. **Solicitud** — el usuario envía su email. El servidor genera un token de restablecimiento (un JWT firmado o una cadena aleatoria almacenada en la base de datos), construye una URL de restablecimiento que contiene ese token (`/reset-password?token=<token>`) y la envía al email del usuario mediante un servicio de correo transaccional.
+2. **Restablecimiento** — el usuario hace clic en el enlace, llega a la página `/reset-password`, introduce una nueva contraseña y envía el formulario. El frontend envía el token (leído de la URL) y la nueva contraseña a la API. El servidor valida el token (firma, expiración y que no se haya usado ya), actualiza la contraseña e invalida el token para que no pueda reutilizarse.
+3. **Confirmación** — el usuario es redirigido a `/login` y puede iniciar sesión con la nueva contraseña.
 
-> **Nota:** La rotura temporal del frontend de la entrega anterior termina aquí. Al finalizar este proyecto, todas las vistas protegidas deben funcionar de extremo a extremo con autenticación real.
-Asegúrate de que tu API de la entrega anterior está corriendo y es accesible desde el frontend antes de empezar.
+> **¿Por qué mostrar siempre un mensaje de confirmación?** Si el formulario muestra "email no encontrado" para direcciones que no existen, un atacante puede usar eso para enumerar qué emails están registrados. Responder siempre con "si esa dirección está en nuestro sistema, recibirás un enlace" lo evita.
+
+**Expiración y reutilización:** Un token de restablecimiento debe durar 15–60 minutos y quedar inutilizable tras un reset exitoso. Un JWT con solo un claim `exp` no se puede invalidar después de usarlo. Persiste estado en el servidor: una fila con el token hasheado, un registro de tokens usados, o un `password_changed_at` que rechace tokens emitidos antes de ese momento. Codificar la expiración en el payload del JWT no basta.
+
+---
+
+### 🌱 Cómo Iniciar el Proyecto
+Este proyecto continúa dentro de tu monorepo existente. Abre una nueva rama: 
+
+`git switch -c feature/password-reset`
+
+Antes de empezar, regístrate en uno de los servicios de email listados arriba y obtén una API key. Guárdala en tu archivo `.env`. Asegúrate de que `.env` está en tu `.gitignore` — **nunca hagas commit de API keys.**
 
 
 # 💻 Qué Debes Hacer
 
-## Vistas de autenticación
+## Backend
 
-- [ ] `/login` — formulario de email y contraseña. Si tiene éxito: almacena el token en `localStorage`, redirige a la vista autenticada principal. Si falla: muestra un mensaje de error claro.
-- [ ] `/register` — formulario de registro. Si tiene éxito: llama a `POST /users` (incluye campos opcionales de perfil), luego a `POST /auth/login` con las mismas credenciales, almacena el token y redirige. Si falla: muestra errores de validación a nivel de campo.
+- [ ] `POST /auth/forgot-password` — acepta `{ email }`. Si el usuario existe, genera un token de restablecimiento con expiración corta (15–60 minutos) y envía un email con el enlace de restablecimiento. Devuelve siempre `200` independientemente de si el email fue encontrado.
+- [ ] `POST /auth/reset-password` — acepta `{ token, new_password }`. Valida el token (firma, expiración y que no se haya usado ya). Si es válido, hashea la nueva contraseña, actualiza el registro del usuario e invalida el token. Devuelve `400` para tokens inválidos, expirados o ya utilizados.
+- [ ] `POST /auth/change-password` — acepta `{ current_password, new_password }`. Requiere un token de sesión válido en la cabecera `Authorization`. Verífica la contraseña actual antes de actualizar. Devuelve `400` si la contraseña actual es incorrecta.
+- [ ] Integra un servicio de correo transaccional para enviar el email de restablecimiento. El email debe incluir el enlace de restablecimiento y ser legible en móvil.
+- [ ] Almacena la API key del servicio de email en una variable de entorno. Documenta el nombre de la variable en tu `README` o en un `.env.example`.
 
-## Vistas de gestión de cuenta
+## Frontend
 
-- [ ] `/account/profile` — muestra el email del usuario actual más los datos de perfil (`name`, `phone`, `address`) desde `GET /auth/me`. Permite editar nombre y contacto mediante `PUT /profiles/me` con el token en la cabecera.
+- [ ] `/forgot-password` — formulario con campo de email. Al enviarlo, llama a `POST /auth/forgot-password` y muestra un mensaje de confirmación ("Si esa dirección está registrada, recibirás un enlace en breve"). El formulario debe desactivarse tras el envío para evitar peticiones duplicadas.
+- [ ] `/reset-password` — formulario de nueva contraseña con campo de confirmación. Lee el `token` del query string de la URL. Al enviarlo, llama a `POST /auth/reset-password`. Si tiene éxito, redirige a `/login` con un mensaje de éxito. Si falla (token expirado o inválido), muestra un error claro y un enlace de vuelta a `/forgot-password`.
+- [ ] `/account/change-password` — formulario con la contraseña actual, la nueva contraseña y la confirmación. Valida que la nueva contraseña y la confirmación coinciden antes de llamar a la API.
+- [ ] Añade un enlace "¿Olvidaste tu contraseña?" en la página `/login` que apunte a `/forgot-password`.
 
-## Protección de rutas
+## Seguridad
 
-- [ ] Identifica todas las vistas de tus aplicaciones Next.js (excluyendo el website público) que requieren sesión autenticada.
-- [ ] Implementa un mecanismo de protección en el cliente (layout guard o hook personalizado) que compruebe el token en `localStorage` y redirija a `/login` si está ausente o no es válido. No uses el middleware de Next.js para esto salvo que el token también esté en una cookie que el middleware pueda leer.
-- [ ] Asegúrate de que el website público (Hito 1) no se ve afectado — sin comprobación de token, sin redirección.
+- [ ] Los tokens de restablecimiento deben expirar e invalidarse tras su uso — un token no puede usarse dos veces.
+- [ ] El endpoint `/forgot-password` debe devolver siempre `200`, nunca revelar si un email está registrado.
+- [ ] Las API keys no deben aparecer nunca en el código fuente — usa exclusivamente variables de entorno.
 
-## Ciclo de vida del token
+# 🚀 Para ir más lejos (opcional)
 
-- [ ] En login y registro: almacena el token en `localStorage`.
-- [ ] En cada llamada protegida a la API: lee el token y adjúntalo como `Authorization: Bearer <token>`.
-- [ ] Al cerrar sesión: elimina el token de `localStorage` y redirige a `/login`.
-- [ ] Si una llamada protegida a la API devuelve `401`: limpia el token y redirige a `/login`.
+No se evalúan, pero son extensiones válidas si el tiempo lo permite:
+
+- **Plantilla de email en HTML** — envía un email con estilos en lugar de un enlace en texto plano.
+- **Rate limiting** — limita el número de solicitudes de restablecimiento por dirección de email por hora para prevenir abusos.
+- **Registro de auditoría** — registra cada evento de restablecimiento de contraseña (timestamp, dirección IP) en la base de datos.
 
 ---
 
 # ✅ Qué Vamos a Evaluar
 
-- [ ] Los formularios de login y registro funcionan de extremo a extremo: el token se almacena tras una llamada exitosa.
-- [ ] Las vistas protegidas redirigen a `/login` cuando no hay un token válido en el almacenamiento.
-- [ ] El website público (Hito 1) continúa funcionando sin ninguna comprobación de autenticación.
-- [ ] La vista de perfil muestra el email de `User` y los datos de nombre/contacto del `Profile` vinculado, y actualiza el perfil mediante `PUT /profiles/me`.
-- [ ] El logout elimina el token y redirige correctamente.
-- [ ] Una respuesta `401` de cualquier llamada protegida a la API limpia la sesión y redirige a `/login`.
+- [ ] `POST /auth/forgot-password` envía un email real con el enlace de restablecimiento cuando se llama con una dirección registrada.
+- [ ] `POST /auth/forgot-password` devuelve `200` incluso cuando la dirección no está registrada — no se filtra información.
+- [ ] El token de restablecimiento expira tras la ventana configurada y no puede usarse después de expirar.
+- [ ] `POST /auth/reset-password` actualiza la contraseña e invalida el token en caso de éxito.
+- [ ] `POST /auth/reset-password` devuelve `400` para tokens expirados o ya utilizados.
+- [ ] `/forgot-password` muestra un mensaje de confirmación tras el envío independientemente del resultado.
+- [ ] `/reset-password` lee el token de la URL, envía el formulario y redirige a `/login` en caso de éxito.
+- [ ] `/reset-password` muestra un error claro con un enlace de vuelta a `/forgot-password` cuando el token es inválido o ha expirado.
+- [ ] La página `/login` tiene un enlace visible a "¿Olvidaste tu contraseña?".
+- [ ] `/account/change-password` valida que la nueva contraseña y la confirmación coinciden, llama a la API y muestra feedback de éxito o error.
+- [ ] `POST /auth/change-password` rechaza contraseñas actuales incorrectas con `400`.
+- [ ] Ninguna API key está en el código fuente — todos los secretos se cargan desde variables de entorno.
 
 ---
 
 # 📦 Cómo Entregar
 
-Sube tu rama y abre un pull request contra `main` en tu monorepo. La descripción del PR debe incluir: qué vistas están ahora protegidas y confirmación de que el website público no se vio afectado.
+Sube tu rama y abre un pull request contra `main` en tu monorepo. La descripción del PR debe incluir: qué servicio de email elegiste, el nombre de la variable de entorno necesaria para ejecutar la feature y confirmación de que probaste el flujo completo de extremo a extremo.

@@ -44,3 +44,30 @@ def create_user_in_db(user_data: dict, profile_data: dict):
     profiles_table.insert(profile_data)
 
     return user_data, profile_data
+
+# --- Token Management ---
+
+def save_reset_token(email: str, token_hash: str, expires_at: float):
+    db = get_db()
+    tokens_table = db.table('reset_tokens')
+    tokens_table.insert({
+        'email': email,
+        'token_hash': token_hash,
+        'expires_at': expires_at,
+        'used': False
+    })
+
+def get_reset_token(token_hash: str):
+    db = get_db()
+    tokens_table = db.table('reset_tokens')
+    tokenQuery = Query()
+    result = tokens_table.search(tokenQuery.token_hash == token_hash)
+    if result:
+        return result[0]
+    return None
+
+def mark_token_used(token_hash: str):
+    db = get_db()
+    tokens_table = db.table('reset_tokens')
+    tokenQuery = Query()
+    tokens_table.update({'used': True}, tokenQuery.token_hash == token_hash)
