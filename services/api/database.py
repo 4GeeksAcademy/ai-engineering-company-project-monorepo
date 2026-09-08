@@ -71,3 +71,73 @@ def mark_token_used(token_hash: str):
     tokens_table = db.table('reset_tokens')
     tokenQuery = Query()
     tokens_table.update({'used': True}, tokenQuery.token_hash == token_hash)
+
+# --- CANDIDATES ---
+def get_all_candidates_from_db(status: str = None, stage: str = None) -> list:
+    db = get_db()
+    table = db.table('candidates')
+    candidates = table.all()
+    if status and status != "ALL":
+        candidates = [c for c in candidates if c.get("status") == status]
+    if stage and stage != "ALL":
+        candidates = [c for c in candidates if c.get("stage") == stage]
+    
+    notes_table = db.table('candidate_notes')
+    for c in candidates:
+        c['notes'] = notes_table.search(Query().candidate_id == c['id'])
+    return candidates
+
+def get_candidate_from_db(candidate_id: int) -> dict:
+    db = get_db()
+    table = db.table('candidates')
+    candidate = table.get(doc_id=candidate_id)
+    if candidate:
+        notes_table = db.table('candidate_notes')
+        candidate['notes'] = notes_table.search(Query().candidate_id == candidate_id)
+    return candidate
+
+def create_candidate_in_db(candidate_data: dict) -> dict:
+    from datetime import datetime
+    db = get_db()
+    table = db.table('candidates')
+    now = datetime.utcnow().isoformat()
+    candidate_data["applied_at"] = now
+    candidate_data["created_at"] = now
+    candidate_data["updated_at"] = now
+    candidate_data["id"] = table.insert(candidate_data)
+    table.update({"id": candidate_data["id"]}, doc_ids=[candidate_data["id"]])
+    candidate_data["notes"] = []
+    return candidate_data
+
+def update_candidate_in_db(candidate_id: int, candidate_data: dict) -> dict:
+    from datetime import datetime
+    db = get_db()
+    table = db.table('candidates')
+    now = datetime.utcnow().isoformat()
+    candidate_data["updated_at"] = now
+    update_data = {k: v for k, v in candidate_data.items() if v is not None}
+    table.update(update_data, doc_ids=[candidate_id])
+    return get_candidate_from_db(candidate_id)
+
+def create_candidate_note_in_db(candidate_id: int, note_data: dict) -> dict:
+    from datetime import datetime
+    db = get_db()
+    table = db.table('candidate_notes')
+    now = datetime.utcnow().isoformat()
+    note_data["candidate_id"] = candidate_id
+    note_data["created_at"] = now
+    note_data["updated_at"] = now
+    note_id = table.insert(note_data)
+    note_data["id"] = note_id
+    table.update({"id": note_id}, doc_ids=[note_id])
+    return note_data
+
+def get_candidate_notes_from_db(candidate_id: int) -> list:
+    db = get_db()
+    table = db.table('candidate_notes')
+    return table.search(Query().candidate_id == candidate_id)
+
+def delete_candidate_note_from_db(note_id: int) -> bool:
+    db = get_db()
+    table = db.table('candidate_notes')
+    return bool(table.remove(doc_ids=[note_id]))

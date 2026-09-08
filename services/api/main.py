@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 from fastapi.responses import FileResponse
-from services.api.routes import users, profiles, auth
+from services.api.routes import users, profiles, auth, incidents, candidates
 import csv
 from services.api.routes import suppliers
 
@@ -24,7 +24,9 @@ app.add_middleware(
 app.include_router(suppliers.router)
 app.include_router(users.router)
 app.include_router(profiles.router)
+app.include_router(candidates.router)
 app.include_router(auth.router)
+app.include_router(incidents.router)
 
 latest_metrics = None
 

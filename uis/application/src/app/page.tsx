@@ -1,9 +1,11 @@
 'use client'
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="bg-white text-blue-950 antialiased min-h-screen">
@@ -27,10 +29,13 @@ export default function HomePage() {
             <li><a href="#servicios" className="hover:text-blue-700">Servicios</a></li>
             <li><a href="#impacto" className="hover:text-blue-700">Impacto</a></li>
             <li><a href="#experiencia" className="hover:text-blue-700">Experiencia</a></li>
-            <li><Link href="/support" className="hover:text-blue-700">Soporte IA</Link></li>
-            <li><Link href="/admin/tickets" className="hover:text-blue-700">Tickets</Link></li>
-            <li><Link href="/admin/panel" className="hover:text-blue-700">Paneles</Link></li>
-            <li><Link href="/login" className="hover:text-blue-700 font-semibold">Login</Link></li>
+            <li>
+              {isAuthenticated ? (
+                <Link href="/admin/panel" className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 font-semibold">Ir al Dashboard</Link>
+              ) : (
+                <Link href="/login" className="bg-blue-100 text-blue-900 px-4 py-2 rounded-md border border-blue-300 hover:bg-blue-200 font-semibold">Acceso Empleados</Link>
+              )}
+            </li>
           </ul>
         </nav>
         
@@ -39,9 +44,13 @@ export default function HomePage() {
             <ul className="mx-auto max-w-6xl space-y-1 px-4 py-3 text-sm sm:px-6">
               <li><a href="#servicios" className="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100" onClick={() => setIsMobileMenuOpen(false)}>Servicios</a></li>
               <li><a href="#impacto" className="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100" onClick={() => setIsMobileMenuOpen(false)}>Impacto</a></li>
-              <li><Link href="/support" className="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100" onClick={() => setIsMobileMenuOpen(false)}>Soporte IA</Link></li>
-              <li><Link href="/admin/panel" className="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100" onClick={() => setIsMobileMenuOpen(false)}>Paneles</Link></li>
-              <li><Link href="/login" className="block rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100 font-semibold" onClick={() => setIsMobileMenuOpen(false)}>Login</Link></li>
+              <li className="pt-2">
+                {isAuthenticated ? (
+                  <Link href="/admin/panel" className="block rounded-md px-3 py-2 bg-blue-900 text-white font-semibold text-center" onClick={() => setIsMobileMenuOpen(false)}>Ir al Dashboard</Link>
+                ) : (
+                  <Link href="/login" className="block rounded-md px-3 py-2 text-blue-900 bg-blue-50 border border-blue-200 font-semibold text-center" onClick={() => setIsMobileMenuOpen(false)}>Acceso Empleados</Link>
+                )}
+              </li>
             </ul>
           </div>
         )}

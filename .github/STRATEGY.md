@@ -1,112 +1,170 @@
 # README
 
-## La Pieza Que Faltaba: Flujo de Restablecimiento de Contraseña
+## Gestor de Incidencias Centralizado
+
+> **Antes de empezar:** Lee tu `CONTEXT-company.md` antes de escribir código — define los nombres de campos, categorías válidas, sedes de tu empresa y los valores semilla esperados para tu implementación.
 
 ### 🎯 Tu reto
+
 **📌 Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
 
-El sistema de autenticación está funcionando. Los usuarios pueden registrarse, iniciar sesión y gestionar su perfil.
+El analizador de fichero CSV que construiste en el proyecto anterior demostró que la lógica de validación y métricas funciona. Pero el equipo de soporte ya no quiere seguir exportando ficheros para analizarlos: quiere registrar incidencias directamente desde el navegador, en tiempo real, desde cualquier punto de la empresa.
 
-¿Pero qué ocurre cuando olvidan su contraseña — o necesitan cambiarla estando conectados?
+Tu tech lead ha decidido dar el siguiente paso: integrar un gestor de incidencias centralizado en la plataforma que lleva construyéndose desde el Hito 5. Cualquier persona de la empresa —esté en una sede operativa, en central o gestionando una incidencia de cliente— podrá registrarla desde un formulario, consultarla y hacer seguimiento desde el mismo panel.
 
-Ahora mismo, un usuario que olvida su contraseña no tiene forma de recuperar su cuenta. Los usuarios con sesión iniciada no tienen un formulario para actualizar su contraseña. En cualquier sistema en producción, ambos flujos son requisitos básicos de seguridad. Tu plataforma no tiene ningún mecanismo para ninguno de los dos.
+> **Nota de tu tech lead:** "Tenemos el histórico en el CSV del proyecto anterior. Vamos a cargarlo como seed de incidencias de cliente para tener datos reales desde el primer día. A partir de ahí, el formulario es la única vía de entrada — nada de ficheros manuales. Y esto tiene que funcionar bien aunque la API tarde, aunque el servidor devuelva un 500, aunque el usuario deje un campo en blanco. Quiero ver mensajes de error que entiendan los usuarios, no stack traces."
 
-Tu tech lead ha abierto el ticket:
+### ¿Qué es un gestor de incidencias profesional?
 
-#### AUTH-03 — Recuperación y cambio de contraseña
-La plataforma necesita dos mecanismos de contraseña — restablecimiento cuando el usuario la olvidó, y cambio estando conectado. Esto cubre tanto la API como el frontend:
-
-**Backend:**
-- `POST /auth/forgot-password` — recibe un email, valida que el usuario existe, genera un token de restablecimiento firmado de corta duración y envía un enlace de restablecimiento a la dirección del usuario.
-- `POST /auth/reset-password` — recibe el token de restablecimiento y una nueva contraseña, valida el token (firma + expiración), hashea la nueva contraseña y actualiza el registro del usuario. El token debe quedar invalidado tras su uso.
-- `POST /auth/change-password` — endpoint autenticado. Recibe la contraseña actual y una nueva, verifica la actual, hashea la nueva y actualiza el registro del usuario.
-
-**Frontend:**
-- `/forgot-password` — formulario donde el usuario introduce su email. Siempre muestra un mensaje de confirmación tras el envío, independientemente de si la dirección existe, para evitar la enumeración de usuarios.
-- `/reset-password` — formulario donde el usuario establece una nueva contraseña. Lee el token de restablecimiento del query string de la URL y lo envía a la API junto con la nueva contraseña. Si tiene éxito, redirige a `/login`.
-- `/account/change-password` — formulario con la contraseña actual, la nueva contraseña y la confirmación. Valida que la nueva contraseña y la confirmación coinciden antes de llamar a la API.
-
-Para el envío de correos, elige uno de los siguientes servicios e intégralo:
-- **Resend**
-- **SendGrid (Twilio)**
-
-> **¿Por qué solo estos dos?** Para este ejercicio, Resend y SendGrid son las opciones prácticas: puedes completar el flujo en desarrollo sin un dominio propio (Resend con su remitente de onboarding; SendGrid en trial/sandbox o con un remitente único verificado — revisa su documentación actual). Alternativas como Mailgun o MailerSend suelen exigir verificar tu propio dominio en DNS antes de enviar a destinatarios arbitrarios, lo que bloquea a muchos estudiantes durante el proyecto.
-
-Ambos ofrecen un tier gratuito suficiente para desarrollo. Las API keys deben almacenarse en variables de entorno — **nunca en el código fuente**.
+Un gestor de incidencias no es solo un formulario conectado a una base de datos. En un entorno real, cada incidencia tiene un ciclo de vida (`abierta` → `en progreso` → `resuelta` → `descartada`) y un origen que determina su contexto: no es lo mismo una queja de cliente que un fallo interno detectado por una sede. El sistema debe registrar quién reportó qué, desde dónde, cuándo, y en qué estado se encuentra — y debe poder agregarlo en métricas útiles para la dirección.
 
 ---
 
-### Conocimiento complementario: cómo funciona un flujo de restablecimiento de contraseña
-El flujo tiene tres pasos y dos momentos separados en el tiempo:
+### Conocimiento complementario: mejorar un gestor de incidencias con embeddings
 
-1. **Solicitud** — el usuario envía su email. El servidor genera un token de restablecimiento (un JWT firmado o una cadena aleatoria almacenada en la base de datos), construye una URL de restablecimiento que contiene ese token (`/reset-password?token=<token>`) y la envía al email del usuario mediante un servicio de correo transaccional.
-2. **Restablecimiento** — el usuario hace clic en el enlace, llega a la página `/reset-password`, introduce una nueva contraseña y envía el formulario. El frontend envía el token (leído de la URL) y la nueva contraseña a la API. El servidor valida el token (firma, expiración y que no se haya usado ya), actualiza la contraseña e invalida el token para que no pueda reutilizarse.
-3. **Confirmación** — el usuario es redirigido a `/login` y puede iniciar sesión con la nueva contraseña.
+Una aplicación como esta — formularios estructurados, filtros y métricas agregadas — funciona muy bien con valores exactos en cada campo. Los embeddings añaden una capa semántica encima: convierten el `title` y la `description` de cada incidencia en un vector denso que captura el significado, no solo palabras clave.
 
-> **¿Por qué mostrar siempre un mensaje de confirmación?** Si el formulario muestra "email no encontrado" para direcciones que no existen, un atacante puede usar eso para enumerar qué emails están registrados. Responder siempre con "si esa dirección está en nuestro sistema, recibirás un enlace" lo evita.
+Con esa representación almacenada en una base de datos vectorial (o en una extensión que soporte búsqueda por similitud), puedes evolucionar el mismo sistema en varias direcciones sin cambiar el modelo CRUD central:
 
-**Expiración y reutilización:** Un token de restablecimiento debe durar 15–60 minutos y quedar inutilizable tras un reset exitoso. Un JWT con solo un claim `exp` no se puede invalidar después de usarlo. Persiste estado en el servidor: una fila con el token hasheado, un registro de tokens usados, o un `password_changed_at` que rechace tokens emitidos antes de ese momento. Codificar la expiración en el payload del JWT no basta.
+- **Encontrar incidencias similares** — al registrar un nuevo reporte, mostrar casos pasados con descripciones parecidas para que soporte reutilice resoluciones o detecte problemas recurrentes.
+- **Búsqueda más inteligente** — consultas como *"fallo en el pago en la caja"* pueden coincidir con incidencias redactadas de otra forma (*"tarjeta rechazada en la compra"*), algo que los filtros por palabra clave suelen pasar por alto.
+- **Detección de duplicados y agrupación** — agrupar picos de reportes relacionados entre sedes u orígenes antes de que saturen el panel de resumen.
+- **Triaje asistido** — sugerir categoría o prioridad a partir del texto de la descripción, comparándolo con embeddings de incidencias históricas ya etiquetadas por el equipo.
+
+No hace falta implementar nada de esto en la entrega actual. La idea es ver que el gestor que construyes hoy es una base sólida: cuando las descripciones viven en la base de datos, los embeddings son el siguiente paso natural si el producto necesita búsqueda e inteligencia más allá de los filtros exactos.
 
 ---
 
-### 🌱 Cómo Iniciar el Proyecto
-Este proyecto continúa dentro de tu monorepo existente. Abre una nueva rama: 
+### 🌱 Cómo empezar el proyecto
 
-`git switch -c feature/password-reset`
+1. Trabaja en `ai-engineering-company-project-monorepo`. Si aún no lo tienes configurado, haz un fork y ábrelo en GitHub Codespaces o clónalo localmente.
+2. Lee tu `CONTEXT-company.md` antes de escribir una sola línea de código. Define la estructura de datos de incidencias, las sedes de tu empresa, las categorías válidas y los valores semilla esperados.
+3. Este proyecto extiende el trabajo del Hito 5: reutiliza la base de datos, la estructura de la API y la arquitectura del frontend existentes.
 
-Antes de empezar, regístrate en uno de los servicios de email listados arriba y obtén una API key. Guárdala en tu archivo `.env`. Asegúrate de que `.env` está en tu `.gitignore` — **nunca hagas commit de API keys.**
 
 
-# 💻 Qué Debes Hacer
+# 💻 Qué tienes que hacer
+
+## Modelo de datos
+
+- [ ] Define el modelo `Incident` con los siguientes campos:
+  - [ ] `id` — identificador único generado automáticamente.
+  - [ ] `title` — título breve de la incidencia (obligatorio).
+  - [ ] `description` — descripción detallada (obligatorio).
+  - [ ] `category` — categoría según las definidas en tu CONTEXT.
+  - [ ] `status` — estado del ciclo de vida: `open`, `in_progress`, `resolved`, `discarded`.
+  - [ ] `origin` — origen del reporte: `customer`, `branch`, `internal`.
+  - [ ] `branch` — sede que gestiona o reporta la incidencia (obligatorio para todos los orígenes; usar `central` cuando no corresponda a una sede específica).
+  - [ ] `created_at` — fecha y hora de creación, generada automáticamente.
+  - [ ] `updated_at` — fecha y hora de última modificación, actualizada automáticamente.
+- [ ] Aplica las restricciones de integridad necesarias: campos obligatorios, valores permitidos en `status`, `origin` y `category`.
+
+## Seed de datos históricos (`/scripts`)
+
+- [ ] Crea el script `seed_incidents.py` que lee el fichero CSV del proyecto anterior y carga todas sus filas en la base de datos asignando `origin: "customer"` a todos los registros.
+- [ ] El script debe aplicar las **transformaciones CSV → modelo** especificadas en tu CONTEXT (mapa de estados, mapa de categorías, `description` → `title`, `date` → `created_at`, ubicación → `branch`) antes del insert — el esquema del CSV del analizador no es idéntico al de este gestor.
+- [ ] El script debe reutilizar la lógica de validación ya existente — extrae las funciones comunes a `packages/shared/` si aún no lo has hecho: los registros inválidos del CSV no se insertan y se reportan en consola al final de la ejecución.
+- [ ] El script es idempotente: si se ejecuta dos veces no duplica registros (comprueba por un campo identificador del CSV antes de insertar).
+
+## Backend (`/services`)
+
+Endpoints de gestión:
+
+- [ ] `POST /api/incidents` — crea una nueva incidencia. Valida todos los campos obligatorios y devuelve `400` con un mensaje descriptivo si falta alguno o contiene un valor no permitido.
+- [ ] `GET /api/incidents` — devuelve la lista de incidencias. Acepta parámetros de filtro opcionales: `status`, `origin`, `branch`, `category`.
+- [ ] `GET /api/incidents/{id}` — devuelve el detalle de una incidencia. Devuelve `404` si no existe.
+- [ ] `PATCH /api/incidents/{id}/status` — actualiza únicamente el estado de una incidencia. Valida que la transición sea coherente con el ciclo de vida: desde `open` se puede avanzar a `in_progress` o `discarded`; desde `in_progress` se puede avanzar a `resolved` o `discarded`; los estados `resolved` y `discarded` son finales.
+- [ ] `GET /api/incidents/summary` — devuelve las métricas agregadas: total por estado, total por categoría, total por origen y total por sede.
+
+Manejo de errores en el backend:
+
+- [ ] Toda excepción no controlada devuelve `500` con un mensaje genérico — nunca el stack trace completo.
+- [ ] Los errores de validación devuelven `400` con un objeto JSON que identifica el campo problemático y describe el error en lenguaje claro.
+- [ ] Los endpoints de lectura no fallan si la base de datos está vacía: devuelven lista vacía o métricas en cero.
+
+## Frontend (`/uis`)
+
+Formulario de registro:
+
+- [ ] Crea una página de registro de incidencias accesible desde el menú de la aplicación.
+- [ ] El formulario incluye todos los campos del modelo. El campo `branch` es siempre visible y obligatorio, con todas las opciones de sede de tu CONTEXT (incluido `central`, mostrado como la etiqueta que indique tu CONTEXT).
+- [ ] Cuando `origin` sea `branch`, el campo `branch` se destaca visualmente para recordar al usuario que está reportando desde una sede específica.
+- [ ] Al enviar, el formulario muestra un indicador de carga mientras la petición está en curso — el botón de envío queda deshabilitado durante ese tiempo.
+- [ ] Si la API devuelve un error, el formulario muestra un mensaje comprensible para el usuario, nunca el mensaje técnico del servidor. Si el error identifica un campo concreto, el mensaje aparece junto a ese campo.
+- [ ] Tras un envío exitoso, el formulario se limpia y muestra una confirmación clara.
+
+Panel de incidencias:
+
+- [ ] Crea una página de listado con todas las incidencias registradas, con filtros por `status`, `origin` y `branch`.
+- [ ] Muestra un indicador de carga mientras se obtienen los datos.
+- [ ] Si la petición falla, muestra un mensaje de error con opción de reintentar — la página no queda en blanco ni rota.
+- [ ] Si no hay incidencias que mostrar (lista vacía o sin resultados para los filtros aplicados), muestra un mensaje informativo — nunca una tabla vacía sin contexto.
+- [ ] Cada incidencia permite actualizar su estado directamente desde el listado. Si la actualización falla, el estado visual vuelve al valor anterior y se notifica al usuario.
+
+Panel de resumen:
+
+- [ ] Muestra las métricas agregadas del endpoint `/summary`: totales por estado, por categoría, por origen y por sede.
+- [ ] Si los datos tardan en cargarse o fallan, el panel muestra el estado correspondiente sin romper el resto de la página.
+
+> ⚠️ **IMPORTANTE:** Los nombres de campos, categorías, sedes y valores de tu implementación deben coincidir exactamente con lo especificado en tu CONTEXT.md. Una implementación genérica que ignore el contexto no será aceptada.
+
+
+# ✅ Qué evaluaremos
+
+## Modelo y seed
+
+- [ ] El modelo incluye todos los campos requeridos con sus restricciones de integridad.
+- [ ] El script de seed carga correctamente las incidencias históricas asignando `origin: "customer"`.
+- [ ] El script de seed aplica las transformaciones CSV → modelo definidas en tu CONTEXT (estado, categoría, título, fechas y sede) antes del insert.
+- [ ] Los registros inválidos del CSV no se insertan y se reportan en consola.
+- [ ] El script es idempotente: ejecutarlo dos veces no duplica datos.
+- [ ] Tras el seed, los totales por `status` y `category` del modelo en `/api/incidents/summary` coinciden con los valores transformados esperados en tu CONTEXT (mismo conjunto de registros válidos que en el proyecto incidents-file-analyzer).
 
 ## Backend
 
-- [ ] `POST /auth/forgot-password` — acepta `{ email }`. Si el usuario existe, genera un token de restablecimiento con expiración corta (15–60 minutos) y envía un email con el enlace de restablecimiento. Devuelve siempre `200` independientemente de si el email fue encontrado.
-- [ ] `POST /auth/reset-password` — acepta `{ token, new_password }`. Valida el token (firma, expiración y que no se haya usado ya). Si es válido, hashea la nueva contraseña, actualiza el registro del usuario e invalida el token. Devuelve `400` para tokens inválidos, expirados o ya utilizados.
-- [ ] `POST /auth/change-password` — acepta `{ current_password, new_password }`. Requiere un token de sesión válido en la cabecera `Authorization`. Verífica la contraseña actual antes de actualizar. Devuelve `400` si la contraseña actual es incorrecta.
-- [ ] Integra un servicio de correo transaccional para enviar el email de restablecimiento. El email debe incluir el enlace de restablecimiento y ser legible en móvil.
-- [ ] Almacena la API key del servicio de email en una variable de entorno. Documenta el nombre de la variable en tu `README` o en un `.env.example`.
+- [ ] Todos los endpoints responden con los códigos HTTP correctos en los casos felices y en los de error.
+- [ ] Los errores de validación identifican el campo problemático en la respuesta JSON.
+- [ ] Ningún endpoint expone un stack trace al cliente.
+- [ ] Las transiciones de estado inválidas son rechazadas con `400`.
+- [ ] El endpoint `/summary` devuelve métricas correctas aunque no haya incidencias.
 
 ## Frontend
 
-- [ ] `/forgot-password` — formulario con campo de email. Al enviarlo, llama a `POST /auth/forgot-password` y muestra un mensaje de confirmación ("Si esa dirección está registrada, recibirás un enlace en breve"). El formulario debe desactivarse tras el envío para evitar peticiones duplicadas.
-- [ ] `/reset-password` — formulario de nueva contraseña con campo de confirmación. Lee el `token` del query string de la URL. Al enviarlo, llama a `POST /auth/reset-password`. Si tiene éxito, redirige a `/login` con un mensaje de éxito. Si falla (token expirado o inválido), muestra un error claro y un enlace de vuelta a `/forgot-password`.
-- [ ] `/account/change-password` — formulario con la contraseña actual, la nueva contraseña y la confirmación. Valida que la nueva contraseña y la confirmación coinciden antes de llamar a la API.
-- [ ] Añade un enlace "¿Olvidaste tu contraseña?" en la página `/login` que apunte a `/forgot-password`.
+- [ ] El formulario valida campos obligatorios en el cliente antes de enviar.
+- [ ] Cuando `origin` es `branch`, el campo `branch` se resalta visualmente y el desplegable muestra las etiquetas de CONTEXT.
+- [ ] Los estados de carga son visibles y el botón de envío queda deshabilitado durante la petición.
+- [ ] Los errores de la API se muestran en lenguaje comprensible para el usuario, nunca como texto técnico.
+- [ ] El listado gestiona correctamente los tres estados posibles: cargando, vacío, con datos.
+- [ ] La actualización de estado en el listado revierte visualmente si la petición falla.
+- [ ] El panel de resumen no rompe la página si su petición falla.
 
-## Seguridad
+## Transversal
 
-- [ ] Los tokens de restablecimiento deben expirar e invalidarse tras su uso — un token no puede usarse dos veces.
-- [ ] El endpoint `/forgot-password` debe devolver siempre `200`, nunca revelar si un email está registrado.
-- [ ] Las API keys no deben aparecer nunca en el código fuente — usa exclusivamente variables de entorno.
-
-# 🚀 Para ir más lejos (opcional)
-
-No se evalúan, pero son extensiones válidas si el tiempo lo permite:
-
-- **Plantilla de email en HTML** — envía un email con estilos en lugar de un enlace en texto plano.
-- **Rate limiting** — limita el número de solicitudes de restablecimiento por dirección de email por hora para prevenir abusos.
-- **Registro de auditoría** — registra cada evento de restablecimiento de contraseña (timestamp, dirección IP) en la base de datos.
+- [ ] La lógica de validación del proyecto anterior está extraída en `packages/shared/` y es reutilizada tanto por el script como por la API, sin duplicación.
+- [ ] El código está organizado según la estructura de carpetas del monorepo (`scripts/`, `services/`, `uis/`, `packages/shared/`).
 
 ---
 
-# ✅ Qué Vamos a Evaluar
+# 📦 Cómo entregar este proyecto
 
-- [ ] `POST /auth/forgot-password` envía un email real con el enlace de restablecimiento cuando se llama con una dirección registrada.
-- [ ] `POST /auth/forgot-password` devuelve `200` incluso cuando la dirección no está registrada — no se filtra información.
-- [ ] El token de restablecimiento expira tras la ventana configurada y no puede usarse después de expirar.
-- [ ] `POST /auth/reset-password` actualiza la contraseña e invalida el token en caso de éxito.
-- [ ] `POST /auth/reset-password` devuelve `400` para tokens expirados o ya utilizados.
-- [ ] `/forgot-password` muestra un mensaje de confirmación tras el envío independientemente del resultado.
-- [ ] `/reset-password` lee el token de la URL, envía el formulario y redirige a `/login` en caso de éxito.
-- [ ] `/reset-password` muestra un error claro con un enlace de vuelta a `/forgot-password` cuando el token es inválido o ha expirado.
-- [ ] La página `/login` tiene un enlace visible a "¿Olvidaste tu contraseña?".
-- [ ] `/account/change-password` valida que la nueva contraseña y la confirmación coinciden, llama a la API y muestra feedback de éxito o error.
-- [ ] `POST /auth/change-password` rechaza contraseñas actuales incorrectas con `400`.
-- [ ] Ninguna API key está en el código fuente — todos los secretos se cargan desde variables de entorno.
+El proyecto debe estar organizado en el monorepo de la siguiente manera:
 
----
+```text
+scripts/
+  seed_incidents.py         ← script de carga del histórico CSV
 
-# 📦 Cómo Entregar
+packages/
+  shared/                   ← lógica de validación compartida entre script y API
 
-Sube tu rama y abre un pull request contra `main` en tu monorepo. La descripción del PR debe incluir: qué servicio de email elegiste, el nombre de la variable de entorno necesaria para ejecutar la feature y confirmación de que probaste el flujo completo de extremo a extremo.
+services/
+  <nombre-del-servicio-api/ ← backend con endpoints de gestión y resumen
+
+uis/
+  <nombre-de-la-ui/         ← interfaz de registro, listado y resumen
+```
+
+1. Sube tu rama con la estructura anterior y abre un Pull Request al repositorio original.
+2. Asegúrate de que el PR incluye:
+   - Captura de pantalla del formulario con un error de validación visible.
+   - Captura de pantalla del panel de listado con datos cargados.
+   - Captura de pantalla del panel de resumen con métricas.
