@@ -1,170 +1,113 @@
 # README
 
-## Gestor de Incidencias Centralizado
-
-> **Antes de empezar:** Lee tu `CONTEXT-company.md` antes de escribir código — define los nombres de campos, categorías válidas, sedes de tu empresa y los valores semilla esperados para tu implementación.
+## Gestión de Errores
 
 ### 🎯 Tu reto
-
 **📌 Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
 
-El analizador de fichero CSV que construiste en el proyecto anterior demostró que la lógica de validación y métricas funciona. Pero el equipo de soporte ya no quiere seguir exportando ficheros para analizarlos: quiere registrar incidencias directamente desde el navegador, en tiempo real, desde cualquier punto de la empresa.
+Llevas varios hitos construyendo la plataforma de tu empresa: un sitio web corporativo, un frontend en Next.js, un backend en Python/FastAPI y scripts que procesan datos reales. El repositorio crece — y con él, la superficie donde las cosas pueden fallar.
 
-Tu tech lead ha decidido dar el siguiente paso: integrar un gestor de incidencias centralizado en la plataforma que lleva construyéndose desde el Hito 5. Cualquier persona de la empresa —esté en una sede operativa, en central o gestionando una incidencia de cliente— podrá registrarla desde un formulario, consultarla y hacer seguimiento desde el mismo panel.
+Tu tech lead ha abierto un ticket de revisión de código con un mensaje claro: el sistema no tiene una estrategia coherente de gestión de errores. Las llamadas a la API pueden fallar en silencio, faltan estados de carga, los usuarios ven mensajes técnicos crudos (o simplemente nada), y los scripts de fondo se rompen sin dejar rastro útil. Antes de que el siguiente hito introduzca más complejidad, el equipo necesita corregir esto.
 
-> **Nota de tu tech lead:** "Tenemos el histórico en el CSV del proyecto anterior. Vamos a cargarlo como seed de incidencias de cliente para tener datos reales desde el primer día. A partir de ahí, el formulario es la única vía de entrada — nada de ficheros manuales. Y esto tiene que funcionar bien aunque la API tarde, aunque el servidor devuelva un 500, aunque el usuario deje un campo en blanco. Quiero ver mensajes de error que entiendan los usuarios, no stack traces."
+Tu tarea es auditar todo el repositorio existente y aplicar una estrategia de gestión de errores consistente en todas las capas: frontend, backend y scripts.
 
-### ¿Qué es un gestor de incidencias profesional?
+El tech lead ha compartido las siguientes notas en el ticket:
 
-Un gestor de incidencias no es solo un formulario conectado a una base de datos. En un entorno real, cada incidencia tiene un ciclo de vida (`abierta` → `en progreso` → `resuelta` → `descartada`) y un origen que determina su contexto: no es lo mismo una queja de cliente que un fallo interno detectado por una sede. El sistema debe registrar quién reportó qué, desde dónde, cuándo, y en qué estado se encuentra — y debe poder agregarlo en métricas útiles para la dirección.
+#### Lo que necesitamos
+- Ningún error debe romper la aplicación ni dejar al usuario en un estado indefinido.
+- Toda operación asíncrona en el frontend debe tener tres estados visibles: cargando, éxito y error.
+- Los mensajes de error que ve el usuario deben ser legibles — nunca un stack trace, un código de estado o un error de parseo de JSON en crudo.
+- Todo estado de error debe ofrecer una salida clara: un botón de reintentar, un enlace a la página principal o instrucciones para contactar soporte.
+- En el backend y los scripts, las excepciones deben capturarse en el ámbito correcto — no con un único try/catch que envuelva toda la función.
+- Nunca debe aparecer información sensible en la salida de errores enviada al cliente.
+- Esta es una tarea de ingeniería transversal — no una nueva funcionalidad. El entregable es una versión más limpia y robusta del repositorio que ya has construido. Al terminar este proyecto, cualquier usuario que encuentre un problema en tu plataforma sabrá qué ha pasado y qué puede hacer.
 
----
+### 🌱 Cómo iniciar el proyecto
+Este proyecto trabaja directamente sobre el monorepo de tu empresa — el mismo que llevas construyendo desde el Hito 1.
 
-### Conocimiento complementario: mejorar un gestor de incidencias con embeddings
+1. Abre el monorepo en tu editor o Codespace.
+2. Crea una nueva rama para este trabajo: `git switch -c feature/error-handling-audit`.
+3. Trabaja en cada capa del código de forma sistemática (ver checklist más abajo).
+4. Haz commits con mensajes claros que expliquen qué corregiste y por qué.
+5. No necesitas un nuevo repositorio ni un boilerplate.
 
-Una aplicación como esta — formularios estructurados, filtros y métricas agregadas — funciona muy bien con valores exactos en cada campo. Los embeddings añaden una capa semántica encima: convierten el `title` y la `description` de cada incidencia en un vector denso que captura el significado, no solo palabras clave.
+### 🤖 Usar tu coding agent para detectar oportunidades
+Antes de hacer cualquier cambio manualmente, usa tu coding agent para escanear el repositorio y localizar las carencias más críticas. A continuación tienes una plantilla de prompt que puedes adaptar y ejecutar en el agente que uses (Cursor, Copilot, Claude Code, etc.).
 
-Con esa representación almacenada en una base de datos vectorial (o en una extensión que soporte búsqueda por similitud), puedes evolucionar el mismo sistema en varias direcciones sin cambiar el modelo CRUD central:
+Estúdiala, ajusta las partes marcadas con `[corchetes]` y hazla tuya — un buen prompt de detección te ahorrará horas de lectura manual.
 
-- **Encontrar incidencias similares** — al registrar un nuevo reporte, mostrar casos pasados con descripciones parecidas para que soporte reutilice resoluciones o detecte problemas recurrentes.
-- **Búsqueda más inteligente** — consultas como *"fallo en el pago en la caja"* pueden coincidir con incidencias redactadas de otra forma (*"tarjeta rechazada en la compra"*), algo que los filtros por palabra clave suelen pasar por alto.
-- **Detección de duplicados y agrupación** — agrupar picos de reportes relacionados entre sedes u orígenes antes de que saturen el panel de resumen.
-- **Triaje asistido** — sugerir categoría o prioridad a partir del texto de la descripción, comparándolo con embeddings de incidencias históricas ya etiquetadas por el equipo.
+> **Prompt de Detección:**
+> Eres un ingeniero de software senior auditando un repositorio en busca de problemas en la gestión de errores.
+> 
+> Analiza todo el repositorio ubicado en `[ruta o describe la estructura de tu repo, por ejemplo: "un frontend Next.js en /apps/web, un backend FastAPI en /apps/api y scripts Python en /scripts"]`.
+> 
+> Por cada archivo o módulo que revises, identifica y reporta:
+> 
+> 1. **TRY/CATCH AUSENTE** — operaciones asíncronas (fetch, await, lectura de archivos, parseo de JSON) que no tienen ningún manejo de errores.
+> 2. **CATCH DEMASIADO AMPLIO** — bloques try/catch o try/except que envuelven funciones enteras o secciones grandes de código en lugar de la operación peligrosa concreta.
+> 3. **FALLOS SILENCIOSOS** — errores capturados pero ignorados (bloques catch vacíos, `except: pass` sin acción).
+> 4. **EXPOSICIÓN DE ERRORES EN CRUDO** — lugares donde un mensaje de excepción, stack trace o código de estado podría llegar a la interfaz de usuario o a la respuesta de la API.
+> 5. **FILTRACIÓN DE DATOS SENSIBLES** — salidas de error o logs que podrían incluir secretos, cadenas de conexión a base de datos, rutas internas o datos personales.
+> 6. **ESTADOS DE CARGA/ERROR AUSENTES EN LA UI** — componentes del frontend que cargan datos pero no renderizan nada (o se rompen) cuando la petición está cargando o falla.
+> 7. **SIN LLAMADA A LA ACCIÓN PARA EL USUARIO** — estados de error que muestran un mensaje pero no ofrecen ninguna salida (sin reintentar, sin navegación, sin contacto de soporte).
+> 8. **SIN sys.exit EN FALLO DE SCRIPT** — scripts Python que encuentran un error crítico pero terminan con código 0 o sin código de salida explícito.
+> 
+> Por cada hallazgo, reporta:
+> - Ruta del archivo y número de línea (o rango)
+> - Categoría (de la lista anterior)
+> - Una línea describiendo el problema
+> - Corrección sugerida (breve — la implementación es responsabilidad del desarrollador)
+> 
+> No hagas ningún cambio. Entrega únicamente el informe de auditoría.
+> Prioriza los hallazgos por severidad: CRÍTICO > ALTO > MEDIO > BAJO.
 
-No hace falta implementar nada de esto en la entrega actual. La idea es ver que el gestor que construyes hoy es una base sólida: cuando las descripciones viven en la base de datos, los embeddings son el siguiente paso natural si el producto necesita búsqueda e inteligencia más allá de los filtros exactos.
+Ejecuta la auditoría, lee el informe con atención y usa el checklist de abajo para registrar tus correcciones.
 
----
+# 💻 Qué debes hacer
 
-### 🌱 Cómo empezar el proyecto
+## Frontend (Next.js / TypeScript)
 
-1. Trabaja en `ai-engineering-company-project-monorepo`. Si aún no lo tienes configurado, haz un fork y ábrelo en GitHub Codespaces o clónalo localmente.
-2. Lee tu `CONTEXT-company.md` antes de escribir una sola línea de código. Define la estructura de datos de incidencias, las sedes de tu empresa, las categorías válidas y los valores semilla esperados.
-3. Este proyecto extiende el trabajo del Hito 5: reutiliza la base de datos, la estructura de la API y la arquitectura del frontend existentes.
+- [ ] Identifica todas las llamadas `fetch` o a la API en el frontend y verifica que cada una tenga un bloque `try/catch` específico para esa llamada.
+- [ ] Para cada operación asíncrona que cargue datos, implementa el patrón de UI de tres estados: cargando (spinner o skeleton), éxito (datos visibles), error (mensaje con llamada a la acción).
+- [ ] Reemplaza cualquier mensaje de error en crudo (`Error 500`, `Unexpected token`, etc.) por una explicación legible para el usuario.
+- [ ] Asegúrate de que todo estado de error incluya una llamada a la acción clara: un botón de reintentar, un enlace a la página principal o un prompt para contactar soporte.
+- [ ] Usa `optional chaining` (`?.`) al acceder a propiedades anidadas que podrían ser `undefined`.
+- [ ] Añade `defaults` o `fallbacks` seguros para valores que podrían ser `null` o `undefined` al renderizar.
+- [ ] Usa bloques `finally` para asegurar que los estados de carga siempre se limpien, independientemente del resultado.
 
+## Backend (Python / FastAPI)
 
+- [ ] Revisa cada handler de ruta y asegúrate de que las excepciones se capturen en el ámbito correcto — evita bloques `try/except` grandes que engullan todos los errores.
+- [ ] Devuelve respuestas HTTP de error apropiadas (`400`, `404`, `422`, `500`) con un cuerpo JSON limpio y estructurado — sin tracebacks de Python en crudo.
+- [ ] Asegúrate de que las respuestas de error no exponen datos sensibles (cadenas de conexión a base de datos, rutas internas, claves secretas).
+- [ ] Añade gestión de errores a todas las llamadas a APIs externas que se hagan desde el backend (por ejemplo, llamadas a un LLM o a un servicio de terceros).
 
-# 💻 Qué tienes que hacer
+## Scripts (Python)
 
-## Modelo de datos
+- [ ] Envuelve las operaciones de lectura/escritura de archivos y el parseo de CSV en bloques `try/except` con mensajes de error informativos impresos en `stderr`.
+- [ ] Asegúrate de que los scripts terminan con un código distinto de cero (`sys.exit(1)`) cuando ocurre un error crítico.
+- [ ] Añade comprobaciones defensivas para datos de entrada faltantes o malformados antes de que comience el procesamiento.
 
-- [ ] Define el modelo `Incident` con los siguientes campos:
-  - [ ] `id` — identificador único generado automáticamente.
-  - [ ] `title` — título breve de la incidencia (obligatorio).
-  - [ ] `description` — descripción detallada (obligatorio).
-  - [ ] `category` — categoría según las definidas en tu CONTEXT.
-  - [ ] `status` — estado del ciclo de vida: `open`, `in_progress`, `resolved`, `discarded`.
-  - [ ] `origin` — origen del reporte: `customer`, `branch`, `internal`.
-  - [ ] `branch` — sede que gestiona o reporta la incidencia (obligatorio para todos los orígenes; usar `central` cuando no corresponda a una sede específica).
-  - [ ] `created_at` — fecha y hora de creación, generada automáticamente.
-  - [ ] `updated_at` — fecha y hora de última modificación, actualizada automáticamente.
-- [ ] Aplica las restricciones de integridad necesarias: campos obligatorios, valores permitidos en `status`, `origin` y `category`.
+## General
 
-## Seed de datos históricos (`/scripts`)
+- [ ] Revisa el código base en busca de `console.error` o sentencias `print` que expongan información interna sensible y elimínalos o reemplázalos.
 
-- [ ] Crea el script `seed_incidents.py` que lee el fichero CSV del proyecto anterior y carga todas sus filas en la base de datos asignando `origin: "customer"` a todos los registros.
-- [ ] El script debe aplicar las **transformaciones CSV → modelo** especificadas en tu CONTEXT (mapa de estados, mapa de categorías, `description` → `title`, `date` → `created_at`, ubicación → `branch`) antes del insert — el esquema del CSV del analizador no es idéntico al de este gestor.
-- [ ] El script debe reutilizar la lógica de validación ya existente — extrae las funciones comunes a `packages/shared/` si aún no lo has hecho: los registros inválidos del CSV no se insertan y se reportan en consola al final de la ejecución.
-- [ ] El script es idempotente: si se ejecuta dos veces no duplica registros (comprueba por un campo identificador del CSV antes de insertar).
-
-## Backend (`/services`)
-
-Endpoints de gestión:
-
-- [ ] `POST /api/incidents` — crea una nueva incidencia. Valida todos los campos obligatorios y devuelve `400` con un mensaje descriptivo si falta alguno o contiene un valor no permitido.
-- [ ] `GET /api/incidents` — devuelve la lista de incidencias. Acepta parámetros de filtro opcionales: `status`, `origin`, `branch`, `category`.
-- [ ] `GET /api/incidents/{id}` — devuelve el detalle de una incidencia. Devuelve `404` si no existe.
-- [ ] `PATCH /api/incidents/{id}/status` — actualiza únicamente el estado de una incidencia. Valida que la transición sea coherente con el ciclo de vida: desde `open` se puede avanzar a `in_progress` o `discarded`; desde `in_progress` se puede avanzar a `resolved` o `discarded`; los estados `resolved` y `discarded` son finales.
-- [ ] `GET /api/incidents/summary` — devuelve las métricas agregadas: total por estado, total por categoría, total por origen y total por sede.
-
-Manejo de errores en el backend:
-
-- [ ] Toda excepción no controlada devuelve `500` con un mensaje genérico — nunca el stack trace completo.
-- [ ] Los errores de validación devuelven `400` con un objeto JSON que identifica el campo problemático y describe el error en lenguaje claro.
-- [ ] Los endpoints de lectura no fallan si la base de datos está vacía: devuelven lista vacía o métricas en cero.
-
-## Frontend (`/uis`)
-
-Formulario de registro:
-
-- [ ] Crea una página de registro de incidencias accesible desde el menú de la aplicación.
-- [ ] El formulario incluye todos los campos del modelo. El campo `branch` es siempre visible y obligatorio, con todas las opciones de sede de tu CONTEXT (incluido `central`, mostrado como la etiqueta que indique tu CONTEXT).
-- [ ] Cuando `origin` sea `branch`, el campo `branch` se destaca visualmente para recordar al usuario que está reportando desde una sede específica.
-- [ ] Al enviar, el formulario muestra un indicador de carga mientras la petición está en curso — el botón de envío queda deshabilitado durante ese tiempo.
-- [ ] Si la API devuelve un error, el formulario muestra un mensaje comprensible para el usuario, nunca el mensaje técnico del servidor. Si el error identifica un campo concreto, el mensaje aparece junto a ese campo.
-- [ ] Tras un envío exitoso, el formulario se limpia y muestra una confirmación clara.
-
-Panel de incidencias:
-
-- [ ] Crea una página de listado con todas las incidencias registradas, con filtros por `status`, `origin` y `branch`.
-- [ ] Muestra un indicador de carga mientras se obtienen los datos.
-- [ ] Si la petición falla, muestra un mensaje de error con opción de reintentar — la página no queda en blanco ni rota.
-- [ ] Si no hay incidencias que mostrar (lista vacía o sin resultados para los filtros aplicados), muestra un mensaje informativo — nunca una tabla vacía sin contexto.
-- [ ] Cada incidencia permite actualizar su estado directamente desde el listado. Si la actualización falla, el estado visual vuelve al valor anterior y se notifica al usuario.
-
-Panel de resumen:
-
-- [ ] Muestra las métricas agregadas del endpoint `/summary`: totales por estado, por categoría, por origen y por sede.
-- [ ] Si los datos tardan en cargarse o fallan, el panel muestra el estado correspondiente sin romper el resto de la página.
-
-> ⚠️ **IMPORTANTE:** Los nombres de campos, categorías, sedes y valores de tu implementación deben coincidir exactamente con lo especificado en tu CONTEXT.md. Una implementación genérica que ignore el contexto no será aceptada.
+> ⚠️ **IMPORTANTE:** No introduzcas nuevas funcionalidades ni refactorices código que no esté relacionado con la gestión de errores. El alcance de este proyecto es estrictamente la resiliencia y la comunicación de errores del código existente.
 
 
-# ✅ Qué evaluaremos
+# ✅ Qué vamos a evaluar
 
-## Modelo y seed
+- [ ] Todas las operaciones asíncronas del frontend implementan el patrón de UI de tres estados (cargando / éxito / error).
+- [ ] Los mensajes de error mostrados al usuario son legibles e incluyen una llamada a la acción.
+- [ ] Los bloques `try/catch` y `try/except` están acotados a operaciones específicas, no envuelven funciones enteras.
+- [ ] Los bloques `finally` se usan correctamente para limpiar el estado de carga.
+- [ ] El `optional chaining` y los `fallbacks` se aplican donde corresponde para evitar errores de renderizado por valores `undefined`.
+- [ ] Las rutas del backend devuelven respuestas de error estructuradas y limpias con los códigos HTTP correctos.
+- [ ] Ninguna información sensible aparece en la salida de errores entregada al cliente.
+- [ ] Los scripts de Python gestionan errores de I/O y terminan con códigos de salida apropiados en caso de fallo.
 
-- [ ] El modelo incluye todos los campos requeridos con sus restricciones de integridad.
-- [ ] El script de seed carga correctamente las incidencias históricas asignando `origin: "customer"`.
-- [ ] El script de seed aplica las transformaciones CSV → modelo definidas en tu CONTEXT (estado, categoría, título, fechas y sede) antes del insert.
-- [ ] Los registros inválidos del CSV no se insertan y se reportan en consola.
-- [ ] El script es idempotente: ejecutarlo dos veces no duplica datos.
-- [ ] Tras el seed, los totales por `status` y `category` del modelo en `/api/incidents/summary` coinciden con los valores transformados esperados en tu CONTEXT (mismo conjunto de registros válidos que en el proyecto incidents-file-analyzer).
+> **Nota:** La evaluación se centra en la corrección y consistencia de los patrones de gestión de errores — no en si se añadieron nuevas funcionalidades.
 
-## Backend
+## 📦 Cómo entregar
 
-- [ ] Todos los endpoints responden con los códigos HTTP correctos en los casos felices y en los de error.
-- [ ] Los errores de validación identifican el campo problemático en la respuesta JSON.
-- [ ] Ningún endpoint expone un stack trace al cliente.
-- [ ] Las transiciones de estado inválidas son rechazadas con `400`.
-- [ ] El endpoint `/summary` devuelve métricas correctas aunque no haya incidencias.
-
-## Frontend
-
-- [ ] El formulario valida campos obligatorios en el cliente antes de enviar.
-- [ ] Cuando `origin` es `branch`, el campo `branch` se resalta visualmente y el desplegable muestra las etiquetas de CONTEXT.
-- [ ] Los estados de carga son visibles y el botón de envío queda deshabilitado durante la petición.
-- [ ] Los errores de la API se muestran en lenguaje comprensible para el usuario, nunca como texto técnico.
-- [ ] El listado gestiona correctamente los tres estados posibles: cargando, vacío, con datos.
-- [ ] La actualización de estado en el listado revierte visualmente si la petición falla.
-- [ ] El panel de resumen no rompe la página si su petición falla.
-
-## Transversal
-
-- [ ] La lógica de validación del proyecto anterior está extraída en `packages/shared/` y es reutilizada tanto por el script como por la API, sin duplicación.
-- [ ] El código está organizado según la estructura de carpetas del monorepo (`scripts/`, `services/`, `uis/`, `packages/shared/`).
-
----
-
-# 📦 Cómo entregar este proyecto
-
-El proyecto debe estar organizado en el monorepo de la siguiente manera:
-
-```text
-scripts/
-  seed_incidents.py         ← script de carga del histórico CSV
-
-packages/
-  shared/                   ← lógica de validación compartida entre script y API
-
-services/
-  <nombre-del-servicio-api/ ← backend con endpoints de gestión y resumen
-
-uis/
-  <nombre-de-la-ui/         ← interfaz de registro, listado y resumen
-```
-
-1. Sube tu rama con la estructura anterior y abre un Pull Request al repositorio original.
-2. Asegúrate de que el PR incluye:
-   - Captura de pantalla del formulario con un error de validación visible.
-   - Captura de pantalla del panel de listado con datos cargados.
-   - Captura de pantalla del panel de resumen con métricas.
+Sube tu rama `feature/error-handling-audit` a GitHub y comparte la URL del pull request (o del repositorio) con tu instructor según las instrucciones de entrega de tu cohorte.

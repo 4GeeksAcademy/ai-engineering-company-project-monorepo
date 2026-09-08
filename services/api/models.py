@@ -121,6 +121,7 @@ class CandidateBase(BaseModel):
     years_of_experience: Optional[int] = None
     status: CandidateStatus = CandidateStatus.PENDING
     stage: CandidateStage = CandidateStage.SCREENING
+    score_ia: Optional[int] = Field(None, ge=0, le=100)
 
 class CandidateCreate(CandidateBase):
     pass

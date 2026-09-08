@@ -37,8 +37,7 @@ export default function ProfilePage() {
         setAddress(data.address || '');
         
       } catch (err: any) {
-        console.error("Error cargando perfil", err);
-        setError("No se pudo cargar el perfil.");
+        setError("Ocurrió un error al cargar la información del perfil.");
         // Si el backend nos responde 401 (token expirado o inválido), cerramos sesión forzosamente
         if (err.response?.status === 401) {
           logout();

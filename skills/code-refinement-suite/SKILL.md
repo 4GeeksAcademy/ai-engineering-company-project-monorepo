@@ -51,8 +51,8 @@ flowchart TD
 ### 📝 PACK 2: PLANNER (Estructuración del Plan de Implementación)
 - **Herramientas:** `Step-Back Prompting (Abstracción)` + `Self-Refinement Loop (3 Ciclos)`.
 - **Acción:** Define componentes desacoplados y refina el documento `implementation-plan.md` hasta dejarlo impecable.
-- **Regla de Formato Obligatoria:** SIEMPRE debes incluir al final de cualquier plan de implementación que generes una sección titulada `## ⚙️ Métodos Aplicados (Code Refinement Suite)`. En esta sección, debes explicar brevemente cómo has aplicado o aplicarás conceptualmente los métodos específicos de esta suite (ToT, CoVe, Red Teaming, etc.) adaptados a la implementación actual.
-
+- **Regla de Formato Obligatoria 1:** SIEMPRE debes incluir al final de cualquier plan de implementación que generes una sección titulada `## ⚙️ Métodos Aplicados (Code Refinement Suite)`. En esta sección, debes explicar brevemente cómo has aplicado o aplicarás conceptualmente los métodos específicos de esta suite (ToT, CoVe, Red Teaming, etc.) adaptados a la implementación actual.
+- **Regla de Formato Obligatoria 2:** SIEMPRE debes incluir una sección titulada `## 🗺️ Mapa de Trabajo por Fases (Roadmap)` que contenga las etapas de implementación en listas. Cada elemento de esta lista DEBE tener un checkbox (`- [ ]`) para poder ir marcándolos como completados a medida que avanza la ejecución.
 ### 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
 - **Herramientas:** `Chain of Verification (CoVe)` + `Test-Driven Refinement (TDD)`.
 - **Acción:** Contrasta los tipos e importaciones contra el código fuente real y ejecuta validaciones automatizadas (`npx tsc --noEmit`, `npm run lint`, `npm test`, `pytest`).

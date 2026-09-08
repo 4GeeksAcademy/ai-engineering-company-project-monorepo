@@ -21,6 +21,7 @@ export interface Candidate {
   years_of_experience?: number;
   status: CandidateStatus;
   stage: CandidateStage;
+  score_ia?: number;
   applied_at?: string;
   created_at?: string;
   updated_at?: string;

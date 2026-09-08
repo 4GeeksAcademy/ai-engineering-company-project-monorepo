@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/axios';
 
 export default function IncidentsPage() {
   const router = useRouter();
@@ -32,23 +33,12 @@ export default function IncidentsPage() {
       if (filters.origin) queryParams.append('origin', filters.origin);
 
       const [incRes, sumRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/incidents?${queryParams.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('http://localhost:8000/api/incidents/summary', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        api.get(`/api/incidents?${queryParams.toString()}`),
+        api.get('/api/incidents/summary')
       ]);
 
-      if (!incRes.ok || !sumRes.ok) {
-        throw new Error('Error al cargar datos del servidor');
-      }
-
-      const incData = await incRes.json();
-      const sumData = await sumRes.json();
-
-      setIncidents(incData);
-      setSummary(sumData);
+      setIncidents(incRes.data);
+      setSummary(sumRes.data);
     } catch (err: any) {
       setErrorMsg('Ocurrió un error de conexión al cargar la lista. Puedes reintentar.');
     } finally {
@@ -69,22 +59,15 @@ export default function IncidentsPage() {
     setIncidents(prev => prev.map(inc => inc.id === id ? { ...inc, status: newStatus } : inc));
     
     try {
-      const res = await fetch(`http://localhost:8000/api/incidents/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      
-      if (!res.ok) {
-        throw new Error('Failed');
-      }
-    } catch (err) {
+      await api.patch(`/api/incidents/${id}/status`, { status: newStatus });
+      // Refetch summary so it updates
+      fetchData();
+    } catch (err: any) {
       // Revert on failure
       setIncidents(prev => prev.map(inc => inc.id === id ? { ...inc, status: currentStatus } : inc));
-      alert('Hubo un error del servidor. No se pudo cambiar el estado de la incidencia.');
+      
+      const errorMessage = err.response?.data?.detail || 'Hubo un error del servidor. No se pudo cambiar el estado de la incidencia.';
+      alert(`Error: ${errorMessage}`);
     }
   };
 

@@ -18,26 +18,31 @@ stages = ["SCREENING", "INTERVIEW", "TECHNICAL_TEST", "OFFER", "HIRED"]
 statuses = ["PENDING", "IN_REVIEW", "ACCEPTED", "REJECTED"]
 
 def seed_candidates(num_candidates=50):
-    for i in range(num_candidates):
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-        name = f"{first_name} {last_name}"
-        email = f"{first_name.lower()}.{last_name.lower()}{random.randint(1,99)}@example.com"
-        
-        candidate_data = {
-            "name": name,
-            "email": email,
-            "phone": fake.phone_number(),
-            "position": random.choice(positions),
-            "linkedin": f"https://linkedin.com/in/{first_name.lower()}-{last_name.lower()}",
-            "resume_url": f"https://nexova-storage.com/cvs/{first_name.lower()}-{last_name.lower()}-cv.pdf",
-            "years_of_experience": random.randint(1, 15),
-            "status": random.choice(statuses),
-            "stage": random.choice(stages)
-        }
-        
-        create_candidate_in_db(candidate_data)
-    print(f"{num_candidates} candidatos creados exitosamente en TinyDB.")
+    try:
+        for i in range(num_candidates):
+            first_name = fake.first_name()
+            last_name = fake.last_name()
+            name = f"{first_name} {last_name}"
+            email = f"{first_name.lower()}.{last_name.lower()}{random.randint(1,99)}@example.com"
+            
+            candidate_data = {
+                "name": name,
+                "email": email,
+                "phone": fake.phone_number(),
+                "position": random.choice(positions),
+                "linkedin": f"https://linkedin.com/in/{first_name.lower()}-{last_name.lower()}",
+                "resume_url": f"https://nexova-storage.com/cvs/{first_name.lower()}-{last_name.lower()}-cv.pdf",
+                "years_of_experience": random.randint(1, 15),
+                "status": random.choice(statuses),
+                "stage": random.choice(stages),
+                "score_ia": random.randint(40, 100)
+            }
+            
+            create_candidate_in_db(candidate_data)
+        print(f"{num_candidates} candidatos creados exitosamente en TinyDB.")
+    except Exception as e:
+        print(f"Error crítico al sembrar candidatos: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     seed_candidates(50)

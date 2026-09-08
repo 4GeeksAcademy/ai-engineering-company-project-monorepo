@@ -28,6 +28,7 @@ def send_reset_email(to_email: str, reset_token: str):
         })
         print(f"Email de restablecimiento enviado a {to_email}")
         return True
-    except Exception as e:
-        print(f"Error al enviar email: {e}")
+    except Exception:
+        import sys
+        print("Error al enviar email: La API de Resend rechazó la petición o hubo un problema de red.", file=sys.stderr)
         return False

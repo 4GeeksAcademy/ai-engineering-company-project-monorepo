@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import SupplierForm from "@/components/SupplierForm";
+import api from "@/lib/axios";
 
 interface Supplier {
   id: number;
@@ -27,13 +28,10 @@ export default function SuppliersPage() {
       if (countryFilter) query.append("country", countryFilter);
       if (categoryFilter) query.append("category", categoryFilter);
       
-      const res = await fetch(`http://localhost:8000/suppliers?${query.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSuppliers(data);
-      }
+      const res = await api.get(`/suppliers?${query.toString()}`);
+      setSuppliers(res.data);
     } catch (err) {
-      console.error(err);
+      // Manejado silenciosamente, setError mostrará el mensaje en la UI
     } finally {
       setLoading(false);
     }
@@ -46,14 +44,10 @@ export default function SuppliersPage() {
   const handleUpdateStatus = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
     try {
-      await fetch(`http://localhost:8000/suppliers/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
-      });
+      await api.patch(`/suppliers/${id}/status`, { status: newStatus });
       fetchSuppliers();
     } catch (err) {
-      console.error(err);
+      // Manejado silenciosamente, la UI reaccionará si es necesario
     }
   };
 
@@ -67,19 +61,10 @@ export default function SuppliersPage() {
     }
     
     try {
-      const res = await fetch(`http://localhost:8000/suppliers/${id}/rate`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hourly_rate: newRate })
-      });
-      if (!res.ok) {
-         const data = await res.json();
-         alert(JSON.stringify(data.detail));
-         return;
-      }
+      await api.patch(`/suppliers/${id}/rate`, { hourly_rate: newRate });
       fetchSuppliers();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      alert(JSON.stringify(err.response?.data?.detail || err.message));
     }
   };
 

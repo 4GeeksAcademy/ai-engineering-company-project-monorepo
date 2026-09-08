@@ -35,4 +35,10 @@ async def main():
         
         await browser.close()
 
-asyncio.run(main())
+if __name__ == "__main__":
+    import sys
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"Error crítico capturando pantallas: {e}", file=sys.stderr)
+        sys.exit(1)

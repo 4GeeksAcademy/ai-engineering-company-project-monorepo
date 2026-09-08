@@ -49,18 +49,26 @@ def main():
     
     export = input("¿Deseas exportar los resultados a CSV? [s/n]: ").strip().lower()
     if export == 's':
-        with open('results.csv', mode='w', encoding='utf-8', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Metrica', 'Valor'])
-            writer.writerow(['Total Procesados', metrics['total_procesados']])
-            writer.writerow(['Total Válidos', metrics['total_validos']])
-            writer.writerow(['Total Inválidos', metrics['total_invalidos']])
-            writer.writerow(['Satisfacción Media', metrics['satisfaccion_media']])
-            for cat, count in metrics['conteo_categorias'].items():
-                writer.writerow([f'Categoria: {cat}', count])
-            for estado, count in metrics['conteo_estados'].items():
-                writer.writerow([f'Estado: {estado}', count])
-        print("✅ Resultados exportados exitosamente a 'results.csv'.")
+        try:
+            with open('results.csv', mode='w', encoding='utf-8', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(['Metrica', 'Valor'])
+                writer.writerow(['Total Procesados', metrics['total_procesados']])
+                writer.writerow(['Total Válidos', metrics['total_validos']])
+                writer.writerow(['Total Inválidos', metrics['total_invalidos']])
+                writer.writerow(['Satisfacción Media', metrics['satisfaccion_media']])
+                for cat, count in metrics['conteo_categorias'].items():
+                    writer.writerow([f'Categoria: {cat}', count])
+                for estado, count in metrics['conteo_estados'].items():
+                    writer.writerow([f'Estado: {estado}', count])
+            print("✅ Resultados exportados exitosamente a 'results.csv'.")
+        except Exception as e:
+            print(f"Error crítico al exportar resultados: {e}", file=sys.stderr)
+            sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Error inesperado en analyze.py: {e}", file=sys.stderr)
+        sys.exit(1)
