@@ -4,6 +4,7 @@ __pycache__
 .env
 !/.env.example
 services/api/db.json
+services/api/dlq.json
 incidentes_db.json
 incidents.csv
 context-flujoContraseña.md

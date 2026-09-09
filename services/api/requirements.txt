@@ -9,3 +9,5 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 email-validator==2.2.0
 resend>=0.8.0
+celery[redis]==5.4.0
+flower==2.0.1

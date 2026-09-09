@@ -22,6 +22,9 @@ from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
 from routes.pipeline import router as pipeline_router
+from routes.tasks import router as tasks_router
+
+from services.tasks import analyze_incidents_task
 
 
 
@@ -117,6 +120,10 @@ app.include_router(telemetry_router)
 # GET /pipeline/runs, /pipeline/latest-runs, /pipeline/kpis, /pipeline/stats
 app.include_router(pipeline_router)
 
+# Registrar router de tareas asíncronas (Message Queues)
+# GET /tasks/{task_id}
+app.include_router(tasks_router)
+
 
 _last_analysis: dict | None = None
 
@@ -146,9 +153,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/api/incidents/analyze")
-async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> dict:
-    global _last_analysis
-
+async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> JSONResponse:
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing file name")
 
@@ -175,8 +180,17 @@ async def analyze_uploaded_incidents(file: UploadFile = File(...)) -> dict:
     if not rows:
         raise HTTPException(status_code=400, detail="CSV has no data rows")
 
-    _last_analysis = analyze_incidents(rows)
-    return _last_analysis
+    # Encolar la tarea en Celery para procesamiento asíncrono
+    task = analyze_incidents_task.delay(csv_content=content, filename=file.filename)
+
+    return JSONResponse(
+        status_code=202,
+        content={
+            "task_id": task.id,
+            "status": "PENDING",
+            "message": "Analysis started. Use GET /tasks/{task_id} to check progress.",
+        },
+    )
 
 
 @app.get("/api/incidents/results/export")
