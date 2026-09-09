@@ -487,6 +487,14 @@ export default function SuppliersPage() {
       {error && (
         <section className="state-card error">
           Could not load suppliers: {error}
+          <button
+            type="button"
+            className="primary-button"
+            style={{ marginTop: '0.75rem' }}
+            onClick={() => void refreshSuppliers()}
+          >
+            Retry
+          </button>
         </section>
       )}
 

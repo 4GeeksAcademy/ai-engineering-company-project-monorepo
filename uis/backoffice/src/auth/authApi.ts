@@ -2,6 +2,18 @@
  * API functions for authentication and user profile endpoints.
  */
 
+function safeDetail(data: unknown, fallback: string): string {
+  if (
+    data &&
+    typeof data === 'object' &&
+    typeof (data as Record<string, unknown>).detail === 'string' &&
+    (data as Record<string, unknown>).detail !== ''
+  ) {
+    return (data as Record<string, unknown>).detail as string
+  }
+  return fallback
+}
+
 export type LoginPayload = {
   email: string
   password: string
@@ -55,7 +67,7 @@ export async function login(payload: LoginPayload): Promise<TokenResponse> {
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Login failed: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to sign in. Please check your credentials and try again.'))
   }
 
   return response.json()
@@ -70,7 +82,7 @@ export async function register(payload: RegisterPayload): Promise<UserResponse> 
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Registration failed: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to create the account. Please try again.'))
   }
 
   return response.json()
@@ -99,7 +111,7 @@ export async function getProfile(token: string): Promise<ProfileResponse> {
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Failed to load profile: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to load profile. Please try again.'))
   }
 
   return response.json()
@@ -120,7 +132,7 @@ export async function updateProfile(
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Failed to update profile: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to update profile. Please try again.'))
   }
 
   return response.json()
@@ -135,7 +147,7 @@ export async function forgotPassword(email: string): Promise<{ detail: string }>
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Request failed: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to complete the request. Please try again.'))
   }
 
   return response.json()
@@ -150,7 +162,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Request failed: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to complete the request. Please try again.'))
   }
 
   return response.json()
@@ -172,7 +184,7 @@ export async function changePassword(
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? `Request failed: ${response.status}`)
+    throw new Error(safeDetail(data, 'Unable to complete the request. Please try again.'))
   }
 
   return response.json()

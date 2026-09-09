@@ -44,8 +44,12 @@ def seed_incidents(
     Idempotency is tracked in `seed_keys_table` (internal-only, never part
     of the public Incident model): rows already seeded are skipped on
     subsequent runs.
+
+    Raises FileNotFoundError, PermissionError, UnicodeDecodeError, OSError
+    for I/O failures.
     """
     text = csv_path.read_text(encoding="utf-8-sig")
+
     analysis = analyze_historical_incidents(text)
 
     SeedKey = Query()
@@ -103,12 +107,20 @@ def print_summary(summary: dict) -> None:
             print(f"  {record['incident_id']} field={error['field']} reason={error['reason']}")
 
 
-def main() -> None:
+def main() -> int:
+    import sys
+
     from database import incident_seed_keys_table, incidents_table
 
-    summary = seed_incidents(DEFAULT_CSV_PATH, incidents_table, incident_seed_keys_table)
+    try:
+        summary = seed_incidents(DEFAULT_CSV_PATH, incidents_table, incident_seed_keys_table)
+    except (FileNotFoundError, PermissionError, UnicodeDecodeError, OSError) as exc:
+        print(f"Error reading CSV: {exc}", file=sys.stderr)
+        return 1
+
     print_summary(summary)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

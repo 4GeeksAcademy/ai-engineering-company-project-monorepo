@@ -96,7 +96,7 @@ export async function getSuppliers(
   const response = await authFetch(url, { requireAuth: true })
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
+    throw new Error(await parseApiError(response))
   }
 
   return response.json()
@@ -114,12 +114,20 @@ export type SupplierCreateInput = {
   notes?: string | null
 }
 
-async function parseApiError(response: Response) {
+async function parseApiError(response: Response): Promise<string> {
   try {
-    const data = await response.json()
-    return JSON.stringify(data.detail ?? data)
+    const body = await response.json()
+    if (
+      body &&
+      typeof body === 'object' &&
+      typeof (body as Record<string, unknown>).detail === 'string' &&
+      ((body as Record<string, unknown>).detail as string).length > 0
+    ) {
+      return (body as Record<string, unknown>).detail as string
+    }
+    return 'Something went wrong. Please try again.'
   } catch {
-    return `API error: ${response.status}`
+    return 'Something went wrong. Please try again.'
   }
 }
 
@@ -330,7 +338,7 @@ async function raiseIncidentError(response: Response): Promise<never> {
   try {
     data = await response.json()
   } catch {
-    throw new Error(`API error: ${response.status}`)
+    throw new Error('Something went wrong. Please try again.')
   }
 
   if (
@@ -347,10 +355,10 @@ async function raiseIncidentError(response: Response): Promise<never> {
 
   if (data && typeof data === 'object' && 'detail' in data) {
     const detail = (data as { detail: unknown }).detail
-    throw new Error(typeof detail === 'string' ? detail : 'Request failed.')
+    throw new Error(typeof detail === 'string' ? detail : 'Something went wrong. Please try again.')
   }
 
-  throw new Error(`API error: ${response.status}`)
+  throw new Error('Something went wrong. Please try again.')
 }
 
 export async function getIncidents(

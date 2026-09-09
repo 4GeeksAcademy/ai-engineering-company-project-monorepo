@@ -1,19 +1,45 @@
+import logging
 import os
 
 import resend
+from resend import RequestsClient
+from resend.exceptions import (
+    InvalidApiKeyError,
+    MissingApiKeyError,
+    RateLimitError,
+    ResendError,
+    ValidationError,
+)
 
+
+logger = logging.getLogger("api.email")
 
 RESEND_API_KEY_ENV = "RESEND_API_KEY"
 RESEND_FROM_ENV = "RESEND_FROM"
 RESEND_FROM_DEFAULT = "TrackFlow <noreply@trackflow.app>"
 
 
+class EmailServiceError(Exception):
+    """Raised when the email service is not available."""
+
+
+class EmailConfigurationError(Exception):
+    """Raised when the email service is not configured."""
+
+
+_EMAIL_TIMEOUT_SECONDS = 15
+
+# Configure a shared HTTP client with a reasonable timeout.
+_http_client = RequestsClient(timeout=_EMAIL_TIMEOUT_SECONDS)
+resend.default_http_client = _http_client
+
+
 def _get_resend_api_key() -> str:
     key = os.environ.get(RESEND_API_KEY_ENV)
     if not key:
-        raise RuntimeError(
-            f"{RESEND_API_KEY_ENV} environment variable is not set. "
-            "Set it before using email features."
+        logger.error("RESEND_API_KEY environment variable is not set")
+        raise EmailConfigurationError(
+            "Email service is not configured."
         )
     return key
 
@@ -119,4 +145,27 @@ def send_password_reset_email(email: str, token: str) -> None:
         "html": html_content,
     }
 
-    resend.Emails.send(params)
+    try:
+        resend.Emails.send(params)
+    except (InvalidApiKeyError, MissingApiKeyError):
+        logger.warning("Resend API key rejected when sending reset email to %s", email)
+        raise EmailServiceError("Email service is not configured.")
+    except RateLimitError:
+        logger.warning("Resend rate limit hit when sending reset email to %s", email)
+        raise EmailServiceError(
+            "Unable to send the reset email right now. Please try again later."
+        )
+    except ValidationError as exc:
+        logger.warning(
+            "Resend validation error for %s: %s", email, exc
+        )
+        raise EmailServiceError(
+            "Unable to send the reset email right now. Please try again later."
+        )
+    except ResendError as exc:
+        logger.error(
+            "Resend API error while sending reset email to %s: %s", email, exc
+        )
+        raise EmailServiceError(
+            "Unable to send the reset email right now. Please try again later."
+        )

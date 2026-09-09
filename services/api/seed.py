@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from pydantic import ValidationError
 from tinydb import Query
 
 from database import suppliers_table
@@ -167,34 +168,44 @@ SUPPLIERS_SEED = [
 ]
 
 
-def main():
+def main() -> int:
+    import sys
+
     supplier_query = Query()
 
     inserted = 0
     skipped = 0
 
-    for raw_supplier in SUPPLIERS_SEED:
-        supplier = SupplierCreate(**raw_supplier)
+    try:
+        for raw_supplier in SUPPLIERS_SEED:
+            supplier = SupplierCreate(**raw_supplier)
 
-        already_exists = suppliers_table.contains(
-            (supplier_query.name == supplier.name)
-            & (supplier_query.country == supplier.country)
-        )
+            already_exists = suppliers_table.contains(
+                (supplier_query.name == supplier.name)
+                & (supplier_query.country == supplier.country)
+            )
 
-        if already_exists:
-            skipped += 1
-            continue
+            if already_exists:
+                skipped += 1
+                continue
 
-        record = supplier.model_dump()
-        record["updated_at"] = datetime.now(timezone.utc).isoformat()
+            record = supplier.model_dump()
+            record["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-        suppliers_table.insert(record)
-        inserted += 1
+            suppliers_table.insert(record)
+            inserted += 1
+    except (OSError, IOError) as exc:
+        print(f"Database error: {exc}", file=sys.stderr)
+        return 1
+    except ValidationError as exc:
+        print(f"Validation error in seed data: {exc}", file=sys.stderr)
+        return 1
 
     print(f"Inserted: {inserted}")
     print(f"Skipped: {skipped}")
     print(f"Total suppliers: {len(suppliers_table)}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

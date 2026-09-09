@@ -1,8 +1,14 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from tinydb import Query
 
 from database import document_to_dict, profiles_table, users_table
-from email_service import send_password_reset_email
+from email_service import (
+    EmailConfigurationError,
+    EmailServiceError,
+    send_password_reset_email,
+)
 from models import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
@@ -23,6 +29,9 @@ from security import (
     validate_reset_token,
     verify_password,
 )
+
+
+logger = logging.getLogger("api.auth")
 
 
 router = APIRouter(
@@ -114,11 +123,11 @@ def forgot_password(payload: ForgotPasswordRequest):
 
             try:
                 send_password_reset_email(payload.email, token)
-            except Exception:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to send reset email. Please try again later.",
+            except (EmailConfigurationError, EmailServiceError):
+                logger.warning(
+                    "Failed to send password reset email to %s", payload.email
                 )
+                mark_reset_token_used(token)
 
     return PasswordChangeResponse(
         detail="If an account with that email exists, a password reset link has been sent.",
