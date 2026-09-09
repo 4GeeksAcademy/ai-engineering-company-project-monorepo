@@ -100,6 +100,36 @@ Read the linked `README.md` inside each folder before you start coding there.
 
 → See [`services/README.md`](./services/README.md)
 
+#### Celery Worker (Async Tasks)
+
+The project uses **Celery** with **Redis** as the message broker for processing long-running tasks asynchronously (e.g., CSV analysis).
+
+**Quick start:**
+
+1. Start Redis and Flower:
+   ```bash
+   docker compose up -d redis flower
+   ```
+
+2. Start the Celery worker:
+   ```bash
+   cd services
+   celery -A celery_app worker --loglevel=info
+   ```
+
+3. Monitor tasks via Flower at [http://localhost:5555](http://localhost:5555)
+
+**Key files:**
+
+| File                          | Purpose                                      |
+| ----------------------------- | -------------------------------------------- |
+| `docker-compose.yml`          | Redis (broker) + Flower (monitoring)          |
+| `services/celery_app.py`      | Celery application instance                   |
+| `services/tasks.py`           | Task definitions + Dead Letter Queue (DLQ)    |
+| `services/api/routes/tasks.py`| `GET /tasks/{task_id}` endpoint               |
+
+**Dead Letter Queue:** Failed tasks are automatically stored in `services/api/dlq.json` (TinyDB) for manual inspection and retry.
+
 ### `data/` — datasets, pipelines, and evaluation
 
 **Purpose:** Everything data-related, from raw files to production-ready tables.
