@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_INVENTORY_API_URL || 'http://localhost:8000',
+  baseURL: process.env.NEXT_PUBLIC_INVENTORY_API_URL || '/backend-api',
 });
 
 // Interceptor para inyectar automáticamente el JWT (Fase 1 - Paso 2)

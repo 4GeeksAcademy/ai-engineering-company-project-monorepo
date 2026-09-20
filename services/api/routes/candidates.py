@@ -13,7 +13,8 @@ from services.api.routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
-@router.get("/", response_model=List[CandidateResponse])
+@router.get("", response_model=List[CandidateResponse])
+@router.get("/", response_model=List[CandidateResponse], include_in_schema=False)
 def get_candidates(
     status: Optional[str] = FastAPIQuery(None),
     stage: Optional[str] = FastAPIQuery(None),
@@ -28,7 +29,8 @@ def get_candidate(candidate_id: int, current_user: dict = Depends(get_current_us
         raise HTTPException(status_code=404, detail="Candidate not found")
     return candidate
 
-@router.post("/", response_model=CandidateResponse)
+@router.post("", response_model=CandidateResponse)
+@router.post("/", response_model=CandidateResponse, include_in_schema=False)
 def create_candidate(candidate: CandidateCreate, current_user: dict = Depends(get_current_user)):
     return create_candidate_in_db(candidate.dict())
 

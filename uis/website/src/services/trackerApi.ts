@@ -7,7 +7,7 @@ import {
   CandidateFilters,
 } from '@/types/candidate';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 
 function getAuthHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -44,7 +44,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
  * Obtiene el listado de candidaturas desde la API REST (GET /records).
  */
 export async function getCandidates(filters?: CandidateFilters): Promise<Candidate[]> {
-  const url = new URL(`${API_BASE_URL}/candidates`);
+  const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const url = new URL(`${API_BASE_URL}/candidates`, base);
   
   if (filters?.status && filters.status !== 'ALL') {
     url.searchParams.append('status', filters.status);

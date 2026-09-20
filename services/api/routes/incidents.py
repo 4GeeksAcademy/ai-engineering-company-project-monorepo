@@ -4,7 +4,7 @@ from packages.shared.validation import (
     IncidentCreate, IncidentUpdateStatus, IncidentResponse, IncidentInDB,
     IncidentStatus, IncidentOrigin, IncidentBranch, IncidentCategory
 )
-from services.api.database import get_db
+from services.api.database import get_tinydb as get_db
 from services.api.routes.auth import get_current_user
 from tinydb import Query
 

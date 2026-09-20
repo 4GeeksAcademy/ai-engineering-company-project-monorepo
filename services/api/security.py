@@ -1,11 +1,12 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import jwt
 from passlib.hash import bcrypt
 
-SECRET_KEY = "mi_clave_secreta_super_segura_que_nadie_sabe" 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY", "mi_clave_secreta_super_segura_que_nadie_sabe")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.verify(plain_password, hashed_password)

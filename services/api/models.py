@@ -119,3 +119,54 @@ class AssetAssignment(SQLModel, table=True):
 
     user_uuid: str= Field(index=True)
     asset:Optional[Asset]= Relationship(back_populates='assignments')
+
+
+# --- Modelos de Candidatos (Scoring / Tracker) ---
+
+class CandidateBase(BaseModel):
+    name: str
+    email: str
+    phone: Optional[str] = None
+    position: str
+    linkedin: Optional[str] = None
+    resume_url: Optional[str] = None
+    years_of_experience: Optional[int] = 0
+    status: str = "PENDING"
+    stage: str = "SCREENING"
+    score_ia: Optional[float] = None
+
+class CandidateCreate(CandidateBase):
+    pass
+
+class CandidateUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    position: Optional[str] = None
+    linkedin: Optional[str] = None
+    resume_url: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    status: Optional[str] = None
+    stage: Optional[str] = None
+    score_ia: Optional[float] = None
+
+class CandidatePatch(CandidateUpdate):
+    pass
+
+class CandidateResponse(CandidateBase):
+    id: int
+    applied_at: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+class CandidateNoteBase(BaseModel):
+    content: str
+
+class CandidateNoteCreate(CandidateNoteBase):
+    pass
+
+class CandidateNoteResponse(CandidateNoteBase):
+    id: int
+    candidate_id: int
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None

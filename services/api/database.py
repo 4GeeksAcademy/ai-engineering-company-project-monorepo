@@ -1,5 +1,7 @@
 import os
 import uuid
+from datetime import datetime
+from typing import Optional
 from tinydb import TinyDB, Query
 from sqlmodel import SQLModel, create_engine, Session
 from dotenv import load_dotenv
@@ -83,3 +85,67 @@ def mark_token_used(token_hash: str):
     tokens_table = db.table('reset_tokens')
     tokenQuery = Query()
     tokens_table.update({'used': True}, tokenQuery.token_hash == token_hash)
+
+
+# --- Operaciones de Candidatos (Scoring / Tracker) ---
+
+def get_all_candidates_from_db(status: Optional[str] = None, stage: Optional[str] = None):
+    db = get_tinydb()
+    table = db.table('candidates')
+    records = table.all()
+    if status and status != 'ALL':
+        records = [r for r in records if r.get('status') == status]
+    if stage and stage != 'ALL':
+        records = [r for r in records if r.get('stage') == stage]
+    return records
+
+def get_candidate_from_db(candidate_id: int):
+    db = get_tinydb()
+    table = db.table('candidates')
+    Q = Query()
+    res = table.search(Q.id == candidate_id)
+    return res[0] if res else None
+
+def create_candidate_in_db(data: dict):
+    db = get_tinydb()
+    table = db.table('candidates')
+    records = table.all()
+    max_id = max([r.get('id', 0) for r in records], default=0)
+    data['id'] = max_id + 1
+    data['created_at'] = datetime.utcnow().isoformat()
+    data['updated_at'] = data['created_at']
+    table.insert(data)
+    return data
+
+def update_candidate_in_db(candidate_id: int, data: dict):
+    db = get_tinydb()
+    table = db.table('candidates')
+    Q = Query()
+    data['updated_at'] = datetime.utcnow().isoformat()
+    table.update(data, Q.id == candidate_id)
+    return get_candidate_from_db(candidate_id)
+
+def get_candidate_notes_from_db(candidate_id: int):
+    db = get_tinydb()
+    table = db.table('candidate_notes')
+    Q = Query()
+    return table.search(Q.candidate_id == candidate_id)
+
+def create_candidate_note_in_db(candidate_id: int, data: dict):
+    db = get_tinydb()
+    table = db.table('candidate_notes')
+    records = table.all()
+    max_id = max([r.get('id', 0) for r in records], default=0)
+    data['id'] = max_id + 1
+    data['candidate_id'] = candidate_id
+    data['created_at'] = datetime.utcnow().isoformat()
+    table.insert(data)
+    return data
+
+def delete_candidate_note_from_db(note_id: int):
+    db = get_tinydb()
+    table = db.table('candidate_notes')
+    Q = Query()
+    removed = table.remove(Q.id == note_id)
+    return len(removed) > 0
+

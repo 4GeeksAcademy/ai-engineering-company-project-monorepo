@@ -1,118 +1,84 @@
-# Hito 5 — Backoffice: Interfaz de Gestión de Inventario
-
-> **Antes de empezar:** Lee tu `CONTEXT-company.md` antes de escribir ningún componente — define los nombres de entidades, etiquetas de campos, restricciones de negocio y vocabulario de dominio que deben aparecer en la interfaz.
+# Contenedorización del Monorepo de la Empresa
 
 ## 🎯 Tu reto
 
-📌 **Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
-
-El equipo de backend completó la API de inventario e hizo el handoff al equipo de producto: todos los endpoints `/inventory` están activos, autenticados y documentados. Ahora el responsable de operaciones ha enviado un brief a la unidad tecnológica: el personal que gestiona el stock a diario necesita una interfaz funcional dentro del backoffice. Mientras no la haya, la API existe pero nadie puede usarla sin un cliente REST.
-
-Tu trabajo es construir la sección de inventario del backoffice: un conjunto de vistas que permitan al personal autenticado consultar el stock disponible, registrar entregas, registrar consumos o salidas y revisar el historial completo de órdenes — todo comunicándose con la API construida en el proyecto de backend.
-
-Esta es una herramienta interna, no una página pública. Las personas que la utilizan son el personal de operaciones, no clientes. Eso condiciona cada decisión: la claridad y la velocidad importan más que el acabado visual de una campaña de marketing. Un responsable de operaciones registrando una entrega a las 7 de la mañana no tiene paciencia para un formulario roto ni para un mensaje de error críptico.
-
-Dos requisitos del brief que es fácil pasar por alto: 
-1. El formulario de orden de salida debe mostrar el stock disponible actual del producto seleccionado antes de que el usuario envíe el formulario.
-2. Cualquier respuesta `400` de la API debe mostrar al usuario un mensaje de error legible — no un objeto JSON en bruto ni un fallo silencioso.
-
----
-
-## 📋 Brief del responsable de operaciones
-
-**De:** Responsable de Operaciones  
-**Para:** Unidad Tecnológica
-
-El equipo de backend entregó la API de inventario el sprint pasado — buen trabajo. Ahora necesito la interfaz. Mi equipo no puede usar Postman para registrar entregas.
-
-**Esto es lo que necesito en el backoffice:**
-
-- Una página que muestre todos los productos con su stock actual. Usa código de color — quiero ver de un vistazo qué está bajo.
-- Un formulario para registrar una orden de entrada (una entrega recibida).
-- Un formulario para registrar una orden de salida (un consumo o salida). Debe mostrar cuánto stock hay disponible antes de que yo envíe, para no registrar más de lo que tenemos.
-- Una página de sólo lectura con todas las órdenes — entradas y salidas — con el nombre del producto y quién creó cada una.
-- Todas estas páginas requieren inicio de sesión. Si un usuario no está autenticado, redirígelo a la página de login.
-
-### ✅ Criterios de aceptación: 
-Las cuatro vistas funcionales, autenticadas, consumiendo datos reales de la API, con gestión correcta de errores en fallos de la API.
-
----
-
-## 🌱 Cómo Empezar el Proyecto
-
-El frontend del backoffice ya existe en tu monorepo. Estás añadiendo la sección de inventario, no creando una nueva aplicación.
-
-1. **Abre tu repositorio existente** (forkeado desde `https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo`).
-2. **Navega a `uis/backoffice`** — aquí vive tu Next.js backoffice.
-3. **Instala las dependencias** si es necesario:
-   ```bash
-   npm install
-   ```
-4. **Configura el entorno:** Añade la URL base de la API de inventario a tu archivo `.env.local`. Debe apuntar a tu backend en ejecución:
-   ```env
-   NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8000
-   ```
-5. **Revisa tu contexto:** Lee tu `CONTEXT-company.md` — los nombres de entidades, etiquetas de campos y vocabulario de dominio deben coincidir con lo que existe en la API y en la interfaz.
-6. **Levanta la API:** Asegúrate de que el servicio de backend (`services/`) está ejecutándose localmente antes de probar el frontend.
-
----
-
-## 💻 Qué Debes Hacer
-
-### Capa de integración con la API
-- [ ] Crea un módulo (p. ej., `lib/inventory.ts`) que centralice todas las llamadas a los endpoints `/inventory`. Ningún componente debe llamar a `fetch` directamente.
-- [ ] Todas las peticiones a endpoints protegidos deben incluir la cabecera `Authorization: Bearer <token>`. Lee el token de donde tu sistema de auth existente lo almacena (localStorage, contexto, cookie).
-- [ ] Gestiona los errores de la API de forma explícita: si el estado de la respuesta es `4xx` o `5xx`, extrae el mensaje de error del cuerpo de la respuesta y muéstraselo al usuario — nunca ignores los errores en silencio.
-
-### Página de productos — `/backoffice/inventory/products`
-- [ ] Obtén y muestra todos los productos desde `GET /inventory/products`.
-- [ ] Muestra el valor de `current_stock` para cada producto junto con los campos específicos de entidad definidos en tu CONTEXT.md.
-- [ ] Aplica indicadores visuales de nivel de stock: usa color o iconografía para distinguir el stock saludable del stock bajo. Define tus propios umbrales — documéntalos en un comentario.
-- [ ] Incluye un enlace o botón claramente etiquetado en cada fila de producto para crear una orden de entrada o de salida para ese producto.
-
-### Formulario de orden de entrada — `/backoffice/inventory/orders/inbound`
-- [ ] Renderiza un formulario que envíe datos a `POST /inventory/orders/inbound`.
-- [ ] El selector de producto debe listar todos los productos disponibles por nombre. No pidas al usuario que escriba un ID en bruto.
-- [ ] Tras un envío exitoso, limpia el formulario y muestra un mensaje de confirmación. Ante un `400` / `500`, muestra el mensaje de error de la API en un elemento visible — no solo en la consola.
-- [ ] El formulario debe estar protegido: redirige a los usuarios no autenticados a la página de login.
-
-### Formulario de orden de salida — `/backoffice/inventory/orders/outbound`
-- [ ] Renderiza un formulario que envíe datos a `POST /inventory/orders/outbound`.
-- [ ] Cuando el usuario selecciona un producto, obtén y muestra su `current_stock` antes de que introduzca una cantidad. Esto debe actualizarse de forma reactiva cuando cambia la selección de producto.
-- [ ] Si la cantidad introducida supera el stock mostrado, muestra una advertencia en el cliente antes de que el usuario envíe. Esto es una salvaguarda de UX — la API aplica la regla real.
-- [ ] Gestiona el `HTTP 400` de la API (stock insuficiente) mostrando el mensaje de error inline junto al campo de cantidad.
-
-### Página de historial de órdenes — `/backoffice/inventory/orders`
-- [ ] Obtén y muestra todas las órdenes desde `GET /inventory/orders`.
-- [ ] Cada fila debe mostrar: nombre del producto, cantidad, tipo de orden (entrada o salida), fecha de creación y el `user_uuid` que la creó.
-- [ ] Muestra las órdenes de entrada y de salida con una distinción visual (p. ej., color, icono o etiqueta).
-- [ ] Esta página es de sólo lectura. Sin acciones de borrado ni edición.
-
-### Protección de rutas
-- [ ] Las cuatro páginas de inventario deben redirigir a los usuarios no autenticados a la página de login. Usa el mismo patrón de comprobación de auth ya presente en el backoffice.
-
 > [!IMPORTANT]
-> Los nombres de entidades, etiquetas de campos y el vocabulario de la interfaz deben coincidir con lo especificado en tu CONTEXT.md — usa el lenguaje de dominio de tu empresa, no los términos genéricos de este README.
+> 📌 **Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
+
+El monorepo ya está en marcha: el equipo ha construido los frontends en Next.js, el servicio API en FastAPI y los scripts de soporte. Todo funciona en tu máquina. El problema es que **sólo funciona en tu máquina**.
+
+El equipo de infraestructura ha elevado una RFP interna al squad: cada vez que un nuevo desarrollador se incorpora, la puesta en marcha tarda horas entre conflictos de versiones de Node y Python, dependencias globales instaladas de formas distintas y pasos de configuración que nadie ha documentado del todo. El objetivo de este proyecto es resolver eso de raíz: el entorno de desarrollo debe definirse en código, versionarse junto al proyecto y ejecutarse de forma idéntica en cualquier máquina del equipo sin configuración manual.
+
+Tu tech lead ha asignado el ticket al squad. El brief es directo: **dockerizar el monorepo completo para desarrollo**.
+- Los dos frontends — el sitio público (`/uis/website`) y el panel interno (`/uis/backoffice`) — deben ejecutarse desde un **único contenedor de interfaces**.
+- El servicio FastAPI va en su **propio contenedor**.
+- Ambos tienen que arrancar con **recarga en caliente**, leer su configuración de variables de entorno, y comunicarse entre sí por **nombre de servicio dentro de la red Docker** — *no por localhost*.
 
 ---
 
-## ✅ Qué Vamos a Evaluar
+## 📋 Brief técnico — Ticket #infra-40
 
-- [ ] Existe un módulo de integración con la API dedicado — no hay llamadas `fetch` directas dentro de los componentes.
-- [ ] Todas las peticiones a endpoints protegidos incluyen la cabecera `Authorization` con el token del usuario actual.
-- [ ] La página de productos carga datos reales de la API y muestra `current_stock` con indicadores visuales de nivel de stock.
-- [ ] El formulario de orden de entrada envía correctamente y muestra una confirmación o un mensaje de error legible en cada resultado — sin fallos silenciosos.
-- [ ] El formulario de orden de salida muestra el stock actual del producto seleccionado de forma reactiva, antes de que el usuario envíe.
-- [ ] El formulario de orden de salida muestra una advertencia en el cliente cuando la cantidad introducida supera el stock disponible.
-- [ ] Una respuesta `400` del endpoint de salida muestra el mensaje de error de la API de forma visible en la interfaz.
-- [ ] La página de historial de órdenes muestra todas las órdenes con distinción entrada/salida, nombre de producto, cantidad, fecha y `user_uuid`.
-- [ ] Las cuatro páginas redirigen a los usuarios no autenticados al login.
-- [ ] Los nombres de entidades y etiquetas de campos en la interfaz coinciden con la especificación del CONTEXT.md.
+El equipo necesita entornos de desarrollo reproducibles. Cada vez que alguien nuevo clona el repositorio, la puesta en marcha se convierte en una sesión de depuración de dependencias.
+
+- **Alcance:** Dockerizar `/uis` (website + backoffice en un único contenedor de interfaces con recarga en caliente) y `/services` (FastAPI con `--reload`). La orquestación se gestiona con Docker Compose.
+- **Criterio de aceptación:** Cualquier miembro del equipo puede ejecutar `docker compose up` desde la raíz del repositorio y tener toda la plataforma operativa sin pasos adicionales.
+
+> [!WARNING]
+> Los servicios se comunican entre sí por **nombre de servicio Docker**, no por `localhost`. Revisa todas las URLs de conexión entre servicios antes del sign-off.
 
 ---
 
-## 📦 Cómo Entregar
+## 🌱 Cómo empezar
 
-1. Confirma y sube todos los cambios a tu fork.
-2. Verifica que `.env.local` está en `.gitignore` — nunca subas URLs de API ni tokens.
-3. Envía la URL de tu fork a través de la plataforma del estudiante.
+1. **Requisitos previos:** Asegúrate de tener Docker Desktop (o Docker Engine + Docker Compose CLI v2) instalado y en ejecución.
+2. **Repositorio:** Trabaja desde tu fork del repositorio base:
+   - [4GeeksAcademy/ai-engineering-company-project-monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo)
+3. **Estructura:** Revisa la estructura actual del monorepo. Deberás crear:
+   - Archivos `Dockerfile` y `.dockerignore` en `/uis/` y en `/services/`.
+   - Archivo `docker-compose.yml` en la raíz del repositorio.
+4. **Variables de entorno:** Crea un archivo `.env` en la raíz antes de escribir ningún `docker-compose.yml`. Las variables de entorno concretas de tu proyecto ya las conoces — llevas semanas trabajando con ellas.
+
+---
+
+## 💻 Lo que debes hacer
+
+### Dockerfile de interfaces (`/uis/Dockerfile`)
+- [ ] Crea un `Dockerfile` en `/uis/` basado en una imagen oficial de Node (Alpine). Debe instalar las dependencias de `/uis/website` y `/uis/backoffice` por separado.
+- [ ] El `CMD` por defecto del Dockerfile debe invocar un script `start.sh` que arranque ambas aplicaciones Next.js en puertos distintos (`website` en el 3000, `backoffice` en el 3001).
+- [ ] Crea un `.dockerignore` en `/uis/` que excluya al menos: `node_modules`, `.next`, `.env*` y `*.log`.
+
+### Dockerfile del backend (`/services/Dockerfile`)
+- [ ] Crea un `Dockerfile` en `/services/` basado en una imagen oficial de Python. Debe instalar `uv`, instalar las dependencias desde `requirements.txt` con `uv pip install -r requirements.txt` y arrancar el servidor Uvicorn con `--reload` habilitado.
+- [ ] Crea un `.dockerignore` en `/services/` que excluya al menos: `__pycache__`, `*.pyc`, `.env*`, `tests/` y `*.log`.
+
+### Docker Compose (`docker-compose.yml`)
+- [ ] Crea `docker-compose.yml` en la raíz con dos servicios: el servicio de interfaces (build desde `/uis/`, con bind mount sobre el código fuente y comando `next dev` para ambas apps) y el servicio de backend (build desde `/services/`, con bind mount y `--reload`).
+- [ ] Expón los puertos correctos en cada servicio para que sean accesibles desde el host.
+- [ ] Conecta ambos servicios en una red Docker con nombre definido explícitamente. Verifica que las URLs de conexión entre servicios usan el nombre del servicio como host, no `localhost`.
+
+> [!CAUTION]
+> 🔒 **Nunca incluyas secretos reales, API keys ni contraseñas en `docker-compose.yml` ni en ningún `Dockerfile`.** Estos archivos se versionan en Git y cualquier persona con acceso al repositorio los podrá leer. Las credenciales van exclusivamente en `.env`, que debe estar en `.gitignore`. Si accidentalmente commiteas un secreto, considera que está comprometido y rótalo inmediatamente.
+
+- [ ] Define todas las variables de entorno de cada servicio mediante un archivo `.env` en la raíz del repositorio (no hardcodeadas en el YAML).
+- [ ] Confirma que `.env` está en el `.gitignore` del repositorio.
+
+---
+
+## ✅ Lo que evaluaremos
+
+- [ ] `docker compose up` desde la raíz levanta la plataforma completa sin errores y sin pasos adicionales de configuración.
+- [ ] Los cambios en el código del host se reflejan en el navegador sin reconstruir la imagen (bind mounts funcionando en ambos servicios).
+- [ ] El servicio de interfaces arranca ambas aplicaciones Next.js en puertos distintos (3000 y 3001) desde un único contenedor.
+- [ ] Los servicios se comunican internamente por nombre de servicio Docker, no por `localhost` ni por IP hardcodeada.
+- [ ] No hay secretos, API keys ni contraseñas hardcodeadas en ningún `Dockerfile` ni en `docker-compose.yml`.
+- [ ] El archivo `.env` está en el `.gitignore` y no aparece en el historial de commits.
+- [ ] Existen archivos `.dockerignore` en `/uis/` y en `/services/`.
+
+---
+
+## 📦 Cómo entregar
+
+1. Sube todos los cambios a tu rama en GitHub.
+2. Abre un Pull Request desde tu rama hacia `main`.
+3. Incluye en la descripción del PR una captura de pantalla mostrando los contenedores en ejecución (`docker compose ps` o la salida de `docker compose up`).
+4. Comparte el enlace del PR con tu tech lead para el sign-off final.

@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = async (currentToken: string) => {
     try {
-      const res = await fetch('http://localhost:8000/auth/me', {
+      const res = await fetch('/auth/me', {
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (res.ok) {

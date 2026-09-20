@@ -24,9 +24,8 @@ export default function NewIncidentPage() {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
-    
     try {
-      const res = await fetch('http://localhost:8000/api/incidents', {
+      const res = await fetch('/api/incidents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

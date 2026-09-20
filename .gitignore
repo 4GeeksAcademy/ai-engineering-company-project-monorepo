@@ -1,1 +1,19 @@
-.env
+# Environment and Secrets
+.env*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+
+# Node & Next.js
+node_modules/
+.next/
+dist/
+build/
+
+# Logs & OS
+*.log
+.DS_Store

@@ -2,8 +2,7 @@ import axios from 'axios';
 
 // 1. Creamos una instancia centralizada de Axios
 const api = axios.create({
-  // Reemplaza esto con la URL base de tu backend de FastAPI si es diferente
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000', 
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '/backend-api', 
   headers: {
     'Content-Type': 'application/json',
   },

@@ -29,7 +29,7 @@ export default function SuppliersPage() {
       if (categoryFilter) query.append("category", categoryFilter);
       
       const res = await api.get(`/suppliers?${query.toString()}`);
-      setSuppliers(res.data);
+      setSuppliers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       // Manejado silenciosamente, setError mostrará el mensaje en la UI
     } finally {

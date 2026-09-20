@@ -1,26 +1,85 @@
 import sys
 import os
+
+# Asegurar que los paquetes compartidos y scripts del monorepo estén en el PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts')))
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 from fastapi.responses import FileResponse
-from services.api.routes import users, profiles, auth
-from services.api.routes import inventory
+from services.api.routes import users, profiles, auth, inventory
 import csv
-from services.api.routes import suppliers
+from services.api.routes import suppliers, incidents, candidates
 
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from services.api.database import engine
 import services.api.models
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../scripts'))
+import uuid
+from datetime import datetime
+from tinydb import Query
+from services.api.database import get_tinydb
+from services.api.security import get_password_hash
+
 from analyzer_core import process_incidents, calculate_metrics
+
+def ensure_admin_user():
+    admin_email= os.getenv('ADMIN_EMAIL')
+    admin_password= os.getenv('ADMIN_PASSWORD')
+
+    if not admin_email or not admin_password:
+        return
+    db=get_tinydb()
+    users_table= db.table('users')
+    profiles_table = db.table('profiles')
+    user_query = Query()
+    existing_user = users_table.search(user_query.email == admin_email)
+    
+    hashed_pwd = get_password_hash(admin_password)
+    
+    if existing_user:
+        # Si ya existe, actualizamos la contraseña y nos aseguramos de que sea admin activo
+        users_table.update({
+            'hashed_password': hashed_pwd,
+            'role': 'admin',
+            'is_active': True,
+            'created_at': existing_user[0].get('created_at', datetime.utcnow().isoformat())
+        }, user_query.email == admin_email)
+        print(f"✅ Administrador sincronizado: {admin_email}")
+    else:
+        # Si no existe, lo creamos con todos los poderes y su perfil
+        user_id = str(uuid.uuid4())
+        user_data = {
+            "id": user_id,
+            "email": admin_email,
+            "hashed_password": hashed_pwd,
+            "is_active": True,
+            "role": "admin",
+            "created_at": datetime.utcnow().isoformat()
+        }
+        profile_data = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "name": "Administrador Nexova",
+            "phone": None,
+            "address": None
+        }
+        users_table.insert(user_data)
+        profiles_table.insert(profile_data)
+        print(f"🎉 Administrador creado exitosamente: {admin_email}")
+
+
+
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Iniciando aplicación: Creando tablas en Supabase...")
     SQLModel.metadata.create_all(engine)
+    ensure_admin_user()
     yield
     print("🛑 Cerrando aplicación...")
 
@@ -39,6 +98,8 @@ app.include_router(users.router)
 app.include_router(profiles.router)
 app.include_router(auth.router)
 app.include_router(inventory.router)
+app.include_router(incidents.router)
+app.include_router(candidates.router)
 
 latest_metrics = None
 

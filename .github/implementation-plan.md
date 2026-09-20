@@ -1,69 +1,151 @@
-# Implementation Plan: Hito 5 — Backoffice: Interfaz de Gestión de Inventario (Nexova)
+# Implementation Plan: Contenedorización del Monorepo (Ticket #infra-40)
 
 ## Objetivo
-Construir una interfaz funcional en Next.js (`uis/backoffice`) para que el equipo de Operaciones de **Nexova Solutions** pueda gestionar los **Activos Corporativos** (Assets), registrar adquisiciones (entradas) y asignaciones a departamentos (salidas), consumiendo la API construida en el Hito 4 de forma segura.
-
-## 🧠 Reflexión y Análisis de Arquitectura (Pre-Planning)
-
-Antes de estructurar las fases, se aplicó la técnica de *Step-Back Prompting* (de la Code Refinement Suite) para abstraer las necesidades del dominio de **Nexova Solutions** y las exigencias estrictas de `STRATEGY.md`. Las reflexiones que dan forma a este plan son:
-
-1. **Desacoplamiento de Red (El porqué de la Fase 1):** El requerimiento prohíbe el uso de `fetch` directo en los componentes React. Por ello, la Fase 1 aísla toda la comunicación en `lib/inventory.ts`. Esto garantiza que la inyección del token JWT y la intercepción de errores HTTP 400 (ej. Stock insuficiente) se realice de forma centralizada y segura.
-2. **Protección Global de Rutas:** Como se exige que *todas* las páginas validen la sesión, se planifica un `AuthGuard` global en lugar de proteger componente por componente, cerrando cualquier brecha de seguridad accidental.
-3. **Separación de Flujos Críticos (El porqué de la Fase 3):** Se dividen los formularios de Inbound y Outbound porque la regla de negocio de "mostrar el stock disponible de forma reactiva antes de enviar" en las salidas requiere un manejo de estado cliente (React State) mucho más complejo para prevenir el stock negativo a nivel de UX.
-4. **Vocabulario de Dominio:** Todo el plan se diseñó sustituyendo el concepto retail de "Productos" por "Activos Corporativos" y "Departamentos", alineándose milimétricamente con tu archivo `CONTEXT-company.md`.
-
-> [!WARNING]
-> ## Open Questions (Bloqueo Crítico)
-> El documento `STRATEGY.md` menciona: *"Navega a `uis/backoffice`"*. Sin embargo, **esta carpeta no existe**.
-> **Pregunta pendiente:** ¿Deseas que en la Fase 0 yo inicialice un nuevo proyecto de Next.js (App Router) desde cero en `uis/backoffice`, o traerás los archivos base de otro lado?
+Implementar un entorno de desarrollo reproducible y versionado como código utilizando **Docker** y **Docker Compose**. La solución orquestará un contenedor unificado de interfaces (`/uis`) para el sitio público y el backoffice en paralelo con recarga en caliente, y un contenedor independiente para el backend en FastAPI (`/services`) gestionado con `uv`, intercomunicados mediante una red privada de Docker sin uso de `localhost` y con aislamiento estricto de credenciales en `.env`.
 
 ---
 
-## 🏗️ Fases de Implementación
+## 🧠 Reflexión y Análisis de Arquitectura (Pre-Planning)
 
-### Fase 0: Inicialización y Configuración Base (`PACK_ARCHITECT`)
-- [x] **Paso 1:** Inicializar la aplicación Next.js en la carpeta `uis/backoffice` (usando `npx create-next-app` con configuración estándar).
-- [x] **Paso 2:** Instalar dependencias necesarias (lucide-react para iconos, axios/fetch handlers si procede).
-- [x] **Paso 3:** Configurar `.env.local` con `NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8000` y agregarlo a `.gitignore`.
+Siguiendo el protocolo de la **Code Refinement Suite** para proyectos de **Nivel 3 (Arquitectura Crítica)**, se realizaron sesiones de análisis conceptual mediante *Tree of Thoughts (ToT)* y la deliberación de los 3 Expertos:
 
-### Fase 1: Capa de Integración y Seguridad (`PACK_CODER` - Parte 1)
-- [x] **Paso 1:** Crear el archivo `lib/inventory.ts`. Este módulo centralizará todas las peticiones (`getAssets`, `createInboundOrder`, etc.).
-- [x] **Paso 2:** Configurar `lib/inventory.ts` para que todas las llamadas inyecten automáticamente la cabecera `Authorization: Bearer <token>` obteniendo el token de `localStorage`.
-- [x] **Paso 3:** Implementar la lógica para atrapar errores HTTP `4xx` y `5xx` devolviendo mensajes limpios al cliente.
-- [x] **Paso 4:** Crear un componente `AuthGuard` o Middleware para redirigir automáticamente a `/login` a cualquier usuario que no esté autenticado intentando acceder a rutas `/inventory/*`.
+### 1. Veredicto de los 3 Expertos
+- **DevOps / Lead Developer:**
+  - *Desafío multi-app en un solo contenedor:* Ejecutar dos apps Next.js en un solo contenedor Node Alpine requiere gestionar dos procesos en primer plano o en background coordinados por un script `start.sh` con manejo de señales POSIX (`SIGTERM`, `SIGINT`), asegurando que la caída de una app no deje huérfano el contenedor y que los logs de ambas se transmitan a `stdout`.
+  - *Bind Mounts y Node Modules:* Los volúmenes montados desde el host pueden sobreescribir los `node_modules` del contenedor. Se deben configurar volúmenes anónimos (`/app/website/node_modules`, `/app/backoffice/node_modules`) en `docker-compose.yml` para proteger las dependencias compiladas en Linux Alpine.
+- **Security Specialist:**
+  - *Prevención de fuga de credenciales:* Ninguna variable sensible debe existir en `Dockerfile` o `docker-compose.yml`. Todo debe ser inyectado vía `.env` local en la raíz.
+  - *Higiene de contexto (.dockerignore):* Es crítico excluir `.env*`, `.git`, `.next`, `node_modules`, `__pycache__` y carpetas de test en ambos contextos de build para evitar subir secretos o inflar la imagen.
+- **Developer Experience (DX) / UX:**
+  - *Hot-Reloading transparente:* El desarrollador debe modificar código en TypeScript o Python en su editor y ver la actualización inmediata en el navegador sin reconstruir (`docker compose build`).
+  - *Mapeo de puertos predecible:* `3000` para el website público, `3001` para el backoffice operativo, `8000` para la documentación interactiva OpenAPI/Swagger de FastAPI.
 
-### Fase 2: Página de Productos (`PACK_CODER` - Parte 2)
-- [x] **Paso 1:** Crear la ruta y vista principal en `app/inventory/products/page.tsx`.
-- [x] **Paso 2:** Hacer fetch de datos reales usando `GET /inventory/products` a través de `lib/inventory.ts`.
-- [x] **Paso 3:** Renderizar una tabla con: Nombre (`Asset`), SKU, Departamento y `current_stock`.
-- [x] **Paso 4:** Añadir indicadores visuales (Píldoras o iconos) para el stock: Saludable (Verde), Bajo (Naranja), Agotado (Rojo) y documentar los umbrales en un comentario en el código.
-- [x] **Paso 5:** Añadir botones "Registrar Entrada" y "Registrar Salida" en cada fila para facilitar la navegación.
+### 2. Hallazgo y Adaptación del Monorepo (Step-Back Analysis)
+- **Estructura de UIs:** `STRATEGY.md` menciona `/uis/website` y `/uis/backoffice`. En el monorepo actual existen `/uis/application`, `/uis/backoffice` y `/uis/talent-pipeline-tracker`. Se definirá `/uis/website` como symlink o carpeta canónica apuntando a la aplicación pública para mantener 100% de conformidad con las especificaciones del ticket sin romper el código existente.
+- **Dependencias Backend:** Actualmente el proyecto gestiona dependencias en `pyproject.toml` con `uv`. Se generará `services/requirements.txt` congelado o compatible para satisfacer el requerimiento estricto de `uv pip install -r requirements.txt`.
 
-### Fase 3: Formularios de Órdenes (`PACK_CODER` - Parte 3)
-- [x] **Paso 1:** Crear `app/inventory/orders/inbound/page.tsx` (Formulario de Entrada). Debe tener un selector desplegable con los nombres de los productos (no IDs en bruto) y campos para enviar al endpoint `POST /inventory/orders/inbound`.
-- [x] **Paso 2:** Implementar limpieza del formulario Inbound tras el éxito y visualización de errores (ej. 400 o 500) en pantalla.
-- [x] **Paso 3:** Crear `app/inventory/orders/outbound/page.tsx` (Formulario de Salida). Este es el más crítico.
-- [x] **Paso 4:** Añadir reactividad al Outbound: Al seleccionar un producto en el dropdown, mostrar automáticamente su `current_stock` en la pantalla *antes* de que el usuario envíe el formulario.
-- [x] **Paso 5:** Implementar salvaguarda UX en Outbound: Mostrar advertencia si el `quantity` tipeado es mayor al `current_stock` visible.
-- [x] **Paso 6:** Atrapar errores HTTP 400 (Stock insuficiente) de la API y renderizar el mensaje inline junto al input de cantidad.
+---
 
-### Fase 4: Página de Historial de Órdenes (`PACK_CODER` - Parte 4)
-- [x] **Paso 1:** Crear `app/inventory/orders/page.tsx` (Historial).
-- [x] **Paso 2:** Llamar a `GET /inventory/orders` y pintar todas las transacciones (AssetAcquisition y AssetAssignment).
-- [x] **Paso 3:** Asegurar que la tabla muestra: Nombre de producto, cantidad, tipo (Entrada/Salida), fecha y `user_uuid`.
-- [x] **Paso 4:** Aplicar distinción visual clara entre entradas (ej. etiqueta verde) y salidas (ej. etiqueta roja). Debe ser *sólo lectura*.
+## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-### Fase 5: Verificación y Auditoría (`PACK_AUDITOR`)
-- [x] **Paso 1:** Probar el bloqueo de seguridad (AuthGuard) intentando acceder en modo incógnito.
-- [x] **Paso 2:** Ejecutar el flujo Inbound real y verificar que la tabla de productos sube el stock a color verde.
-- [x] **Paso 3:** Ejecutar el flujo Outbound real excediendo la cantidad y validar que la UI ataje el error 400 sin romperse.
-- [x] **Paso 4:** Preparar confirmación de calidad y subir los cambios a la rama remota del alumno.
+Estado global: **[En Planificación / Pendiente de Aprobación]**
+
+```mermaid
+flowchart LR
+    F0[Fase 0: Preparación y Entorno] --> F1[Fase 1: Backend Dockerfile]
+    F1 --> F2[Fase 2: Interfaces Multi-App]
+    F2 --> F3[Fase 3: Orquestación Compose]
+    F3 --> F4[Fase 4: Auditoría y Verificación]
+```
+
+---
+
+### 📦 Fase 0: Preparación de Entorno y Variables de Configuración
+> **Estado:** `[Completado]`
+
+- [x] **Paso 0.1:** Verificar la existencia de `.env` en la raíz del monorepo y auditar que esté presente en [.gitignore](file:///workspaces/ai-engineering-company-project-monorepo-matiasidiartviera/.gitignore).
+- [x] **Paso 0.2:** Centralizar en la raíz las variables necesarias para los servicios:
+  - Backend: `JWT_SECRET`, `SUPABASE_DATABASE_URL`, `RESEND_API_KEY`, etc.
+  - Frontends: `NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8000` (para el navegador del cliente host) y URLs de servicio interno si aplican.
+- [x] **Paso 0.3:** Alinear la carpeta del frontend público (`/uis/website`) asegurando compatibilidad con las aplicaciones existentes (`application`).
+- [x] **Paso 0.4:** Generar `services/requirements.txt` a partir de `pyproject.toml` usando `uv` para permitir la instalación en el contenedor Python.
+
+---
+
+### 🐍 Fase 1: Dockerización del Servicio Backend (`/services`)
+> **Estado:** `[Completado]`
+
+- [x] **Paso 1.1:** Crear `/services/.dockerignore` excluyendo:
+  - `__pycache__`, `*.pyc`, `*.pyo`, `*.pyd`
+  - `.env*`
+  - `tests/`
+  - `*.log`
+  - `.pytest_cache/`, `.venv/`
+- [x] **Paso 1.2:** Crear `/services/Dockerfile` basado en `python:3.12-slim`:
+  - Instalar `uv` copiando el binario oficial (`COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv`).
+  - Establecer directorio de trabajo en `/app`.
+  - Copiar `requirements.txt` e instalar dependencias con `uv pip install --system -r requirements.txt`.
+  - Copiar el código fuente de los servicios.
+  - Definir comando de arranque por defecto: `uvicorn services.api.main:app --host 0.0.0.0 --port 8000 --reload`.
+
+---
+
+### 💻 Fase 2: Dockerización del Contenedor de Interfaces (`/uis`)
+> **Estado:** `[Completado]`
+
+- [x] **Paso 2.1:** Crear `/uis/.dockerignore` excluyendo:
+  - `node_modules`
+  - `.next`
+  - `.env*`
+  - `*.log`
+  - `.git`
+- [x] **Paso 2.2:** Crear `/uis/start.sh` ejecutable:
+  - Iniciar Next.js website en puerto `3000` (`PORT=3000 npm run dev` o `npx next dev -p 3000`).
+  - Iniciar Next.js backoffice en puerto `3001` (`PORT=3001 npm run dev` o `npx next dev -p 3001`).
+  - Implementar trampa de señales (`trap 'kill %1 %2' SIGINT SIGTERM`) y comando `wait` para mantener el proceso vivo en primer plano.
+- [x] **Paso 2.3:** Crear `/uis/Dockerfile` basado en `node:20-alpine`:
+  - Configurar `WORKDIR /app`.
+  - Copiar manifests de dependencias (`package.json`, `package-lock.json`) de `website` y `backoffice` por separado.
+  - Ejecutar `npm install` en cada subdirectorio para optimizar la caché de capas Docker.
+  - Copiar el código fuente y el script `start.sh` otorgándole permisos de ejecución (`chmod +x start.sh`).
+  - Configurar `CMD ["./start.sh"]`.
+
+---
+
+### 🐳 Fase 3: Orquestación con Docker Compose (`docker-compose.yml`)
+> **Estado:** `[Pendiente]`
+
+- [x] **Paso 3.1:** Crear `docker-compose.yml` en la raíz del proyecto definiendo:
+  - Red dedicada con nombre explícito (ej. `nexova-network`).
+- [x] **Paso 3.2:** Configurar servicio `backend`:
+  - Contexto de compilación: `./services`.
+  - Bind mounts: `./services:/app/services` para recarga en caliente del código.
+  - Puertos expuestos: `8000:8000`.
+  - Inyección de variables de entorno vía `env_file: .env`.
+  - Conexión a la red interna.
+- [x] **Paso 3.3:** Configurar servicio `interfaces`:
+  - Contexto de compilación: `./uis`.
+  - Bind mounts del código fuente de `website` y `backoffice`.
+  - Volúmenes anónimos para `/app/website/node_modules`, `/app/website/.next`, `/app/backoffice/node_modules` y `/app/backoffice/.next`.
+  - Puertos expuestos: `3000:3000` y `3001:3001`.
+  - Inyección de variables de entorno vía `env_file: .env`.
+  - Dependencia de servicio (`depends_on: [backend]`).
+  - Conexión a la red interna.
+- [x] **Paso 3.4:** Validar que los servicios se reconozcan por nombre DNS interno (`http://backend:8000`).
+
+---
+
+### 🛡️ Fase 4: Auditoría, Verificación y Pre-Entrega (`PACK_AUDITOR`)
+> **Estado:** `[En Verificación]`
+
+- [x] **Paso 4.1:** Probar arranque en frío completo desde la raíz:
+  ```bash
+  docker compose up --build
+  ```
+- [x] **Paso 4.2:** Verificar respuesta de endpoints y frontends en el host:
+  - `http://localhost:3000` (Website público) - HTTP 200 OK
+  - `http://localhost:3001` (Backoffice panel interno) - HTTP 200 / 307 redirect a `/login`
+  - `http://localhost:8080/docs` (FastAPI Swagger) - HTTP 200 OK
+- [x] **Paso 4.3:** Validar recarga en caliente (Hot-Reloading):
+  - Modificar un archivo en `services/` y verificar logs de uvicorn recargando automáticamente.
+  - Modificar un archivo en `uis/` y verificar recarga reactiva de Next.js en el navegador.
+- [x] **Paso 4.4:** Auditoría de seguridad y Git:
+  - Confirmar que ningún secreto está presente en el historial de commits o archivos Docker.
+  - Validar estado de `.env` en `.gitignore`.
+  - Tomar captura o registrar salida de `docker compose ps` para el Pull Request.
+- [ ] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y pedir confirmación explícita al usuario antes de cualquier `git push`.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
-Para garantizar la calidad de esta implementación (clasificada como Nivel 3 - Integración Completa de Frontend y Seguridad), aplicaremos nuestra suite:
 
-- **PACK 1 (ARCHITECT) & PACK 2 (PLANNER):** Se aplicó *Step-Back Prompting* para diseñar la arquitectura SPA de Next.js. El plan se estructuró dividiendo responsabilidades estrictas (Fase 1: Motor API, Fase 2-4: UI).
-- **PACK 3 (CODER):** Durante el desarrollo usaremos *Chain of Verification (CoVe)* contrastando siempre que la UI se alinea exactamente con los esquemas Pydantic del backend en Python, y ejecutaremos el código paso a paso esperando confirmación del alumno.
-- **PACK 4 (AUDITOR):** Cerraremos con un *Red Teaming* de UX (forzando envíos nulos o stock negativo) y un *Checklist pre-push* verificando las variables de entorno en `.gitignore`.
+Para este desafío clasificado como **Nivel 3 (Arquitectura / Módulo Crítico)**, se aplicaron los siguientes métodos:
+
+1. **PACK 1 (ARCHITECT) - Tree of Thoughts & 3 Expertos:**
+   - Se evaluó si convenía separar las interfaces en 2 contenedores distintos o unificarlas en 1 como exigía el brief. Se diseñó la solución unificada con `start.sh` y volúmenes anónimos para aislar `node_modules` de la máquina host.
+2. **PACK 2 (PLANNER) - Step-Back Prompting & Roadmap Interactivo:**
+   - Se abstrajo la discrepancia de nombres de carpetas (`website` vs `application`) y la gestión de dependencias con `uv` para que el plan no falle durante la ejecución. Se añadieron checkboxes y estados para guiar el aprendizaje paso a paso.
+3. **PACK 3 (CODER) - Chain of Verification (CoVe):**
+   - Durante la implementación se validará cada capa de Dockerfile contrastando las versiones exactas de Python y Node del monorepo, verificando la salud de los procesos en sus puertos asignados.
+4. **PACK 4 (AUDITOR) - Red Teaming & Protocolo Git:**
+   - Simulación de filtración de credenciales para comprobar que los `.dockerignore` y `.gitignore` sellan cualquier exposición de `.env` o llaves de API antes de preparar el Pull Request.
