@@ -184,4 +184,3 @@ To build an automated **Candidate Screening and RAG Matching Agent** for the Tal
 * **Ranked Candidate List:** A structured leaderboard in the selection pipeline showing scored candidates with highlighted key qualifications and fit explanations.
 * **Automated Candidate Portal Update:** Automatically updates candidate status and triggers template email notifications (e.g., scheduling request for top-tier candidates or polite rejection for non-matching profiles).
 * **Consultant Search Results:** Inline n
-
