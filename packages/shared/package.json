@@ -5,11 +5,16 @@
   "description": "Shared types for AI Engineering transversal projects",
   "main": "index.ts",
   "types": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
   "keywords": [
     "types",
     "shared"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
 }
