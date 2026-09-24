@@ -1,167 +1,101 @@
-# Your company context
+Welcome to HealthCore
+AI Engineering · 4Geeks Academy — Company Briefing
+HealthCore is an outpatient healthcare services company founded in 2011 in Austin, Texas. It operates a network of 12 clinics — 9 in the United States (Texas, Florida, and Georgia) and 3 in the United Kingdom (London and Manchester) — offering primary care, specialist consultations, chronic disease management, and preventive health programmes. The company employs approximately 200 people across clinical staff, operations, administration, and a growing technology unit. Annual revenue sits around 28 million dollars.
 
-# Welcome to Nexova Solutions
+HealthCore was built on a simple idea: accessible, high-quality care that doesn't require patients to wait weeks for an appointment or navigate a confusing system. Same-day bookings, extended hours, and bilingual staff in US markets became the brand's signature. For most of its history, that was enough to grow steadily and earn a loyal patient base in both countries.
 
-## AI Engineering · 4Geeks Academy — Company Briefing
+It is no longer enough.
 
----
-
-Nexova Solutions is a human resources consulting and talent acquisition firm founded in 2011, headquartered in Valencia, Spain, with an expansion office in Miami, Florida. The company has 120 employees and generates approximately 8 million dollars in annual revenue across three business lines: executive and mid-management headhunting, customer support team outsourcing for technology companies, and corporate training in soft skills and leadership.
-
-Nexova's clients are mid-sized companies — mostly in technology, retail, and financial services — that have decided to outsource some or all of their talent management. They come to Nexova because finding the right people, training them, and keeping them engaged is hard, and Nexova has spent twelve years building the expertise to do it well.
-
-## How the company is organised
-
-Nexova is led by **Laura Mendoza**, CEO since the company's founding. She built the business from a two-person consultancy into a 120-person firm operating in two countries. She is direct, results-focused, and has a clear view of what Nexova needs to become — she just needs the right tools to get there.
+How the company is organised
+HealthCore is led by Dr. Sandra Okonkwo, a physician who spent years inside large hospital systems before founding the company out of frustration with how much time clinicians spent on administration instead of patients. She is precise, evidence-driven, and deeply sceptical of technology that doesn't solve a real problem — but she has come to understand that without modern systems, HealthCore cannot manage what it has already built, let alone grow further.
 
 The company is organised around the following areas:
 
-**Talent Selection Operations** is the core of what Nexova does and its main source of revenue. Javier Almeida manages a team of 40 selection consultants who run recruitment processes on behalf of clients — from the initial briefing through CV screening, interviews, and final placement. Every step of this process is currently done manually.
+Clinical Operations is where the medicine happens. Dr. Marcus Reid oversees approximately 120 clinical staff — physicians, nurse practitioners, nurses, and medical assistants — across the 12 locations. Each clinic operates somewhat independently, with its own processes and its own patient records system. The US and UK clinics use different electronic health record platforms, and they do not speak to each other.
 
-**Corporate Training** designs and delivers training programmes for client companies. Elena Vargas leads a team of 12 that runs courses, workshops, and webinars on topics ranging from leadership to communication to team management. The catalogue exists, enrolments happen, but there is almost no infrastructure behind it — just a PDF, a Google Form, and a spreadsheet.
+Patient Experience and Access manages everything that happens before and after the clinical encounter: booking appointments, reminding patients, handling follow-up, and making sure the patient has a smooth journey from first contact to discharge. Priya Nair leads this function from London, and she is acutely aware that a 22% no-show rate across the network represents both a patient failure and a significant financial loss.
 
-**Customer Support Outsourcing** is where Nexova provides client companies with dedicated support teams. Roberto Díaz manages 30 agents who handle customer incidents on behalf of technology, retail, and finance clients, working by phone, email, and chat. The team is skilled, but they operate without a knowledge base, without real-time visibility, and with a resolution time that regularly misses the committed service level.
+Revenue Cycle and Billing is responsible for getting paid for the care that HealthCore provides. In the US, that means navigating commercial insurance, Medicare, and Medicaid — a complex claims and reimbursement process where a 14% denial rate (more than double the industry average) is currently costing the company significant money. In the UK, billing is a mix of private pay and a small NHS contract. Tom Callahan manages both revenue streams, but without a unified view of either.
 
-**Sales and Business Development** drives the growth of the business. Megan Clarke leads a team of 18 people — account managers who look after existing clients and SDRs who pursue new ones. The team has a CRM but uses it inconsistently, does most prospecting manually, and loses deals they should not lose simply because follow-up falls through the cracks.
+Compliance and Data Governance is what keeps HealthCore legally safe. Claire Whitfield manages the company's obligations under HIPAA in the US and UK GDPR in the United Kingdom — two different frameworks with different rules about how patient data can be stored, accessed, and shared. Any system that HealthCore builds or adopts must be evaluated through this lens. Claire's team is small, but her authority in the organisation is significant.
 
-**Marketing and Communications** manages Nexova's external presence: the corporate website, LinkedIn, the monthly newsletter, and the blog. Carmen Ruiz leads a small team that produces everything manually and has limited visibility into what actually works.
+People and Workforce handles the 200 employees across 12 locations in two countries, each with different employment law frameworks. Diane Foster manages everything from hiring — clinical roles are hard to fill and take an average of 47 days to close — to onboarding, compliance training, and tracking the continuing medical education hours that clinicians are legally required to complete to maintain their licences.
 
-**Human Resources** handles everything related to Nexova's own 120 employees: contracts, onboarding, holidays, performance reviews, and day-to-day queries. Patricia Solís manages this with a team of four, largely by email and spreadsheet.
+Technology is the team that has been tasked with making all of this work. James Osei, the CTO, leads six people in Austin. They are responsible for a patchwork of legacy systems that were each built or acquired to solve a specific problem and have never been properly integrated. Two different EHR systems. A US billing platform. A UK billing spreadsheet. A phone-based US scheduling system. A manual diary for UK bookings. No shared data layer between any of them.
 
-**Technology and Infrastructure** is led by CTO Sergio Molina, who has a team of six. The current technology estate is a collection of tools that were each introduced to solve a specific problem and have never been properly connected: a legacy helpdesk, a CRM, a home-built applicant tracking system from the early 2010s, and Google Workspace as the connective tissue between everything. There is no telemetry, no centralised logging, and no clear picture of what is happening across the business at any given moment.
+Executive Leadership centres on Dr. Okonkwo, who receives weekly reports from each department head — all formatted differently, sometimes contradictory, and always based on data that is several days old. She is managing a 28-million-dollar, two-country clinical network without being able to answer a basic question like "what is our no-show rate across the network this week?" without making phone calls.
 
-**Executive Leadership** centres on Laura, who receives a weekly PDF report prepared manually by each department head — a process that takes hours of their time every week and still delivers information that is several days old by the time it reaches her.
+Where the company stands today
+HealthCore has built something genuinely valuable: a network of clinics that patients trust and clinical staff want to work in. But the infrastructure underneath the clinical work has not kept pace with the company's growth. The consequences range from inconvenient to serious.
 
-## Where the company stands today
+Patients in the US book by phone while patients in the UK call a front desk — there is no shared online booking system. A fifth of patients do not show up to their appointments, and no proactive outreach system exists to prevent it. Clinical staff spend 35 minutes a day on documentation tasks that AI could assist with. Billing denials cost millions annually. Compliance training is tracked on a spreadsheet. Patient data flows through systems that were never designed to share information.
 
-Nexova has a strong reputation in its markets, a deep network of candidates and clients built over twelve years, and a team that genuinely knows how to find, develop, and support talent. What it does not have is the infrastructure to operate at scale.
+Operating in healthcare adds a layer of responsibility that does not exist in other industries. Patient data is protected by law — HIPAA in the US, UK GDPR in the UK. Every system that handles that data must meet specific legal standards. Errors are not just inefficiencies; in healthcare, they can have consequences for real patients.
 
-The consequences are tangible: consultants spend most of their time on manual tasks that could be automated, clients have no visibility into the status of their recruitment processes, the training catalogue is invisible to most potential buyers, the support team misses its SLAs, and leadership makes decisions based on data that is always a week behind.
+Dr. Okonkwo has created an internal unit called HealthCore Digital to build the systems, workflows, and intelligent tools that will allow the company to operate as a modern healthcare provider — safe, efficient, and genuinely centred on the patient.
 
-New platforms — automated, data-driven, and built for scale — are starting to compete directly with what Nexova offers. Laura knows that the window to respond is not unlimited.
+You are part of that unit.
 
-She has assembled an AI Engineering team to build the systems, automations, and intelligent tools that will allow Nexova to do what it already does well — but faster, at greater scale, and with far less manual effort.
+The Departments and Their Problems
+🏥 Clinical Operations
+Director: Dr. Marcus Reid (~120 clinical staff across 12 locations)
 
-**You are part of that team.**
+Each of the 12 clinics operates with its own processes and patient records system. US clinics use one EHR platform, UK clinics use another, and they cannot communicate with each other. Clinical staff spend 35 minutes per day on documentation tasks that could be assisted by AI. When a patient moves between locations or crosses the US-UK boundary, their history does not follow them.
 
----
+What they need: A unified patient record API that surfaces data from both EHR systems, AI-assisted clinical documentation to reduce administrative time, cross-location patient history visibility, and a clinical operations dashboard showing appointment volume, patient flow, and documentation time by location.
 
-## The Departments and Their Problems
+🗓️ Patient Experience and Access
+Manager: Priya Nair (London)
 
-### 🌐 Marketing and Communications
+Patients in the US book appointments by phone. Patients in the UK call a front desk. There is no shared online booking system. A 22% no-show rate across the network represents both poor patient experience and significant financial loss — approximately $1.8 million annually in lost appointment slots. No proactive outreach system exists to remind patients or reschedule at-risk appointments.
 
-**Manager:** Carmen Ruiz
+What they need: A unified online booking platform for both markets, an intelligent appointment reminder system with SMS/email/app notifications, a no-show prediction model that flags high-risk appointments for proactive contact, and a patient experience dashboard tracking booking rates, no-shows, and patient satisfaction by location.
 
-The corporate website was built in 2019 and hasn't been meaningfully updated — it's slow, not accessible, and doesn't reflect the company's current positioning. Content is produced manually, and the team doesn't measure the real impact of their work: they know how many website visits they get, but not what converts.
+💰 Revenue Cycle and Billing
+Manager: Tom Callahan
 
-**What they need:** A full redesign of the corporate website with SEO/GEO optimisation and schema.org markup, an AI-assisted content pipeline, and a marketing metrics dashboard tracking visits, traffic sources, and conversion rates.
+In the US, a 14% claims denial rate — more than double the industry average of 5-8% — is costing HealthCore significant revenue. Claims are submitted manually with inconsistent coding practices across locations. In the UK, billing is split between private pay and a small NHS contract, managed separately with no unified view. Tom cannot answer "what is our collection rate this month?" without making phone calls.
 
----
+What they need: An AI-assisted claims review system that flags high-risk submissions before they go out, automated coding suggestions based on clinical notes, a unified billing dashboard showing US and UK revenue streams in real time, denial pattern analysis to identify systematic issues, and automated follow-up workflows for denied or unpaid claims.
 
-### 💼 Sales and Business Development
+🔒 Compliance and Data Governance
+Manager: Claire Whitfield
 
-**Manager:** Marcos Ibáñez (18-person team: 6 account managers, 12 SDRs)
+HealthCore operates under two different legal frameworks: HIPAA in the United States and UK GDPR in the United Kingdom. Every system that handles patient data must be evaluated through both lenses. Data access logs are maintained separately in each EHR system. Audit trails are incomplete. When a patient requests their data under GDPR or HIPAA, compiling it requires manual work across multiple systems.
 
-SDRs prospect manually on LinkedIn, export lists to Excel, and follow up by email with no automation. They have a CRM (HubSpot) but only 40% of the team updates it consistently. Many deals are lost due to lack of follow-up, and there is no visibility into which prospects are most likely to close.
+What they need: A centralised compliance monitoring dashboard showing data access patterns across both jurisdictions, automated audit trail consolidation, a patient data request automation tool that compiles records from all systems, and a compliance risk scoring system that flags potential violations before they become breaches.
 
-**What they need:** A sales pipeline dashboard, a prospecting sequence automation (first contact → follow-up → close or discard), deal alerts for inactive conversations, and an AI agent that suggests personalised proposal angles based on a prospect's profile.
+👥 People and Workforce
+Manager: Diane Foster
 
----
+Managing 200 employees across 12 locations in two countries, each with different employment law frameworks, creates significant overhead. Clinical roles are hard to fill and take an average of 47 days to close — nearly 20 days longer than industry benchmarks. Onboarding is manual. Continuing medical education (CME) hours, which clinicians are legally required to track to maintain their licences, are recorded on a spreadsheet.
 
-### 🧑‍🤝‍🧑 Human Resources (Internal)
+What they need: An internal HR portal for holiday requests, absence management, and policy queries, an automated clinical onboarding flow with credential verification checklists, a CME tracking system with automatic expiry alerts, an HR KPI dashboard tracking time-to-hire, turnover, and absenteeism by location and role, and an HR chatbot that answers common employee questions.
 
-**Manager:** Patricia Solís
+💻 Technology
+CTO: James Osei (6-person team in Austin)
 
-Holiday requests, absences, and HR queries are managed by email and spreadsheets. New employee onboarding is manual. Performance reviews happen twice a year through Google Forms that nobody reviews systematically. There are no visibility metrics: no turnover rate, no absenteeism data, no average time-to-fill for internal roles.
+HealthCore's technology estate is a patchwork of systems acquired or built over a decade: two different EHR platforms, a US billing system, a UK billing spreadsheet, a phone-based US scheduling system, and manual diaries for UK bookings. There is no shared data layer. No telemetry. No centralised logging. When a system fails, the team finds out when a clinic calls to report it.
 
-**What they need:** An internal HR portal, an automated onboarding flow with progressive checklists, an HR KPI dashboard, and an internal HR agent that answers team questions about policies and benefits.
+What they need: A HealthCore central API that unifies patient, appointment, billing, and staff data across both EHR systems, real-time telemetry and monitoring from all 12 locations, a data pipeline feeding clinical, operations, and finance dashboards, automated health checks with alerts, and technical documentation indexed for semantic search.
 
----
+📊 Executive Leadership
+CEO: Dr. Sandra Okonkwo
 
-### 🔍 Talent Selection Operations (core business)
+Dr. Okonkwo manages a 28-million-dollar healthcare network across two countries without a unified dashboard. Her decisions are based on weekly reports from each department head — all formatted differently, sometimes contradictory, and always several days old. She cannot answer basic operational questions like "what is our no-show rate this week?" or "which location has the highest claims denial rate this month?" without making phone calls.
 
-**Manager:** Javier Almeida (40 selection consultants)
+What she needs: A unified executive dashboard with real-time KPIs from all departments (appointment volume, no-show rate, claims denial rate, revenue by location, patient satisfaction), an automatically generated weekly report delivered every Monday at 7am, threshold alerts for critical metrics, and a natural-language AI assistant she can query directly.
 
-CV screening is manual: each consultant reads 30 to 80 CVs per search. Candidate communication is done by individual email with no templates. There is no system to track the real-time status of each candidate — clients call to ask. Matching between candidate and vacancy relies entirely on consultant intuition.
+Why Choose HealthCore?
+Choose HealthCore if you are drawn to:
 
-**What they need:** An AI-assisted selection pipeline with automatic CV scoring and ranking, a RAG system over the candidate database ("find profiles with B2B sales experience and C1 English"), a candidate portal with real-time status, and a communication agent that sends automatic status emails.
+Healthcare and regulated data — building systems that handle protected health information under HIPAA and UK GDPR, where errors have legal consequences and privacy is non-negotiable.
+Cross-border healthcare operations — two countries, two regulatory frameworks, two EHR systems, and a unified patient experience that must work across all of it.
+High-stakes AI applications — clinical documentation assistance, claims denial prediction, and appointment no-show forecasting are not optional enhancements; they directly impact patient care and company viability.
+Systems that serve real patients — every dashboard, API, and automation you build exists to help people get the healthcare they need, when they need it, without unnecessary friction.
+The AI challenges at HealthCore include natural language processing of clinical notes for billing code suggestions, predictive models for appointment no-shows trained on multi-location data, RAG systems over compliance documentation in two jurisdictions, and intelligent scheduling that balances patient preferences with clinic capacity. If you want to build systems where technical excellence directly translates to better healthcare delivery, HealthCore is your company.
 
----
 
-### 🎓 Corporate Training
-
-**Manager:** Elena Vargas (12-person team)
-
-The training catalogue lives in a PDF updated quarterly. Enrolments are handled through a Google Form managed manually in a spreadsheet. There is no record of who completed which training beyond Excel attendance lists. Personalisation is zero: every client receives the same catalogue proposal regardless of their needs.
-
-**What they need:** A searchable training catalogue with online enrolment, a recommendation system that suggests programmes based on client profile, a learner portal with progress tracking, and a training advisory chatbot that builds personalised training plans.
-
----
-
-### 📞 Customer Support (outsourced service)
-
-**Manager:** Roberto Díaz (30 agents)
-
-The 30 agents handle incidents from Nexova's outsourcing clients (tech, retail, finance) by phone, email, and web chat. There is no centralised knowledge base — agents resolve issues from experience and a shared Word document on Drive. Average resolution time is 48 hours; the committed SLA is 24 hours. Supervisors have no real-time visibility into workload or backlog state.
-
-**What they need:** A first-line support chatbot that resolves 40% of queries without human intervention using RAG, a centralised knowledge base with semantic search, a real-time support dashboard, and a ticket sentiment analysis tool that identifies dissatisfied clients before they escalate.
-
----
-
-### 💻 Technology and Infrastructure
-
-**CTO:** Sergio Molina (6-person team)
-
-The technology stack is a patchwork of disconnected tools: HubSpot, legacy Zendesk, Google Workspace, a home-built ATS from the 2010s, and multiple spreadsheets. There is no telemetry or centralised logging. When something fails, the team finds out through users. Deployments are manual.
-
-**What they need:** Centralised telemetry and logging, a data pipeline that feeds all company dashboards, real-time monitoring with automatic alerts, and an internal engineering agent that answers architecture questions by querying technical documentation.
-
----
-
-### 📊 Executive Direction
-
-**CEO:** Laura Mendoza
-
-Laura receives a weekly PDF report prepared manually by each department head — preparation takes 4 to 8 hours per manager. There is no unified view of the business. Strategic decisions are made with data that is a week old.
-
-**What she needs:** A unified executive dashboard with real-time KPIs from all areas, an automatically generated weekly report, strategic threshold alerts, and a natural-language AI assistant she can query directly.
-
----
-
-## Why Choose Nexova?
-
-Choose Nexova if you are drawn to:
-
-- **People and data** — building systems that rank candidates, track learners, and measure sales team performance.
-- **B2B services** — your users are not anonymous consumers but professional teams with specific workflows and expectations.
-- **AI at the core of the business** — at Nexova, AI doesn't support the product; it _is_ the competitive advantage. CV scoring, candidate matching, RAG over a knowledge base, and first-line support agents are central deliverables, not optional enhancements.
-- **Cross-functional complexity** — you will build for five very different teams (operations, sales, HR, training, support), each with different data, different users, and different definitions of success.
-
-The AI challenges at Nexova include semantic search over a candidate database, first-line support automation that must respect SLAs, a CV scoring pipeline with explainable rankings, and a recommendation engine for training programmes. If you want your portfolio to demonstrate AI Engineering applied directly to a company's core operations — not just its internal tools — Nexova is your company.
-
---
-
-# Company Choice & AI Agent Proposal
-
-## Company Selection
-**Chosen Company:** Nexova Solutions  
-**Justification:**  
-I have chosen Nexova Solutions because its core business operations rely directly on human capital management, where AI implementation can yield immediate, high-value efficiency gains. Nexova operates as a B2B service firm with high manual overhead in talent acquisition, customer support, and sales prospecting. Transforming these heavily manual workflows—such as reading 30 to 80 CVs per search or manually following up with sales leads—presents a high-impact AI Engineering challenge. Building scalable systems like automated candidate ranking, RAG-driven support knowledge bases, and executive KPI aggregation directly targets the company's core value proposition rather than just auxiliary internal tooling.
-
----
-
-## Departments of Interest
-
-1. **Talent Selection Operations (Manager: Javier Almeida):**  
-   This department is the primary revenue engine of Nexova, yet 40 selection consultants currently perform manual CV screening and intuition-based candidate matching. I am interested in building the automated selection pipeline because implementing semantic search and AI scoring over a candidate database directly solves their core operational bottleneck and improves client visibility.
-
-2. **Customer Support Outsourcing (Manager: Roberto Díaz):**  
-   Managing 30 agents without a centralized knowledge base has caused resolution times to double their committed 24-hour SLA. I find this department compelling because automating first-line query resolution with RAG and implementing real-time sentiment analysis provides a clear, measurable metric for operational improvement and client retention.
-
----
-
-## Target Automation Challenge
-From the milestone map, I am most looking forward to building the **AI-assisted selection pipeline with automatic CV scoring, ranking, and candidate RAG search ("find profiles with B2B sales experience and C1 English")**.
 
 ---
 
