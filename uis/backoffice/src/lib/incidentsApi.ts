@@ -1,4 +1,6 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Empty by default: requests go to the backoffice itself, which proxies them to
+// the API (see next.config.ts). Set NEXT_PUBLIC_API_URL to call the API directly.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export type ProblemKind = "missing" | "invalid";
 
@@ -34,7 +36,7 @@ export async function analyzeIncidents(file: File): Promise<AnalysisResult> {
   try {
     response = await fetch(`${API_URL}/api/incidents/analyze`, { method: "POST", body });
   } catch {
-    throw new Error(`No se pudo conectar con la API en ${API_URL}. ¿Está arrancada?`);
+    throw new Error("No se pudo conectar con la API de análisis. ¿Está arrancada?");
   }
   if (!response.ok) throw new Error(await errorMessage(response, "No se pudo analizar el archivo"));
   return response.json();
