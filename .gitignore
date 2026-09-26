@@ -7,3 +7,4 @@ __pycache__/
 results.csv
 uis/backoffice/.next/
 uis/backoffice/node_modules/
+.pytest_cache/
