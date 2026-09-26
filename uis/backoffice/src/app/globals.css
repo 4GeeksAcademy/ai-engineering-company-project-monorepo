@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f5f7fb; color: #172033; font-family: Arial, sans-serif; }
+main { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+.card { background: white; border: 1px solid #dce2ed; border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+button, input { font: inherit; } button { cursor: pointer; background: #2457d6; color: white; border: 0; border-radius: 7px; padding: .7rem 1rem; }
+.drop { border: 2px dashed #9aa8c0; text-align: center; padding: 2rem; border-radius: 10px; }
+.error { color: #a51c30; } table { width: 100%; border-collapse: collapse; } td, th { text-align: left; padding: .5rem; border-bottom: 1px solid #e5e9f0; }
