@@ -237,3 +237,65 @@ Cada TASK debe completarse y verificarse en su propio commit antes de iniciar la
 - **Qué hacer:** Agregar al inicio del recorrido la creación de un local desde la UI y utilizar ese local en el flujo válido. Reemplazar la comprobación de local fuera de catálogo por un movimiento con un ID de local inventado enviado directamente a la API, con expectativa `404`, ya que la UI no permite escribir IDs manualmente.
 - **Cómo verificar:** Seguir el checklist con API y backoffice activos. Confirmar que se crea y selecciona el local, que el flujo válido refleja el stock esperado y que el intento con ID inexistente devuelve `404` sin alterar saldo ni historial.
 - **Commit sugerido:** `docs: verify managed local catalog end to end`
+
+## Cambio de requisito: punto de reorden por artículo
+
+### CR3-01: Punto de reorden en el modelo de artículo
+
+- **Criterios EARS:** INV-026, INV-027.
+- **Plan:** §1 Modelo de datos.
+- **Amplía:** TASK-01.
+- **Archivos que toca:** `services/api/models/inventory.py`; `services/api/tests/test_inventory_models.py`.
+- **Qué hacer:** Añadir el campo `punto_reorden` a `ArticuloCreate`/`Articulo` como `Decimal` obligatorio, validando que sea mayor o igual a cero. Añadir tests que acepten un punto de reorden válido y rechacen su ausencia, un valor negativo o no numérico.
+- **Cómo verificar:** Desde `services/api/`, ejecutar `python -m unittest discover -s tests -p "test_inventory_models.py"`. Deben pasar los casos válidos e inválidos de `punto_reorden`.
+- **Commit sugerido:** `feat(inventory): add reorder point to article model`
+
+### CR3-02: Señal de punto de reorden en la consulta de stock
+
+- **Criterios EARS:** INV-026, INV-028.
+- **Plan:** §4 Endpoints.
+- **Amplía:** TASK-03, CR2-03.
+- **Archivos que toca:** `services/api/routers/inventory.py`.
+- **Qué hacer:** Extender la respuesta de `GET /inventory/stock` para incluir `punto_reorden` (del artículo) y el booleano `bajo_punto_reorden` (verdadero cuando el stock calculado es menor que el punto de reorden). No cambiar los códigos de respuesta existentes.
+- **Cómo verificar:** Desde `services/api/`, ejecutar `python -m compileall -q routers/inventory.py`. Con `TestClient`, confirmar que la respuesta de `/inventory/stock` incluye ambos campos y que `bajo_punto_reorden` cambia correctamente al registrar movimientos que crucen el punto de reorden.
+- **Commit sugerido:** `feat(inventory): flag stock below reorder point`
+
+### CR3-03: Verificación del punto de reorden en el backend
+
+- **Criterios EARS:** INV-026, INV-027, INV-028.
+- **Plan:** §1 Modelo de datos; §4 Endpoints.
+- **Amplía:** TASK-04, CR2-04.
+- **Archivos que toca:** `services/api/verify_inventory.py`.
+- **Qué hacer:** Añadir etapas que registren un artículo con `punto_reorden`, provoquen que su stock caiga por debajo mediante una salida, y confirmen que `GET /inventory/stock` responde con `bajo_punto_reorden: true`. Añadir una etapa que confirme `422` al registrar un artículo sin `punto_reorden` o con un valor negativo.
+- **Cómo verificar:** Desde `services/api/`, ejecutar `python verify_inventory.py` dos veces seguidas; ambas corridas deben reportar todo `OK`.
+- **Commit sugerido:** `test(inventory): verify reorder point signal`
+
+### CR3-04: Tipos compartidos para punto de reorden
+
+- **Criterios EARS:** INV-026, INV-028.
+- **Plan:** §5 Tipos compartidos.
+- **Amplía:** TASK-05, CR2-05.
+- **Archivos que toca:** `packages/shared/types/inventory.ts`.
+- **Qué hacer:** Añadir `punto_reorden: string` a `InventoryArticle` y `NewInventoryArticle`; añadir `punto_reorden: string` y `bajo_punto_reorden: boolean` a `InventoryStock`.
+- **Cómo verificar:** Revisar que el archivo no tiene referencias rotas ni errores de sintaxis internos (los demás archivos que aún no usan estos campos se corrigen en tareas posteriores).
+- **Commit sugerido:** `feat(shared-types): add reorder point fields`
+
+### CR3-05: UI de punto de reorden en el backoffice
+
+- **Criterios EARS:** INV-026, INV-028, INV-029.
+- **Plan:** §4 Endpoints (Señal de punto de reorden en el backoffice); §5 Tipos compartidos.
+- **Amplía:** TASK-07, CR2-07.
+- **Archivos que toca:** `uis/backoffice/src/InventoryManager.tsx`.
+- **Qué hacer:** Añadir el campo "Punto de reorden" al formulario de creación de artículos. Mostrar el punto de reorden como columna en el listado de artículos. En la consulta de stock, mostrar una señal visible cuando `bajo_punto_reorden` sea verdadero. Cuando el usuario tenga un local seleccionado en la consulta de stock, consultar el stock de cada artículo del catálogo en ese local (reutilizando `getStock`) y marcar visualmente en el listado de artículos los que tengan `bajo_punto_reorden: true`.
+- **Cómo verificar:** Desde la raíz, ejecutar `npm run build --workspace backoffice` y `npm run lint --workspace backoffice`. Para la comprobación funcional: crear un artículo con un punto de reorden bajo, registrar movimientos que dejen su stock por debajo, y confirmar visualmente la señal tanto en la consulta de stock como en el listado de artículos para el local seleccionado.
+- **Commit sugerido:** `feat(backoffice): surface reorder point signal`
+
+### CR3-06: Checklist de verificación del punto de reorden
+
+- **Criterios EARS:** INV-026, INV-027, INV-028, INV-029.
+- **Plan:** §4 Endpoints; §5 Tipos compartidos.
+- **Amplía:** TASK-08, CR2-08.
+- **Archivos que toca:** `specs/inventory-manager/e2e-checklist.md`.
+- **Qué hacer:** Añadir pasos al checklist para crear un artículo con punto de reorden, provocar que su stock caiga por debajo, y confirmar la señal visible tanto en la consulta de stock como en el listado de artículos. Añadir un paso que confirme el rechazo `422` al registrar un artículo sin punto de reorden o con un valor negativo.
+- **Cómo verificar:** No requiere ejecutar código; es un documento. Revisar que quede coherente con el resto del checklist.
+- **Commit sugerido:** `docs: verify reorder point signal end to end`
