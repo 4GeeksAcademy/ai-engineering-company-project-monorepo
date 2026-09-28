@@ -10,6 +10,7 @@ const navigation = [
   { name: "Incidents", href: "/incidents", icon: "🚨" },
   { name: "Brasa Points", href: "/loyalty", icon: "⭐" },
   { name: "Hiring", href: "/hiring", icon: "👥" },
+  { name: "Suppliers", href: "/suppliers", icon: "🤝" },
 ];
 
 export default function Sidebar() {

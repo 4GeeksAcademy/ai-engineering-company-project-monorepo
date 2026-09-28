@@ -1,6 +1,6 @@
 """Health-check router."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
@@ -17,5 +17,5 @@ async def health_check():
     return HealthResponse(
         status="ok",
         version=settings.APP_VERSION,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
     )
