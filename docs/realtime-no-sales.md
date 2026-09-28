@@ -12,7 +12,7 @@ Draft PR **#53** (`feature/sse-notifications`) used this shape for emergency-ord
 
 ## Routes
 
-Mounted from `services/api/no_sales_router.py` onto `uvicorn api.app:app`. Paths avoid the word `sales` so OpenAPI coverage does not pretend the `/sales` noun exists.
+Mounted from `services/api/no_sales_router.py` onto `uvicorn api.app:app`. Alert paths stay under `/realtime`. The `/sales` noun is the sales router.
 
 | Method | Path | Auth | Role |
 | --- | --- | --- | --- |
@@ -31,9 +31,9 @@ Unauthenticated calls return **401**.
 - A background sweep (`NO_SALES_POLL_SECONDS`, default 15; `NO_SALES_MONITOR=0` disables it) re-evaluates during service.
 - An alert stays up through close. It clears when a sale is recorded inside the window.
 
-## Hook for the `/sales` router
+## Hook from `POST /sales`
 
-Another change can add `POST /sales` without editing this router. After it stores a sale, call:
+`POST /sales` (Bearer JWT) appends the ticket to the same in-memory list `GET /sales` reads, then calls `record_sale` in `services/api/sales_events.py`. A sale during opening hours clears that location's no-sales alert and keeps a quiet location from raising one. Unknown locations return **404**. A currency other than the location's own COP or USD returns **400** (a value that is not COP or USD is **422**).
 
 ```python
 from sales_events import record_sale

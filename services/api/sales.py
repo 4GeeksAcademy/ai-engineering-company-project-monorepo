@@ -7,7 +7,7 @@ week of 2026-09-14 (America/Bogota).
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from users import get_current_user
 
 from locations import all_locations, get_location
+from sales_events import parse_amount, record_sale
 
 router = APIRouter(
     prefix="/sales",
@@ -59,6 +60,15 @@ _WEEKLY_LOCAL: tuple[tuple[str, int, float], ...] = (
     ("us-ftlauderdale", 274, 7_820),
     ("us-jacksonville", 248, 6_940),
 )
+
+
+class SaleCreate(BaseModel):
+    """One new ticket. Currency must be the location's own COP or USD."""
+
+    location_id: str = Field(min_length=1, max_length=64)
+    amount: str | float | int
+    currency: Currency
+    occurred_at: datetime | None = None
 
 
 class Sale(BaseModel):
@@ -256,6 +266,21 @@ def _filtered(location_id: str | None, currency: Currency | None) -> list[Sale]:
     return rows
 
 
+def _next_sale_id(location_id: str) -> str:
+    prefix = f"sal-{location_id}-"
+    taken = {row.id for row in _SALES if row.id.startswith(prefix)}
+    index = 1
+    while f"{prefix}{index}" in taken:
+        index += 1
+    return f"{prefix}{index}"
+
+
+def _aware_moment(moment: datetime) -> datetime:
+    if moment.tzinfo is None or moment.tzinfo.utcoffset(moment) is None:
+        raise HTTPException(status_code=400, detail="occurred_at must include a timezone")
+    return moment
+
+
 @router.get("", response_model=list[Sale])
 def list_sales(
     location_id: str | None = Query(default=None),
@@ -263,6 +288,55 @@ def list_sales(
 ) -> list[Sale]:
     """Ticket-level sales. Each row has location, currency (COP or USD), and occurred_at."""
     return _filtered(location_id, currency)
+
+
+@router.post("", response_model=Sale, status_code=201)
+def create_sale(payload: SaleCreate) -> Sale:
+    """Store a ticket on the same list GET /sales reads, then notify the no-sales monitor."""
+    location = get_location(payload.location_id.strip())
+    if location is None:
+        raise HTTPException(status_code=404, detail="Sales for that location were not found.")
+    if payload.currency != location.currency:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{location.name} records sales in {location.currency}.",
+        )
+    try:
+        amount = parse_amount(str(payload.amount))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    moment = _aware_moment(payload.occurred_at or datetime.now(timezone.utc))
+    local_amount = float(amount)
+    sale = Sale(
+        id=_next_sale_id(location.id),
+        location_id=location.id,
+        location_name=location.name,
+        country=location.country,
+        region=location.region,
+        currency=location.currency,
+        amount=local_amount,
+        amount_cop=_to_cop(local_amount, location.currency),
+        amount_usd=_to_usd(local_amount, location.currency),
+        covers=1,
+        occurred_at=moment.isoformat(),
+        channel="dine_in",
+        menu_item_id="grilled-sirloin",
+    )
+    _SALES.append(sale)
+    try:
+        record_sale(
+            location.id,
+            amount,
+            location.currency,
+            occurred_at=moment,
+            source="sales",
+        )
+    except ValueError as error:
+        _SALES.pop()
+        text = str(error)
+        status_code = 404 if "Unknown Brasaland location" in text else 400
+        raise HTTPException(status_code=status_code, detail=text) from error
+    return sale
 
 
 @router.get("/overview", response_model=SalesOverview)
