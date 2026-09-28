@@ -124,6 +124,21 @@ curl "http://127.0.0.1:8000/inventory/alerts?threshold=20"
 
 Interactive docs: `http://127.0.0.1:8000/docs`
 
+## Central API nouns (Technology)
+
+Seeded Brasaland data on this same app. Detail and curl examples: [`docs/central-api.md`](../../docs/central-api.md).
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/menus`, `/menus/catalogue`, `/menus/{item_id}` | Public | Chain menu, COP and USD list prices |
+| `GET` | `/sales`, `/sales/overview`, `/sales/alerts`, `/sales/locations/{location_id}`, `/sales/{sale_id}` | Bearer | Tickets with location, currency, timestamp; chain COP and USD |
+| `GET` | `/customers`, `/customers/overview`, `/customers/{customer_id}` | Bearer | CRM; `brasa_points_balance` on the stamp card |
+| `GET` | `/suppliers`, `/suppliers/overview`, `/suppliers/{supplier_id}` | Bearer | About 20 suppliers, two markets, price history |
+
+```bash
+python -m pytest tests/test_central_api_domains.py -q
+```
+
 ## Auth endpoints (previous JSON delivery)
 
 SQLite user store: `data/company_api.db`. Set `JWT_SECRET_KEY` so tokens survive reloads.

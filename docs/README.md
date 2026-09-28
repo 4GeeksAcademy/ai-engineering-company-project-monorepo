@@ -5,4 +5,6 @@ This folder holds **cross-cutting documentation** for the monorepo: architecture
 - **Main purpose**: provide a single place for “global” project documentation (not tied to one app or agent only).
 - **Recommendation**: organize docs by topic (architecture, deployment, data, security, observability, etc.) and keep links from each component’s README to these guides.
 
+- [central-api.md](./central-api.md) — menus, sales, customers, and suppliers on `uvicorn api.app:app` (how to run and what a grader should see in `/docs`).
+
 > _Spanish version: [README.es.md](./README.es.md)._

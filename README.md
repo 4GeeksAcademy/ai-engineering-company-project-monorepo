@@ -66,6 +66,23 @@ Full details (inventory endpoints, conversation log, curl examples): [`services/
 
 **Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md` for how to verify all rubric criteria.
 
+### Central API nouns (locations, menus, sales, customers, suppliers)
+
+The same process (`uvicorn api.app:app`) serves Brasaland’s central API. Menus are public. Sales, customers, suppliers, and locations expect a Bearer JWT from `POST /auth/register` or `POST /auth/login`.
+
+| Noun | Example |
+| --- | --- |
+| Menus | `GET /menus` — COP and USD list prices, same dishes in both markets |
+| Sales | `GET /sales` — each ticket has `location_id`, `currency` (`COP` or `USD`), `amount`, `occurred_at`; `GET /sales/overview` is the chain total |
+| Customers | `GET /customers` — CRM rows with `brasa_points_balance` (physical stamp card) |
+| Suppliers | `GET /suppliers` — about 20 suppliers, Colombia and Florida, price history |
+
+Open `http://127.0.0.1:8000/docs` after the server starts. How to call them and how to test: [`docs/central-api.md`](./docs/central-api.md).
+
+```bash
+python -m pytest tests/test_central_api_domains.py -q
+```
+
 ### Celery worker (Message Queues and Async Tasks)
 
 The Celery **worker is an independent process** — it does **not** run inside the FastAPI app. FastAPI only enqueues tasks (`POST /reporting/pipeline-runs` → `202` + `task_id`); the worker consumes them from Redis.

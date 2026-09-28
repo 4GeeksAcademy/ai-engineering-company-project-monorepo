@@ -13,14 +13,14 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 
 | `CONTEXT.md` need | Status in monorepo |
 | --- | --- |
-| Technology: central API (locations, menus, sales, customers, suppliers) | **Partial** — `locations=present`; `auth`/`users=present`; `menus`/`sales`/`customers`/`suppliers=missing`; `inventory=present` on `:8000` |
+| Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
 | Technology: telemetry + pipeline to dashboards | **Partial** — Part 2 weekly location cost/waste ETL + Phase one Prefect stage subflows + Phase two isolated KPI transform unit tests + Phase three CLI (`python data/pipelines/pipeline.py --offline`) + Phase four backoffice Monday weekly report (`/reporting/weekly-performance`, stakeholder copy); engineering `GET /telemetry/report` untouched |
-| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — no sales UI yet; weekly Purchase cost / Waste cost / Waste ratio / Stockout frequency / Price alert frequency per location (COP/USD) on Monday weekly report |
-| Procurement: supplier price history, consolidated spend | **Partial** — Price alert frequency + Purchase cost per location-week on Monday weekly report |
-| Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `uis/website/` corporate home (`/`) live; Brasa Points still stamp cards per `CONTEXT.md` |
+| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; no sales UI; no live no-sales stream; Monday weekly cost/waste report still separate |
+| Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
+| Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; digital wallet not built; `uis/website/` corporate home (`/`) live |
 | People: HR portal / KPIs by country | **Not done** |
 | Training: recipe catalogue, push to 14 locations | **Not done** — knowledge docs under `docs/company-knowledge-base/` are source material only |
-| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — Monday weekly ops & finance report live for Mariana / Felipe / Lucía (stakeholder labels); chain sales USD+COP still a separate gap |
+| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; no NL assistant change |
 
 ## What already runs (engineering)
 
@@ -262,7 +262,7 @@ head -n 5 CONTEXT.md → # Welcome to Brasaland
 ## Planned next steps (order)
 
 1. Keep every product change traceable to a `CONTEXT.md` department need (name the section in the PR/commit).
-2. Extend the central API toward missing Technology nouns: **locations → menus → sales → customers → suppliers**, reusing `services/api` routers.
+2. Central API nouns **locations, menus, sales, customers, and suppliers** are seeded on `uvicorn api.app:app`. A live POS, live invoices, and a digital Brasa Points wallet are still open.
 3. Executive path: surface chain sales in **USD and COP**, wire Monday-style weekly report to the existing async pipeline, keep Mariana’s NL assistant on the documented agent loop.
 4. Later phases: keep staff dashboard consumers for `reporting.weekly_location_performance` current; extend sales USD+COP for Mariana.
 5. Do not rewrite the monorepo or invent another company.
@@ -307,6 +307,34 @@ cd uis/backoffice && npm run build → tsc -b && vite build green
 Manual UI (CDP): login → Monday weekly report; audit forbidden jargon hits=[]; required KPI labels present; friendly location names; COP+USD; period America/Bogota
 Artifacts: stakeholder_ux_03_monday_report.png, stakeholder_ux_04_kpi_table.png, stakeholder_ux_monday_report_walkthrough.mp4
 ```
+
+## Latest central API nouns (`cursor/central-api-nouns-5989`)
+
+Department served: **Technology** (Nicolás Park — locations, menus, sales, customers, suppliers on one server) + **Operations** (Felipe — per-location COP/USD tickets and a no-sales alert list) + **Procurement** (Lucía — ~20 suppliers and price history) + **Marketing** (Camila — CRM with a Brasa Points stamp-card balance) + **Executive** (Mariana — chain totals in COP and USD) + **Training** (Jake — same menu in all 14 kitchens).
+
+Built on `main` (`a7c9bf9`), not draft PR #64. Routers: `services/api/menus.py`, `sales.py`, `customers.py`, `suppliers.py`. `app.py` only mounts them; reporting stays mounted. Seeded snapshot, not a live POS. Brasa Points stay physical stamp cards (`digital_loyalty=false`).
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+GET http://127.0.0.1:8000/docs → 200
+locations=present
+menus=present
+sales=present
+customers=present
+suppliers=present
+inventory=present
+path_count=39
+reporting paths still present
+python3 -m pytest tests/test_central_api_domains.py -q → 7 passed
+python3 -m pytest tests/test_users_api.py tests/test_error_handling.py -q → 27 passed
+GET /menus/catalogue → 6 items, currencies COP+USD, location_count 14
+GET /sales/overview without token → 401
+GET /sales/overview with Bearer → 14 locations, 42 tickets, chain_total_cop=476340000, chain_total_usd=119085, florida_total_usd=53460
+GET /customers/cus-001 → Brasa Points, brasa_points_balance=32, loyalty_tier=silver, digital_loyalty=false
+GET /suppliers/overview → total_suppliers=20, colombia_count=10, florida_count=10, price_alerts=8
+```
+
+Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**. That does not make POS integration, telemetry, or a digital loyalty wallet complete.
 
 ## How to update this file
 
