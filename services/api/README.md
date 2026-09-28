@@ -148,6 +148,7 @@ Seeded Brasaland data on this same app. Detail and curl examples: [`docs/central
 | --- | --- | --- | --- |
 | `GET` | `/menus`, `/menus/catalogue`, `/menus/{item_id}` | Public | Chain menu, COP and USD list prices |
 | `GET` | `/sales`, `/sales/overview`, `/sales/alerts`, `/sales/locations/{location_id}`, `/sales/{sale_id}` | Bearer | Tickets with location, currency, timestamp; chain COP and USD |
+| `POST` | `/sales` | Bearer | Record a ticket (location, amount, COP or USD) and notify the no-sales monitor |
 | `GET` | `/customers`, `/customers/overview`, `/customers/{customer_id}` | Bearer | CRM; `brasa_points_balance` on the stamp card |
 | `GET` | `/suppliers`, `/suppliers/overview`, `/suppliers/{supplier_id}` | Bearer | About 20 suppliers, two markets, price history |
 
@@ -157,7 +158,7 @@ python -m pytest tests/test_central_api_domains.py -q
 
 ## Live no-sales alerts
 
-Restaurant Operations (Felipe Guerrero): when an open location has no sale for a configurable window, `GET /realtime/ops-alerts/stream` pushes an SSE alert. A recorded sale clears it. The `/sales` HTTP noun is separate; call `record_sale` from `services/api/sales_events.py` when that router lands. Grader steps: [`docs/realtime-no-sales.md`](../../docs/realtime-no-sales.md).
+Restaurant Operations (Felipe Guerrero): when an open location has no sale for a configurable window, `GET /realtime/ops-alerts/stream` pushes an SSE alert. `POST /sales` stores the ticket and calls `record_sale` in `services/api/sales_events.py`, which clears that location. Grader steps: [`docs/realtime-no-sales.md`](../../docs/realtime-no-sales.md).
 
 ## Auth endpoints (previous JSON delivery)
 

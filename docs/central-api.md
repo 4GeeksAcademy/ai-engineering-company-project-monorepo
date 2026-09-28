@@ -36,6 +36,7 @@ Use `access_token` as `Authorization: Bearer …`.
 | --- | --- | --- |
 | GET | `/menus`, `/menus/catalogue`, `/menus/{item_id}` | COP and USD list prices; both markets |
 | GET | `/sales` | Tickets: `location_id`, `currency` (`COP` or `USD`), `amount`, `occurred_at` |
+| POST | `/sales` | Record one ticket (`location_id`, `amount`, `currency`) and feed the no-sales monitor |
 | GET | `/sales?currency=COP` or `USD` | Filter |
 | GET | `/sales?location_id=co-med-centro` | One kitchen |
 | GET | `/sales/overview` | Chain totals in COP and USD, 14 location rows |

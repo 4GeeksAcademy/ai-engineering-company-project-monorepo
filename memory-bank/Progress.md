@@ -15,7 +15,7 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 | --- | --- |
 | Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) and `realtime=present` (`GET /realtime/ops-alerts/stream`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
 | Technology: telemetry + pipeline to dashboards | **Partial** — live no-sales SSE on `GET /realtime/ops-alerts/stream` plus Part 2 weekly location cost/waste ETL, Prefect stage subflows, KPI unit tests, CLI, and backoffice Monday weekly report; engineering `GET /telemetry/report` untouched |
-| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; live no-sales alert on backoffice `/accessible`; Next.js `uis/portal` `/ops/sales` shows per-location sales in COP and USD. Smart ordering still open |
+| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; `POST /sales` stores a ticket and calls `record_sale` so the live no-sales alert on backoffice `/accessible` sees that location; Next.js `uis/portal` `/ops/sales` shows per-location sales in COP and USD. Smart ordering still open |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; Next.js `uis/portal` `/points` looks up a guest and shows Brasa Points balance, history, and tier rewards (fixtures, or `GET /customers` when `BRASALAND_DATA_SOURCE=live`); `uis/website/` corporate home (`/`) live. `CONTEXT.md` still describes stamp cards as today’s in-restaurant programme |
 | People: HR portal / KPIs by country | **Not done** |
@@ -508,6 +508,21 @@ python3 -c json.load(workflows/brasaland-monday-leadership-report.n8n.json) → 
 python3 workflows/validate_weekly_report_workflow.py → OK schedule=0 7 * * 1 timezone=America/Bogota active=false
 python3 -m pytest tests/test_n8n_weekly_workflow.py -q → 1 passed
 NO_SALES_MONITOR=0 python -m pytest -q → 128 passed
+```
+
+## Latest sales feed into the no-sales alert (`cursor/sales-feed-no-sales-alert-d91e`)
+
+Department served: **Restaurant Operations** (Felipe Guerrero — a real ticket clears a quiet location) + **Technology** (Nicolás Park — `POST /sales` on the central API calls `record_sale`).
+
+`GET /sales` was read-only. `POST /sales` appends the ticket to the same in-memory list and calls `record_sale` in `services/api/sales_events.py`. Unknown locations are 404. A currency that is not the location's COP or USD is 400.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+NO_SALES_MONITOR=0 python -m pytest -q → 131 passed
+node --experimental-strip-types --test uis/backoffice/tests/noSalesAlerts.test.ts → 8 passed
+POST /sales co-med-centro 48000 COP during an open alert → 201, active alerts cleared, ticket on GET /sales
+POST /sales before evaluate → no alert raised
+POST unknown location → 404; Colombia location with USD → 400; EUR → 422; amount 0 → 400
 ```
 
 ## How to update this file
