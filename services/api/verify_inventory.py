@@ -80,6 +80,30 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
         assert_status(response, 200)
         return response.json()
 
+    def get_articles() -> list[dict[str, Any]]:
+        response = client.get("/inventory/articles")
+        assert_status(response, 200)
+        return response.json()
+
+    def assert_article_rejection_is_non_mutating(
+        payload: dict[str, Any],
+        context: str,
+    ) -> None:
+        article_id = require_state("article_id")
+        articles_before = get_articles()
+        stock_before = get_stock(article_id)
+        history_before = get_history(article_id)
+        response = client.post("/inventory/articles", json=payload)
+        assert_status(response, 422)
+        if get_articles() != articles_before:
+            raise AssertionError(f"El catálogo cambió tras el rechazo: {context}")
+        assert_inventory_unchanged(
+            article_id,
+            stock_before,
+            history_before,
+            context,
+        )
+
     def create_local() -> None:
         response = client.post(
             "/inventory/locals",
@@ -100,6 +124,7 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
                 "nombre": "Artículo de verificación",
                 "categoria": "verduras",
                 "unidad_medida": "kg",
+                "punto_reorden": "5",
             },
         )
         assert_status(response, 201)
@@ -116,6 +141,17 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
             raise AssertionError(f"Se esperaba stock 0, recibí {stock['stock']}")
 
     run_stage("consultar stock inicial en cero (200)", check_initial_stock)
+
+    def check_initial_reorder_point() -> None:
+        stock = get_stock(require_state("article_id"))
+        if Decimal(str(stock["punto_reorden"])) != Decimal("5"):
+            raise AssertionError(
+                f"Se esperaba punto_reorden 5, recibí {stock['punto_reorden']}"
+            )
+        if stock["bajo_punto_reorden"] is not True:
+            raise AssertionError("Con stock inicial cero se esperaba bajo_punto_reorden true")
+
+    run_stage("señalar punto de reorden con stock inicial cero (200)", check_initial_reorder_point)
 
     def create_entry() -> None:
         article_id = require_state("article_id")
@@ -134,6 +170,58 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
 
     run_stage("registrar entrada y reflejar stock (201)", create_entry)
 
+    def check_below_reorder_point_after_entry() -> None:
+        stock = get_stock(require_state("article_id"))
+        if Decimal(str(stock["stock"])) != Decimal("4.5"):
+            raise AssertionError(f"Se esperaba stock 4.5, recibí {stock['stock']}")
+        if stock["bajo_punto_reorden"] is not True:
+            raise AssertionError("Con stock 4.5 se esperaba bajo_punto_reorden true")
+
+    run_stage("mantener señal bajo punto de reorden con stock 4.5 (200)", check_below_reorder_point_after_entry)
+
+    def create_entry_above_reorder_point() -> None:
+        response = client.post(
+            "/inventory/movements",
+            json=movement_payload(
+                require_state("article_id"),
+                require_state("local_id"),
+                cantidad=2,
+            ),
+        )
+        assert_status(response, 201)
+        stock = get_stock(require_state("article_id"))
+        if Decimal(str(stock["stock"])) != Decimal("6.5"):
+            raise AssertionError(f"Se esperaba stock 6.5, recibí {stock['stock']}")
+        if stock["bajo_punto_reorden"] is not False:
+            raise AssertionError("Con stock 6.5 se esperaba bajo_punto_reorden false")
+
+    run_stage("superar punto de reorden y retirar señal (201)", create_entry_above_reorder_point)
+
+    def reject_article_without_reorder_point() -> None:
+        assert_article_rejection_is_non_mutating(
+            {
+                "nombre": "Artículo sin punto de reorden",
+                "categoria": "verduras",
+                "unidad_medida": "kg",
+            },
+            "punto_reorden ausente",
+        )
+
+    run_stage("rechazar artículo sin punto de reorden (422)", reject_article_without_reorder_point)
+
+    def reject_article_with_negative_reorder_point() -> None:
+        assert_article_rejection_is_non_mutating(
+            {
+                "nombre": "Artículo con punto de reorden negativo",
+                "categoria": "verduras",
+                "unidad_medida": "kg",
+                "punto_reorden": "-1",
+            },
+            "punto_reorden negativo",
+        )
+
+    run_stage("rechazar artículo con punto de reorden negativo (422)", reject_article_with_negative_reorder_point)
+
     def reject_negative_exit_without_mutation() -> None:
         article_id = require_state("article_id")
         stock_before = get_stock(article_id)
@@ -144,7 +232,7 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
                 article_id,
                 require_state("local_id"),
                 tipo="salida",
-                cantidad=5,
+                cantidad=7,
             ),
         )
         assert_status(response, 409)
@@ -255,6 +343,7 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
                 "nombre": "Artículo inválido",
                 "categoria": "frutas",
                 "unidad_medida": "kg",
+                "punto_reorden": "5",
             },
         )
         assert_status(response, 422)
@@ -277,6 +366,7 @@ def run_verification(client: TestClient) -> tuple[list[str], list[str]]:
                 "nombre": "Artículo con unidad inválida",
                 "categoria": "verduras",
                 "unidad_medida": "kilogramo",
+                "punto_reorden": "5",
             },
         )
         assert_status(response, 422)
