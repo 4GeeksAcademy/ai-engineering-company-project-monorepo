@@ -22,6 +22,7 @@ export interface InventoryArticle {
   nombre: string
   categoria: InventoryCategory
   unidad_medida: InventoryUnit
+  punto_reorden: string
 }
 
 export interface InventoryLocation {
@@ -45,12 +46,15 @@ export interface InventoryStock {
   local: string
   stock: string
   unidad_medida: InventoryUnit
+  punto_reorden: string
+  bajo_punto_reorden: boolean
 }
 
 export interface NewInventoryArticle {
   nombre: string
   categoria: InventoryCategory
   unidad_medida: InventoryUnit
+  punto_reorden: string
 }
 
 export interface NewInventoryLocation {
