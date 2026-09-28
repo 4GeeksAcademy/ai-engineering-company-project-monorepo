@@ -10,7 +10,7 @@ Las convenciones y el contexto ya documentado se encuentran en `memory-bank/`.
 
 - Incluye registrar y consultar artículos de inventario, registrar entradas, salidas y ajustes asociados a un artículo y un local, y consultar el stock disponible de cada artículo por local a partir de sus movimientos.
 - No incluye gestión de proveedores, precios, órdenes de compra, aprobaciones, pedidos de emergencia, integración con POS, transferencias automatizadas entre locales, consolidación de compras, lotes, caducidad ni trazabilidad por proveedor.
-- No incluye predicción de demanda, mínimos de stock por artículo, categoría o local, umbrales o alertas de stock, alertas de merma, registro detallado de desperdicio, ni automatizaciones del agente de inventario predictivo descrito en `company-choice.md`. El gestor de incidencias sigue siendo un módulo distinto.
+- No incluye predicción de demanda, mínimos de stock por categoría o local, alertas de merma, registro detallado de desperdicio, ni automatizaciones del agente de inventario predictivo descrito en `company-choice.md`. El punto de reorden se define únicamente por artículo, no por categoría ni por local. El gestor de incidencias sigue siendo un módulo distinto.
 
 ## Criterios de aceptación
 
@@ -39,6 +39,10 @@ Las convenciones y el contexto ya documentado se encuentran en `memory-bank/`.
 - **INV-023 (Comportamiento no deseado):** Si se intenta registrar un movimiento con un local que no existe en el catálogo, el sistema rechaza el registro y no altera el stock calculado.
 - **INV-024 (Basado en evento):** Cuando se registra un local con nombre válido, el sistema lo persiste con un identificador único y lo deja disponible para registrar movimientos y consultar su stock. Si falta el nombre, el sistema rechaza el registro.
 - **INV-025 (Ubicuo):** El catálogo de locales es común a toda la aplicación; cada local tiene un identificador único y un nombre no vacío.
+- **INV-026 (Ubicuo):** Cada artículo tiene un punto de reorden: una cantidad numérica mayor o igual a cero, definida al registrarlo y aplicable por igual en todos los locales.
+- **INV-027 (Comportamiento no deseado):** Si se intenta registrar un artículo sin punto de reorden, con un valor negativo o no numérico, el sistema rechaza el registro.
+- **INV-028 (De estado):** Mientras el stock calculado de un artículo en un local esté por debajo de su punto de reorden, la consulta de stock de ese artículo y ese local lo señala explícitamente en la respuesta.
+- **INV-029 (De estado):** Mientras haya artículos con stock por debajo de su punto de reorden en un local, el backoffice los muestra de forma visible en el listado de artículos para ese local.
 
 ## Preguntas abiertas / decisiones pendientes
 
