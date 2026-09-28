@@ -25,6 +25,7 @@ class InventoryModelTests(unittest.TestCase):
                     nombre="Tomate",
                     categoria=category,
                     unidad_medida=UnidadMedida.KG,
+                    punto_reorden=Decimal("5.5"),
                 )
                 self.assertEqual(article.categoria, category)
 
@@ -34,8 +35,29 @@ class InventoryModelTests(unittest.TestCase):
                     nombre="Tomate",
                     categoria=CategoriaArticulo.VERDURAS,
                     unidad_medida=unit,
+                    punto_reorden=Decimal("5.5"),
                 )
                 self.assertEqual(article.unidad_medida, unit)
+
+    def test_article_accepts_non_negative_reorder_point(self) -> None:
+        for reorder_point in (Decimal("0"), Decimal("5.5")):
+            with self.subTest(reorder_point=reorder_point):
+                article = ArticuloCreate(
+                    nombre="Tomate",
+                    categoria=CategoriaArticulo.VERDURAS,
+                    unidad_medida=UnidadMedida.KG,
+                    punto_reorden=reorder_point,
+                )
+                self.assertEqual(article.punto_reorden, reorder_point)
+
+        persisted_article = Articulo(
+            id="article-1",
+            nombre="Tomate",
+            categoria=CategoriaArticulo.VERDURAS,
+            unidad_medida=UnidadMedida.KG,
+            punto_reorden=Decimal("5.5"),
+        )
+        self.assertEqual(persisted_article.punto_reorden, Decimal("5.5"))
 
     def test_persisted_article_requires_id(self) -> None:
         with self.assertRaises(ValidationError):
@@ -43,6 +65,7 @@ class InventoryModelTests(unittest.TestCase):
                 nombre="Tomate",
                 categoria=CategoriaArticulo.VERDURAS,
                 unidad_medida=UnidadMedida.KG,
+                punto_reorden=Decimal("5.5"),
             )
 
     def test_article_rejects_invalid_category_and_empty_required_fields(self) -> None:
@@ -51,14 +74,16 @@ class InventoryModelTests(unittest.TestCase):
                 nombre="Tomate",
                 categoria="frutas",
                 unidad_medida=UnidadMedida.KG,
+                punto_reorden=Decimal("5.5"),
             )
 
         valid_payload = {
             "nombre": "Tomate",
             "categoria": CategoriaArticulo.VERDURAS,
             "unidad_medida": UnidadMedida.KG,
+            "punto_reorden": Decimal("5.5"),
         }
-        for field in ("nombre", "categoria", "unidad_medida"):
+        for field in ("nombre", "categoria", "unidad_medida", "punto_reorden"):
             with self.subTest(field=field):
                 payload = valid_payload.copy()
                 del payload[field]
@@ -70,7 +95,19 @@ class InventoryModelTests(unittest.TestCase):
                 nombre="   ",
                 categoria=CategoriaArticulo.VERDURAS,
                 unidad_medida=UnidadMedida.KG,
+                punto_reorden=Decimal("5.5"),
             )
+
+    def test_article_rejects_negative_or_non_numeric_reorder_point(self) -> None:
+        for reorder_point in (Decimal("-0.1"), "not-a-number"):
+            with self.subTest(reorder_point=reorder_point):
+                with self.assertRaises(ValidationError):
+                    ArticuloCreate(
+                        nombre="Tomate",
+                        categoria=CategoriaArticulo.VERDURAS,
+                        unidad_medida=UnidadMedida.KG,
+                        punto_reorden=reorder_point,
+                    )
 
     def test_article_rejects_unit_outside_catalog(self) -> None:
         with self.assertRaises(ValidationError):
@@ -78,6 +115,7 @@ class InventoryModelTests(unittest.TestCase):
                 nombre="Tomate",
                 categoria=CategoriaArticulo.VERDURAS,
                 unidad_medida="lb",
+                punto_reorden=Decimal("5.5"),
             )
 
     def test_local_create_accepts_non_empty_name(self) -> None:

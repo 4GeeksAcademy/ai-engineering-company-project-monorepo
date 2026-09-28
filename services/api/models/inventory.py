@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 
 TextoNoVacio = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -38,6 +38,7 @@ class ArticuloCreate(BaseModel):
     nombre: TextoNoVacio
     categoria: CategoriaArticulo
     unidad_medida: UnidadMedida
+    punto_reorden: Decimal = Field(ge=0)
 
 
 class Articulo(ArticuloCreate):
