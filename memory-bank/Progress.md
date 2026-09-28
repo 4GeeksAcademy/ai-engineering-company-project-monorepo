@@ -20,7 +20,7 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; Next.js `uis/portal` `/points` looks up a guest and shows Brasa Points balance, history, and tier rewards (fixtures, or `GET /customers` when `BRASALAND_DATA_SOURCE=live`); `uis/website/` corporate home (`/`) live. `CONTEXT.md` still describes stamp cards as today’s in-restaurant programme |
 | People: HR portal / KPIs by country | **Not done** |
 | Training: recipe catalogue, push to 14 locations | **Partial** — `POST /knowledge/query` searches the four English standards (allergens, waste, ordering, Brasa Points) and returns cited chunks. Not a full recipe catalogue and not a push to all 14 kitchens |
-| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` and portal `/ops/sales` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; standards questions can go to `POST /knowledge/query`; a sales NL assistant and Monday 07:00 send remain open |
+| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` and portal `/ops/sales` chain totals in COP and USD; Monday weekly ops & finance report in the backoffice; n8n export `workflows/brasaland-monday-leadership-report.n8n.json` schedules Monday 07:00 America/Bogota, logs into the central API, pulls `GET /reporting/weekly-location-performance`, and delivers COP/USD leadership copy (email, Slack, CSV) with a failure branch. Standards questions can go to `POST /knowledge/query`. A sales NL assistant and a chain sales dashboard remain open |
 
 ## What already runs (engineering)
 
@@ -263,7 +263,7 @@ head -n 5 CONTEXT.md → # Welcome to Brasaland
 
 1. Keep every product change traceable to a `CONTEXT.md` department need (name the section in the PR/commit).
 2. Central API nouns **locations, menus, sales, customers, and suppliers** are seeded on `uvicorn api.app:app`. A live POS, live invoices, and a digital Brasa Points wallet are still open.
-3. Executive path: surface chain sales in **USD and COP**, wire Monday-style weekly report to the existing async pipeline, keep Mariana’s NL assistant on the documented agent loop.
+3. Executive path: chain sales in **USD and COP** are seeded and shown on portal `/ops/sales`. Monday 07:00 delivery is the n8n workflow in `workflows/` (it reads the reporting API; it does not enqueue the pipeline). Keep Mariana’s NL assistant on the documented agent loop.
 4. Later phases: keep staff dashboard consumers for `reporting.weekly_location_performance` current; extend sales USD+COP for Mariana.
 5. Do not rewrite the monorepo or invent another company.
 
@@ -306,6 +306,30 @@ head -n 5 CONTEXT.md → # Welcome to Brasaland
 cd uis/backoffice && npm run build → tsc -b && vite build green
 Manual UI (CDP): login → Monday weekly report; audit forbidden jargon hits=[]; required KPI labels present; friendly location names; COP+USD; period America/Bogota
 Artifacts: stakeholder_ux_03_monday_report.png, stakeholder_ux_04_kpi_table.png, stakeholder_ux_monday_report_walkthrough.mp4
+```
+
+## Latest milestone 9 — n8n Monday leadership report (`cursor/n8n-monday-leadership-report-3cb7`)
+
+Department served: **Executive** (Mariana Restrepo — automated weekly report Monday 07:00) with **Restaurant Operations** (Felipe Guerrero) and **Procurement** (Lucía Fernández) figures on the same report (purchase, waste, stockouts, price alerts, COP and USD kept separate).
+
+Importable workflow `workflows/brasaland-monday-leadership-report.n8n.json` (inactive until credentials exist):
+
+- Schedule cron `0 7 * * 1` with workflow timezone `America/Bogota` (not America/New_York: Bogotá has no daylight saving, and the chain week in `previous_chain_week_bounds` is America/Bogota). Manual trigger for a grader test.
+- `POST /auth/login` using `BRASALAND_STAFF_EMAIL` / `BRASALAND_STAFF_PASSWORD`, then `GET /reporting/weekly-location-performance?week_start=` with Bearer JWT.
+- Leadership text plus CSV under `/home/node/brasaland-reports` (host `workflows/out/`). Email (SMTP credential placeholder, CSV attached) and Slack (API credential placeholder) run when their env vars are set.
+- Error output from login, missing token, KPI query, format, CSV write, email, and Slack writes `brasaland-weekly-failure.txt` and notifies when delivery env vars are set.
+- Local n8n: `workflows/docker-compose.n8n.yml` (`n8nio/n8n:1.123.81`). Root `docker-compose.yml` was not changed.
+- No live secrets in the export. Docker was not available in this run, so n8n itself was not started; the export was checked with the structure script and Node execution of the embedded week and report functions.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+python3 workflows/validate_weekly_report_workflow.py
+→ OK brasaland-monday-leadership-report.n8n.json
+  nodes=23
+  schedule=0 7 * * 1 timezone=America/Bogota active=false
+  sample COP purchase=1000.00 USD purchase=50.00
+  chain-week instants checked=7
+python3 -m pytest tests/test_n8n_weekly_workflow.py -q → 1 passed
 ```
 
 ## Latest Next.js portal (`cursor/nextjs-brasaland-portal-9a60`)
@@ -470,6 +494,20 @@ head -n 5 CONTEXT.md → # Welcome to Brasaland
 NO_SALES_MONITOR=0 python -m pytest -q → 127 passed
 cd uis/portal && npm ci && npm test → 16 passed
 cd uis/portal && npm run build → Next.js 15.5.26; routes / , /points , /points/[customerId] , /ops/sales
+```
+
+## Latest merge of main into the Monday leadership workflow (`cursor/n8n-monday-leadership-report`)
+
+Department served: **Executive** (Mariana Restrepo — Monday 07:00 America/Bogota report stays) + **Technology** (Nicolás Park — the workflow still reads the central reporting API that is mounted with the other routers).
+
+Merged `origin/main` (`940987f`) into this branch. The only content conflict was `memory-bank/Progress.md`. Docs indexes for the central API, knowledge query, and no-sales alert stay, and `workflows/README.md` keeps the Monday report. The n8n export was not rewritten.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+python3 -c json.load(workflows/brasaland-monday-leadership-report.n8n.json) → name=Brasaland Monday leadership report nodes=23
+python3 workflows/validate_weekly_report_workflow.py → OK schedule=0 7 * * 1 timezone=America/Bogota active=false
+python3 -m pytest tests/test_n8n_weekly_workflow.py -q → 1 passed
+NO_SALES_MONITOR=0 python -m pytest -q → 128 passed
 ```
 
 ## How to update this file
