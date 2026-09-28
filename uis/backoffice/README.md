@@ -16,14 +16,17 @@ It contains no patient-level data and does not claim to be a live operational sy
 
 ## Technology and route
 
-This is a static HTML/CSS frontend. The entry route is `index.html`, which is served as `/` when this directory is used as the server root. No backend service is required for the current welcome view. Future APIs or background services belong under the repository's centralized `services/` folder.
+This is a Next.js 16 (App Router) application built with React 19 and TypeScript. The entry route is `app/page.tsx` (`/`); the sidebar is a client component in `components/sidebar.tsx`, and overview content lives in the JavaScript module `lib/workspace-data.js`. No backend service is required for the current welcome view. Future APIs or background services belong under the repository's centralized `services/` folder.
+
+The nested `talent-pipeline-tracker/` is a separate Next.js app with its own dependencies; it is excluded from this app's TypeScript and ESLint scope.
 
 ## Run locally
 
-From the repository root:
-
 ```bash
-python3 -m http.server 4174 --directory uis/backoffice
+cd uis/backoffice
+npm install
+npm run dev      # http://localhost:3002
+npm run lint
+npm run build
+npm run start    # after a successful build
 ```
-
-Open `http://localhost:4174/`.

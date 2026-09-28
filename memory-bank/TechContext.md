@@ -83,9 +83,11 @@ Root-level development commands, workspace installation commands, test commands,
 
 ## Existing applications and services
 
-### Existing application
+### Existing applications
 
-- `uis/talent-pipeline-tracker`: Next.js frontend for managing candidates, including status/stage filtering, candidate details, candidate notes, and candidate registration requirements described in the milestone context.
+- `uis/website`: Next.js, React, and TypeScript public website with the home (`/`) and patient enquiry (`/application`) routes; dev server on port 3001.
+- `uis/backoffice`: Next.js, React, and TypeScript internal operations overview (`/`); dev server on port 3002.
+- `uis/backoffice/talent-pipeline-tracker`: Next.js frontend for managing candidates, including status/stage filtering, candidate details, candidate notes, and candidate registration requirements described in the milestone context.
 
 ### Existing shared code
 
