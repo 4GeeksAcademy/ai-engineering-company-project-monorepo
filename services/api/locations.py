@@ -161,6 +161,11 @@ _LOCATIONS: list[Location] = [
 ]
 
 
+def location_roster() -> list[Location]:
+    """14 company-owned restaurants from CONTEXT.md (Colombia + Florida)."""
+    return list(_LOCATIONS)
+
+
 def all_locations() -> list[Location]:
     """Roster other central-API routers join against (sales, customers)."""
     return list(_LOCATIONS)
@@ -171,6 +176,7 @@ def get_location(location_id: str) -> Location | None:
         if location.id == location_id:
             return location
     return None
+
 
 
 @router.get("", response_model=list[Location])

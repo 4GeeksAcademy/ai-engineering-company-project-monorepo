@@ -5,7 +5,7 @@ This folder contains **all projects with a user interface** for the cross-functi
 The two main projects stored here are:
 
 - **`website`** — Brasaland’s public-facing corporate site (Vite + React). Home route `/`. See [`website/README.md`](./website/README.md).
-- **`backoffice`** — internal Brasaland Digital console (Vite + React). Public `/login` and `/register`; staff views (`/`, `/accessible`, `/account/profile`, `/account/change-password`) use a client layout guard (`ProtectedRoute` + `useRequireAuth`) that checks `localStorage` and `GET /auth/me`. See [`backoffice/README.md`](./backoffice/README.md). Legacy static KPI HTML lives in `backoffice/legacy/`.
+- **`backoffice`** — internal Brasaland Digital console (Vite + React). Public `/login` and `/register`; staff views (`/`, `/accessible`, `/account/profile`, `/account/change-password`) use a client layout guard (`ProtectedRoute` + `useRequireAuth`) that checks `localStorage` and `GET /auth/me`. `/accessible` shows live no-sales alerts for Felipe Guerrero. See [`backoffice/README.md`](./backoffice/README.md). Legacy static KPI HTML lives in `backoffice/legacy/`.
 
 Also present: **`web/`** — incident-analysis HTML tool (not the public marketing site).
 

@@ -13,9 +13,9 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 
 | `CONTEXT.md` need | Status in monorepo |
 | --- | --- |
-| Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
-| Technology: telemetry + pipeline to dashboards | **Partial** — Part 2 weekly location cost/waste ETL + Phase one Prefect stage subflows + Phase two isolated KPI transform unit tests + Phase three CLI (`python data/pipelines/pipeline.py --offline`) + Phase four backoffice Monday weekly report (`/reporting/weekly-performance`, stakeholder copy); engineering `GET /telemetry/report` untouched |
-| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; no sales UI; no live no-sales stream; Monday weekly cost/waste report still separate |
+| Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) and `realtime=present` (`GET /realtime/ops-alerts/stream`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
+| Technology: telemetry + pipeline to dashboards | **Partial** — live no-sales SSE on `GET /realtime/ops-alerts/stream` plus Part 2 weekly location cost/waste ETL, Prefect stage subflows, KPI unit tests, CLI, and backoffice Monday weekly report; engineering `GET /telemetry/report` untouched |
+| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; live no-sales alert on `/accessible` (banner, toast, list; clears when a sale is recorded; COP for Colombia, USD for Florida). No sales UI; smart ordering still open |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; digital wallet not built; `uis/website/` corporate home (`/`) live |
 | People: HR portal / KPIs by country | **Not done** |
@@ -388,6 +388,54 @@ python -m pytest -q → 110 passed
 ```
 
 Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**, and `/knowledge/query` is present. That does not make POS integration, telemetry, or a digital loyalty wallet complete.
+
+## Latest live no-sales alert (`cursor/realtime-no-sales-alert-198b`)
+
+Department served: **Restaurant Operations** (Felipe Guerrero — alert when a location has no sales during opening hours) + **Technology** (Nicolás Park — real-time telemetry on the central API).
+
+SSE on `GET /realtime/ops-alerts/stream` (Bearer JWT, `fetch` + `ReadableStream`). Detection lives in `services/api/no_sales.py`; the router is `services/api/no_sales_router.py`. Sales enter through `sales_events.record_sale` so a future `/sales` router can hook in without this channel owning that noun. OpenAPI paths do not contain `sales`, so the coverage script still reports `sales=missing`.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+GET http://127.0.0.1:8000/docs → 200
+locations=present
+menus=missing
+sales=missing
+customers=missing
+suppliers=missing
+inventory=present
+path_count=28
+/realtime/ops-alerts /realtime/ops-alerts/stream /realtime/ops-alerts/simulate present
+GET /realtime/ops-alerts/stream without token → 401
+python scripts/simulate_no_sales.py quiet --location co-med-centro → alert COP, quiet_minutes=31
+python scripts/simulate_no_sales.py resume --location co-med-centro --amount 48000 --currency COP → status=cleared
+NO_SALES_MONITOR=0 .venv/bin/python -m pytest tests/test_no_sales_alerts.py tests/test_users_api.py -q → 34 passed
+node --experimental-strip-types --test uis/backoffice/tests/noSalesAlerts.test.ts → 8 passed
+cd uis/backoffice && npm run build → tsc -b && vite build green
+Browser http://127.0.0.1:5174/accessible (grader.ops@brasaland.test): Live → Simulate no sales → banner + list Medellín Centro COP, no reload → Record a sale (48000 COP) → row gone, “No open location is quiet right now.” Same flow at 390px width.
+```
+
+Skill **passed** (criteria 1–4 + 6). At the time of that run, Technology’s menus/sales/customers/suppliers were still `missing`. Those nouns, `POST /knowledge/query`, and the realtime router are mounted together after the merge from `origin/main` (`0813179`).
+
+Draft PRs **#53** (SSE tickets) and **#54** (WebSocket knowledge chat) can be closed. This branch reuses the SSE shape (named events, JWT via fetch, Last-Event-ID, reconnect backoff) on current `main` for the no-sales alert. Those drafts target other features and have diverged from `main`.
+
+## Latest merge of main into the no-sales alert (`cursor/realtime-no-sales-alert-198b`)
+
+Department served: **Restaurant Operations** (Felipe Guerrero — live no-sales alert stays mounted) + **Technology** (Nicolás Park — locations, menus, sales, customers, suppliers, inventory, users, reporting, knowledge, and realtime on one server).
+
+Merged `origin/main` (`0813179`, PR #93) into this branch. `services/api/app.py` includes the #89 routers, `services.knowledge.routes`, and `register_ops_alerts`. `locations.py` keeps `location_roster`, `all_locations`, and `get_location`. Progress keeps the central-API, knowledge, and no-sales entries.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+/locations /menus /sales /customers /suppliers /inventory /users present
+/reporting/weekly-location-performance present
+/knowledge/query present
+/realtime/ops-alerts/stream present
+path_count=43
+NO_SALES_MONITOR=0 python -m pytest -q → 127 passed
+cd uis/backoffice && npm run build → tsc -b && vite build green
+node --experimental-strip-types --test uis/backoffice/tests/noSalesAlerts.test.ts → 8 passed
+```
 
 ## How to update this file
 

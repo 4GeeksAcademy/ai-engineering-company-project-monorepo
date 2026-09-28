@@ -41,6 +41,12 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
       },
+      "/realtime": {
+        target: apiTarget,
+        changeOrigin: true,
+        timeout: 0,
+        proxyTimeout: 0,
+      },
       "/api": {
         target: apiTarget,
         changeOrigin: true,

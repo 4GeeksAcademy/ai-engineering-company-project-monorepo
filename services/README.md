@@ -7,7 +7,7 @@ Each subfolder inside `services/` must correspond to **one specific service** (f
 - **Main purpose**: to centralize all the backend logic, APIs, and queue consumers that support the company's use cases.
 - **Recommendation**: document in this file (or in sub-READMEs) the services you add, their objective, the technology used, and how to run them.
 
-The central FastAPI app is `services/api/app.py` (`uvicorn api.app:app`). It mounts locations, menus, sales, customers, suppliers, inventory, users, reporting, and knowledge (`POST /knowledge/query`). Run notes: [`services/api/README.md`](./api/README.md), [`docs/central-api.md`](../docs/central-api.md), and [`docs/knowledge-rag.md`](../docs/knowledge-rag.md).
+The central FastAPI app is `services/api/app.py` (`uvicorn api.app:app`). It mounts locations, menus, sales, customers, suppliers, inventory, users, reporting, knowledge (`POST /knowledge/query`), and realtime (`GET /realtime/ops-alerts/stream`). Run notes: [`services/api/README.md`](./api/README.md), [`docs/central-api.md`](../docs/central-api.md), [`docs/knowledge-rag.md`](../docs/knowledge-rag.md), and [`docs/realtime-no-sales.md`](../docs/realtime-no-sales.md).
 
 ## Celery (Message Queues and Async Tasks)
 
@@ -37,5 +37,9 @@ Task logs (every attempt): `task_id`, `attempt`, `status`, `duration_ms`; failur
 - `POST /reporting/pipeline-runs` → enqueues `run_weekly_pipeline`, returns **202** `{"task_id": "..."}`
 - `GET /tasks/{task_id}` → Redis/Celery status as
   `{"task_id": "...", "status": "pending|started|success|failure", "result": ...}`
+
+## Live operations alerts
+
+`services/api/no_sales_router.py` mounts `GET /realtime/ops-alerts/stream` on the central FastAPI app (`uvicorn api.app:app`). It tells Restaurant Operations when an open location has no sales during business hours. Details: [`docs/realtime-no-sales.md`](../docs/realtime-no-sales.md).
 
 > _Spanish version: [README.es.md](./README.es.md)._

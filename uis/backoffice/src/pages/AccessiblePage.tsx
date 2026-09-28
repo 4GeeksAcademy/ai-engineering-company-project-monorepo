@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AsyncPanel } from "../components/AsyncState";
+import { NoSalesLive } from "../components/NoSalesLive";
 import {
   fetchInventory,
   fetchLocationsOverview,
@@ -133,6 +134,8 @@ export function AccessiblePage() {
           — 14 restaurants across Colombia and Florida, COP and USD.
         </p>
       </div>
+
+      <NoSalesLive />
 
       <div className="accessible__dashboard" aria-label="Authenticated operations dashboard">
         <div className="accessible__panel accessible__panel--span">
