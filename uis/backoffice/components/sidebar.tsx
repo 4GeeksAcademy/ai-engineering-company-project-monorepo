@@ -16,6 +16,15 @@ export function Sidebar() {
           <small>Digital workspace</small>
         </span>
       </Link>
+      <div className="sidebar-section">
+        <p className="sidebar-label">Patient experience</p>
+        <nav className="side-nav" aria-label="Patient experience navigation">
+          <Link href="/incidents" className="incident-nav-link">
+            <span className="nav-icon" aria-hidden="true">▤</span>
+            Incident analysis
+          </Link>
+        </nav>
+      </div>
       {workspaceNav.map((section) => (
         <div className="sidebar-section" key={section.label}>
           <p className="sidebar-label">{section.label}</p>
