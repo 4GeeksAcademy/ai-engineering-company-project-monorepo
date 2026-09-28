@@ -88,9 +88,12 @@ def get_stock(
 	article = _find_article(articulo_id)
 	if storage.find_local(local) is None:
 		raise HTTPException(status_code=404, detail="Local no encontrado")
+	stock = storage.calculate_stock(article.id, local)
 	return {
 		"articulo_id": article.id,
 		"local": local,
-		"stock": storage.calculate_stock(article.id, local),
+		"stock": stock,
 		"unidad_medida": article.unidad_medida,
+		"punto_reorden": article.punto_reorden,
+		"bajo_punto_reorden": stock < article.punto_reorden,
 	}
