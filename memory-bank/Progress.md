@@ -15,12 +15,12 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 | --- | --- |
 | Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) and `realtime=present` (`GET /realtime/ops-alerts/stream`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
 | Technology: telemetry + pipeline to dashboards | **Partial** — live no-sales SSE on `GET /realtime/ops-alerts/stream` plus Part 2 weekly location cost/waste ETL, Prefect stage subflows, KPI unit tests, CLI, and backoffice Monday weekly report; engineering `GET /telemetry/report` untouched |
-| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; live no-sales alert on `/accessible` (banner, toast, list; clears when a sale is recorded; COP for Colombia, USD for Florida). No sales UI; smart ordering still open |
+| Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; live no-sales alert on backoffice `/accessible`; Next.js `uis/portal` `/ops/sales` shows per-location sales in COP and USD. Smart ordering still open |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
-| Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; digital wallet not built; `uis/website/` corporate home (`/`) live |
+| Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; Next.js `uis/portal` `/points` looks up a guest and shows Brasa Points balance, history, and tier rewards (fixtures, or `GET /customers` when `BRASALAND_DATA_SOURCE=live`); `uis/website/` corporate home (`/`) live. `CONTEXT.md` still describes stamp cards as today’s in-restaurant programme |
 | People: HR portal / KPIs by country | **Not done** |
 | Training: recipe catalogue, push to 14 locations | **Partial** — `POST /knowledge/query` searches the four English standards (allergens, waste, ordering, Brasa Points) and returns cited chunks. Not a full recipe catalogue and not a push to all 14 kitchens |
-| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; standards questions can go to `POST /knowledge/query`; a sales NL assistant remains open |
+| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` and portal `/ops/sales` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; standards questions can go to `POST /knowledge/query`; a sales NL assistant and Monday 07:00 send remain open |
 
 ## What already runs (engineering)
 
@@ -308,6 +308,28 @@ Manual UI (CDP): login → Monday weekly report; audit forbidden jargon hits=[];
 Artifacts: stakeholder_ux_03_monday_report.png, stakeholder_ux_04_kpi_table.png, stakeholder_ux_monday_report_walkthrough.mp4
 ```
 
+## Latest Next.js portal (`cursor/nextjs-brasaland-portal-9a60`)
+
+Department served: **Marketing** (Camila Ospina — digital Brasa Points) + **Restaurant Operations** (Felipe Guerrero — sales per location in COP and USD) + **Executive** (Mariana Restrepo — chain totals in both currencies). The portal calls Technology’s customers and sales nouns when `BRASALAND_DATA_SOURCE=live`. Before this merge those routers were **missing** on the branch, so the default is a typed fixture client. This does not complete a live POS or a digital wallet.
+
+- App: `uis/portal` (Next.js App Router, TypeScript). Routes `/`, `/points`, `/points/[customerId]`, `/ops/sales`.
+- Client: `GET /customers`, `GET /customers/{id}`, `GET /sales` (`location_id` + `currency`). Fallback when the live call fails. Staff JWT via `BRASALAND_API_TOKEN` (not committed).
+- Points math from `docs/company-knowledge-base/brasaland-loyalty-program.en.md` (10,000 COP or 10 USD = 1 point; Bronze/Silver/Gold; redeem from 15 in steps of 5).
+- Brand tokens match `uis/website` (charcoal, ember, Outfit, Source Sans 3).
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+Live mode matches draft central API shapes on `cursor/central-api-nouns-5989` (PR #89): `brasa_points_balance` + `loyalty_tier` + `order_history` without spend; `GET /sales` tickets (`amount`, `currency`, `location_id`, `occurred_at`) rolled up per location. `GET /sales/overview` location rows still accepted.
+cd uis/portal && npm test → 16 passed (loyalty, COP/USD conversion, ticket rollup, stamp-card balance, env switch, fixture fallback)
+cd uis/portal && npm run build → Next.js 15.5.26 compiled; routes / , /points , /points/[customerId] , /ops/sales
+npm start → :3000
+Browser: unknown email → not-found alert; ana.morales@guest.brasaland.example → balance 23, Silver, history, rewards
+/ops/sales → chain COP $476,340,000 and chain USD $119,085.00; Florida filter → 6 Florida rows, Colombia hidden
+Narrow viewport still shows the sales heading; console clear
+```
+
+Technology central API remains **incomplete** while menus/sales/customers/suppliers are `missing` on `services/api/app.py`. That sentence describes the portal run before the merge. After `origin/main` (`7b0a125`) those nouns, `POST /knowledge/query`, and `GET /realtime/ops-alerts/stream` are mounted with the portal.
+
 ## Latest central API nouns (`cursor/central-api-nouns-5989`)
 
 Department served: **Technology** (Nicolás Park — locations, menus, sales, customers, suppliers on one server) + **Operations** (Felipe — per-location COP/USD tickets and a no-sales alert list) + **Procurement** (Lucía — ~20 suppliers and price history) + **Marketing** (Camila — CRM with a Brasa Points stamp-card balance) + **Executive** (Mariana — chain totals in COP and USD) + **Training** (Jake — same menu in all 14 kitchens).
@@ -435,6 +457,19 @@ path_count=43
 NO_SALES_MONITOR=0 python -m pytest -q → 127 passed
 cd uis/backoffice && npm run build → tsc -b && vite build green
 node --experimental-strip-types --test uis/backoffice/tests/noSalesAlerts.test.ts → 8 passed
+```
+
+## Latest merge of main into the Next.js portal (`cursor/nextjs-brasaland-portal`)
+
+Department served: **Marketing** (Camila Ospina — `/points` stays) + **Restaurant Operations** (Felipe Guerrero — `/ops/sales` stays beside the live no-sales alert) + **Technology** (Nicolás Park — seeded nouns, knowledge query, and realtime stream stay mounted).
+
+Merged `origin/main` (`7b0a125`) into this branch. The only content conflict was `memory-bank/Progress.md`. Root package files, `.gitignore`, and CI did not overlap. `uis/README.md` keeps website, backoffice (including the no-sales alert), portal, and `web/`.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+NO_SALES_MONITOR=0 python -m pytest -q → 127 passed
+cd uis/portal && npm ci && npm test → 16 passed
+cd uis/portal && npm run build → Next.js 15.5.26; routes / , /points , /points/[customerId] , /ops/sales
 ```
 
 ## How to update this file
