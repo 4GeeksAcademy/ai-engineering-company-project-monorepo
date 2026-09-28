@@ -30,6 +30,7 @@ const createEmptyArticleForm = (): NewInventoryArticle => ({
   nombre: '',
   categoria: inventoryCategories[0],
   unidad_medida: inventoryUnits[0],
+  punto_reorden: '',
 })
 
 function localDateTimeValue() {
@@ -61,6 +62,10 @@ function formatDate(value: string) {
 }
 
 function InventoryManager() {
+  const [articleReorderStatus, setArticleReorderStatus] = useState<{
+    queryKey: string
+    flags: Record<string, boolean>
+  } | null>(null)
   const [articles, setArticles] = useState<InventoryArticle[]>([])
   const [locations, setLocations] = useState<InventoryLocation[]>([])
   const [movements, setMovements] = useState<InventoryMovement[]>([])
@@ -78,6 +83,8 @@ function InventoryManager() {
   const [loadingStock, setLoadingStock] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+
+  const reorderQueryKey = `${stockLocal}:${articles.map((article) => article.id).join(',')}`
 
   useEffect(() => {
     let active = true
@@ -107,6 +114,30 @@ function InventoryManager() {
     }
   }, [])
 
+  useEffect(() => {
+    let active = true
+    if (!stockLocal || articles.length === 0) return () => { active = false }
+
+    void Promise.all(articles.map(async (article) => {
+      const result = await getStock(article.id, stockLocal)
+      return [article.id, result.bajo_punto_reorden] as const
+    }))
+      .then((results) => {
+        if (!active) return
+        setArticleReorderStatus({
+          queryKey: reorderQueryKey,
+          flags: Object.fromEntries(results),
+        })
+      })
+      .catch((requestError: unknown) => {
+        if (active) setError(errorMessage(requestError, 'No se pudo consultar el stock de los artículos.'))
+      })
+
+    return () => {
+      active = false
+    }
+  }, [articles, reorderQueryKey, stockLocal])
+
   const reloadInventory = async () => {
     const [articleData, movementData] = await Promise.all([getArticles(), getMovements()])
     setArticles(articleData)
@@ -127,6 +158,7 @@ function InventoryManager() {
       const article = await createArticle({
         ...articleForm,
         nombre: articleForm.nombre.trim(),
+        punto_reorden: articleForm.punto_reorden,
       })
       setArticleForm(createEmptyArticleForm())
       setSelectedArticleId(article.id)
@@ -178,6 +210,7 @@ function InventoryManager() {
       }
       await createMovement(payload)
       setMovementForm((current) => ({ ...current, cantidad: '', motivo: '' }))
+      setArticleReorderStatus(null)
       await reloadInventory()
       if (stock && stock.articulo_id === payload.articulo_id && stock.local === payload.local) {
         setStock(await getStock(payload.articulo_id, payload.local))
@@ -270,6 +303,20 @@ function InventoryManager() {
                   ))}
                 </select>
               </label>
+              <label className="field">
+                <span>Punto de reorden</span>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={articleForm.punto_reorden}
+                  onChange={(event) => setArticleForm({
+                    ...articleForm,
+                    punto_reorden: event.target.value,
+                  })}
+                />
+              </label>
               <button className="primary-button" type="submit" disabled={savingArticle}>
                 {savingArticle ? 'Guardando...' : 'Registrar artículo'} <span>→</span>
               </button>
@@ -322,7 +369,13 @@ function InventoryManager() {
                   >
                     <span className="inventory-article-copy">
                       <strong>{article.nombre}</strong>
-                      <span>{article.categoria}</span>
+                      {articleReorderStatus?.queryKey === reorderQueryKey
+                        && articleReorderStatus.flags[article.id] && (
+                        <span className="badge badge-media">Bajo punto de reorden</span>
+                      )}
+                      <span>
+                        {article.categoria} · Punto de reorden: {article.punto_reorden}
+                      </span>
                     </span>
                     <span className="inventory-unit">{article.unidad_medida}</span>
                   </button>
@@ -496,6 +549,11 @@ function InventoryManager() {
                 <span className="inventory-stock-article">
                   {articles.find((article) => article.id === stock.articulo_id)?.nombre ?? stock.articulo_id}
                 </span>
+                {stock.bajo_punto_reorden && (
+                  <p className="badge badge-media" role="status">
+                    Por debajo del punto de reorden ({stock.punto_reorden})
+                  </p>
+                )}
               </div>
             )}
           </section>
