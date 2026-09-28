@@ -6,7 +6,7 @@ counting error).
 
 Daily procedure:
 1. At the close of each shift, the kitchen lead weighs and logs waste by
-   category in the operations app.
+   category on the shift waste log.
 2. Any waste over 2 kg of meat protein in a single shift requires a
    mandatory explanatory note.
 3. Unexplained shrinkage above 3% of an ingredient's weekly inventory

@@ -77,7 +77,7 @@ The same process (`uvicorn api.app:app`) serves Brasaland’s central API. Menus
 | Customers | `GET /customers` — CRM rows with `brasa_points_balance` (physical stamp card) |
 | Suppliers | `GET /suppliers` — about 20 suppliers, Colombia and Florida, price history |
 
-Open `http://127.0.0.1:8000/docs` after the server starts. How to call them and how to test: [`docs/central-api.md`](./docs/central-api.md).
+Open `http://127.0.0.1:8000/docs` after the server starts. How to call them and how to test: [`docs/central-api.md`](./docs/central-api.md). The same app also mounts `POST /knowledge/query` ([`docs/knowledge-rag.md`](./docs/knowledge-rag.md)).
 
 ```bash
 python -m pytest tests/test_central_api_domains.py -q

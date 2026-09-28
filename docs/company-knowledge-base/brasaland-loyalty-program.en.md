@@ -14,14 +14,15 @@ Points can be redeemed starting at 15 accumulated points, in increments of
 5. Every 5 points redeemed equal 20,000 COP (20 USD) of discount on the
 bill. Points cannot be combined with other active monthly promotions.
 
-The program is available both on physical stamp cards (being phased out)
-and in the digital app. A customer can transfer their points from a
-physical card to the app only once, by presenting the completed physical
-card at any location.
+The programme runs on physical stamp cards. About 60% of customers do not
+use the cards, and the cards do not produce a customer database. A digital
+app is not available yet. Points stay on the customer's own card and cannot
+be moved onto another person's card.
 
 Frequently asked customer questions:
-- "Can points be used on delivery orders?" Yes, they apply the same way as
-  in-store, as long as the order is placed through the app.
+- "Can points be used on delivery orders?" Delivery ordering is not
+  available yet. Redeem points in the restaurant with the physical stamp
+  card.
 - "Can I share my account with a family member?" No, every Brasa Points
   account is individual and non-transferable between people.
 - "What happens if I move to another country?" Points are valid at any

@@ -15,7 +15,7 @@ Worked on `feature/error-handling-audit` in the existing company monorepo (not a
 | AI / agent | `agent.py` | HTTP had no timeout; LLM client unbounded | 10s inventory HTTP timeout; 30s Groq client timeout; existing missing-key and API-down exits kept |
 | Automation | `services/tasks.py` | Retries + DLQ already present | Left as-is (max_retries=3, exponential backoff, SQLite DLQ) |
 | Reporting app | `services/reporting/main.py` | Import-time Supabase crash; enqueue errors uncaught | Lazy client → 503; Redis enqueue → 503; invalid `last_run.json` → 500 |
-| Knowledge | `scripts/services/routers/knowledge.py` | 500 body included exception text | Log server-side; generic 503 on `ExternalServiceError`; LLM/Qdrant via `call_external` |
+| Knowledge | `services/knowledge/routes.py` (`POST /knowledge/query` on the central app) | Older copy lived at `scripts/services/routers/knowledge.py` and was not mounted | Blank question 400; Qdrant/OpenAI failures 503 via `ExternalServiceError`; default path is local embeddings, no key |
 | Secrets in errors | HTTP envelope, Celery DLQ, `last_run.json` | Connection strings, keys, and `/Users/` paths could appear in JSON | `services/safe_errors.py` redacts client text; third-party failures map to `{service} is unavailable` |
 | Browser / CLI logs | ErrorBoundary `console.error`, inventory skip log, agent prints | Stack traces, CSV rows, filesystem paths, API base URL | Generic log lines only; no `componentStack`, row dumps, or host paths |
 | Scripts | `scripts/analyze.py`, `scripts/nightly_export.py` | CSV/file I/O had no STDERR + `sys.exit(1)` path | Missing/empty/malformed input checked first; I/O and parse errors print to STDERR and exit 1 |

@@ -1,3 +1,6 @@
+// Deprecated screen. It is not imported by uis/website or uis/backoffice.
+// Ask Brasaland standards via POST /knowledge/query on uvicorn api.app:app
+// (services/knowledge/routes.py). See docs/knowledge-rag.md.
 import React, { useState } from 'react';
 
 const SUPPORT =

@@ -7,7 +7,7 @@ Each subfolder inside `services/` must correspond to **one specific service** (f
 - **Main purpose**: to centralize all the backend logic, APIs, and queue consumers that support the company's use cases.
 - **Recommendation**: document in this file (or in sub-READMEs) the services you add, their objective, the technology used, and how to run them.
 
-The central FastAPI app is `services/api/app.py` (`uvicorn api.app:app`). It mounts locations, menus, sales, customers, suppliers, inventory, users, and reporting. Run notes: [`services/api/README.md`](./api/README.md) and [`docs/central-api.md`](../docs/central-api.md).
+The central FastAPI app is `services/api/app.py` (`uvicorn api.app:app`). It mounts locations, menus, sales, customers, suppliers, inventory, users, reporting, and knowledge (`POST /knowledge/query`). Run notes: [`services/api/README.md`](./api/README.md), [`docs/central-api.md`](../docs/central-api.md), and [`docs/knowledge-rag.md`](../docs/knowledge-rag.md).
 
 ## Celery (Message Queues and Async Tasks)
 

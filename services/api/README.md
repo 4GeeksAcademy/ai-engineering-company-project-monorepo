@@ -88,11 +88,27 @@ agent  | We have Tomatoes, Mozzarella... |              | 2026-...
 
 The root-level `api/` package is a compatibility shim that re-exports this service's FastAPI app so `uvicorn api.app:app` works from the repo root.
 
+## Knowledge query
+
+`POST /knowledge/query` answers from `docs/company-knowledge-base/` and returns the cited chunks. The router is `services/knowledge/routes.py`. Design and env vars: [`docs/knowledge-rag.md`](../../docs/knowledge-rag.md).
+
+```bash
+curl -sS -X POST http://127.0.0.1:8000/knowledge/query \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What allergens are in the House Sauce?"}'
+```
+
+No API key is required. The default path uses local embeddings. `BRASALAND_RAG_BACKEND=qdrant` and `BRASALAND_RAG_LLM=openai` turn on the vector store and chat model.
+
 ## Alternative run command
+
+`services/api/main.py` is deprecated (it used to import a missing knowledge router). It now starts the same central app:
 
 ```bash
 python services/api/main.py
 ```
+
+Prefer `uvicorn api.app:app`.
 
 ## Inventory endpoints
 

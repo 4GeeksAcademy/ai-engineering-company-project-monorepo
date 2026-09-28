@@ -13,14 +13,14 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 
 | `CONTEXT.md` need | Status in monorepo |
 | --- | --- |
-| Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
+| Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
 | Technology: telemetry + pipeline to dashboards | **Partial** — Part 2 weekly location cost/waste ETL + Phase one Prefect stage subflows + Phase two isolated KPI transform unit tests + Phase three CLI (`python data/pipelines/pipeline.py --offline`) + Phase four backoffice Monday weekly report (`/reporting/weekly-performance`, stakeholder copy); engineering `GET /telemetry/report` untouched |
 | Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; no sales UI; no live no-sales stream; Monday weekly cost/waste report still separate |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; digital wallet not built; `uis/website/` corporate home (`/`) live |
 | People: HR portal / KPIs by country | **Not done** |
-| Training: recipe catalogue, push to 14 locations | **Not done** — knowledge docs under `docs/company-knowledge-base/` are source material only |
-| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; no NL assistant change |
+| Training: recipe catalogue, push to 14 locations | **Partial** — `POST /knowledge/query` searches the four English standards (allergens, waste, ordering, Brasa Points) and returns cited chunks. Not a full recipe catalogue and not a push to all 14 kitchens |
+| Executive: sales USD+COP dashboard, NL assistant, Monday 07:00 report | **Partial** — seeded `GET /sales/overview` chain totals in COP and USD; Monday weekly ops & finance report still the staff UI; standards questions can go to `POST /knowledge/query`; a sales NL assistant remains open |
 
 ## What already runs (engineering)
 
@@ -335,6 +335,59 @@ GET /suppliers/overview → total_suppliers=20, colombia_count=10, florida_count
 ```
 
 Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**. That does not make POS integration, telemetry, or a digital loyalty wallet complete.
+
+## Latest knowledge RAG (`cursor/knowledge-rag-query-34a7`)
+
+Department served: **Training** (Jake Morrison — searchable standards) + **Technology** (Nicolás Park — one route on the central API) + **Executive** (Mariana can ask a standards question; this is not the chain-sales assistant).
+
+Kept `data/process/rag.py` + `data/pipelines/rag.py` (collection `brasaland_kb`, allergen and COP/USD rules). Retired `scripts/rag.py` (it searched `company_knowledge_base`) by making it delegate here. `services/api/main.py` no longer imports a missing router; it starts the same central app. `POST /knowledge/query` is `services/knowledge/routes.py`, included from `services/api/app.py`.
+
+Default path needs no API key: local hashed embeddings and an extractive answer with cited chunks. `BRASALAND_RAG_BACKEND=qdrant` and `BRASALAND_RAG_LLM=openai` enable the vector store and chat model. Loyalty copy now matches `CONTEXT.md` (physical stamp cards; digital app not available yet).
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+GET http://127.0.0.1:8000/docs → 200
+locations=present
+menus=missing
+sales=missing
+customers=missing
+suppliers=missing
+inventory=present
+knowledge=present
+path_count=26
+/knowledge/query in OpenAPI → True
+POST /knowledge/query House Sauce → 200, soy + sulfites, source brasaland-menu-allergens.en.md
+POST unrelated question → not enough information, sources=[]
+python data/eval/eval_knowledge_qa.py → n=28 retrieval_hit_rate=1.000 answer_pass_rate=1.000
+python -m pytest tests/test_knowledge_query.py -q → 14 passed
+```
+
+Skill **passed** (criteria 1–4 + 6). At the time of that run, Technology’s menus/sales/customers/suppliers were still `missing`. Those nouns are mounted together with `/knowledge/query` after the merge from `origin/main` (`#89`).
+
+## Latest merge of #89 into knowledge query (`cursor/knowledge-rag-query-34a7`)
+
+Department served: **Technology** (Nicolás Park — menus, sales, customers, suppliers, and `POST /knowledge/query` on one server) + **Training** (Jake Morrison — searchable standards stay mounted).
+
+Merged `origin/main` (`5751231`, PR #89) into this branch. `services/api/app.py` includes `menus`, `sales`, `customers`, `suppliers`, and `services.knowledge.routes`. Both Progress entries above are kept.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+GET http://127.0.0.1:8000/docs → 200
+locations=present
+menus=present
+sales=present
+customers=present
+suppliers=present
+inventory=present
+knowledge=present
+path_count=40
+/menus /sales /customers /suppliers GET present
+/knowledge/query POST present
+python -m pytest tests/test_knowledge_query.py tests/test_central_api_domains.py -q → 21 passed
+python -m pytest -q → 110 passed
+```
+
+Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**, and `/knowledge/query` is present. That does not make POS integration, telemetry, or a digital loyalty wallet complete.
 
 ## How to update this file
 
