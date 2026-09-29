@@ -12,11 +12,14 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "python-multipart>=0.0.9",
     "tinydb>=4.8",
+    "python-jose[cryptography]>=3.3",
+    "bcrypt>=4.1",
     "incidents-analyzer",
 ]
 
 [project.scripts]
 seed = "seed:main"
+create-user = "auth.cli:main"
 
 [tool.uv.sources]
 incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = true }
@@ -25,4 +28,4 @@ incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = tr
 py-modules = ["main", "seed"]
 
 [tool.setuptools.packages.find]
-include = ["core*", "incidents*", "suppliers*"]
+include = ["auth*", "core*", "incidents*", "suppliers*"]

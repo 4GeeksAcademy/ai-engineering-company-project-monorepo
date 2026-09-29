@@ -1,2 +1,5 @@
 # TinyDB runtime storage (seeded on startup, not source)
 suppliers/db.json
+
+# Internal users store (password hashes, created at runtime)
+auth/db.json

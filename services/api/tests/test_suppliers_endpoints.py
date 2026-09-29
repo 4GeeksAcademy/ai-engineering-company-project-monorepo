@@ -23,11 +23,11 @@ NEW = {
 
 
 @pytest.fixture()
-def client(tmp_path, monkeypatch) -> TestClient:
+def client(tmp_path, monkeypatch, admin_headers) -> TestClient:
     database = TinyDB(tmp_path / "db.json")
     seed_database(database)
     monkeypatch.setattr(service, "_db", database)
-    yield TestClient(app)
+    yield TestClient(app, headers=admin_headers)
     database.close()
 
 
