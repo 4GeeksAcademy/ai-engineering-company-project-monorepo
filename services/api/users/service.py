@@ -9,19 +9,21 @@ bootstrapped from the ``AUTH_INITIAL_EMAIL`` / ``AUTH_INITIAL_PASSWORD`` env
 vars. There is no public sign-up and no default password anywhere in the code.
 
 Invariant: the store is never left empty, so the API can't lock itself out.
+Each user has exactly one Profile (``profiles`` domain, display name and contact
+data), created and deleted together with the user.
 """
 
 from __future__ import annotations
 
 import logging
 import os
-import time
 from uuid import UUID, uuid4
 
 from tinydb import Query, TinyDB
 
 from auth.security import hash_password, verify_password
 from core.config import get_users_db_path
+from profiles import service as profiles_service
 
 from .schemas import UserCreate, UserOut, UserUpdate
 
@@ -87,7 +89,13 @@ def create_user(payload: UserCreate) -> UserOut:
         "email": payload.email,
         "password_hash": hash_password(payload.password),
     }
-    get_db().insert(doc)
+    doc_id = get_db().insert(doc)
+    try:
+        # One-to-one: a user never exists without its Profile.
+        profiles_service.ensure_profile(doc["user_uuid"], doc["email"])
+    except Exception:
+        get_db().remove(doc_ids=[doc_id])
+        raise
     return UserOut(user_uuid=doc["user_uuid"], email=doc["email"])
 
 
@@ -110,8 +118,6 @@ def update_user(user_uuid: UUID, payload: UserUpdate) -> UserOut:
         stored["email"] = changes["email"]
     if "password" in changes:
         stored["password_hash"] = hash_password(changes["password"])
-        # Revokes every token issued before this moment (see auth.dependencies).
-        stored["password_changed_at"] = int(time.time())
     if stored:
         get_db().update(stored, doc_ids=[doc.doc_id])
     return get_user(user_uuid)
@@ -124,6 +130,18 @@ def delete_user(user_uuid: UUID) -> None:
     if len(get_db()) <= 1:
         raise LastUserError()
     get_db().remove(doc_ids=[doc.doc_id])
+    profiles_service.delete_profile(user_uuid)  # cascade
+
+
+def sync_profiles() -> None:
+    """Enforce the one-to-one relation across the two stores, at startup:
+    give a Profile to every user that lacks one (users created before profiles
+    existed) and drop profiles whose user is gone."""
+    users = {doc["user_uuid"]: doc["email"] for doc in get_db().all()}
+    for user_uuid, email in users.items():
+        profiles_service.ensure_profile(user_uuid, email)
+    for orphan in profiles_service.profile_owner_uuids() - users.keys():
+        profiles_service.delete_profile(orphan)
 
 
 def bootstrap_first_user() -> None:

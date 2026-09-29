@@ -6,6 +6,7 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 
 - **`incidents/`** — Support ticket CSV analysis ("Analizador de Incidencias"). Validates and computes metrics on Nexova support-incident exports, per the rules in [scripts/CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md). Reuses the same [`incidents_analyzer`](../../packages/incidents_analyzer) package as the CLI script in `scripts/analyze.py`, so both run identical validation/metrics logic.
 - **`users/`** — Internal accounts (email + password, bcrypt-hashed) with full CRUD, stored in TinyDB.
+- **`profiles/`** — One `Profile` per user (strictly one-to-one, same key `user_uuid`): the **display name and the contact data** (`contact_email`, `phone`) live here, not in `User`. Stored in TinyDB (`profiles/db.json`, gitignored).
 - **`auth/`** — Login (OAuth2 password flow + JWT carrying `user_uuid`) and the `get_current_user` dependency used to protect every other domain.
 - **`suppliers/`** — Supplier directory ("Directorio de Proveedores", Patricia Solís / Nexova). Replaces the HR spreadsheet with a [TinyDB](https://tinydb.readthedocs.io/)-backed store, seeded on startup with the 15 suppliers from [`suppliers/seed_data.py`](./suppliers/seed_data.py) (spec: [CONTEXT-suppliers.md](./suppliers/CONTEXT-suppliers.md)). Pydantic (`suppliers/schemas.py`) rejects with `422` any missing `country`, a `status` outside `active`/`suspended`, empty `categories`, or a `currency` that doesn't match the country (Spain→EUR, USA→USD). Suspending (not deleting) is the preferred way to retire a supplier.
 
@@ -14,18 +15,31 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 Every route except `POST /auth/login`, `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`).
 
 - **Users are just credentials**: `email` + `password`, stored in their own TinyDB file, `users/db.json` (gitignored). Each document is `{user_uuid, email, password_hash}` — the password is hashed with bcrypt before it is stored (max 72 bytes) and is never returned, logged or echoed back, not even in `422` responses. Emails are case-insensitive (stored lower-cased) and unique.
-- **Login** — OAuth2 password flow: `POST /auth/login` (`application/x-www-form-urlencoded`) with `username` = the **email** and `password` returns `{"access_token": "...", "token_type": "bearer"}`. Unknown email and wrong password give the same `401`. Also served at `/api/auth/*` for the backoffice proxy.
-- **Token** — JWT signed with HS256 (`python-jose`). Claims: `user_uuid` (the id of the user document in TinyDB; `sub` repeats it), `iat`, `exp` (30 min by default). Nothing else: whether the user still exists is checked on every request, so deleting an account kills its tokens at once, and changing the email keeps the session. Changing a password revokes every token issued before the change.
+- **Login** — `POST /auth/login` (also at `/api/auth/login` for the backoffice proxy), OAuth2 password flow: `application/x-www-form-urlencoded` with `username` = the **email** and `password`. The credentials are checked against the bcrypt hash in TinyDB; an unknown email, a wrong password and a malformed email all give the same `401 {"detail": "Incorrect email or password"}` (and take about the same time). On success:
+
+  ```json
+  {"access_token": "<jwt>", "token_type": "bearer", "expires_in": 1800}
+  ```
+
+- **Token** — JWT signed with HS256 by `python-jose` using `SECRET_KEY`. Claims are the minimum: `user_id` (the `user_uuid` of the user document in TinyDB) and `exp`. Nothing else: no email, no password. The user is re-read on every request, so deleting an account kills its tokens at once, and changing the email keeps the session. Lifetime: `ACCESS_TOKEN_EXPIRE_MINUTES` (default 30, must be a positive integer); `expires_in` is that value in seconds.
 - **No roles**: any valid session can use the suppliers and incidents APIs and list/read users. Changing or deleting a user is restricted to the account owner (`403` otherwise), so nobody can reset another person's password.
 
-Protection is applied on the routers themselves (`dependencies=[Depends(get_current_user)]`), so a route added to `suppliers/`, `incidents/` or `users/` is private by default, and `tests/test_auth.py` fails if any documented operation is left open.
+Protection is applied on the routers themselves (`dependencies=[Depends(get_current_user)]`), so a route added to `suppliers/`, `incidents/`, `users/` or `profiles/` is private by default, and `tests/test_auth.py` fails if any documented operation is left open.
+
+### Profiles (one-to-one with users)
+
+`User` is only credentials; everything a person sees or that is used to reach them is in the `Profile`: `display_name` (required, 1-80 chars), `contact_email` (optional, may differ from the login email) and `phone` (optional).
+
+- **The relation is enforced by construction**: creating a user creates its profile (default `display_name` = the local part of the email, so `ana@x.com` → `ana`) and deleting a user deletes it. There is no `POST`/`DELETE` on `/profiles`, and the profile is keyed on `user_uuid`, so a second one cannot exist. If the profile insert fails, the user creation is rolled back.
+- **Existing databases are migrated on startup**: `sync_profiles()` gives a profile to every user that lacks one and drops profiles whose user is gone. A missing profile is also recreated when its owner reads `/profiles/me` or edits it.
+- Everyone with a session can read profiles; only the owner can edit theirs (`403` otherwise). Editing a profile never touches the login credentials.
 
 ### Configuration
 
 | Env var | Purpose |
 |---|---|
 | `SECRET_KEY` | JWT signing key, at least 32 characters (`openssl rand -hex 32`). **Required in production.** If unset, a random per-process key is used (sessions die on restart, and it breaks with several workers). |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime (default `30`). |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime in minutes (default `30`). An invalid value (`0`, negative, not an integer) stops the API at startup. |
 | `AUTH_INITIAL_EMAIL` / `AUTH_INITIAL_PASSWORD` | Creates the first user on startup, only if the user store is empty. |
 
 Without them the API starts with no users; create one with `uv run create-user --email <email>` (prompts for the password).
@@ -38,13 +52,17 @@ All endpoints below need a session (see above) except `/auth/login` and `/health
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/auth/login` | Public. Exchange the email (form field `username`) and password for a bearer token. `401` on bad credentials. |
+| `POST` | `/auth/login` | Public. Exchange the email (form field `username`) and password for a bearer token (`access_token`, `token_type`, `expires_in`). `401` on bad credentials. |
 | `GET` | `/auth/me` | The user of the current session (`user_uuid`, `email`). |
 | `GET` | `/users` | List users (`user_uuid` and `email` only). |
 | `POST` | `/users` | Create a user (`{"email", "password"}`; password 8-72 bytes). `409` if the email exists, `422` on invalid data. |
 | `GET` | `/users/{user_uuid}` | One user. `404` if missing. |
 | `PATCH` | `/users/{user_uuid}` | Change your own `email` and/or `password`; `current_password` is required for either (`400` if wrong, `409` if the email is taken). `403` if it is not your account. |
-| `DELETE` | `/users/{user_uuid}` | Delete your own account (`204`). `403` if it is not yours; `409` if it is the last user. |
+| `DELETE` | `/users/{user_uuid}` | Delete your own account and its profile (`204`). `403` if it is not yours; `409` if it is the last user. |
+| `GET` | `/profiles` | List all profiles (`user_uuid`, `display_name`, `contact_email`, `phone`). |
+| `GET` | `/profiles/me` | Your own profile. |
+| `GET` | `/profiles/{user_uuid}` | One user's profile. `404` if missing. |
+| `PATCH` | `/profiles/{user_uuid}` | Partial update of your own `display_name`, `contact_email`, `phone` (an explicit `null` clears the two optional ones). `403` if it is not your profile, `422` on invalid data. |
 | `POST` | `/api/incidents/analyze` | Upload a CSV (`multipart/form-data`, field name `file`), get back the analysis as JSON. `400` if the file isn't `.csv`, `422` if required columns are missing or the file has no data rows. |
 | `GET` | `/api/incidents/results/export` | Download the most recent analysis as `results.csv` (one metric per row). `404` if no analysis has run yet in this process. |
 | `GET` | `/suppliers` | List all suppliers. |
@@ -86,5 +104,5 @@ uv run seed --reset      # wipe and reload the 15 initial suppliers
 
 - The "last analysis" used by the export endpoint is kept in an in-memory, module-level variable — it is lost on restart and is not shared across multiple worker processes. Acceptable for this feature's current scope; documented rather than hidden.
 - The suppliers directory is stored at `suppliers/db.json`, a TinyDB flat file that's regenerated (and reseeded) whenever it's missing — it's gitignored, not source. A second worker process would not see writes made by another one; fine for the current single-process scope, and the reason the project brief already earmarks a move to Postgres once the ORM is ready.
-- Login has no rate limiting or lockout yet, and tokens are only revocable by changing the user's password or deleting the account (there is no refresh or logout endpoint; a token issued in the same second as a password change is not revoked). Put the API behind a reverse proxy with rate limits until that is added.
+- Login has no rate limiting or lockout yet, and a token stays valid until it expires or its account is deleted: changing a password does **not** revoke the tokens already issued (they carry no `iat`), and there is no refresh or logout endpoint, so keep `ACCESS_TOKEN_EXPIRE_MINUTES` short. Put the API behind a reverse proxy with rate limits until that is added.
 - `uis/backoffice` does not send a token yet, so its calls to `/api/suppliers` and `/api/incidents` now get `401` until a login screen is added.

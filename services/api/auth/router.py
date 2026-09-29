@@ -1,5 +1,7 @@
-"""Routes for the auth domain: login (OAuth2 password flow, the form's ``username`` field carries the email) and the current
-session's user. User management lives in the ``users`` domain.
+"""Routes for the auth domain: login and the current session's user.
+
+``POST /login`` follows the OAuth2 password flow: the form's ``username`` field
+carries the email. User management lives in the ``users`` domain.
 
 Mounted twice in ``main.py``: at ``/auth`` (documented) and at ``/api/auth``
 (what the backoffice calls through the Vite proxy).
@@ -12,6 +14,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from core.config import get_access_token_expire_minutes
 from users.schemas import UserOut
 
 from . import service
@@ -32,7 +35,10 @@ async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return Token(access_token=create_access_token(user.user_uuid))
+    return Token(
+        access_token=create_access_token(user.user_uuid),
+        expires_in=get_access_token_expire_minutes() * 60,
+    )
 
 
 @router.get("/me", response_model=UserOut)

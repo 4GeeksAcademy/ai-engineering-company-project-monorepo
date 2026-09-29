@@ -41,6 +41,11 @@ def get_users_db_path() -> Path:
     return Path(__file__).resolve().parent.parent / "users" / "db.json"
 
 
+def get_profiles_db_path() -> Path:
+    """TinyDB file for the user profiles (gitignored runtime state)."""
+    return Path(__file__).resolve().parent.parent / "profiles" / "db.json"
+
+
 @lru_cache(maxsize=1)
 def get_jwt_secret() -> str:
     """Key used to sign the access tokens, from the SECRET_KEY env var.
@@ -65,7 +70,10 @@ def get_access_token_expire_minutes() -> int:
     raw = os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES")
     if not raw:
         return DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES
-    minutes = int(raw)
+    try:
+        minutes = int(raw)
+    except ValueError:
+        minutes = 0
     if minutes <= 0:
         raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES must be a positive integer")
     return minutes

@@ -35,7 +35,7 @@ incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = tr
 py-modules = ["main", "seed"]
 
 [tool.setuptools.packages.find]
-include = ["auth*", "core*", "incidents*", "suppliers*", "users*"]
+include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

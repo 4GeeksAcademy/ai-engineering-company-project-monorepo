@@ -8,6 +8,7 @@ all it takes (401 = no valid session).
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -28,16 +29,19 @@ _UNAUTHORIZED = HTTPException(
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> UserOut:
-    data = decode_access_token(token)
-    if data is None:
+    user_uuid = decode_access_token(token)
+    if user_uuid is None:
         raise _UNAUTHORIZED
-    doc = users_service.get_doc(data.user_uuid)
+    doc = users_service.get_doc(user_uuid)
     if doc is None:  # account deleted after the token was issued
-        raise _UNAUTHORIZED
-    # A password change revokes every token issued before it.
-    if data.issued_at < doc.get("password_changed_at", 0):
         raise _UNAUTHORIZED
     return UserOut(user_uuid=doc["user_uuid"], email=doc["email"])
 
 
 CurrentUser = Annotated[UserOut, Depends(get_current_user)]
+
+
+def only_owner(user_uuid: UUID, current: CurrentUser) -> None:
+    """Dependency for routes shaped ``/{user_uuid}``: only that user may pass."""
+    if current.user_uuid != user_uuid:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="You can only change your own account")

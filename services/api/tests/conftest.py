@@ -8,6 +8,7 @@ import pytest
 from tinydb import TinyDB
 
 from auth.security import create_access_token, hash_password
+from profiles import service as profiles_service
 from users import service as users_service
 
 PASSWORD = "correct-horse-battery"
@@ -25,6 +26,20 @@ def users_db(tmp_path, monkeypatch) -> TinyDB:
     for email, user_uuid in UUIDS.items():
         database.insert({"user_uuid": str(user_uuid), "email": email, "password_hash": _PASSWORD_HASH})
     monkeypatch.setattr(users_service, "_db", database)
+    yield database
+    database.close()
+
+
+@pytest.fixture(autouse=True)
+def profiles_db(tmp_path, monkeypatch) -> TinyDB:
+    """One profile per seeded user, as the app has after startup (default name =
+    the local part of the email)."""
+    database = TinyDB(tmp_path / "profiles-db.json")
+    for email, user_uuid in UUIDS.items():
+        database.insert(
+            {"user_uuid": str(user_uuid), "display_name": email.split("@")[0], "contact_email": None, "phone": None}
+        )
+    monkeypatch.setattr(profiles_service, "_db", database)
     yield database
     database.close()
 

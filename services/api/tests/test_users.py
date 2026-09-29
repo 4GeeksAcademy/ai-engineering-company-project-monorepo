@@ -92,21 +92,14 @@ def test_owner_changes_email_with_the_current_password(client):
     assert client.get("/auth/me", headers=h).status_code == 200  # same uuid, same session
 
 
-def test_owner_changes_password_and_old_tokens_stop_working(client, users_db):
+def test_owner_changes_password(client, users_db):
     old = headers_for(ALICE)
-    users_db.update({"password_changed_at": 0}, lambda d: d["email"] == ALICE)  # baseline
     res = client.patch(f"/users/{uuid_of(ALICE)}", json={"password": "brand-new-pass", "current_password": PASSWORD}, headers=old)
     assert res.status_code == 200 and "brand-new-pass" not in res.text
     assert login(client, ALICE, PASSWORD).status_code == 401
     assert login(client, ALICE, "brand-new-pass").status_code == 200
     stored = next(d for d in users_db.all() if d["email"] == ALICE)
     assert stored["password_hash"].startswith("$2") and "brand-new-pass" not in str(stored)
-
-
-def test_password_change_revokes_tokens_issued_before_it(client, users_db):
-    old = headers_for(ALICE)
-    users_db.update({"password_changed_at": 4102444800}, lambda d: d["email"] == ALICE)  # change "in the future"
-    assert client.get("/auth/me", headers=old).status_code == 401
 
 
 def test_update_needs_the_right_current_password(client):

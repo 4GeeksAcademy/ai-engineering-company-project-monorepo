@@ -8,12 +8,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
-from jose import jwt
+from jose import JWTError, jwt
 from tinydb import TinyDB
 
 from auth.security import create_access_token
 from conftest import ALICE, BOB, PASSWORD, headers_for, uuid_of
-from core.config import JWT_ALGORITHM, get_jwt_secret
+from core.config import JWT_ALGORITHM, get_access_token_expire_minutes, get_jwt_secret
 from main import app
 from seed import seed_database
 from suppliers import service as suppliers_service
@@ -50,14 +50,45 @@ def test_login_email_is_case_insensitive(client):
     assert login(client, "  ALICE@Example.com ").status_code == 200
 
 
-def test_the_jwt_carries_the_user_uuid_stored_in_tinydb(client, users_db):
-    token = login(client).json()["access_token"]
-    claims = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+def test_login_response_and_jwt_claims(client, users_db):
+    body = login(client).json()
+    assert set(body) == {"access_token", "token_type", "expires_in"}
+    assert body["token_type"] == "bearer" and body["expires_in"] == 30 * 60  # default lifetime
+
+    claims = jwt.decode(body["access_token"], get_jwt_secret(), algorithms=[JWT_ALGORITHM])
     stored = next(doc for doc in users_db.all() if doc["email"] == ALICE)
-    assert claims["user_uuid"] == stored["user_uuid"] == str(uuid_of(ALICE))
-    assert claims["sub"] == claims["user_uuid"]
-    assert set(claims) == {"sub", "user_uuid", "iat", "exp"}  # no email, no password, no hash
-    assert claims["exp"] - claims["iat"] == 30 * 60
+    assert set(claims) == {"user_id", "exp"}  # minimum claims: no email, no password, no hash
+    assert claims["user_id"] == stored["user_uuid"] == str(uuid_of(ALICE))
+    assert claims["exp"] == pytest.approx(datetime.now(timezone.utc).timestamp() + body["expires_in"], abs=5)
+
+
+def test_token_is_signed_with_hs256_and_the_secret_key(client):
+    token = login(client).json()["access_token"]
+    assert jwt.get_unverified_header(token)["alg"] == "HS256"
+    with pytest.raises(JWTError):
+        jwt.decode(token, "k" * 40, algorithms=[JWT_ALGORITHM])
+
+
+@pytest.mark.parametrize("minutes,seconds", [("1", 60), ("120", 7200)])
+def test_expiration_is_configurable(client, monkeypatch, minutes, seconds):
+    monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", minutes)
+    body = login(client).json()
+    claims = jwt.decode(body["access_token"], get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+    assert body["expires_in"] == seconds
+    assert claims["exp"] == pytest.approx(datetime.now(timezone.utc).timestamp() + seconds, abs=5)
+
+
+@pytest.mark.parametrize("bad", ["0", "-5", "abc", "1.5"])
+def test_invalid_expiration_setting_is_refused(monkeypatch, bad):
+    monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", bad)
+    with pytest.raises(RuntimeError):
+        get_access_token_expire_minutes()
+
+
+def test_an_expired_token_is_rejected_by_the_real_clock(client, monkeypatch):
+    monkeypatch.setattr("auth.security.get_access_token_expire_minutes", lambda: -1)
+    headers = {"Authorization": f"Bearer {create_access_token(uuid_of(ALICE))}"}
+    assert client.get("/suppliers", headers=headers).status_code == 401
 
 
 @pytest.mark.parametrize(
@@ -78,13 +109,12 @@ def _token(claims: dict, key: str | None = None, algorithm: str = JWT_ALGORITHM)
 
 
 def _valid_claims(**overrides):
-    now = datetime.now(timezone.utc)
-    user_uuid = str(uuid_of(ALICE))
-    return {"sub": user_uuid, "user_uuid": user_uuid, "iat": now, "exp": now + timedelta(minutes=5)} | overrides
+    return {"user_id": str(uuid_of(ALICE)), "exp": datetime.now(timezone.utc) + timedelta(minutes=5)} | overrides
 
 
-def _without(*names):
-    return {k: v for k, v in _valid_claims().items() if k not in names}
+def test_control_a_hand_made_valid_token_is_accepted(client):
+    """Guards the cases below: they must fail because of the one thing they break."""
+    assert client.get("/suppliers", headers=_token(_valid_claims())).status_code == 200
 
 
 @pytest.mark.parametrize(
@@ -96,16 +126,16 @@ def _without(*names):
         _token(_valid_claims(exp=datetime.now(timezone.utc) - timedelta(seconds=1))),
         _token(_valid_claims(), key="k" * 40),  # signed with another key
         _token(_valid_claims(), algorithm="HS512"),  # algorithm not allowed
-        _token(_without("exp")),  # never expires
-        _token(_without("iat")),
-        _token(_without("user_uuid")),
-        _token(_valid_claims(user_uuid=str(uuid_of(BOB)))),  # sub and user_uuid disagree
-        _token(_valid_claims(sub="1", user_uuid="1")),  # not a uuid
-        _token(_valid_claims(sub=ALICE, user_uuid=ALICE)),  # email instead of uuid
-        _token(_valid_claims(sub="0" * 32, user_uuid="0" * 32)),  # well-formed uuid, no such user
+        _token({"user_id": str(uuid_of(ALICE))}),  # never expires
+        _token({"exp": _valid_claims()["exp"]}),  # no user_id
+        _token({"sub": str(uuid_of(ALICE)), "user_uuid": str(uuid_of(ALICE)), "exp": _valid_claims()["exp"]}),  # old claim names
+        _token(_valid_claims(user_id=1)),  # not a string
+        _token(_valid_claims(user_id="1")),  # not a uuid
+        _token(_valid_claims(user_id=ALICE)),  # email instead of uuid
+        _token(_valid_claims(user_id="0" * 32)),  # well-formed uuid, no such user
     ],
-    ids=["missing", "garbage", "basic-scheme", "expired", "wrong-key", "wrong-alg", "no-exp", "no-iat",
-         "no-user-uuid", "mismatch", "int-id", "email-subject", "unknown-user"],
+    ids=["missing", "garbage", "basic-scheme", "expired", "wrong-key", "wrong-alg", "no-exp",
+         "no-user-id", "old-claim-names", "int-id", "not-a-uuid", "email-as-id", "unknown-user"],
 )
 def test_invalid_sessions_are_rejected_with_401(client, headers):
     response = client.get("/suppliers", headers=headers)
@@ -118,7 +148,7 @@ def test_unsigned_alg_none_token_is_rejected(client):
         return base64.urlsafe_b64encode(json.dumps(obj).encode()).rstrip(b"=").decode()
 
     uid = str(uuid_of(ALICE))
-    forged = f"{b64({'alg': 'none', 'typ': 'JWT'})}.{b64({'sub': uid, 'user_uuid': uid, 'iat': 1, 'exp': 4102444800})}."
+    forged = f"{b64({'alg': 'none', 'typ': 'JWT'})}.{b64({'user_id': uid, 'exp': 4102444800})}."
     assert client.get("/suppliers", headers={"Authorization": f"Bearer {forged}"}).status_code == 401
 
 
@@ -173,6 +203,8 @@ def test_sensitive_routes_answer_401_without_a_token(client):
         ("get", "/api/suppliers/1"), ("post", "/api/suppliers"), ("delete", "/api/suppliers/1"),
         ("post", "/api/incidents/analyze"), ("get", "/api/incidents/results/export"),
         ("get", "/auth/me"), ("get", "/api/auth/me"),
+        ("get", "/profiles"), ("get", "/profiles/me"), ("get", f"/profiles/{uid}"),
+        ("patch", f"/profiles/{uid}"), ("get", "/api/profiles"), ("patch", f"/api/profiles/{uid}"),
         ("get", "/users"), ("post", "/users"), ("get", f"/users/{uid}"), ("patch", f"/users/{uid}"),
         ("delete", f"/users/{uid}"), ("get", "/api/users"), ("post", "/api/users"),
     ]
