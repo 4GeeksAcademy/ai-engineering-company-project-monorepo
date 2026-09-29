@@ -36,9 +36,9 @@ def get_suppliers_db_path() -> Path:
     return Path(__file__).resolve().parent.parent / "suppliers" / "db.json"
 
 
-def get_auth_db_path() -> Path:
+def get_users_db_path() -> Path:
     """TinyDB file for the internal users (gitignored runtime state)."""
-    return Path(__file__).resolve().parent.parent / "auth" / "db.json"
+    return Path(__file__).resolve().parent.parent / "users" / "db.json"
 
 
 @lru_cache(maxsize=1)

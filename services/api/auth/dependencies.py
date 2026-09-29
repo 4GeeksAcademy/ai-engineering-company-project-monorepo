@@ -1,8 +1,8 @@
-"""FastAPI dependencies that enforce authentication and roles.
+"""FastAPI dependency that enforces authentication.
 
 ``get_current_user`` is attached at router level to every protected domain, so
-a new route there is private by default; ``require_role`` narrows a single
-route further (401 = no valid session, 403 = valid session, not allowed).
+a new route there is private by default. There are no roles: a valid session is
+all it takes (401 = no valid session).
 """
 
 from __future__ import annotations
@@ -12,11 +12,12 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from . import service
-from .schemas import Role, UserOut
+from users import service as users_service
+from users.schemas import UserOut
+
 from .security import decode_access_token
 
-# tokenUrl only feeds the "Authorize" button in /docs.
+# tokenUrl only feeds the "Authorize" button in /docs (its "username" box takes the email).
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 _UNAUTHORIZED = HTTPException(
@@ -27,24 +28,16 @@ _UNAUTHORIZED = HTTPException(
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> UserOut:
-    username = decode_access_token(token)
-    if username is None:
+    data = decode_access_token(token)
+    if data is None:
         raise _UNAUTHORIZED
-    user = service.get_user(username)
-    if user is None or user.get("disabled"):
+    doc = users_service.get_doc(data.user_uuid)
+    if doc is None:  # account deleted after the token was issued
         raise _UNAUTHORIZED
-    return UserOut(username=user["username"], role=user["role"], disabled=False)
+    # A password change revokes every token issued before it.
+    if data.issued_at < doc.get("password_changed_at", 0):
+        raise _UNAUTHORIZED
+    return UserOut(user_uuid=doc["user_uuid"], email=doc["email"])
 
 
 CurrentUser = Annotated[UserOut, Depends(get_current_user)]
-
-
-def require_role(*allowed: Role):
-    """Dependency factory: only users whose role is in ``allowed`` get through."""
-
-    async def checker(user: CurrentUser) -> UserOut:
-        if user.role not in allowed:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
-        return user
-
-    return checker

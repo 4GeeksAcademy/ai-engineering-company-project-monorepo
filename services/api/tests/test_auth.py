@@ -1,7 +1,9 @@
-"""Auth checks: login, token validation, roles, and that no sensitive route is public."""
+"""Auth checks: login, the JWT contents, token validation, and that no sensitive route is public."""
 
 from __future__ import annotations
 
+import base64
+import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -9,23 +11,12 @@ from fastapi.testclient import TestClient
 from jose import jwt
 from tinydb import TinyDB
 
-from auth import service as auth_service
 from auth.security import create_access_token
+from conftest import ALICE, BOB, PASSWORD, headers_for, uuid_of
 from core.config import JWT_ALGORITHM, get_jwt_secret
 from main import app
 from seed import seed_database
 from suppliers import service as suppliers_service
-
-from conftest import PASSWORD, headers_for
-
-NEW_SUPPLIER = {
-    "name": "Proveedor Auth",
-    "country": "Spain",
-    "categories": ["job_boards"],
-    "monthly_rate": 10,
-    "currency": "EUR",
-    "status": "active",
-}
 
 
 @pytest.fixture()
@@ -37,8 +28,8 @@ def client(tmp_path, monkeypatch) -> TestClient:
     database.close()
 
 
-def login(client, username="admin", password=PASSWORD, prefix=""):
-    return client.post(f"{prefix}/auth/login", data={"username": username, "password": password})
+def login(client, email=ALICE, password=PASSWORD, prefix=""):
+    return client.post(f"{prefix}/auth/login", data={"username": email, "password": password})
 
 
 # --- login -----------------------------------------------------------------
@@ -51,25 +42,32 @@ def test_login_returns_a_bearer_token_that_opens_me(client, prefix):
     body = response.json()
     assert body["token_type"] == "bearer"
     me = client.get(f"{prefix}/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
-    assert me.json() == {"username": "admin", "role": "admin", "disabled": False}
+    assert me.json() == {"user_uuid": str(uuid_of(ALICE)), "email": ALICE}
     assert "password" not in me.text
 
 
+def test_login_email_is_case_insensitive(client):
+    assert login(client, "  ALICE@Example.com ").status_code == 200
+
+
+def test_the_jwt_carries_the_user_uuid_stored_in_tinydb(client, users_db):
+    token = login(client).json()["access_token"]
+    claims = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+    stored = next(doc for doc in users_db.all() if doc["email"] == ALICE)
+    assert claims["user_uuid"] == stored["user_uuid"] == str(uuid_of(ALICE))
+    assert claims["sub"] == claims["user_uuid"]
+    assert set(claims) == {"sub", "user_uuid", "iat", "exp"}  # no email, no password, no hash
+    assert claims["exp"] - claims["iat"] == 30 * 60
+
+
 @pytest.mark.parametrize(
-    "username,password", [("admin", "wrong-password"), ("ghost", PASSWORD), ("admin", "x" * 100)]
+    "email,password", [(ALICE, "wrong-password"), ("ghost@example.com", PASSWORD), (ALICE, "x" * 100), ("not-an-email", PASSWORD)]
 )
-def test_login_failures_are_a_uniform_401(client, username, password):
-    response = login(client, username, password)
+def test_login_failures_are_a_uniform_401(client, email, password):
+    response = login(client, email, password)
     assert response.status_code == 401
-    assert response.json() == {"detail": "Incorrect username or password"}
+    assert response.json() == {"detail": "Incorrect email or password"}
     assert response.headers["www-authenticate"] == "Bearer"
-
-
-def test_disabled_user_cannot_log_in_or_use_an_existing_token(client, auth_db):
-    token_headers = headers_for("supervisor")
-    auth_db.update({"disabled": True}, lambda d: d["username"] == "supervisor")
-    assert login(client, "supervisor").status_code == 401
-    assert client.get("/suppliers", headers=token_headers).status_code == 401
 
 
 # --- token validation ------------------------------------------------------
@@ -81,7 +79,12 @@ def _token(claims: dict, key: str | None = None, algorithm: str = JWT_ALGORITHM)
 
 def _valid_claims(**overrides):
     now = datetime.now(timezone.utc)
-    return {"sub": "admin", "iat": now, "exp": now + timedelta(minutes=5)} | overrides
+    user_uuid = str(uuid_of(ALICE))
+    return {"sub": user_uuid, "user_uuid": user_uuid, "iat": now, "exp": now + timedelta(minutes=5)} | overrides
+
+
+def _without(*names):
+    return {k: v for k, v in _valid_claims().items() if k not in names}
 
 
 @pytest.mark.parametrize(
@@ -89,14 +92,20 @@ def _valid_claims(**overrides):
     [
         {},
         {"Authorization": "Bearer not-a-jwt"},
-        {"Authorization": "Basic YWRtaW46cGFzcw=="},
+        {"Authorization": "Basic YWxpY2U6cGFzcw=="},
         _token(_valid_claims(exp=datetime.now(timezone.utc) - timedelta(seconds=1))),
         _token(_valid_claims(), key="k" * 40),  # signed with another key
         _token(_valid_claims(), algorithm="HS512"),  # algorithm not allowed
-        _token({k: v for k, v in _valid_claims().items() if k != "exp"}),  # never expires
-        _token(_valid_claims(sub="ghost")),  # user no longer exists
+        _token(_without("exp")),  # never expires
+        _token(_without("iat")),
+        _token(_without("user_uuid")),
+        _token(_valid_claims(user_uuid=str(uuid_of(BOB)))),  # sub and user_uuid disagree
+        _token(_valid_claims(sub="1", user_uuid="1")),  # not a uuid
+        _token(_valid_claims(sub=ALICE, user_uuid=ALICE)),  # email instead of uuid
+        _token(_valid_claims(sub="0" * 32, user_uuid="0" * 32)),  # well-formed uuid, no such user
     ],
-    ids=["missing", "garbage", "basic-scheme", "expired", "wrong-key", "wrong-alg", "no-exp", "unknown-user"],
+    ids=["missing", "garbage", "basic-scheme", "expired", "wrong-key", "wrong-alg", "no-exp", "no-iat",
+         "no-user-uuid", "mismatch", "int-id", "email-subject", "unknown-user"],
 )
 def test_invalid_sessions_are_rejected_with_401(client, headers):
     response = client.get("/suppliers", headers=headers)
@@ -105,98 +114,25 @@ def test_invalid_sessions_are_rejected_with_401(client, headers):
 
 
 def test_unsigned_alg_none_token_is_rejected(client):
-    import base64, json
-
     def b64(obj):
         return base64.urlsafe_b64encode(json.dumps(obj).encode()).rstrip(b"=").decode()
 
-    forged = f"{b64({'alg': 'none', 'typ': 'JWT'})}.{b64({'sub': 'admin', 'exp': 4102444800})}."
+    uid = str(uuid_of(ALICE))
+    forged = f"{b64({'alg': 'none', 'typ': 'JWT'})}.{b64({'sub': uid, 'user_uuid': uid, 'iat': 1, 'exp': 4102444800})}."
     assert client.get("/suppliers", headers={"Authorization": f"Bearer {forged}"}).status_code == 401
 
 
-# --- roles -----------------------------------------------------------------
+def test_deleted_user_token_stops_working(client, users_db):
+    headers = headers_for(BOB)
+    assert client.get("/suppliers", headers=headers).status_code == 200
+    users_db.remove(lambda d: d["email"] == BOB)
+    assert client.get("/suppliers", headers=headers).status_code == 401
 
 
-@pytest.mark.parametrize("role", ["consultant", "supervisor", "admin"])
-def test_any_role_can_read(client, role):
-    assert client.get("/suppliers", headers=headers_for(role)).status_code == 200
-    assert client.get("/api/suppliers/1", headers=headers_for(role)).status_code == 200
-
-
-@pytest.mark.parametrize(
-    "role,expected", [("consultant", 403), ("supervisor", 201), ("admin", 201)]
-)
-def test_only_supervisors_and_admins_can_create(client, role, expected):
-    assert client.post("/suppliers", json=NEW_SUPPLIER, headers=headers_for(role)).status_code == expected
-
-
-@pytest.mark.parametrize("role,expected", [("consultant", 403), ("supervisor", 200), ("admin", 200)])
-def test_only_supervisors_and_admins_can_modify(client, role, expected):
-    h = headers_for(role)
-    assert client.patch("/suppliers/1", json={"notes": "x"}, headers=h).status_code == expected
-    assert client.patch("/suppliers/1/rate", json={"monthly_rate": 5}, headers=h).status_code == expected
-    assert client.patch("/suppliers/1/status", json={"status": "active"}, headers=h).status_code == expected
-
-
-@pytest.mark.parametrize("role,expected", [("consultant", 403), ("supervisor", 403), ("admin", 204)])
-def test_only_admins_can_delete(client, role, expected):
-    assert client.delete("/suppliers/1", headers=headers_for(role)).status_code == expected
-
-
-def test_a_forbidden_write_does_not_change_data(client):
-    before = client.get("/suppliers/1", headers=headers_for("admin")).json()
-    client.patch("/suppliers/1/rate", json={"monthly_rate": 1}, headers=headers_for("consultant"))
-    assert client.get("/suppliers/1", headers=headers_for("admin")).json() == before
-
-
-def test_role_change_applies_to_existing_tokens(client, auth_db):
-    headers = headers_for("supervisor")
-    assert client.post("/suppliers", json=NEW_SUPPLIER, headers=headers).status_code == 201
-    auth_db.update({"role": "consultant"}, lambda d: d["username"] == "supervisor")
-    assert client.post("/suppliers", json=NEW_SUPPLIER, headers=headers).status_code == 403
-
-
-# --- user management ---------------------------------------------------------
-
-
-def test_admin_creates_a_user_who_can_then_log_in(client):
-    payload = {"username": "  Nuevo.Usuario ", "password": "s3cret-pass!", "role": "consultant"}
-    created = client.post("/auth/users", json=payload, headers=headers_for("admin"))
-    assert created.status_code == 201
-    assert created.json() == {"username": "nuevo.usuario", "role": "consultant", "disabled": False}
-    assert login(client, "NUEVO.usuario", "s3cret-pass!").status_code == 200
-    stored = auth_service.get_user("nuevo.usuario")
-    assert stored["password_hash"].startswith("$2") and "s3cret-pass!" not in str(stored)
-
-
-def test_creating_users_is_admin_only_and_rejects_duplicates_and_bad_input(client):
-    ok = {"username": "otro", "password": "s3cret-pass!", "role": "consultant"}
-    assert client.post("/auth/users", json=ok).status_code == 401
-    assert client.post("/auth/users", json=ok, headers=headers_for("supervisor")).status_code == 403
-    assert client.post("/auth/users", json={**ok, "username": "admin"}, headers=headers_for("admin")).status_code == 409
-    for bad in ({"password": "short"}, {"role": "root"}, {"password": "é" * 40}, {"username": "a b"}):
-        assert client.post("/auth/users", json={**ok, **bad}, headers=headers_for("admin")).status_code == 422
-
-
-def test_bootstrap_admin_only_runs_on_an_empty_store(tmp_path, monkeypatch, auth_db):
-    monkeypatch.setenv("AUTH_ADMIN_PASSWORD", "bootstrap-pass")
-    auth_service.bootstrap_admin()  # store already has users: no-op
-    assert len(auth_db) == 3
-
-    empty = TinyDB(tmp_path / "empty.json")
-    monkeypatch.setattr(auth_service, "_db", empty)
-    auth_service.bootstrap_admin()
-    assert auth_service.authenticate("admin", "bootstrap-pass")["role"] == "admin"
-    empty.close()
-
-
-def test_bootstrap_without_password_creates_nobody(tmp_path, monkeypatch):
-    empty = TinyDB(tmp_path / "empty.json")
-    monkeypatch.setattr(auth_service, "_db", empty)
-    monkeypatch.delenv("AUTH_ADMIN_PASSWORD", raising=False)
-    auth_service.bootstrap_admin()
-    assert len(empty) == 0
-    empty.close()
+def test_changing_the_email_keeps_the_session(client, users_db):
+    headers = headers_for(BOB)
+    users_db.update({"email": "bob.new@example.com"}, lambda d: d["email"] == BOB)
+    assert client.get("/auth/me", headers=headers).json()["email"] == "bob.new@example.com"
 
 
 # --- nothing sensitive is public ---------------------------------------------
@@ -227,19 +163,28 @@ def test_every_documented_operation_requires_a_session_except_the_public_allowli
 
 
 def test_sensitive_routes_answer_401_without_a_token(client):
+    uid = uuid_of(ALICE)
     calls = [
         ("get", "/suppliers"), ("get", "/api/suppliers"), ("get", "/suppliers/1"),
         ("get", "/suppliers/search/by-country?country=Spain"),
         ("get", "/suppliers/search/by-category?category=job_boards"),
         ("post", "/suppliers"), ("patch", "/suppliers/1"), ("patch", "/suppliers/1/rate"),
         ("patch", "/suppliers/1/status"), ("delete", "/suppliers/1"),
-        ("post", "/api/incidents/analyze"), ("get", "/api/incidents/results/export"),
-        ("get", "/auth/me"), ("post", "/auth/users"), ("get", "/api/auth/me"),
         ("get", "/api/suppliers/1"), ("post", "/api/suppliers"), ("delete", "/api/suppliers/1"),
+        ("post", "/api/incidents/analyze"), ("get", "/api/incidents/results/export"),
+        ("get", "/auth/me"), ("get", "/api/auth/me"),
+        ("get", "/users"), ("post", "/users"), ("get", f"/users/{uid}"), ("patch", f"/users/{uid}"),
+        ("delete", f"/users/{uid}"), ("get", "/api/users"), ("post", "/api/users"),
     ]
     for method, url in calls:
         assert getattr(client, method)(url).status_code == 401, (method, url)
-    assert len(client.get("/suppliers", headers=headers_for("admin")).json()) == 15  # nothing was touched
+    assert len(client.get("/suppliers", headers=headers_for(ALICE)).json()) == 15  # nothing was touched
+
+
+def test_any_valid_session_can_use_the_suppliers_api(client):
+    h = headers_for(BOB)
+    assert client.get("/suppliers", headers=h).status_code == 200
+    assert client.patch("/api/suppliers/1/rate", json={"monthly_rate": 5}, headers=h).status_code == 200
 
 
 def test_health_and_docs_stay_public(client):

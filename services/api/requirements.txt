@@ -4,4 +4,5 @@ python-multipart>=0.0.9
 tinydb>=4.8
 python-jose[cryptography]>=3.3
 bcrypt>=4.1
+email-validator>=2.0
 -e ../../packages/incidents_analyzer

@@ -5,26 +5,20 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 ## Domains implemented
 
 - **`incidents/`** — Support ticket CSV analysis ("Analizador de Incidencias"). Validates and computes metrics on Nexova support-incident exports, per the rules in [scripts/CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md). Reuses the same [`incidents_analyzer`](../../packages/incidents_analyzer) package as the CLI script in `scripts/analyze.py`, so both run identical validation/metrics logic.
-- **`auth/`** — Internal users, login (OAuth2 password flow + JWT) and the `get_current_user` / `require_role` dependencies used to protect every other domain.
+- **`users/`** — Internal accounts (email + password, bcrypt-hashed) with full CRUD, stored in TinyDB.
+- **`auth/`** — Login (OAuth2 password flow + JWT carrying `user_uuid`) and the `get_current_user` dependency used to protect every other domain.
 - **`suppliers/`** — Supplier directory ("Directorio de Proveedores", Patricia Solís / Nexova). Replaces the HR spreadsheet with a [TinyDB](https://tinydb.readthedocs.io/)-backed store, seeded on startup with the 15 suppliers from [`suppliers/seed_data.py`](./suppliers/seed_data.py) (spec: [CONTEXT-suppliers.md](./suppliers/CONTEXT-suppliers.md)). Pydantic (`suppliers/schemas.py`) rejects with `422` any missing `country`, a `status` outside `active`/`suspended`, empty `categories`, or a `currency` that doesn't match the country (Spain→EUR, USA→USD). Suspending (not deleting) is the preferred way to retire a supplier.
 
-## Authentication and authorization
+## Authentication
 
-Every route except `POST /auth/login`, `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`); with a valid session but the wrong role, `403`.
+Every route except `POST /auth/login`, `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`).
 
-- **Login** — OAuth2 password flow: `POST /auth/login` (`application/x-www-form-urlencoded`, fields `username` and `password`) returns `{"access_token": "...", "token_type": "bearer"}`. Unknown user, wrong password and disabled account all give the same `401`. Also served at `/api/auth/*` for the backoffice proxy, like suppliers.
-- **Token** — JWT signed with HS256 (`python-jose`), claims `sub`, `iat`, `exp` (30 min by default). The role is *not* in the token: it is read from the user store on every request, so demoting or disabling a user takes effect immediately.
-- **Users** — internal accounts in their own TinyDB file, `auth/db.json` (gitignored; passwords stored as bcrypt hashes, max 72 bytes). No public sign-up: an admin creates users with `POST /auth/users`.
-- **Roles** (see [ARCHITECTURE_PROPOSAL.md](../../docs/ARCHITECTURE_PROPOSAL.md)):
+- **Users are just credentials**: `email` + `password`, stored in their own TinyDB file, `users/db.json` (gitignored). Each document is `{user_uuid, email, password_hash}` — the password is hashed with bcrypt before it is stored (max 72 bytes) and is never returned, logged or echoed back, not even in `422` responses. Emails are case-insensitive (stored lower-cased) and unique.
+- **Login** — OAuth2 password flow: `POST /auth/login` (`application/x-www-form-urlencoded`) with `username` = the **email** and `password` returns `{"access_token": "...", "token_type": "bearer"}`. Unknown email and wrong password give the same `401`. Also served at `/api/auth/*` for the backoffice proxy.
+- **Token** — JWT signed with HS256 (`python-jose`). Claims: `user_uuid` (the id of the user document in TinyDB; `sub` repeats it), `iat`, `exp` (30 min by default). Nothing else: whether the user still exists is checked on every request, so deleting an account kills its tokens at once, and changing the email keeps the session. Changing a password revokes every token issued before the change.
+- **No roles**: any valid session can use the suppliers and incidents APIs and list/read users. Changing or deleting a user is restricted to the account owner (`403` otherwise), so nobody can reset another person's password.
 
-| Action | `consultant` | `supervisor` | `admin` |
-|---|:-:|:-:|:-:|
-| Read suppliers (`GET /suppliers…`) | ✅ | ✅ | ✅ |
-| Analyze / export incidents | ✅ | ✅ | ✅ |
-| Create / edit / rate / status of a supplier (`POST`, `PATCH`) | ❌ | ✅ | ✅ |
-| Delete a supplier, create users | ❌ | ❌ | ✅ |
-
-Protection is applied on the routers themselves (`dependencies=[Depends(get_current_user)]`), so a route added to `suppliers/` or `incidents/` is private by default, and `tests/test_auth.py` fails if any documented operation is left open.
+Protection is applied on the routers themselves (`dependencies=[Depends(get_current_user)]`), so a route added to `suppliers/`, `incidents/` or `users/` is private by default, and `tests/test_auth.py` fails if any documented operation is left open.
 
 ### Configuration
 
@@ -32,9 +26,9 @@ Protection is applied on the routers themselves (`dependencies=[Depends(get_curr
 |---|---|
 | `SECRET_KEY` | JWT signing key, at least 32 characters (`openssl rand -hex 32`). **Required in production.** If unset, a random per-process key is used (sessions die on restart, and it breaks with several workers). |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime (default `30`). |
-| `AUTH_ADMIN_USERNAME` / `AUTH_ADMIN_PASSWORD` | Creates the first admin on startup, only if the user store is empty (username defaults to `admin`). |
+| `AUTH_INITIAL_EMAIL` / `AUTH_INITIAL_PASSWORD` | Creates the first user on startup, only if the user store is empty. |
 
-Without `AUTH_ADMIN_PASSWORD` the API starts with no users; create one with `uv run create-user --username <name> --role admin` (prompts for the password).
+Without them the API starts with no users; create one with `uv run create-user --email <email>` (prompts for the password).
 
 ## Endpoints
 
@@ -44,9 +38,13 @@ All endpoints below need a session (see above) except `/auth/login` and `/health
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/auth/login` | Public. Exchange `username`/`password` (form) for a bearer token. `401` on bad credentials. |
-| `GET` | `/auth/me` | The user of the current session. |
-| `POST` | `/auth/users` | Create a user (`{"username", "password", "role"}`). Admin only; `409` if the username exists. |
+| `POST` | `/auth/login` | Public. Exchange the email (form field `username`) and password for a bearer token. `401` on bad credentials. |
+| `GET` | `/auth/me` | The user of the current session (`user_uuid`, `email`). |
+| `GET` | `/users` | List users (`user_uuid` and `email` only). |
+| `POST` | `/users` | Create a user (`{"email", "password"}`; password 8-72 bytes). `409` if the email exists, `422` on invalid data. |
+| `GET` | `/users/{user_uuid}` | One user. `404` if missing. |
+| `PATCH` | `/users/{user_uuid}` | Change your own `email` and/or `password`; `current_password` is required for either (`400` if wrong, `409` if the email is taken). `403` if it is not your account. |
+| `DELETE` | `/users/{user_uuid}` | Delete your own account (`204`). `403` if it is not yours; `409` if it is the last user. |
 | `POST` | `/api/incidents/analyze` | Upload a CSV (`multipart/form-data`, field name `file`), get back the analysis as JSON. `400` if the file isn't `.csv`, `422` if required columns are missing or the file has no data rows. |
 | `GET` | `/api/incidents/results/export` | Download the most recent analysis as `results.csv` (one metric per row). `404` if no analysis has run yet in this process. |
 | `GET` | `/suppliers` | List all suppliers. |
@@ -60,7 +58,7 @@ All endpoints below need a session (see above) except `/auth/login` and `/health
 | `DELETE` | `/suppliers/{id}` | Remove a supplier (`204`). `404` if it doesn't exist. The CONTEXT prefers suspending to keep the relationship history; use this for entries made by mistake. |
 | `GET` | `/health` | Public liveness check. |
 
-Interactive docs (Swagger UI) are available at `/docs` when the server is running; use *Authorize* there with a username and password to try the protected routes.
+Interactive docs (Swagger UI) are available at `/docs` when the server is running; use *Authorize* there with your email (in the *username* box) and password to try the protected routes.
 
 ## Running locally
 
@@ -68,7 +66,8 @@ Interactive docs (Swagger UI) are available at `/docs` when the server is runnin
 cd services/api
 pip install -r requirements.txt
 export SECRET_KEY=$(openssl rand -hex 32)
-export AUTH_ADMIN_PASSWORD='choose-a-password'   # first run only
+export AUTH_INITIAL_EMAIL='you@example.com'       # first run only
+export AUTH_INITIAL_PASSWORD='choose-a-password'
 uvicorn main:app --reload --port 8000
 ```
 
@@ -87,5 +86,5 @@ uv run seed --reset      # wipe and reload the 15 initial suppliers
 
 - The "last analysis" used by the export endpoint is kept in an in-memory, module-level variable — it is lost on restart and is not shared across multiple worker processes. Acceptable for this feature's current scope; documented rather than hidden.
 - The suppliers directory is stored at `suppliers/db.json`, a TinyDB flat file that's regenerated (and reseeded) whenever it's missing — it's gitignored, not source. A second worker process would not see writes made by another one; fine for the current single-process scope, and the reason the project brief already earmarks a move to Postgres once the ORM is ready.
-- Login has no rate limiting or lockout yet, and tokens are not revocable before they expire (there is no refresh or logout endpoint). Put the API behind a reverse proxy with rate limits until that is added.
+- Login has no rate limiting or lockout yet, and tokens are only revocable by changing the user's password or deleting the account (there is no refresh or logout endpoint; a token issued in the same second as a password change is not revoked). Put the API behind a reverse proxy with rate limits until that is added.
 - `uis/backoffice` does not send a token yet, so its calls to `/api/suppliers` and `/api/incidents` now get `401` until a login screen is added.

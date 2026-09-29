@@ -14,7 +14,14 @@ dependencies = [
     "tinydb>=4.8",
     "python-jose[cryptography]>=3.3",
     "bcrypt>=4.1",
+    "email-validator>=2.0",
     "incidents-analyzer",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
@@ -28,4 +35,8 @@ incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = tr
 py-modules = ["main", "seed"]
 
 [tool.setuptools.packages.find]
-include = ["auth*", "core*", "incidents*", "suppliers*"]
+include = ["auth*", "core*", "incidents*", "suppliers*", "users*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

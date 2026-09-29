@@ -2,4 +2,4 @@
 suppliers/db.json
 
 # Internal users store (password hashes, created at runtime)
-auth/db.json
+users/db.json
