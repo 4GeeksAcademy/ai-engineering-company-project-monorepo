@@ -1,0 +1,4 @@
+data/auth.json
+.env
+.env.*
+!.env.example

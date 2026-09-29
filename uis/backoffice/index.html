@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Análisis operativo de incidencias" />
+    <title>Pulse Desk | Análisis de incidencias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <a class="brand" href="#analysis" aria-label="Pulse Desk, inicio">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span><strong>pulse</strong><small>DESK / OPS</small></span>
+        </a>
+
+        <div class="workspace-switcher">
+          <span class="eyebrow">ESPACIO ACTIVO</span>
+          <strong>Nexova People Ops</strong>
+          <span class="workspace-status"><i></i>Sincronización lista</span>
+        </div>
+
+        <nav class="nav-list">
+          <span class="nav-section">OPERACIONES</span>
+          <a class="nav-item" href="#overview"><span class="nav-glyph">01</span>Resumen</a>
+          <a class="nav-item active" href="#analysis" aria-current="page"><span class="nav-glyph">02</span>Incidencias <b>4</b></a>
+          <a class="nav-item" href="#requests"><span class="nav-glyph">03</span>Solicitudes</a>
+          <a class="nav-item" href="#team"><span class="nav-glyph">04</span>Equipo</a>
+          <span class="nav-section">SISTEMA</span>
+          <a class="nav-item" href="#settings"><span class="nav-glyph">05</span>Configuración</a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-chip"><span class="avatar">JM</span><span><strong>Jeferson M.</strong><small>Administrador</small></span><span class="dots">•••</span></div>
+          <span class="version">PULSE DESK 0.1.0</span>
+        </div>
+      </aside>
+
+      <main class="main-content" id="analysis">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Operaciones</span><span>/</span><strong>Análisis de incidencias</strong></div>
+          <div class="topbar-actions"><span class="live-dot"><i></i>API conectada</span><button class="icon-button" title="Notificaciones" aria-label="Notificaciones">♧</button><button class="avatar small" title="Cuenta de usuario">JM</button></div>
+        </header>
+
+        <div class="page-content">
+          <section class="page-intro">
+            <div><span class="eyebrow accent">CONTROL OPERATIVO · 29 SEP 2026</span><h1>Análisis de incidencias</h1><p>Convierte un export de incidencias en señales claras para tu equipo.</p></div>
+            <div class="intro-note"><span class="note-number">01</span><span>Sube un CSV<br />para comenzar</span></div>
+          </section>
+
+          <section class="upload-panel" aria-labelledby="upload-title">
+            <div class="section-heading"><div><span class="eyebrow">ENTRADA DE DATOS</span><h2 id="upload-title">Carga tu fichero CSV</h2></div><span class="format-pill">CSV · UTF-8</span></div>
+            <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Seleccionar o arrastrar un fichero CSV">
+              <input type="file" id="file-input" accept=".csv,text/csv" hidden />
+              <div class="upload-symbol" aria-hidden="true"><span></span><span></span><span></span></div>
+              <strong id="drop-title">Arrastra tu fichero aquí</strong>
+              <p>o <button class="text-button" id="browse-button" type="button">selecciona desde tu equipo</button></p>
+              <small id="file-meta">Máximo recomendado: 25 MB · Solo archivos .csv</small>
+            </div>
+            <div class="upload-actions"><span class="selected-file" id="selected-file">Ningún fichero seleccionado</span><button class="primary-button" id="analyze-button" type="button" disabled><span class="button-arrow">↗</span>Analizar fichero</button></div>
+            <div class="error-banner" id="error-banner" role="alert" hidden></div>
+          </section>
+
+          <section class="results-section" id="results" aria-live="polite">
+            <div class="section-heading results-heading"><div><span class="eyebrow">LECTURA DEL ÚLTIMO ANÁLISIS</span><h2>Panel de resultados</h2></div><div class="results-actions"><span class="result-state" id="result-state">Esperando fichero</span><button class="download-button" id="download-button" type="button" disabled><span aria-hidden="true">↓</span> Descargar CSV</button></div></div>
+            <div class="metric-grid" id="metric-grid">
+              <article class="metric-card muted"><span>Total procesados</span><strong>—</strong><small>sin datos todavía</small></article>
+              <article class="metric-card muted"><span>Registros válidos</span><strong>—</strong><small>sin datos todavía</small></article>
+              <article class="metric-card muted"><span>Registros inválidos</span><strong>—</strong><small>sin datos todavía</small></article>
+              <article class="metric-card muted"><span>Satisfacción media</span><strong>—</strong><small>casos cerrados puntuados</small></article>
+            </div>
+            <div class="detail-grid" id="detail-grid">
+              <article class="detail-card"><div class="card-title"><span>Por categoría</span><span class="card-label">VALIDADOS</span></div><div class="empty-state">Los resultados aparecerán aquí</div></article>
+              <article class="detail-card"><div class="card-title"><span>Por estado</span><span class="card-label">VALIDADOS</span></div><div class="empty-state">Los resultados aparecerán aquí</div></article>
+              <article class="detail-card issues-card"><div class="card-title"><span>Registros inválidos</span><span class="card-label warning-label">REVISIÓN</span></div><div class="empty-state">Los problemas aparecerán aquí</div></article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

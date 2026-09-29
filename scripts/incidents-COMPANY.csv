@@ -1,0 +1,5 @@
+incident_id,category,title,description,status,priority,created_at,assigned_to,satisfaction_score
+INC-001,training,Portal de formacion no disponible,La plataforma de formacion devuelve un error al iniciar sesion,open,high,2026-09-25,training-team,
+INC-002,timekeeping,Marcaje horario duplicado,Se ha registrado dos veces el mismo marcaje de entrada,pending,medium,2026-09-26,hr-operations,
+INC-003,employee-documentation,Documento de empleado pendiente,Falta validar un documento solicitado por Recursos Humanos,resolved,low,2026-09-27,hr-operations,4.5
+INC-004,leave-request,Error al solicitar vacaciones,La solicitud de vacaciones no aparece en el calendario,open,high,2026-09-28,hr-support,
