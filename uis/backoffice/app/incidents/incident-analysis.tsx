@@ -18,7 +18,8 @@ type IncidentAnalysisResult = {
   };
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+// Use the Next.js same-origin proxy so the browser doesn't need to reach the API directly.
+const API_BASE = "";
 
 export function IncidentAnalysis() {
   const inputRef = useRef<HTMLInputElement>(null);
