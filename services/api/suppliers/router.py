@@ -5,11 +5,14 @@ suspending a supplier so the commercial history is kept.
 
 Mounted twice in ``main.py``: at ``/suppliers`` (documented) and at
 ``/api/suppliers`` (what the backoffice calls through the Vite proxy).
+Both mounts share this router, so both are protected.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from auth.dependencies import get_current_user
 
 from . import service
 from .schemas import (
@@ -22,7 +25,8 @@ from .schemas import (
     SupplierUpdate,
 )
 
-router = APIRouter(tags=["suppliers"])
+# Every route needs a valid session; there are no roles.
+router = APIRouter(tags=["suppliers"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("", response_model=list[SupplierOut])

@@ -12,11 +12,22 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "python-multipart>=0.0.9",
     "tinydb>=4.8",
+    "python-jose[cryptography]>=3.3",
+    "email-validator>=2.0",
     "incidents-analyzer",
+    "libpass[bcrypt]>=1.9",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
 seed = "seed:main"
+create-user = "auth.cli:main"
 
 [tool.uv.sources]
 incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = true }
@@ -25,4 +36,8 @@ incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = tr
 py-modules = ["main", "seed"]
 
 [tool.setuptools.packages.find]
-include = ["core*", "incidents*", "suppliers*"]
+include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

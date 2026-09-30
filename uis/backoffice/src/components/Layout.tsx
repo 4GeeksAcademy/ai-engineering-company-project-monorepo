@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { FileBarChart, LayoutDashboard, Truck } from "lucide-react";
+import { FileBarChart, LayoutDashboard, LogOut, Truck } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
   { to: "/", label: "Inicio", icon: LayoutDashboard, end: true },
@@ -8,9 +9,10 @@ const navItems = [
 ];
 
 export default function Layout() {
+  const { user, logout } = useAuth();
   return (
     <div className="flex min-h-screen bg-slate-950">
-      <aside className="w-64 shrink-0 border-r border-slate-800 bg-slate-900/60 px-4 py-6">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-900/60 px-4 py-6">
         <p className="px-2 text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
@@ -34,6 +36,20 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+        <div className="mt-auto border-t border-slate-800 px-2 pt-4">
+          <p className="truncate text-sm font-medium text-white" data-testid="current-user">
+            {user?.profile.name ?? user?.email}
+          </p>
+          <p className="truncate text-xs text-slate-500">{user?.email}</p>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-3 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+          >
+            <LogOut size={16} />
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
       <main className="flex-1 px-8 py-10">
         <Outlet />

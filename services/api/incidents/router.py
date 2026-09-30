@@ -6,13 +6,18 @@ proposal — see docs/ARCHITECTURE_PROPOSAL.md for that broader discussion.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import Response
+
+from auth.dependencies import get_current_user
 
 from . import service
 from .schemas import AnalyzeResponse
 
-router = APIRouter(prefix="/api/incidents", tags=["incidents"])
+# Support-ticket data is internal: any valid session may analyze and export.
+router = APIRouter(
+    prefix="/api/incidents", tags=["incidents"], dependencies=[Depends(get_current_user)]
+)
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)

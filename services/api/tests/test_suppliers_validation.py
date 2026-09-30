@@ -31,8 +31,8 @@ def db(tmp_path, monkeypatch) -> TinyDB:
 
 
 @pytest.fixture()
-def client(db) -> TestClient:
-    return TestClient(app)
+def client(db, auth_headers) -> TestClient:
+    return TestClient(app, headers=auth_headers)
 
 
 def test_model_fields_match_context():
