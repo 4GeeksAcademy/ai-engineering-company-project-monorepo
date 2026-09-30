@@ -21,6 +21,8 @@
 11. [Glosario para estudiante](#11-glosario-para-estudiante)
 12. [Consejos finales](#12-consejos-finales)
 
+➡️ **Continuación:** [AUTH‑02 — login, registro y rutas protegidas](./aprendiendo%20con%20la%20ia%20-%20AUTH-02.md) (todo lo hecho, decisiones y problemas resueltos).
+
 ---
 
 ## 1. ¿Qué es este proyecto?
