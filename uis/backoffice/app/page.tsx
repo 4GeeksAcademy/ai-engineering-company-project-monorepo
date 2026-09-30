@@ -1,5 +1,8 @@
 import { Sidebar } from "@/components/sidebar";
-import { departments, mapPoints, metrics, priorities } from "@/lib/workspace-data";
+import { departments, mapPoints, priorities } from "@/lib/workspace-data";
+import { getDashboardMetrics } from "@/lib/milestone-two/dashboard-metrics";
+
+const metrics = getDashboardMetrics();
 
 export default function Overview() {
   return (
@@ -20,7 +23,7 @@ export default function Overview() {
               <span className="avatar">HC</span>
               <span>
                 <strong>Digital team</strong>
-                <small>6 people · Austin</small>
+                <small>Austin team</small>
               </span>
             </span>
           </div>
@@ -28,16 +31,16 @@ export default function Overview() {
 
         <section className="welcome-section" aria-labelledby="welcome-heading">
           <div>
-            <p className="eyebrow">Friday, 25 September 2026</p>
+            <p className="eyebrow">Internal operations overview</p>
             <h1 id="welcome-heading">Good morning, HealthCore Digital.</h1>
             <p className="welcome-copy">A clear view of the network, so every team can spend more time on the work that matters.</p>
           </div>
           <div className="welcome-aside">
             <span className="signal-line" aria-hidden="true"></span>
             <p>
-              <strong>12</strong> locations
+              <strong>US · UK</strong> locations
               <br />
-              <span>across two countries</span>
+              <span>company context · US and UK</span>
             </p>
           </div>
         </section>
@@ -86,14 +89,14 @@ export default function Overview() {
               </div>
               <span className="pulse-mark" aria-hidden="true">✦</span>
             </div>
-            <p className="pulse-copy">Same-day bookings, extended hours, and bilingual staff are the signature of HealthCore care.</p>
+            <p className="pulse-copy">HealthCore’s company briefing highlights same-day bookings, extended hours, and bilingual staff as part of its access approach.</p>
             <div className="pulse-quote">
               <span>“</span>
-              <p>Accessible, high-quality care that does not make patients wait weeks or navigate a confusing system.</p>
+              <p>Accessible, high-quality care without unnecessary waits or confusing processes.</p>
             </div>
             <div className="pulse-footer">
-              <span>HealthCore since 2011</span>
-              <span>Austin, Texas</span>
+              <span>Internal company context</span>
+              <span>United States · United Kingdom</span>
             </div>
           </div>
         </section>
@@ -127,7 +130,7 @@ export default function Overview() {
           <div className="location-intro">
             <p className="eyebrow eyebrow-light">The network</p>
             <h2>Close to the people we serve.</h2>
-            <p>HealthCore operates 12 clinics across the United States and United Kingdom. Local processes are different; the care standard is shared.</p>
+            <p>HealthCore operates clinics across the United States and United Kingdom. Local processes are different; the care standard is shared.</p>
           </div>
           <div className="location-map" aria-label="HealthCore clinic footprint">
             <div className="map-line line-one"></div>
@@ -139,10 +142,9 @@ export default function Overview() {
               </div>
             ))}
             <div className="map-legend">
-              <strong>12</strong>
+                <strong>US · UK</strong>
               <span>
-                clinics
-                <br />9 US · 3 UK
+                clinic footprint
               </span>
             </div>
           </div>

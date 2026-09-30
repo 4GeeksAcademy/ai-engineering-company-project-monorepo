@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Sidebar } from "@/components/sidebar";
 import { IncidentAnalysis } from "./incident-analysis";
 
@@ -7,7 +8,7 @@ export default function IncidentsPage() {
       <Sidebar />
       <main className="main-content">
         <header className="topbar">
-          <div className="breadcrumb"><a href="/">HealthCore Digital</a><span aria-hidden="true">/</span><strong>Incident analysis</strong></div>
+          <div className="breadcrumb"><Link href="/">HealthCore Digital</Link><span aria-hidden="true">/</span><strong>Incident analysis</strong></div>
           <div className="topbar-actions"><span className="status-dot"><i></i>Privacy-first analysis</span></div>
         </header>
         <section className="welcome-section incident-welcome">

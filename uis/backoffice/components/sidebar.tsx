@@ -23,6 +23,10 @@ export function Sidebar() {
             <span className="nav-icon" aria-hidden="true">▤</span>
             Incident analysis
           </Link>
+          <Link href="/operations" className="incident-nav-link">
+            <span className="nav-icon" aria-hidden="true">▥</span>
+            Operations metrics
+          </Link>
         </nav>
       </div>
       {workspaceNav.map((section) => (
