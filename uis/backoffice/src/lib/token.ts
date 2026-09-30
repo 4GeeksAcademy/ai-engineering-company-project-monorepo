@@ -35,3 +35,15 @@ export function onTokenChange(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+/**
+ * Called when another tab logs in or out (the `storage` event never fires in the tab that made the change).
+ * `token` is the new value, or null when it was removed (including `localStorage.clear()`).
+ */
+export function onTokenChangeInOtherTab(listener: (token: string | null) => void): () => void {
+  const handler = (event: StorageEvent) => {
+    if (event.key === KEY || event.key === null) listener(getToken());
+  };
+  window.addEventListener("storage", handler);
+  return () => window.removeEventListener("storage", handler);
+}

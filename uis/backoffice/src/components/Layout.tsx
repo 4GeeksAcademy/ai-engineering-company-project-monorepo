@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { FileBarChart, LayoutDashboard, LogOut, Truck } from "lucide-react";
+import { FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
   { to: "/", label: "Inicio", icon: LayoutDashboard, end: true },
   { to: "/incidents", label: "Análisis de incidentes", icon: FileBarChart, end: false },
   { to: "/suppliers", label: "Proveedores", icon: Truck, end: false },
+  { to: "/account/profile", label: "Mi perfil", icon: UserCircle, end: false },
 ];
 
 export default function Layout() {

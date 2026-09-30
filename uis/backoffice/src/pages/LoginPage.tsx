@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../lib/api";
@@ -90,6 +90,12 @@ export default function LoginPage() {
           {submitting && <Loader2 size={16} className="animate-spin" />}
           Entrar
         </button>
+        <p className="mt-4 text-center text-sm text-slate-400">
+          ¿No tienes cuenta?{" "}
+          <Link to="/register" className="text-cyan-300 hover:text-cyan-200">
+            Regístrate
+          </Link>
+        </p>
       </form>
     </div>
   );
