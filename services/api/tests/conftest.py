@@ -9,7 +9,9 @@ from tinydb import TinyDB
 
 from auth.security import create_access_token, hash_password
 from profiles import service as profiles_service
+from profiles.schemas import Profile
 from users import service as users_service
+from users.schemas import Role, User
 
 PASSWORD = "correct-horse-battery"
 ALICE, BOB, CAROL = "alice@example.com", "bob@example.com", "carol@example.com"
@@ -24,7 +26,8 @@ def users_db(tmp_path, monkeypatch) -> TinyDB:
     """Fresh users (alice, bob, carol) per test, never the real users/db.json."""
     database = TinyDB(tmp_path / "users-db.json")
     for email, user_uuid in UUIDS.items():
-        database.insert({"user_uuid": str(user_uuid), "email": email, "password_hash": _PASSWORD_HASH})
+        user = User(id=user_uuid, email=email, hashed_password=_PASSWORD_HASH, role=Role.admin if email == ALICE else Role.user)
+        database.insert(user.model_dump(mode="json"))
     monkeypatch.setattr(users_service, "_db", database)
     yield database
     database.close()
@@ -36,9 +39,7 @@ def profiles_db(tmp_path, monkeypatch) -> TinyDB:
     the local part of the email)."""
     database = TinyDB(tmp_path / "profiles-db.json")
     for email, user_uuid in UUIDS.items():
-        database.insert(
-            {"user_uuid": str(user_uuid), "display_name": email.split("@")[0], "contact_email": None, "phone": None}
-        )
+        database.insert(Profile(user_id=user_uuid, name=email.split("@")[0]).model_dump(mode="json"))
     monkeypatch.setattr(profiles_service, "_db", database)
     yield database
     database.close()

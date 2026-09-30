@@ -8,7 +8,13 @@ import secrets
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
+
+# services/api/.env (gitignored) feeds SECRET_KEY & co. Variables already set in
+# the environment win, so deployments and tests can still override it.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 JWT_ALGORITHM = "HS256"
 MIN_SECRET_KEY_LENGTH = 32

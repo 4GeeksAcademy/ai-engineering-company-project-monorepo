@@ -13,9 +13,10 @@ _DUMMY_HASH = hash_password("not-a-real-password")
 
 
 def authenticate(email: str, password: str) -> UserOut | None:
-    """The user if the credentials are valid."""
+    """The user if the credentials are valid and the account is active."""
     doc = users_service.get_doc_by_email(email)
-    password_ok = verify_password(password, doc["password_hash"] if doc else _DUMMY_HASH)
-    if doc is None or not password_ok:
+    password_ok = verify_password(password, doc["hashed_password"] if doc else _DUMMY_HASH)
+    # An inactive account gets the same answer as a wrong password.
+    if doc is None or not password_ok or not doc["is_active"]:
         return None
-    return UserOut(user_uuid=doc["user_uuid"], email=doc["email"])
+    return UserOut.model_validate(doc)

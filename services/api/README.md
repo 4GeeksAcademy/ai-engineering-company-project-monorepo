@@ -5,34 +5,37 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 ## Domains implemented
 
 - **`incidents/`** — Support ticket CSV analysis ("Analizador de Incidencias"). Validates and computes metrics on Nexova support-incident exports, per the rules in [scripts/CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md). Reuses the same [`incidents_analyzer`](../../packages/incidents_analyzer) package as the CLI script in `scripts/analyze.py`, so both run identical validation/metrics logic.
-- **`users/`** — Internal accounts (email + password, bcrypt-hashed) with full CRUD, stored in TinyDB.
-- **`profiles/`** — One `Profile` per user (strictly one-to-one, same key `user_uuid`): the **display name and the contact data** (`contact_email`, `phone`) live here, not in `User`. Stored in TinyDB (`profiles/db.json`, gitignored).
-- **`auth/`** — Login (OAuth2 password flow + JWT carrying `user_uuid`) and the `get_current_user` dependency used to protect every other domain.
+- **`users/`** — Internal accounts (email + password, bcrypt-hashed through `libpass`) with full CRUD, stored in TinyDB.
+- **`profiles/`** — One `Profile` per user (strictly one-to-one through `user_id`, the `User.id`): the **name and the contact data** (`contact_email`, `phone`, `address`) live here, not in `User`. Stored in TinyDB (`profiles/db.json`, gitignored).
+- **`auth/`** — Login (OAuth2 password flow + JWT carrying the user `id`) and the `get_current_user` dependency used to protect every other domain.
 - **`suppliers/`** — Supplier directory ("Directorio de Proveedores", Patricia Solís / Nexova). Replaces the HR spreadsheet with a [TinyDB](https://tinydb.readthedocs.io/)-backed store, seeded on startup with the 15 suppliers from [`suppliers/seed_data.py`](./suppliers/seed_data.py) (spec: [CONTEXT-suppliers.md](./suppliers/CONTEXT-suppliers.md)). Pydantic (`suppliers/schemas.py`) rejects with `422` any missing `country`, a `status` outside `active`/`suspended`, empty `categories`, or a `currency` that doesn't match the country (Spain→EUR, USA→USD). Suspending (not deleting) is the preferred way to retire a supplier.
 
 ## Authentication
 
-Every route except `POST /auth/login`, `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`).
+Every route except `POST /auth/login`, `POST /users` (sign-up), `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`).
 
-- **Users are just credentials**: `email` + `password`, stored in their own TinyDB file, `users/db.json` (gitignored). Each document is `{user_uuid, email, password_hash}` — the password is hashed with bcrypt before it is stored (max 72 bytes) and is never returned, logged or echoed back, not even in `422` responses. Emails are case-insensitive (stored lower-cased) and unique.
-- **Login** — `POST /auth/login` (also at `/api/auth/login` for the backoffice proxy), OAuth2 password flow: `application/x-www-form-urlencoded` with `username` = the **email** and `password`. The credentials are checked against the bcrypt hash in TinyDB; an unknown email, a wrong password and a malformed email all give the same `401 {"detail": "Incorrect email or password"}` (and take about the same time). On success:
+- **Users are credentials plus account state**, stored in their own TinyDB file, `users/db.json` (gitignored). Each document is a `User` (`users/schemas.py`): `id` (uuid), `email`, `hashed_password`, `is_active`, `role` (`admin` | `manager` | `user`; nothing else is accepted) and `created_at` (UTC). No display name or contact data: those are in the Profile. The password is hashed with bcrypt before it is stored (max 72 bytes) and is never returned, logged or echoed back, not even in `422` responses. `is_active=false` blocks login and invalidates its tokens (`401`, the same answer as a wrong password). Accounts created through the public sign-up start inactive and wait for an admin to approve them; the bootstrap user, `create-user` and admin-created accounts are active. `role` is granted only by an admin (`PUT /users/{id}`), by the `AUTH_INITIAL_*` bootstrap user (admin) or by `create-user --role admin`; `POST /users` (public sign-up) always creates a `user`. Documents written before this model (`user_uuid`/`password_hash`) are migrated on startup. Emails are case-insensitive (stored lower-cased) and unique.
+- **Password rule: never plain text, always bcrypt through `libpass`.** Install `libpass[bcrypt]`, not the unmaintained `passlib`; the import is the same (`from passlib.hash import bcrypt`). All hashing lives in `auth/security.py` (`hash_password` / `verify_password`).
+- **Auth rule: stateless JWT only.** No server-side sessions and no cookies (no `SessionMiddleware`, no `Set-Cookie`, no session store, no token blacklist). The client keeps the token and sends it in `Authorization: Bearer`; CORS runs with `allow_credentials=False`. The only per-request lookup is reading the user from TinyDB to check that it still exists and is active.
+- **Storage rule: users and profiles live only in TinyDB**, now and after Supabase/PostgreSQL is added. No users or profiles tables in Supabase, and no SQLModel models for them. SQL tables of other modules (inventory, …) store just a `user_uuid` column with the TinyDB `User.id`, as a plain reference (no foreign key: there is no users table). Deleting a user therefore does not cascade into those tables by itself.
+- **Login** — `POST /auth/login`, OAuth2 password flow: `application/x-www-form-urlencoded` with `username` = the **email** and `password`. The credentials are checked against the bcrypt hash in TinyDB; an unknown email, a wrong password and a malformed email all give the same `401 {"detail": "Incorrect email or password"}` (and take about the same time). On success:
 
   ```json
   {"access_token": "<jwt>", "token_type": "bearer", "expires_in": 1800}
   ```
 
-- **Token** — JWT signed with HS256 by `python-jose` using `SECRET_KEY`. Claims are the minimum: `user_id` (the `user_uuid` of the user document in TinyDB) and `exp`. Nothing else: no email, no password. The user is re-read on every request, so deleting an account kills its tokens at once, and changing the email keeps the session. Lifetime: `ACCESS_TOKEN_EXPIRE_MINUTES` (default 30, must be a positive integer); `expires_in` is that value in seconds.
-- **No roles**: any valid session can use the suppliers and incidents APIs and list/read users. Changing or deleting a user is restricted to the account owner (`403` otherwise), so nobody can reset another person's password.
+- **Token** — JWT signed with HS256 by `python-jose` using `SECRET_KEY`. Claims are the minimum: `user_id` (the `id` of the user document in TinyDB) and `exp`. Nothing else: no email, no password. The user is re-read on every request, so deleting an account kills its tokens at once, and changing the email keeps the session. Lifetime: `ACCESS_TOKEN_EXPIRE_MINUTES` (default 30, must be a positive integer); `expires_in` is that value in seconds.
+- **Who may touch what** (`403 Forbidden` = valid token, not yours; `401` = no valid token). Roles are `admin` | `manager` | `user` (new users are `user`); only `admin` has extra powers today (`manager` is stored and assignable but grants nothing yet). Any valid session can use the suppliers and incidents APIs. For accounts and profiles: **reading** someone's user or profile is for its owner or an admin, **listing** every user or profile is for admins, **changing or deleting** a user is for the owner or an admin, and **writing a profile** is for the owner only. Only an admin can change a `role` or `is_active`, and only the owner can change their own password. The last active admin can be neither demoted, deactivated nor deleted (`409`). The `403` comes before any lookup, so an unknown id answers `403` too: nobody can probe which accounts exist.
 
 Protection is applied on the routers themselves (`dependencies=[Depends(get_current_user)]`), so a route added to `suppliers/`, `incidents/`, `users/` or `profiles/` is private by default, and `tests/test_auth.py` fails if any documented operation is left open.
 
 ### Profiles (one-to-one with users)
 
-`User` is only credentials; everything a person sees or that is used to reach them is in the `Profile`: `display_name` (required, 1-80 chars), `contact_email` (optional, may differ from the login email) and `phone` (optional).
+`User` is only credentials; everything a person sees or that is used to reach them is in the `Profile`: `id` (its own uuid), `user_id` (the owner, unique), `name` (required, 1-80 chars), `contact_email` (optional, may differ from the login email), `phone` (optional) and `address` (optional, up to 200 chars).
 
-- **The relation is enforced by construction**: creating a user creates its profile (default `display_name` = the local part of the email, so `ana@x.com` → `ana`) and deleting a user deletes it. There is no `POST`/`DELETE` on `/profiles`, and the profile is keyed on `user_uuid`, so a second one cannot exist. If the profile insert fails, the user creation is rolled back.
-- **Existing databases are migrated on startup**: `sync_profiles()` gives a profile to every user that lacks one and drops profiles whose user is gone. A missing profile is also recreated when its owner reads `/profiles/me` or edits it.
-- Everyone with a session can read profiles; only the owner can edit theirs (`403` otherwise). Editing a profile never touches the login credentials.
+- **The relation is enforced by construction**: creating a user creates its profile (default `name` = the local part of the email, so `ana@x.com` → `ana`, unless `POST /users` gives a `name`) and deleting a user deletes it. There is no `POST`/`DELETE` on `/profiles`, and the profile is looked up by `user_id`, so a second one cannot exist. If the profile insert fails, the user creation is rolled back.
+- **Existing databases are migrated on startup**: `migrate_legacy_profiles()` turns `{user_uuid, display_name, …}` documents into `{id, user_id, name, …}`, then `sync_profiles()` gives a profile to every user that lacks one and drops profiles whose user is gone. A missing profile is also recreated when its owner reads or edits `/profiles/me`.
+- Reading a profile by id is for its owner or an admin and the full list is for admins (`403` otherwise). Writing is for the owner only: `PUT /profiles/me`, or `PUT /profiles/{user_id}` with your own id (`403` with anyone else's, admins included). Editing a profile never touches the login credentials.
 
 ### Configuration
 
@@ -46,23 +49,25 @@ Without them the API starts with no users; create one with `uv run create-user -
 
 ## Endpoints
 
-Supplier routes are served at `/suppliers` (shown in `/docs`) and also at `/api/suppliers`, the path the backoffice uses through the Vite proxy (which only forwards `/api`).
+Routes are served under one prefix per domain: `/auth`, `/users`, `/profiles`, `/suppliers`. Supplier routes are also mounted at `/api/suppliers` (hidden from `/docs`): that is the path the backoffice uses through the Vite proxy, which only forwards `/api`. Incident routes live at `/api/incidents`, fixed by the project brief.
 
-All endpoints below need a session (see above) except `/auth/login` and `/health`.
+All endpoints below need a session (see above) except `POST /auth/login`, `POST /users` and `/health`.
 
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/auth/login` | Public. Exchange the email (form field `username`) and password for a bearer token (`access_token`, `token_type`, `expires_in`). `401` on bad credentials. |
-| `GET` | `/auth/me` | The user of the current session (`user_uuid`, `email`). |
-| `GET` | `/users` | List users (`user_uuid` and `email` only). |
-| `POST` | `/users` | Create a user (`{"email", "password"}`; password 8-72 bytes). `409` if the email exists, `422` on invalid data. |
-| `GET` | `/users/{user_uuid}` | One user. `404` if missing. |
-| `PATCH` | `/users/{user_uuid}` | Change your own `email` and/or `password`; `current_password` is required for either (`400` if wrong, `409` if the email is taken). `403` if it is not your account. |
-| `DELETE` | `/users/{user_uuid}` | Delete your own account and its profile (`204`). `403` if it is not yours; `409` if it is the last user. |
-| `GET` | `/profiles` | List all profiles (`user_uuid`, `display_name`, `contact_email`, `phone`). |
+| `GET` | `/auth/me` | The user of the current session (`id`, `email`, `is_active`, `role`, `created_at`) plus its linked `profile` (`name`, `contact_email`, `phone`, `address`, …). Never the hash. |
+| `GET` | `/users` | **Admins only** (`403`). List users (`id`, `email`, `is_active`, `role`, `created_at`; never the hash). |
+| `GET` | `/users/directory` | Any session. Who is who: `[{user_id, name}]` of the **active** users, sorted by name. Nothing else (no email, role or contact data), so it is the way to show names without listing accounts. |
+| `POST` | `/users` | Register a user: `{"email", "password"}` (password 8-72 bytes) plus optional initial profile `name`, `phone`, `address`. The password is hashed before storing and the linked Profile is created in the same operation (`201`). The new user is always a `user`. **Public** (no session needed): it is the sign-up. The account starts **inactive** (`is_active=false`) and the `201` answer carries a `message` saying so: it can't sign in until an admin approves it. `409` if the email exists, `422` on invalid data (nothing is created). |
+| `GET` | `/users/{user_id}` | One user: the owner or an admin (`403` otherwise). `404` if missing (admins only ever see that). |
+| `PUT` | `/users/{user_id}` | Partial update (omitted fields are kept) of `email`, `password` and, for admins only, `role` and `is_active` (this is how a pending sign-up is approved, or an account switched off). Allowed to the owner or an admin (`403` otherwise). The owner needs `current_password` to change their email or password (`422` if missing, `400` if wrong); an admin editing someone else does not, but cannot change their password (`403`). `409` if the email is taken or it would demote, deactivate or remove the last active admin. |
+| `DELETE` | `/users/{user_id}` | Delete a user and its linked profile (`204`). Allowed to the owner or an admin (`403` otherwise); `404` if missing; `409` if it is the last user or the last active admin. |
+| `GET` | `/profiles` | **Admins only** (`403`). List all profiles (`id`, `user_id`, `name`, `contact_email`, `phone`, `address`). |
 | `GET` | `/profiles/me` | Your own profile. |
-| `GET` | `/profiles/{user_uuid}` | One user's profile. `404` if missing. |
-| `PATCH` | `/profiles/{user_uuid}` | Partial update of your own `display_name`, `contact_email`, `phone` (an explicit `null` clears the two optional ones). `403` if it is not your profile, `422` on invalid data. |
+| `GET` | `/profiles/{user_id}` | One user's profile: the owner or an admin (`403` otherwise). `404` if missing. |
+| `PUT` | `/profiles/me` | Partial update of your own `name`, `phone`, `address` (and `contact_email`); omitted fields are kept and an explicit `null` clears `phone`, `address` or `contact_email` (not `name`). `id` and `user_id` can't be sent (`422`). `422` on invalid data. |
+| `PUT` | `/profiles/{user_id}` | Same as `/profiles/me` but by id; only for your own id, `403` for anyone else (admins included). |
 | `POST` | `/api/incidents/analyze` | Upload a CSV (`multipart/form-data`, field name `file`), get back the analysis as JSON. `400` if the file isn't `.csv`, `422` if required columns are missing or the file has no data rows. |
 | `GET` | `/api/incidents/results/export` | Download the most recent analysis as `results.csv` (one metric per row). `404` if no analysis has run yet in this process. |
 | `GET` | `/suppliers` | List all suppliers. |
@@ -83,9 +88,9 @@ Interactive docs (Swagger UI) are available at `/docs` when the server is runnin
 ```bash
 cd services/api
 pip install -r requirements.txt
-export SECRET_KEY=$(openssl rand -hex 32)
-export AUTH_INITIAL_EMAIL='you@example.com'       # first run only
-export AUTH_INITIAL_PASSWORD='choose-a-password'
+cp .env.example .env    # then set SECRET_KEY (openssl rand -hex 32) and, on the first run only,
+                        # AUTH_INITIAL_EMAIL / AUTH_INITIAL_PASSWORD. `.env` is gitignored and loaded on startup;
+                        # real environment variables take precedence over it.
 uvicorn main:app --reload --port 8000
 ```
 

@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 # Routes that receive passwords. FastAPI's default 422 body echoes the rejected
 # ``input`` of every field, which would send a (too short / too long) password
 # back in the response and into proxy and access logs.
-_CREDENTIAL_PATHS = ("/auth", "/api/auth", "/users", "/api/users")
+_CREDENTIAL_PATHS = ("/auth", "/users")
 
 
 async def validation_error_handler(request: Request, exc: RequestValidationError):

@@ -1,12 +1,18 @@
 """Routes for the users domain: CRUD over internal accounts (email + password).
 
-Every route needs a valid session. Anyone logged in can list and read users
-and create a teammate's account, but only the owner can change or delete an
-account (``403`` otherwise) — there are no roles, so nobody can reset someone
-else's password. Display name and contact data are not here: see ``profiles``.
+Every route needs a valid session (``401`` otherwise) except ``POST /users``,
+the registration: anyone can sign up (with an optional initial profile, created
+in the same operation) and always gets the ``user`` role. Reading, changing or
+deleting an account is for the account's owner or an admin (``403`` otherwise),
+and listing every user is for admins only (``/directory`` is the exception:
+any session gets the names of the active users, and nothing else); only an admin can change a ``role`` or
+``is_active``, and only the owner can change their own password — nobody can
+reset someone else's. Sign-ups start inactive: an admin approves them by setting
+``is_active``. Display name and contact data are not stored here: see ``profiles``.
 
-Mounted twice in ``main.py``: at ``/users`` (documented) and at ``/api/users``
-(the backoffice's Vite-proxy path).
+Two routers, both mounted at ``/users`` in ``main.py``: ``router`` is private by
+default, so a route added to it is protected; ``public_router`` holds the only
+exception and is the one to keep an eye on.
 """
 
 from __future__ import annotations
@@ -15,52 +21,73 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from auth.dependencies import get_current_user, only_owner
+from auth.dependencies import CurrentUser, admin_only, get_current_user, owner_or_admin
 
 from . import service
-from .schemas import UserCreate, UserOut, UserUpdate
+from .schemas import DirectoryEntry, Role, SignUpOut, UserCreate, UserOut, UserUpdate
+
+PENDING_MESSAGE = "Account created. It has to be approved by an admin before you can sign in."
 
 router = APIRouter(tags=["users"], dependencies=[Depends(get_current_user)])
+public_router = APIRouter(tags=["users"])
 
 
-@router.get("", response_model=list[UserOut])
+@router.get("", response_model=list[UserOut], dependencies=[Depends(admin_only)])
 async def list_users() -> list[UserOut]:
     return service.list_users()
 
 
-@router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def create_user(payload: UserCreate) -> UserOut:
+# Declared before "/{user_id}" so "directory" is never parsed as an id.
+@router.get("/directory", response_model=list[DirectoryEntry])
+async def user_directory() -> list[DirectoryEntry]:
+    """Who is who, for any session: ``user_id`` and ``name`` of the active users, nothing else."""
+    return service.list_directory()
+
+
+@public_router.post("", response_model=SignUpOut, status_code=status.HTTP_201_CREATED)
+async def create_user(payload: UserCreate) -> SignUpOut:
+    """Public sign-up. The new user is always a ``user`` (``role`` is not accepted) and
+    starts inactive: it can't sign in until an admin approves it (``is_active=true``)."""
     try:
-        return service.create_user(payload)
+        user = service.create_user(payload, is_active=False)
+        return SignUpOut(**user.model_dump(), message=PENDING_MESSAGE)
     except service.EmailTakenError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.get("/{user_uuid}", response_model=UserOut)
-async def get_user(user_uuid: UUID) -> UserOut:
+@router.get("/{user_id}", response_model=UserOut, dependencies=[Depends(owner_or_admin)])
+async def get_user(user_id: UUID) -> UserOut:
     try:
-        return service.get_user(user_uuid)
+        return service.get_user(user_id)
     except service.UserNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
-@router.patch("/{user_uuid}", response_model=UserOut, dependencies=[Depends(only_owner)])
-async def update_user(user_uuid: UUID, payload: UserUpdate) -> UserOut:
+@router.put("/{user_id}", response_model=UserOut, dependencies=[Depends(owner_or_admin)])
+async def update_user(user_id: UUID, payload: UserUpdate, current: CurrentUser) -> UserOut:
+    is_owner = current.id == user_id
+    if (payload.role is not None or payload.is_active is not None) and current.role != Role.admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Only an admin can change a role or activate accounts")
+    if payload.password is not None and not is_owner:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Only the owner can change their password")
     try:
-        return service.update_user(user_uuid, payload)
+        return service.update_user(user_id, payload, check_password=is_owner)
     except service.UserNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except service.CurrentPasswordRequiredError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     except service.WrongPasswordError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-    except service.EmailTakenError as exc:
+    except (service.EmailTakenError, service.LastAdminError) as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.delete("/{user_uuid}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(only_owner)])
-async def delete_user(user_uuid: UUID) -> None:
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(owner_or_admin)])
+async def delete_user(user_id: UUID) -> None:
+    """Also deletes the user's linked profile."""
     try:
-        service.delete_user(user_uuid)
+        service.delete_user(user_id)
     except service.UserNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except service.LastUserError as exc:
+    except (service.LastUserError, service.LastAdminError) as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc

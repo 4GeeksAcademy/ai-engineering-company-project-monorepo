@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -35,14 +37,13 @@ def login(client, email=ALICE, password=PASSWORD, prefix=""):
 # --- login -----------------------------------------------------------------
 
 
-@pytest.mark.parametrize("prefix", ["", "/api"])
-def test_login_returns_a_bearer_token_that_opens_me(client, prefix):
-    response = login(client, prefix=prefix)
+def test_login_returns_a_bearer_token_that_opens_me(client):
+    response = login(client)
     assert response.status_code == 200
     body = response.json()
     assert body["token_type"] == "bearer"
-    me = client.get(f"{prefix}/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
-    assert me.json() == {"user_uuid": str(uuid_of(ALICE)), "email": ALICE}
+    me = client.get("/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.json()["id"] == str(uuid_of(ALICE)) and me.json()["email"] == ALICE
     assert "password" not in me.text
 
 
@@ -58,7 +59,7 @@ def test_login_response_and_jwt_claims(client, users_db):
     claims = jwt.decode(body["access_token"], get_jwt_secret(), algorithms=[JWT_ALGORITHM])
     stored = next(doc for doc in users_db.all() if doc["email"] == ALICE)
     assert set(claims) == {"user_id", "exp"}  # minimum claims: no email, no password, no hash
-    assert claims["user_id"] == stored["user_uuid"] == str(uuid_of(ALICE))
+    assert claims["user_id"] == stored["id"] == str(uuid_of(ALICE))
     assert claims["exp"] == pytest.approx(datetime.now(timezone.utc).timestamp() + body["expires_in"], abs=5)
 
 
@@ -169,6 +170,7 @@ def test_changing_the_email_keeps_the_session(client, users_db):
 
 PUBLIC = {
     ("post", "/auth/login"),
+    ("post", "/users"),  # sign-up: how an account starts
     ("get", "/health"),
 }
 
@@ -178,8 +180,8 @@ def test_every_documented_operation_requires_a_session_except_the_public_allowli
 
     Works from the OpenAPI schema (public API, stable across FastAPI versions):
     an operation depending on ``get_current_user`` declares an OAuth2 ``security``
-    requirement. The undocumented ``/api/*`` mounts reuse the same routers, and
-    are covered by the explicit 401 checks below.
+    requirement. The undocumented ``/api/suppliers`` mount reuses the same router and
+    is covered by the mirror check below.
     """
     operations = {
         (method, path): operation
@@ -192,6 +194,41 @@ def test_every_documented_operation_requires_a_session_except_the_public_allowli
     assert exposed == []
 
 
+def _example_url(path: str, operation: dict) -> str:
+    """Fill the ``{param}`` placeholders with a well-formed dummy so only auth can answer."""
+    schemas = {p["name"]: p["schema"] for p in operation.get("parameters", []) if p["in"] == "path"}
+    return re.sub(
+        r"\{(\w+)\}",
+        lambda m: str(uuid4()) if schemas[m.group(1)].get("format") == "uuid" else "1",
+        path,
+    )
+
+
+def test_the_hidden_api_suppliers_mount_answers_401_without_a_token(client):
+    """``/api/suppliers`` (what the backoffice calls through the Vite proxy) is hidden from
+    the OpenAPI schema, so the schema guard above can't see it. It mirrors ``/suppliers``:
+    call every operation with no token and require a 401 (a 404 would mean the mirror is gone)."""
+    checked = 0
+    for path, item in app.openapi()["paths"].items():
+        for method, operation in item.items():
+            if not path.startswith("/suppliers"):
+                continue
+            mirror = "/api" + path
+            response = getattr(client, method)(_example_url(mirror, operation))
+            assert response.status_code == 401, (method, mirror, response.status_code)
+            checked += 1
+    assert checked == 9  # every supplier operation was walked
+
+
+def test_auth_users_and_profiles_live_only_under_their_own_prefix(client):
+    """No ``/api/auth``, ``/api/users`` or ``/api/profiles`` copies: those routes are not there at all."""
+    h = headers_for(ALICE)
+    for url in ("/api/auth/me", "/api/users", "/api/users/directory", "/api/profiles", "/api/profiles/me"):
+        assert client.get(url, headers=h).status_code == 404, url
+    assert client.post("/api/auth/login", data={"username": ALICE, "password": PASSWORD}).status_code == 404
+    assert client.post("/api/users", json={"email": "a@example.com", "password": "12345678"}).status_code == 404
+
+
 def test_sensitive_routes_answer_401_without_a_token(client):
     uid = uuid_of(ALICE)
     calls = [
@@ -202,11 +239,11 @@ def test_sensitive_routes_answer_401_without_a_token(client):
         ("patch", "/suppliers/1/status"), ("delete", "/suppliers/1"),
         ("get", "/api/suppliers/1"), ("post", "/api/suppliers"), ("delete", "/api/suppliers/1"),
         ("post", "/api/incidents/analyze"), ("get", "/api/incidents/results/export"),
-        ("get", "/auth/me"), ("get", "/api/auth/me"),
+        ("get", "/auth/me"),
         ("get", "/profiles"), ("get", "/profiles/me"), ("get", f"/profiles/{uid}"),
-        ("patch", f"/profiles/{uid}"), ("get", "/api/profiles"), ("patch", f"/api/profiles/{uid}"),
-        ("get", "/users"), ("post", "/users"), ("get", f"/users/{uid}"), ("patch", f"/users/{uid}"),
-        ("delete", f"/users/{uid}"), ("get", "/api/users"), ("post", "/api/users"),
+        ("put", "/profiles/me"),
+        ("get", "/users"), ("get", f"/users/{uid}"), ("put", f"/users/{uid}"),
+        ("delete", f"/users/{uid}"), ("get", "/users/directory"),
     ]
     for method, url in calls:
         assert getattr(client, method)(url).status_code == 401, (method, url)
@@ -222,3 +259,29 @@ def test_any_valid_session_can_use_the_suppliers_api(client):
 def test_health_and_docs_stay_public(client):
     assert client.get("/health").status_code == 200
     assert client.get("/openapi.json").status_code == 200
+
+
+# --- GET /auth/me: user + linked profile ------------------------------------------
+
+
+def test_me_returns_email_role_and_the_linked_profile(client):
+    me = client.get("/auth/me", headers=headers_for(ALICE)).json()
+    assert (me["email"], me["role"]) == (ALICE, "admin")
+    assert set(me) == {"id", "email", "is_active", "role", "created_at", "profile"}
+    profile = me["profile"]
+    assert profile["user_id"] == me["id"] == str(uuid_of(ALICE))
+    assert (profile["name"], profile["contact_email"], profile["phone"], profile["address"]) == ("alice", None, None, None)
+    assert client.get("/auth/me", headers=headers_for(BOB)).json()["role"] == "user"
+    assert "hash" not in json.dumps(me) and "password" not in json.dumps(me)
+
+
+def test_me_reflects_profile_edits_and_recreates_a_missing_profile(client, profiles_db):
+    h = headers_for(BOB)
+    client.put("/profiles/me", json={"name": "Bob B.", "phone": "+34 600 000 000", "address": "Calle 1",
+                                     "contact_email": "bob.work@example.com"}, headers=h)
+    profile = client.get("/auth/me", headers=h).json()["profile"]
+    assert (profile["name"], profile["phone"], profile["address"], profile["contact_email"]) == (
+        "Bob B.", "+34 600 000 000", "Calle 1", "bob.work@example.com")
+    profiles_db.remove(lambda d: d["user_id"] == str(uuid_of(BOB)))
+    assert client.get("/auth/me", headers=h).json()["profile"]["name"] == "bob"
+    assert len(profiles_db) == 3

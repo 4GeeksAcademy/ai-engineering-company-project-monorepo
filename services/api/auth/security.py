@@ -1,30 +1,33 @@
-"""Password hashing and JWT helpers. Pure functions, no I/O."""
+"""Password hashing and JWT helpers. Pure functions, no I/O.
+
+Passwords are only ever stored as bcrypt hashes, through libpass (``libpass[bcrypt]``)."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-import bcrypt
 from jose import JWTError, jwt
+from passlib.hash import bcrypt  # libpass (maintained passlib fork, same import), not the abandoned passlib
 
 from core.config import JWT_ALGORITHM, get_access_token_expire_minutes, get_jwt_secret
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("ascii")
+    """bcrypt hash (``$2b$...``, own salt). Every password operation goes through here."""
+    return bcrypt.hash(password)
 
 
-def verify_password(password: str, password_hash: str) -> bool:
+def verify_password(password: str, hashed_password: str) -> bool:
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("ascii"))
-    except ValueError:  # e.g. password longer than bcrypt's 72-byte limit
+        return bcrypt.verify(password, hashed_password)
+    except ValueError:  # malformed hash, or a password longer than bcrypt's 72-byte limit
         return False
 
 
 def create_access_token(user_uuid: UUID | str) -> str:
     """Signed JWT (HS256, python-jose) with the minimum claims: ``user_id`` (the
-    user's ``user_uuid`` stored in TinyDB) and ``exp``. Who the user is and
+    user's ``id`` stored in TinyDB) and ``exp``. Who the user is and
     whether they still exist is read from the store on every request, so
     deleting an account takes effect immediately instead of when the token
     expires. The uuid never changes, so editing the email keeps the session.
