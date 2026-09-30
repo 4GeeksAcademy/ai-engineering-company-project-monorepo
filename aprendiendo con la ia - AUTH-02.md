@@ -1,7 +1,7 @@
 # 📘 Aprendiendo con la IA — AUTH‑02: login, registro y rutas protegidas
 
 > **Estudiante:** INES
-> **Proyecto:** Nexova — backoffice (`uis/backoffice`) y API (`services/api`)
+> **Proyecto:** Nexova — backoffice (`uis/backoffice`, **Next.js**) y API (`services/api`)
 > **Qué es este documento:** el diario de la tarea AUTH‑02. Aquí está todo lo que se hizo, **por qué** se hizo así, las **decisiones** que se tomaron y los **problemas** que aparecieron por el camino, con lo que se aprende de cada uno.
 > Es la continuación de tu cuaderno general, [`aprendiendo con la ia.md`](./aprendiendo%20con%20la%20ia.md).
 
@@ -20,6 +20,7 @@
 9. [Cómo verlo funcionando](#9-cómo-verlo-funcionando)
 10. [Glosario](#10-glosario)
 11. [Ejercicios para practicar](#11-ejercicios-para-practicar)
+12. [Segunda parte: migración a Next.js](#12-segunda-parte-migración-a-nextjs)
 
 ---
 
@@ -62,7 +63,7 @@ Faltaba el otro lado: que la **aplicación del navegador** (el backoffice) supie
 
 - **Context** (`AuthContext`): una "variable global" de React. Cualquier página puede preguntar "¿hay alguien con sesión?" con el hook `useAuth()`.
 - **Layout guard** (`RequireAuth`): un componente que envuelve las páginas privadas y decide si se muestran o si te manda a `/login`.
-- **React Router**: la librería que decide qué página se ve según la URL.
+- **Next.js (App Router)**: el framework que decide qué página se ve según la URL, a partir de las **carpetas** de `src/app/`. La primera versión de este trabajo usaba **React Router** (una librería que hace lo mismo con código); después se migró a Next.js, como pedía el enunciado ([sección 12](#12-segunda-parte-migración-a-nextjs)).
 
 ---
 
@@ -134,25 +135,29 @@ Al **recargar la página**, si hay token guardado, **no se fía de él sin más*
 ### 4.4 🛡️ El portero — `src/auth/RequireAuth.tsx`
 
 ```
-App.tsx
-├── /login            (pública)
-├── /register         (pública)
-└── <RequireAuth>     ← el portero
-    └── <Layout>      (barra lateral)
-        ├── /                  Inicio
-        ├── /incidents         Análisis de incidentes
-        ├── /suppliers         Proveedores
-        └── /account/profile   Mi perfil
-    └── *  (cualquier URL desconocida → pasa por el portero → inicio)
+src/app/
+├── layout.tsx               <AuthProvider> para toda la app
+├── (public)/                ← grupo sin portero
+│   ├── login/page.tsx       /login
+│   └── register/page.tsx    /register
+├── (app)/                   ← grupo con portero
+│   ├── layout.tsx           <RequireAuth> + barra lateral
+│   ├── page.tsx             /                 Inicio
+│   ├── incidents/page.tsx   /incidents        Análisis de incidentes
+│   ├── suppliers/page.tsx   /suppliers        Proveedores
+│   └── account/profile/page.tsx  /account/profile  Mi perfil
+└── not-found.tsx            cualquier URL desconocida → inicio (→ portero)
 ```
+
+En Next.js **cada carpeta es un trozo de la URL** y `page.tsx` es la página. Los nombres entre paréntesis, como `(app)`, son **grupos**: no aparecen en la URL y sirven para que varias páginas compartan un `layout.tsx`. El portero está en el layout de `(app)`, así que protege automáticamente todo lo que metas en esa carpeta.
 
 Qué hace el portero:
 - **Sesión comprobándose** → muestra "Comprobando la sesión…".
-- **Sin sesión** → `<Navigate to="/login">` y apunta de dónde venías (con el `?query`), para devolverte ahí tras el login.
-- **Con sesión** → muestra la página (`<Outlet />`).
+- **Sin sesión** → `router.replace("/login?next=/la-pagina")`: te manda al login y apunta en la URL de dónde venías (con su `?query`), para devolverte ahí.
+- **Con sesión** → muestra la página (`children`).
 - **En cada navegación vuelve a leer el token.** Si alguien lo borró a mano (DevTools), cierra la sesión.
 
-### 4.5 ✍️ Página de registro — `src/pages/RegisterPage.tsx`
+### 4.5 ✍️ Página de registro — `src/views/RegisterPage.tsx`
 
 - Campos: email, contraseña, repetir contraseña, y un perfil opcional (nombre, teléfono, dirección).
 - **Valida antes de enviar**, con los **mismos límites que la API**: contraseña de 8 a 72 bytes, nombre hasta 80, teléfono con patrón, dirección hasta 200.
@@ -161,7 +166,7 @@ Qué hace el portero:
 - Si todo va bien: login automático → token guardado → te lleva a `/`.
 - Si la cuenta se crea pero el login automático falla (por ejemplo, un fallo de red), dice "Cuenta creada, inicia sesión". **Nunca** dice "error al registrarte", porque la cuenta sí existe.
 
-### 4.6 👤 Página de perfil — `src/pages/ProfilePage.tsx`
+### 4.6 👤 Página de perfil — `src/views/ProfilePage.tsx`
 
 - Al abrirse pide `GET /auth/me`: email (solo lectura) + nombre, teléfono y dirección.
 - Al guardar envía `PUT /profiles/me` **solo con los campos que cambiaron**:
@@ -179,19 +184,21 @@ function diff(saved, form) {
 - ¿Por qué `null`? En esta API, **no enviar un campo** significa "déjalo como está", y **enviar `null`** significa "bórralo". Son dos cosas diferentes.
 - El botón "Guardar cambios" está desactivado si no has cambiado nada, y "Descartar" devuelve los valores guardados.
 
-### 4.7 🔀 El proxy de Vite — `vite.config.ts`
+### 4.7 🔀 Reenviar las llamadas a la API — `next.config.mjs`
 
-En desarrollo, el backoffice (puerto 5174) reenvía las llamadas a la API (puerto 8000). Así no hay problemas de CORS y en Codespaces solo necesitas abrir un puerto.
+El backoffice (puerto 5174) reenvía las llamadas a la API (puerto 8000). Así no hay problemas de CORS y en Codespaces solo necesitas abrir un puerto. En Next.js esto se hace con **rewrites**; en la primera versión, con Vite, se llamaba "proxy".
 
-El problema: `/users` y `/profiles` son rutas de la API, pero el navegador también puede pedir esas URLs como páginas. La solución fue reenviar **solo las llamadas de datos**:
+El problema: `/users` y `/profiles` son rutas de la API, pero el navegador también puede pedir esas URLs como páginas. La solución es reenviar **solo las llamadas de datos**:
 
-```ts
-const apiCallsOnly = {
-  target: API,
-  // si el navegador pide HTML (una página), se sirve la app; si pide datos, va a la API
-  bypass: (req) => (req.headers.accept?.includes("text/html") ? "/index.html" : undefined),
-};
-proxy: { "/api": API, "/auth": API, "/users": apiCallsOnly, "/profiles": apiCallsOnly }
+```js
+const notAPage = [{ type: "header", key: "accept", value: ".*text/html.*" }];
+rewrites: [
+  { source: "/api/:path*",      destination: `${API}/api/:path*` },
+  { source: "/auth/:path*",     destination: `${API}/auth/:path*` },
+  // "missing": solo si la petición NO pide HTML (es decir, no es el navegador cargando una página)
+  { source: "/users",           destination: `${API}/users`,            missing: notAPage },
+  { source: "/profiles/:path*", destination: `${API}/profiles/:path*`, missing: notAPage },
+]
 ```
 
 ### 4.8 🐍 Cambio en la API — `services/api/users/router.py`
@@ -216,7 +223,7 @@ Son scripts con **Playwright**: abren un Chromium de verdad, rellenan formulario
 
 | Decisión | Alternativas | Por qué se eligió |
 |---|---|---|
-| **Hacerlo en Vite + React Router, no en Next.js** | Migrar a Next.js; crear otra app | El repo no tiene Next.js. Migrar era un cambio enorme y arriesgado para algo que ya funcionaba. Se te preguntó y elegiste mantener Vite. |
+| **Primero en Vite + React Router; después, migrar a Next.js** | Crear otra app Next.js aparte; entregar solo código de referencia | El repo no tenía Next.js, así que primero se construyó y probó todo sobre lo que había. Cuando confirmaste que el enunciado exige Next.js, se **migró el backoffice existente**: una sola app, sin login duplicado, reaprovechando la lógica ya probada ([sección 12](#12-segunda-parte-migración-a-nextjs)). |
 | **Token en `localStorage`** | Cookie `httpOnly` | Lo pedía el enunciado y la API ya funcionaba con Bearer. Tiene un coste de seguridad: ver [sección 7](#7-seguridad-lo-que-hay-que-tener-claro). |
 | **Un único `apiFetch` para todo** | Poner la cabecera en cada llamada | La regla se escribe una vez y no se puede olvidar. |
 | **Validar en el navegador *y* en la API** | Solo en la API | El navegador da respuesta rápida y en español; la API es la que manda de verdad (el navegador se puede saltar). |
@@ -239,6 +246,7 @@ Cada problema sigue el mismo esquema: **síntoma → causa → solución → lec
 - **Causa:** `uis/backoffice` y `uis/website` son Vite + React.
 - **Solución:** parar y preguntar, con opciones claras.
 - **Lección:** si el enunciado y el código no coinciden, **no inventes**: pregunta. Las ideas (guard, token, localStorage) son las mismas en cualquier framework.
+- **Final:** más tarde se migró a Next.js. Como la lógica ya estaba separada del framework, casi no hubo que tocarla.
 
 ### 🔴 2. El mensaje venía cortado
 - **Síntoma:** "siguiendo exactamente estos requisitos:" y solo aparecía el contexto.
@@ -254,7 +262,7 @@ Cada problema sigue el mismo esquema: **síntoma → causa → solución → lec
 ### 🔴 4. El registro llamaba a la API… y le llegaba la web
 - **Síntoma:** `POST /users` desde el navegador no llegaba a la API.
 - **Causa:** el proxy de Vite solo reenviaba `/api` y `/auth`.
-- **Solución:** reenviar `/users` y `/profiles`, pero solo las peticiones de datos (el `bypass` por `Accept: text/html`, [4.7](#47--el-proxy-de-vite--viteconfigts)).
+- **Solución:** reenviar `/users` y `/profiles`, pero solo las peticiones de datos, mirando la cabecera `Accept: text/html`. Hoy se hace con los rewrites de Next.js y `missing` ([4.7](#47--reenviar-las-llamadas-a-la-api--nextconfigmjs)).
 - **Lección:** una misma URL puede ser una página o una llamada de datos. La cabecera `Accept` dice cuál es.
 
 ### 🔴 5. La API no arrancaba con `admin@nexova.test`
@@ -324,15 +332,17 @@ Cada problema sigue el mismo esquema: **síntoma → causa → solución → lec
 | `uis/backoffice/src/lib/api.ts` | + `register`, `updateMyProfile`, errores por campo, arreglo del 401 tardío |
 | `uis/backoffice/src/lib/profileFields.ts` | 🆕 límites y validación del perfil (compartido) |
 | `uis/backoffice/src/auth/AuthContext.tsx` | + `register`, `saveProfile`, `refreshUser`, `loggedOut`, sincronización entre pestañas |
-| `uis/backoffice/src/auth/RequireAuth.tsx` | Revisa el token en cada navegación, conserva el `?query`, logout sin "volver a" |
-| `uis/backoffice/src/pages/RegisterPage.tsx` | 🆕 página de registro |
-| `uis/backoffice/src/pages/ProfilePage.tsx` | 🆕 página de perfil |
-| `uis/backoffice/src/pages/LoginPage.tsx` | Enlace a registro, mensaje de error actualizado |
-| `uis/backoffice/src/components/Layout.tsx` | Entrada "Mi perfil" en la barra lateral |
-| `uis/backoffice/src/App.tsx` | Rutas nuevas y ruta comodín `*` |
+| `uis/backoffice/src/auth/RequireAuth.tsx` | Layout guard: revisa el token en cada navegación, `?next=`, logout sin "volver a" |
+| `uis/backoffice/src/lib/returnTo.ts` | 🆕 `?next=` seguro (sin *open redirect*) |
+| `uis/backoffice/src/app/**` | 🆕 rutas de Next.js: layout raíz, grupos `(public)` y `(app)`, `not-found` |
+| `uis/backoffice/src/views/RegisterPage.tsx` | 🆕 página de registro |
+| `uis/backoffice/src/views/ProfilePage.tsx` | 🆕 página de perfil |
+| `uis/backoffice/src/views/LoginPage.tsx` | Enlace a registro, vuelta a `?next=` |
+| `uis/backoffice/src/components/Layout.tsx` | Entrada "Mi perfil"; `next/link` en vez de `NavLink` |
 | `uis/backoffice/src/types/auth.ts` | Tipos del registro y del perfil |
-| `uis/backoffice/vite.config.ts` | Proxy de `/users` y `/profiles` |
-| `uis/backoffice/e2e/*.e2e.mjs` | 🆕 4 suites de pruebas |
+| `uis/backoffice/next.config.mjs` | 🆕 rewrites hacia la API (sustituye a `vite.config.ts`) |
+| `uis/backoffice/package.json`, `tsconfig.json` | Next.js 16 y TypeScript 5.9 en vez de Vite |
+| `uis/backoffice/e2e/*.e2e.mjs` | 🆕 4 suites de pruebas (+ la de proveedores, adaptada) |
 | `uis/backoffice/README.md` | Documentación de rutas y token |
 | `services/api/users/router.py` (+ schemas, service, README, tests) | Cuentas nuevas activas |
 
@@ -351,7 +361,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt uvicorn   # s
 ```bash
 npm run dev:backoffice        # desde la raíz del repo
 ```
-Abre el puerto **5174** (pestaña *Ports* de VS Code). Prueba: registrarte → entrar → "Mi perfil" → editar → "Cerrar sesión".
+Abre el puerto **5174** (pestaña *Ports* de VS Code). La primera vez que visitas cada página tarda un poco: en modo desarrollo, Next.js la compila al pedirla. Prueba: registrarte → entrar → "Mi perfil" → editar → "Cerrar sesión".
 Para ver el token: DevTools → Application → Local Storage → `nexova.token`.
 
 **Las pruebas automáticas** (con la API y el backoffice en marcha):
@@ -380,6 +390,14 @@ E2E_EMAIL=tu@email.com E2E_PASSWORD=tucontraseña npm run e2e:register
 | **Carrera (race condition)** | Error que depende del orden en que terminan cosas que ocurren a la vez |
 | **XSS** | Ataque que inyecta JavaScript malicioso en una página |
 | **Accesibilidad (a11y)** | Que la web se pueda usar con lector de pantalla, teclado, etc. |
+| **App Router** | El sistema de rutas de Next.js: carpetas de `src/app/` = URLs |
+| **Grupo de rutas** `(nombre)` | Carpeta que agrupa páginas (y su layout) sin aparecer en la URL |
+| **Componente de servidor / de cliente** | El de servidor se genera en el servidor; el de cliente (`"use client"`) se ejecuta en el navegador y puede usar hooks y `localStorage` |
+| **SSR** | *Server Side Rendering*: el servidor manda el HTML ya hecho |
+| **Hydration** | Cuando React "da vida" en el navegador al HTML que vino del servidor. Si no coinciden, error |
+| **Rewrite** | Regla de Next.js que reenvía una URL a otro destino sin que el navegador lo note |
+| **Proxy (Next.js 16)** | El antiguo "middleware": código que se ejecuta en el servidor antes de cada petición |
+| **Open redirect** | Fallo que permite usar tu web para redirigir a otra (útil para *phishing*) |
 
 ---
 
@@ -390,6 +408,105 @@ E2E_EMAIL=tu@email.com E2E_PASSWORD=tucontraseña npm run e2e:register
 3. **Medidor de contraseña (fácil):** en `/register`, muestra "débil / media / fuerte" mientras se escribe.
 4. **Tu propio test (medio):** añade a `profile.e2e.mjs` un caso que compruebe que un nombre de 81 caracteres se bloquea en el navegador.
 5. **Pregunta para pensar:** ¿qué pasaría si `apiFetch` borrara el token con **cualquier** error, no solo con 401? Pista: piensa en qué pasa si la API se cae un momento.
+6. **Next.js (medio):** añade una página `/account/security` dentro de `src/app/(app)/`. Comprueba que, sin tocar el portero, ya está protegida. ¿Por qué?
+7. **Next.js (para pensar):** `src/views/HomePage.tsx` empieza con `"use client"` aunque no usa hooks. Quítalo, ejecuta `npm run build` y busca "Backoffice de Nexova" en `.next/server/app/index.html`. ¿Qué ves y por qué importa? (Solución en la sección 12, problema C.)
+
+---
+
+## 12. Segunda parte: migración a Next.js
+
+### 🎯 Por qué
+
+El enunciado pedía **"componentes y páginas Next.js"**. La primera versión se hizo sobre lo que tenía el repo (Vite + React Router). Cuando confirmaste que se exige Next.js, se **migró el backoffice** a **Next.js 16 con App Router**. Se volvieron a pasar todas las pruebas, en modo desarrollo **y** en producción.
+
+### 🔄 Qué cambió y qué no
+
+| Pieza | Antes (Vite + React Router) | Ahora (Next.js) |
+|---|---|---|
+| Rutas | `<Routes>` en `App.tsx` | Carpetas en `src/app/` |
+| Páginas | `src/pages/*.tsx` | `src/views/*.tsx` + `src/app/**/page.tsx` que las importa |
+| Portero | `<RequireAuth>` con `<Outlet />` | `<RequireAuth>` en `src/app/(app)/layout.tsx`, con `children` |
+| Redirigir | `<Navigate to="/login">` | `router.replace("/login")` (`next/navigation`) |
+| Enlaces | `<Link to>` / `<NavLink>` | `<Link href>` (`next/link`) + `usePathname()` para marcar el activo |
+| Volver tras el login | estado interno del router (`state.from`) | en la URL: `/login?next=/suppliers` |
+| Llamar a la API | proxy de `vite.config.ts` | rewrites de `next.config.mjs` |
+| Variable de entorno | `VITE_API_BASE_URL` | `NEXT_PUBLIC_API_BASE_URL` |
+| **Token, `apiFetch`, `AuthContext`, validaciones** | — | **Casi sin cambios** ✅ |
+
+💡 **Lección principal:** como la lógica (token, API, sesión) estaba en archivos separados de la navegación, cambiar de framework solo obligó a tocar la "piel" de la app.
+
+### 🧠 Conceptos nuevos de Next.js
+
+**1. Servidor y cliente.** Next.js genera primero el HTML **en el servidor** y luego React lo "hidrata" en el navegador. En el servidor **no existe `localStorage`**. Por eso:
+- Todas las vistas llevan `"use client"`, porque usan hooks y la sesión del navegador.
+- La sesión empieza **siempre** en `"loading"` y el token se lee ya en el navegador (`useEffect`). Si el servidor dijera "anónimo" y el navegador "cargando", el HTML no coincidiría: un **error de hydration**.
+
+**2. ¿Por qué no usar el "middleware" (ahora "proxy") de Next.js?** Se ejecuta **en el servidor**, antes de cada petición, y el servidor no puede leer el `localStorage` del navegador. Por eso el enunciado dice que no se use, y la protección se hace con un **layout guard en el cliente**. Dato curioso: en Next.js 16 el middleware se ha **renombrado a proxy**; lo encontramos leyendo la documentación que trae el propio paquete (`node_modules/next/dist/docs/`).
+
+**3. `?next=` y el *open redirect*.** Ahora la página de vuelta viaja en la URL. Un atacante podría enviarte un enlace como `/login?next=https://web-falsa.com` para que, tras iniciar sesión, acabaras en su web. `src/lib/returnTo.ts` solo acepta rutas que empiecen por `/` (y no por `//`):
+
+```ts
+export function safeReturnTo(value) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return "/";
+  return value;
+}
+```
+
+Hay un test que lo comprueba con `https://evil.example.com` y con `//evil.example.com`.
+
+### 🔴 Problemas de la migración
+
+**A. TypeScript 7 no sirve para Next.js**
+- **Síntoma:** el repo usa TypeScript 7, y `require("typescript").createProgram` es `undefined`.
+- **Causa:** TypeScript 7 es el compilador nuevo (nativo) y ya no incluye la API de JavaScript que Next.js usa para leer el `tsconfig` y comprobar los tipos.
+- **Solución:** el backoffice tiene su propio TypeScript **5.9**; el resto del repo sigue con la 7. npm lo instala dentro de `uis/backoffice/node_modules`.
+- **Lección:** antes de cambiar de herramienta, comprueba que es compatible con **lo que ya tienes**.
+
+**B. `src/pages` no se puede usar**
+- **Causa:** Next.js trata cualquier carpeta `pages/` como su sistema antiguo de rutas (*Pages Router*).
+- **Solución:** renombrarla a `src/views` con `git mv`, para que git conserve el historial de cada archivo.
+
+**C. El HTML del servidor enseñaba la página de inicio sin sesión**
+- **Síntoma:** en el HTML de `/` generado en el servidor aparecía "Backoffice de Nexova", aunque el portero mostraba "Comprobando la sesión…".
+- **Causa:** `HomePage` no usaba hooks, así que era un **componente de servidor**. Next.js lo renderizó en el servidor y lo envió dentro de la página, aunque el portero no lo mostrara.
+- **Solución:** `"use client"` también en `HomePage`. Ahora las vistas protegidas no salen del servidor.
+- **Lección:** en Next.js, **ocultar** no es lo mismo que **no enviar**. Mira siempre qué HTML genera el servidor.
+
+**D. Dos "alertas" en cada página**
+- **Síntoma:** los tests fallaban con "strict mode violation: 2 elements" al buscar `role="alert"`.
+- **Causa:** Next.js añade un **anunciador de rutas** invisible (`#__next-route-announcer__`) con `role="alert"`. Sirve para que un lector de pantalla diga el nombre de la página nueva al navegar.
+- **Solución:** los tests buscan las alertas de la app excluyendo ese elemento.
+
+**E. Un 404 "nuevo"**
+- **Síntoma:** error de consola "404" en el test del portero.
+- **Causa:** con Vite, cualquier URL devolvía 200 (la misma app). Next.js responde **404** a una URL que no existe, que es lo correcto. Después, `not-found.tsx` te lleva al inicio.
+- **Solución:** el test acepta ese 404 concreto como esperado.
+
+**F. Un test que fallaba "a veces" (y dos lecciones)**
+- **Síntoma:** el test del "401 tardío" fallaba 1 de cada 3 veces.
+- **Causa 1:** esperaba 300 ms "a ojo". Con Next.js la navegación primero descarga la página, y a veces la petición salía después del cambio de token.
+- **Causa 2 (la buena):** el JWT solo lleva `user_id` y `exp`, con precisión de segundos. Si dos logins ocurren en el **mismo segundo**, la API devuelve **exactamente el mismo token**. Entonces el "401 del token viejo" es un 401 del token actual, y borrarlo es lo correcto. Se confirmó midiendo: falló justo en las ejecuciones con tokens idénticos.
+- **Solución:** esperar a que la petición llegue de verdad (no un tiempo fijo) y pedir un token nuevo hasta que sea distinto. Después, 8 de 8 ejecuciones en verde.
+- **Lección:** un test que falla "a veces" casi nunca es mala suerte. **Mide antes de arreglar**, y no pongas esperas de tiempo fijo.
+
+**G. `next start` sin build**
+- **Causa:** al probar el typecheck "en limpio" se apartó la carpeta `.next`, y `next start` necesita una build.
+- **Solución:** `npm run build` antes de `npm run start`.
+
+**H. Aparecieron `AGENTS.md` y `CLAUDE.md`**
+- **Causa:** `next dev` (Next.js 16) los genera solo, con notas para asistentes de IA. Se comprobó en el código de Next.js (`generate-agent-files.js`) antes de fiarse.
+- **Solución:** incluirlos en el commit, porque `next dev` los volvería a crear.
+- **Lección:** si aparece un archivo que no has creado tú, **averigua de dónde viene** antes de borrarlo o subirlo.
+
+### ✅ Resultado
+
+| Comprobación | Resultado |
+|---|---|
+| `npm run build` (7 rutas) | ✅ |
+| `npm run typecheck` (`next typegen` + `tsc`) | ✅ |
+| 5 suites e2e en **producción** (`next start`) | ✅ 104 comprobaciones |
+| 5 suites e2e en **desarrollo** (`next dev`) | ✅ 104 comprobaciones |
+| Website público sin autenticación | ✅ |
 
 ---
 

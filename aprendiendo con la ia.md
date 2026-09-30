@@ -200,17 +200,22 @@ Esto es **datos estructurados** que Google entiende. Mejora el SEO (cómo aparec
 
 ## 5. Frontend 2: El panel interno (backoffice)
 
+> 🔄 **Actualización (AUTH‑02):** el backoffice se **migró de Vite + React Router a Next.js 16 (App Router)**. Esta sección muestra la estructura nueva; los fragmentos de código de más abajo son la **versión original**, más simple, y siguen sirviendo para entender la idea. El detalle de la migración está en [aprendiendo con la ia - AUTH-02.md](./aprendiendo%20con%20la%20ia%20-%20AUTH-02.md#12-segunda-parte-migración-a-nextjs).
+
 ### 🧱 Tecnologías
 
-Mismas que website + **React Router DOM** para rutas y **Playwright** para tests e2e.
+**Next.js 16** (App Router) con React 19, Tailwind y **TypeScript 5.9** (Next.js aún no funciona con TypeScript 7), y **Playwright** para tests e2e.
 
 ### 📄 Estructura
 
 ```
 uis/backoffice/src/
-├── main.tsx                 # Punto de entrada
-├── App.tsx                  # Enrutador con React Router
-├── index.css                # Estilos
+├── app/                     # Rutas de Next.js (cada carpeta = un trozo de la URL)
+│   ├── layout.tsx           # Layout raíz: <html> + <AuthProvider>
+│   ├── globals.css          # Estilos
+│   ├── (public)/            # login/ y register/ (sin sesión)
+│   ├── (app)/               # layout.tsx con el portero + inicio, incidents/, suppliers/, account/profile/
+│   └── not-found.tsx        # URL desconocida → inicio
 ├── auth/
 │   ├── AuthContext.tsx       # Estado global de autenticación
 │   └── RequireAuth.tsx       # Protege rutas (redirige si no logueado)
@@ -224,10 +229,14 @@ uis/backoffice/src/
 │       └── SupplierRow.tsx   # Fila de proveedor editable
 ├── lib/
 │   ├── api.ts               # Llamadas a la API (fetch con token)
-│   └── token.ts             # Gestión del JWT en localStorage
-├── pages/
+│   ├── token.ts             # Gestión del JWT en localStorage
+│   ├── returnTo.ts          # ?next= seguro tras el login
+│   └── profileFields.ts     # Límites de los campos del perfil
+├── views/                   # Las páginas (componentes de cliente)
 │   ├── HomePage.tsx          # Página principal del backoffice
 │   ├── LoginPage.tsx         # Login
+│   ├── RegisterPage.tsx      # Registro
+│   ├── ProfilePage.tsx       # Mi perfil
 │   ├── IncidentsAnalysisPage.tsx # Analizador de incidentes
 │   └── SuppliersPage.tsx     # Directorio de proveedores
 └── types/
@@ -419,6 +428,8 @@ class SupplierCreate(BaseModel):
 **Ventaja:** FastAPI valida automáticamente los datos que llegan. Si alguien envía `monthly_rate: -100`, devuelve error 422 automáticamente.
 
 ### 🔄 Proxy de Vite (Cómo se comunican frontend y backend)
+
+> 🔄 **Actualización:** tras la migración a Next.js, el backoffice hace esto con los **rewrites** de `next.config.mjs`; el website sigue usando el proxy de Vite. La idea es la misma.
 
 ```ts
 // vite.config.ts del backoffice
@@ -637,11 +648,12 @@ import { Link } from "./router";
 | Tecnología | Versión | ¿Qué es? | ¿Por qué la usamos? |
 |---|---|---|---|
 | **React** | 19 | Biblioteca de UI | El estándar para interfaces modernas |
-| **TypeScript** | 7 | JavaScript con tipos | Evita errores, mejor autocompletado |
-| **Vite** | 8.3 | Bundler / dev server | Más rápido que Webpack, recarga instantánea |
+| **TypeScript** | 7 (5.9 en el backoffice) | JavaScript con tipos | Evita errores, mejor autocompletado |
+| **Vite** | 8.3 | Bundler / dev server (website) | Más rápido que Webpack, recarga instantánea |
+| **Next.js** | 16.3 | Framework de React (backoffice) | Rutas por carpetas, build optimizada; lo pedía AUTH‑02 |
 | **Tailwind CSS** | 3.4 | Framework CSS | Escribimos CSS en el HTML, muy rápido |
 | **Lucide React** | 1.47 | Iconos | Iconos bonitos y simples |
-| **React Router DOM** | 7.18 | Enrutador (solo backoffice) | Navegación entre páginas |
+| ~~**React Router DOM**~~ | ~~7.18~~ | Enrutador del backoffice **hasta la migración a Next.js** | Sustituido por el App Router de Next.js |
 
 ### 🐍 Backend
 
