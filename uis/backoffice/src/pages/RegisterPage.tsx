@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { useAuth, type RegisterResult } from "../auth/AuthContext";
+import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../lib/api";
 import { validateProfileFields } from "../lib/profileFields";
 import type { SignUpPayload } from "../types/auth";
@@ -64,7 +64,7 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<Exclude<RegisterResult, "authenticated"> | null>(null);
+  const [created, setCreated] = useState(false);
 
   if (status === "authenticated") return <Navigate to="/" replace />;
 
@@ -91,7 +91,7 @@ export default function RegisterPage() {
     try {
       const outcome = await register(payload);
       if (outcome === "authenticated") navigate("/", { replace: true });
-      else setResult(outcome);
+      else setCreated(true);
     } catch (err) {
       const { fields, general } = fromApiError(err);
       setFieldErrors(fields);
@@ -101,16 +101,12 @@ export default function RegisterPage() {
     }
   }
 
-  if (result) {
+  if (created) {
     return (
       <Shell>
         <div role="status" className="mt-6 flex gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
-          <p>
-            {result === "pending"
-              ? "Cuenta creada. Un administrador tiene que aprobarla antes de que puedas iniciar sesión."
-              : "Cuenta creada, pero no se pudo iniciar sesión automáticamente. Inicia sesión con tus datos."}
-          </p>
+          <p>Cuenta creada, pero no se pudo iniciar sesión automáticamente. Inicia sesión con tus datos.</p>
         </div>
         <Link
           to="/login"

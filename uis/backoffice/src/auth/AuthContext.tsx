@@ -1,13 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ApiError, fetchMe, login as apiLogin, register as apiRegister, updateMyProfile } from "../lib/api";
+import { fetchMe, login as apiLogin, register as apiRegister, updateMyProfile } from "../lib/api";
 import { clearToken, getToken, onTokenChange, onTokenChangeInOtherTab } from "../lib/token";
 import type { Me, ProfileUpdate, SignUpPayload } from "../types/auth";
 
 /**
- * After a successful sign-up: "authenticated" = logged in; "pending" = the API refuses to log the account in
- * yet (sign-ups wait for an admin); "created" = the automatic login failed for another reason (network…).
+ * After a successful sign-up: "authenticated" = logged in; "created" = the account exists but the automatic
+ * login failed (network, or an admin switched the account off in between).
  */
-export type RegisterResult = "authenticated" | "pending" | "created";
+export type RegisterResult = "authenticated" | "created";
 
 type Status = "loading" | "anonymous" | "authenticated";
 
@@ -92,17 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoggedOut(false);
   }, []);
 
-  // Sign up, then log straight in with the same credentials. The API creates sign-ups inactive, so
-  // that login answers 401 until an admin approves the account: that is "pending", not a failure.
+  // Sign up, then log straight in with the same credentials (the API creates sign-ups active).
   const register = useCallback(
     async (payload: SignUpPayload): Promise<RegisterResult> => {
       await apiRegister(payload);
       try {
         await login(payload.email, payload.password);
         return "authenticated";
-      } catch (err) {
-        // The account exists either way: never report this as a failed sign-up.
-        return err instanceof ApiError && err.status === 401 ? "pending" : "created";
+      } catch {
+        // The account exists: never report this as a failed sign-up.
+        return "created";
       }
     },
     [login],

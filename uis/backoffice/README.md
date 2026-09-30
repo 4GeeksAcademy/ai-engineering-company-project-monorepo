@@ -12,8 +12,7 @@ token in `localStorage`; from then on every API call carries `Authorization: Bea
 (`src/lib/api.ts`). Auth is stateless: no cookies and no server-side session. The token expires by itself
 (`ACCESS_TOKEN_EXPIRE_MINUTES` on the API); a `401` from the API, or "Cerrar sesión", forgets the token and
 sends the user back to `/login`. You need an active user on the API: set `AUTH_INITIAL_EMAIL` /
-`AUTH_INITIAL_PASSWORD` for its first start (see `services/api/README.md`). Accounts created through the
-public sign-up wait for an admin to approve them and cannot log in before that.
+`AUTH_INITIAL_PASSWORD` for its first start (see `services/api/README.md`), or sign up at `/register`.
 
 ## Route protection and token lifecycle
 
@@ -41,9 +40,9 @@ The public website (`uis/website`) has no authentication at all and must stay th
 `/register` posts email, password and the optional profile (name, phone, address) to `POST /users`, then logs
 straight in with `POST /auth/login` and, on success, stores the token and goes to `/`. The form validates with the
 API's own limits before sending, and shows the API's `409` (email taken) and `422` (validation) next to the field.
-The API creates sign-ups **inactive**, so today that automatic login gets a `401`: the page then says the account
-was created and is waiting for an admin's approval (no token is stored). Once an admin activates the account, the
-user signs in from `/login`. The Vite proxy forwards `/users` to the API for this call, except browser page loads.
+The API creates sign-ups active, so the new user is in straight away. If that automatic login still fails (network,
+or an admin switched the account off in between), the page says the account was created and points to `/login`;
+it is never reported as a failed sign-up. The Vite proxy forwards `/users` to the API for this call, except browser page loads.
 
 ## Pages
 
@@ -75,7 +74,7 @@ Requires `services/api` running (see its README) and a logged-in user — the pa
 
 With the API and `npm run dev` running (and `npx playwright install chromium`), from `uis/backoffice`:
 `E2E_EMAIL=… E2E_PASSWORD=… npm run e2e` (login and suppliers; needs a fresh seed) and
-`npm run e2e:register` (sign-up; `E2E_*` must be an active admin) and `npm run e2e:profile` (profile page; it
+`npm run e2e:register` (sign-up) and `npm run e2e:profile` (profile page; it
 restores the profile at the end), `npm run e2e:guard` (route protection; also opens the public website on
 `:5173`, skip with `E2E_WEBSITE_URL=none`) and `npm run e2e:token` (token lifecycle; needs the supplier seed). See the header of each file in `e2e/`.
 

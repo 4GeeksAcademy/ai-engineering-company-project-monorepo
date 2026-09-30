@@ -25,9 +25,9 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def approve(client, user_id):
-    """An admin (ALICE) activates a pending sign-up."""
-    return client.put(f"/users/{user_id}", json={"is_active": True}, headers=headers_for(ALICE))
+def set_active(client, user_id, active):
+    """An admin (ALICE) switches an account on or off."""
+    return client.put(f"/users/{user_id}", json={"is_active": active}, headers=headers_for(ALICE))
 
 
 def login(client, email, password):
@@ -42,15 +42,13 @@ def test_create_stores_a_hash_and_a_uuid_and_the_user_can_log_in(client, users_d
     assert created.status_code == 201
     body = created.json()
     assert set(body) == PUBLIC_FIELDS | {"message"} and body["email"] == "nuevo@example.com"
-    assert body["is_active"] is False and body["role"] == "user"  # pending approval; the API can't grant a role
+    assert body["is_active"] is True and body["role"] == "user"  # active at once; the API can't grant a role
     assert "s3cret-pass!" not in created.text
 
     stored = users_db.get(doc_id=4)
     assert stored["id"] == body["id"]
     assert set(stored) == PUBLIC_FIELDS | {"hashed_password"}
     assert stored["hashed_password"].startswith("$2") and NEW["password"] not in str(stored)
-    assert login(client, "NUEVO@example.com", NEW["password"]).status_code == 401  # not approved yet
-    assert approve(client, body["id"]).status_code == 200
     assert login(client, "NUEVO@example.com", NEW["password"]).status_code == 200
 
 
@@ -204,10 +202,10 @@ def test_bootstrap_without_full_credentials_creates_nobody(tmp_path, monkeypatch
 # --- account state: is_active, role, created_at ----------------------------------
 
 
-def test_new_sign_ups_are_inactive_users_with_a_creation_date(client, users_db):
+def test_new_sign_ups_are_active_users_with_a_creation_date(client, users_db):
     client.post("/users", json=NEW, headers=headers_for(ALICE))
     stored = users_db.get(doc_id=4)
-    assert stored["is_active"] is False and stored["role"] == "user"
+    assert stored["is_active"] is True and stored["role"] == "user"
     created_at = datetime.fromisoformat(stored["created_at"])
     assert created_at.tzinfo is not None and abs(datetime.now(timezone.utc) - created_at) < timedelta(minutes=1)
 
@@ -371,19 +369,17 @@ def test_the_last_admin_cannot_be_deleted(client, users_db):
 # --- public sign-up (POST /users) ---------------------------------------------------
 
 
-def test_sign_up_needs_no_session_and_starts_pending_until_an_admin_approves(client, users_db):
+def test_sign_up_needs_no_session_and_can_log_in_straight_away(client, users_db):
     email = "signup@example.com"
     res = client.post("/users", json={"email": email, "password": "s3cret-pass!", "name": "Sara"})
     assert res.status_code == 201
     body = res.json()
-    assert body["role"] == "user" and body["is_active"] is False and "approved by an admin" in body["message"]
+    assert body["role"] == "user" and body["is_active"] is True and "sign in now" in body["message"]
     assert "password" not in res.text and "hash" not in res.text
     assert len(users_db) == 4
-    # pending: same 401 as a wrong password, so it reveals nothing about the email
-    pending = login(client, email, "s3cret-pass!")
-    assert pending.status_code == 401 and pending.json() == login(client, email, "wrong-password-1").json()
-    assert approve(client, body["id"]).json()["is_active"] is True
-    token = login(client, email, "s3cret-pass!").json()["access_token"]
+    logged_in = login(client, email, "s3cret-pass!")
+    assert logged_in.status_code == 200
+    token = logged_in.json()["access_token"]
     me = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"}).json()
     assert (me["email"], me["role"], me["profile"]["name"]) == (email, "user", "Sara")
 
@@ -398,17 +394,20 @@ def test_sign_up_cannot_grant_a_role_or_reuse_an_email(client, users_db):
 def test_only_an_admin_can_activate_or_deactivate_accounts(client):
     new = client.post("/users", json=NEW).json()
     url = f"/users/{new['id']}"
-    for who in (BOB, CAROL):  # regular users can't approve anyone
-        assert client.put(url, json={"is_active": True}, headers=headers_for(who)).status_code == 403
-    assert login(client, NEW["email"], NEW["password"]).status_code == 401
-    assert approve(client, new["id"]).status_code == 200
+    for who in (BOB, CAROL):  # regular users can't switch anyone off
+        assert client.put(url, json={"is_active": False}, headers=headers_for(who)).status_code == 403
     token = login(client, NEW["email"], NEW["password"]).json()["access_token"]
     mine = {"Authorization": f"Bearer {token}"}
-    assert client.put(url, json={"is_active": False}, headers=mine).status_code == 403  # can't reactivate self either
-    off = client.put(url, json={"is_active": False}, headers=headers_for(ALICE))
+    assert client.put(url, json={"is_active": False}, headers=mine).status_code == 403  # not even their own account
+    off = set_active(client, new["id"], False)
     assert off.status_code == 200 and off.json()["is_active"] is False
     assert client.get("/auth/me", headers=mine).status_code == 401  # deactivating kills the session
+    wrong = login(client, NEW["email"], "wrong-password-1")
+    inactive = login(client, NEW["email"], NEW["password"])  # same 401 as a wrong password: reveals nothing
+    assert inactive.status_code == 401 and inactive.json() == wrong.json()
     assert client.get("/users", headers=headers_for(ALICE)).json()  # and it is visible to admins in the listing
+    assert set_active(client, new["id"], True).status_code == 200  # only an admin switches it back on
+    assert login(client, NEW["email"], NEW["password"]).status_code == 200
 
 
 def test_the_last_active_admin_cannot_be_deactivated_demoted_or_deleted(client, users_db):
@@ -425,7 +424,7 @@ def test_the_last_active_admin_cannot_be_deactivated_demoted_or_deleted(client, 
 
 
 def test_a_signed_up_user_gets_403_on_other_peoples_accounts_and_401_without_a_token(client):
-    approve(client, client.post("/users", json=NEW).json()["id"])
+    client.post("/users", json=NEW)
     token = login(client, NEW["email"], NEW["password"]).json()["access_token"]
     mine = {"Authorization": f"Bearer {token}"}
     other = f"/users/{uuid_of(ALICE)}"
@@ -502,11 +501,11 @@ def test_directory_needs_a_token_and_is_not_parsed_as_a_user_id(client):
 def test_directory_shows_profile_names_sorted_and_hides_inactive_accounts(client, users_db):
     client.put("/profiles/me", json={"name": "Zoe"}, headers=headers_for(ALICE))
     client.put("/profiles/me", json={"name": "ana"}, headers=headers_for(CAROL))
-    pending = client.post("/users", json={**NEW, "name": "Pending Pat"}).json()  # inactive until approved
+    pat = client.post("/users", json={**NEW, "name": "Pat"}).json()  # a sign-up is listed at once
     names = [e["name"] for e in client.get("/users/directory", headers=headers_for(BOB)).json()]
-    assert names == ["ana", "bob", "Zoe"]  # case-insensitive order, no "Pending Pat"
-    approve(client, pending["id"])
+    assert names == ["ana", "bob", "Pat", "Zoe"]  # case-insensitive order
+    set_active(client, pat["id"], False)
     names = [e["name"] for e in client.get("/users/directory", headers=headers_for(BOB)).json()]
-    assert "Pending Pat" in names
+    assert "Pat" not in names
     users_db.update({"is_active": False}, lambda d: d["email"] == CAROL)
     assert "ana" not in [e["name"] for e in client.get("/users/directory", headers=headers_for(BOB)).json()]

@@ -31,10 +31,10 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       // The API answers the same 401 for a wrong password, an unknown email and an account that is
-      // still waiting for an admin's approval, so the message covers all three.
+      // that an admin has switched off, so the message covers all three.
       setError(
         err instanceof ApiError && err.status === 401
-          ? "Email o contraseña incorrectos, o la cuenta todavía no ha sido aprobada."
+          ? "Email o contraseña incorrectos, o la cuenta está desactivada."
           : "No se pudo iniciar sesión. Inténtalo de nuevo.",
       );
     } finally {

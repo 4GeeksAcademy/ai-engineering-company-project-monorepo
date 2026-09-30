@@ -121,7 +121,7 @@ class UserOut(BaseModel):
 
 
 class SignUpOut(UserOut):
-    """Answer of the public sign-up: the new (inactive) user and what happens next."""
+    """Answer of the public sign-up: the new (active) user and what happens next."""
 
     message: str
 
