@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";

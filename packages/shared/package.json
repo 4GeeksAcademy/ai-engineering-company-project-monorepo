@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "description": "Shared types for AI Engineering transversal projects",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "types/index.ts",
+  "types": "types/index.ts",
   "scripts": {},
   "keywords": [
     "types",

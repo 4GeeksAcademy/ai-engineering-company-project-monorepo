@@ -7,8 +7,8 @@ deleting an account is for the account's owner or an admin (``403`` otherwise),
 and listing every user is for admins only (``/directory`` is the exception:
 any session gets the names of the active users, and nothing else); only an admin can change a ``role`` or
 ``is_active``, and only the owner can change their own password — nobody can
-reset someone else's. Sign-ups start inactive: an admin approves them by setting
-``is_active``. Display name and contact data are not stored here: see ``profiles``.
+reset someone else's. Sign-ups are active straight away (they can log in at once);
+an admin can switch an account off with ``is_active``. Display name and contact data are not stored here: see ``profiles``.
 
 Two routers, both mounted at ``/users`` in ``main.py``: ``router`` is private by
 default, so a route added to it is protected; ``public_router`` holds the only
@@ -26,7 +26,7 @@ from auth.dependencies import CurrentUser, admin_only, get_current_user, owner_o
 from . import service
 from .schemas import DirectoryEntry, Role, SignUpOut, UserCreate, UserOut, UserUpdate
 
-PENDING_MESSAGE = "Account created. It has to be approved by an admin before you can sign in."
+SIGN_UP_MESSAGE = "Account created. You can sign in now."
 
 router = APIRouter(tags=["users"], dependencies=[Depends(get_current_user)])
 public_router = APIRouter(tags=["users"])
@@ -47,10 +47,10 @@ async def user_directory() -> list[DirectoryEntry]:
 @public_router.post("", response_model=SignUpOut, status_code=status.HTTP_201_CREATED)
 async def create_user(payload: UserCreate) -> SignUpOut:
     """Public sign-up. The new user is always a ``user`` (``role`` is not accepted) and
-    starts inactive: it can't sign in until an admin approves it (``is_active=true``)."""
+    active: it can sign in straight away."""
     try:
-        user = service.create_user(payload, is_active=False)
-        return SignUpOut(**user.model_dump(), message=PENDING_MESSAGE)
+        user = service.create_user(payload)
+        return SignUpOut(**user.model_dump(), message=SIGN_UP_MESSAGE)
     except service.EmailTakenError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import CsvUploader from "../components/incidents/CsvUploader";

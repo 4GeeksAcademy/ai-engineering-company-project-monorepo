@@ -94,7 +94,7 @@ def list_users() -> list[UserOut]:
 
 
 def list_directory() -> list[DirectoryEntry]:
-    """Active users with their profile name, sorted by name. Pending or deactivated
+    """Active users with their profile name, sorted by name. Deactivated
     accounts are left out, and so is everything but the name."""
     names = {p.user_id: p.name for p in profiles_service.list_profiles()}
     entries = [
@@ -124,8 +124,8 @@ def create_user(payload: UserCreate, role: Role = Role.user, is_active: bool = T
     """Create the user and its linked Profile in one operation.
 
     ``role`` is not part of ``UserCreate`` on purpose: the API can't grant it.
-    ``is_active=False`` creates a pending account (public sign-up) that can't
-    sign in until an admin activates it.
+    ``is_active=False`` creates an account that can't sign in until an admin
+    activates it (the public sign-up creates active accounts).
     The optional ``name`` / ``phone`` / ``address`` go to the Profile, never to User.
     """
     if get_doc_by_email(payload.email) is not None:

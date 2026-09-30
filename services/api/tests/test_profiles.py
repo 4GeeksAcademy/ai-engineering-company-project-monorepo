@@ -42,7 +42,6 @@ def test_creating_a_user_creates_exactly_one_profile_with_a_default_name(client,
 
 def test_deleting_a_user_deletes_their_profile(client, profiles_db):
     created = client.post("/users", json=NEW_USER, headers=headers_for(ALICE)).json()
-    client.put(f"/users/{created['id']}", json={"is_active": True}, headers=headers_for(ALICE))  # approve the sign-up
     own = {"Authorization": f"Bearer {create_access_token(created['id'])}"}
     assert len(profiles_db) == 4
     assert client.delete(f"/users/{created['id']}", headers=own).status_code == 204

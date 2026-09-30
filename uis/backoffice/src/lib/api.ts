@@ -1,37 +1,42 @@
 import type { AnalyzeResponse } from "../types/incidents";
 import type { Supplier, SupplierCreate, SupplierStatus } from "../types/suppliers";
-import type { Me } from "../types/auth";
+import type { Me, Profile, ProfileUpdate, SignUpOut, SignUpPayload } from "../types/auth";
 import { clearToken, getToken, setToken } from "./token";
 
-// Vacío = mismo origen: en desarrollo el proxy de Vite reenvía /api a la API local.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+// Vacío = mismo origen: los rewrites de next.config.mjs reenvían las llamadas a la API local.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
+    /** Per-field messages of a 422 (FastAPI validation), keyed by the body field name. */
+    public fieldErrors: Record<string, string> = {},
   ) {
     super(message);
   }
 }
 
-async function readErrorDetail(response: Response): Promise<string> {
+async function toApiError(response: Response): Promise<ApiError> {
   try {
     const body = await response.json();
-    if (typeof body.detail === "string") return body.detail;
+    if (typeof body.detail === "string") return new ApiError(body.detail, response.status);
     if (Array.isArray(body.detail)) {
-      return body.detail
+      const fieldErrors: Record<string, string> = {};
+      const message = body.detail
         .map((e: { loc?: unknown[]; msg?: string }) => {
           const field = e.loc?.slice(1).join(".");
-          const message = (e.msg ?? "").replace(/^Value error, /, "");
-          return field ? `${field}: ${message}` : message;
+          const text = (e.msg ?? "").replace(/^Value error, /, "");
+          if (field && !(field in fieldErrors)) fieldErrors[field] = text;
+          return field ? `${field}: ${text}` : text;
         })
         .join("; ");
+      return new ApiError(message, response.status, fieldErrors);
     }
-    return response.statusText;
   } catch {
-    return response.statusText;
+    /* not JSON: fall back to the status text */
   }
+  return new ApiError(response.statusText, response.status);
 }
 
 // Every call to the API goes through here so it carries the bearer token. A 401 while holding
@@ -42,7 +47,8 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   const token = getToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-  if (response.status === 401 && token) clearToken();
+  // Only if it is still the stored token: a late 401 for an old one must not end a newer session.
+  if (response.status === 401 && token && getToken() === token) clearToken();
   return response;
 }
 
@@ -53,16 +59,43 @@ export async function login(email: string, password: string): Promise<void> {
     body: new URLSearchParams({ username: email, password }),
   });
   if (!response.ok) {
-    throw new ApiError(await readErrorDetail(response), response.status);
+    throw await toApiError(response);
   }
   const { access_token } = await response.json();
   setToken(access_token);
 }
 
+/** Public sign-up (POST /users). Empty optional profile fields are left out rather than sent blank. */
+export async function register(payload: SignUpPayload): Promise<SignUpOut> {
+  const body = Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined && value !== ""));
+  const response = await fetch(`${API_BASE_URL}/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return response.json();
+}
+
 export async function fetchMe(): Promise<Me> {
   const response = await apiFetch("/auth/me");
   if (!response.ok) {
-    throw new ApiError(await readErrorDetail(response), response.status);
+    throw await toApiError(response);
+  }
+  return response.json();
+}
+
+/** Edits the session's own profile; the owner comes from the bearer token, never from the body. */
+export async function updateMyProfile(update: ProfileUpdate): Promise<Profile> {
+  const response = await apiFetch("/profiles/me", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(update),
+  });
+  if (!response.ok) {
+    throw await toApiError(response);
   }
   return response.json();
 }
@@ -77,7 +110,7 @@ export async function analyzeIncidentsFile(file: File): Promise<AnalyzeResponse>
   });
 
   if (!response.ok) {
-    throw new ApiError(await readErrorDetail(response), response.status);
+    throw await toApiError(response);
   }
 
   return response.json();
@@ -87,7 +120,7 @@ export async function downloadResultsCsv(): Promise<void> {
   const response = await apiFetch("/api/incidents/results/export");
 
   if (!response.ok) {
-    throw new ApiError(await readErrorDetail(response), response.status);
+    throw await toApiError(response);
   }
 
   const blob = await response.blob();
@@ -107,7 +140,7 @@ async function suppliersRequest<T>(path: string, init?: RequestInit): Promise<T>
     headers: init?.body ? { "Content-Type": "application/json" } : undefined,
   });
   if (!response.ok) {
-    throw new ApiError(await readErrorDetail(response), response.status);
+    throw await toApiError(response);
   }
   return response.json();
 }
