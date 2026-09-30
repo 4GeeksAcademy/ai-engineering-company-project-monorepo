@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from tinydb import TinyDB, Query as TinyQuery
 
@@ -24,6 +25,14 @@ VALID_STATUSES = ["active", "suspended"]
 
 
 app = FastAPI(title="Brasaland Supplier Directory")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class SupplierCreate(BaseModel):
@@ -51,7 +60,10 @@ def get_db():
 
 def validate_supplier(data):
     if data["country"] not in ["Colombia", "USA"]:
-        raise HTTPException(status_code=400, detail="País inválido")
+        raise HTTPException(
+            status_code=400,
+            detail="País inválido",
+        )
 
     expected_currency = "COP" if data["country"] == "Colombia" else "USD"
 
@@ -74,7 +86,10 @@ def validate_supplier(data):
         )
 
     if data["status"] not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail="Estado inválido")
+        raise HTTPException(
+            status_code=400,
+            detail="Estado inválido",
+        )
 
 
 @app.get("/suppliers")
@@ -110,7 +125,10 @@ def get_supplier(supplier_id: int):
     db.close()
 
     if supplier is None:
-        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail="Proveedor no encontrado",
+        )
 
     return supplier
 
@@ -125,6 +143,7 @@ def create_supplier(supplier: SupplierCreate):
     db = get_db()
 
     existing = db.get(TinyQuery().name == data["name"])
+
     if existing:
         db.close()
         raise HTTPException(
@@ -135,7 +154,11 @@ def create_supplier(supplier: SupplierCreate):
     supplier_id = db.insert(data)
     data["id"] = supplier_id
 
-    db.update({"id": supplier_id}, doc_ids=[supplier_id])
+    db.update(
+        {"id": supplier_id},
+        doc_ids=[supplier_id],
+    )
+
     db.close()
 
     return data
@@ -147,24 +170,35 @@ def update_supplier(
     supplier: SupplierUpdate,
 ):
     db = get_db()
+
     existing = db.get(TinyQuery().id == supplier_id)
 
     if existing is None:
         db.close()
-        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail="Proveedor no encontrado",
+        )
 
     updates = supplier.model_dump(exclude_none=True)
 
     if "status" in updates and updates["status"] not in VALID_STATUSES:
         db.close()
-        raise HTTPException(status_code=400, detail="Estado inválido")
+        raise HTTPException(
+            status_code=400,
+            detail="Estado inválido",
+        )
 
     if "rate_per_unit" in updates:
         updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    db.update(updates, TinyQuery().id == supplier_id)
+    db.update(
+        updates,
+        TinyQuery().id == supplier_id,
+    )
 
     updated = db.get(TinyQuery().id == supplier_id)
+
     db.close()
 
     return updated
@@ -178,12 +212,19 @@ def delete_supplier(supplier_id: int):
 
     if existing is None:
         db.close()
-        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail="Proveedor no encontrado",
+        )
 
     db.remove(TinyQuery().id == supplier_id)
+
     db.close()
 
-    return {"message": "Proveedor eliminado correctamente"}
+    return {
+        "message": "Proveedor eliminado correctamente"
+    }
+
 
 @app.patch("/suppliers/{supplier_id}/rate")
 def update_supplier_rate(
@@ -191,11 +232,15 @@ def update_supplier_rate(
     rate_per_unit: float = Query(..., gt=0),
 ):
     db = get_db()
+
     existing = db.get(TinyQuery().id == supplier_id)
 
     if existing is None:
         db.close()
-        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail="Proveedor no encontrado",
+        )
 
     updated_at = datetime.now(timezone.utc).isoformat()
 
@@ -208,6 +253,7 @@ def update_supplier_rate(
     )
 
     updated = db.get(TinyQuery().id == supplier_id)
+
     db.close()
 
     return updated
@@ -219,14 +265,21 @@ def update_supplier_status(
     status: str = Query(...),
 ):
     if status not in VALID_STATUSES:
-        raise HTTPException(status_code=422, detail="Estado inválido")
+        raise HTTPException(
+            status_code=422,
+            detail="Estado inválido",
+        )
 
     db = get_db()
+
     existing = db.get(TinyQuery().id == supplier_id)
 
     if existing is None:
         db.close()
-        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail="Proveedor no encontrado",
+        )
 
     db.update(
         {"status": status},
@@ -234,6 +287,7 @@ def update_supplier_status(
     )
 
     updated = db.get(TinyQuery().id == supplier_id)
+
     db.close()
 
     return updated
