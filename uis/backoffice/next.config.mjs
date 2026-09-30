@@ -9,8 +9,18 @@
 const API = process.env.API_PROXY_TARGET ?? "http://localhost:8000";
 const notAPage = [{ type: "header", key: "accept", value: ".*text/html.*" }];
 
+// `next dev` only serves its dev assets (JS chunks, live reload) to localhost. In a GitHub Codespace the browser
+// comes through the forwarded URL (<codespace>-5174.app.github.dev), which it would answer with 403, leaving the
+// pages without JavaScript. Allow exactly this codespace's forwarded hostname; nothing changes elsewhere.
+const { CODESPACE_NAME, GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN } = process.env;
+const allowedDevOrigins =
+  CODESPACE_NAME && GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+    ? [`${CODESPACE_NAME}-5174.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`]
+    : [];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins,
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${API}/api/:path*` },

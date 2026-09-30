@@ -107,7 +107,9 @@ Other scripts (from the repo root: `npm run build:backoffice`, `npm run typechec
 `uis/backoffice`): `npm run build` (production build), `npm run start` (serve that build on :5174),
 `npm run typecheck` (`next typegen` + `tsc`).
 
-Requires `services/api` running (see its README).
+Requires `services/api` running (see its README). In a GitHub Codespace, open the forwarded port 5174; `next.config.mjs` allows
+exactly that forwarded hostname in `allowedDevOrigins` (otherwise `next dev` answers its JavaScript with 403 and
+the pages never come to life).
 
 **TypeScript version:** the backoffice uses TypeScript 5.9 (its own devDependency), while the rest of the repo
 uses TypeScript 7. Next.js reads `tsconfig.json` and type-checks through the TypeScript JavaScript API, which

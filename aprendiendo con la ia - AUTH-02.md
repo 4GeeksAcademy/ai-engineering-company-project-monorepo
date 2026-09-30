@@ -498,6 +498,12 @@ Hay un test que lo comprueba con `https://evil.example.com` y con `//evil.exampl
 - **Solución:** incluirlos en el commit, porque `next dev` los volvería a crear.
 - **Lección:** si aparece un archivo que no has creado tú, **averigua de dónde viene** antes de borrarlo o subirlo.
 
+**I. En Codespaces la página se quedaba "congelada" (lo descubriste tú)**
+- **Síntoma:** en tu navegador el proyecto no funcionaba, aunque todas las pruebas automáticas pasaban.
+- **Causa:** en modo desarrollo, Next.js solo entrega su JavaScript a `localhost`. Tú entras por `…-5174.app.github.dev`, así que recibías el HTML pero el JavaScript respondía **403**: la página no cobraba vida. Las pruebas pasaban porque entraban por `localhost`.
+- **Solución:** `allowedDevOrigins` en `next.config.mjs`, limitado a la dirección exacta de **tu** Codespace (se calcula con las variables `CODESPACE_NAME` y `GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN`). Cualquier otra dirección sigue bloqueada.
+- **Lección:** prueba también **como lo usará la persona real**. Un test que pasa en un entorno distinto al suyo puede esconder un problema. Y si algo "no se ve", comprueba primero que **todos los servidores** (API y web) estén encendidos.
+
 ### ✅ Resultado
 
 | Comprobación | Resultado |
