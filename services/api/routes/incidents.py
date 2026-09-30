@@ -10,7 +10,7 @@ from threading import Lock
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ANALYSIS_PACKAGE = REPO_ROOT / "packages" / "incidents-analysis"
 if str(ANALYSIS_PACKAGE) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_PACKAGE))

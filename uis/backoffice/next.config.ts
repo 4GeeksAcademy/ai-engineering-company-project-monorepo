@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/suppliers",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/suppliers`,
+      },
+      {
+        source: "/api/suppliers/:path*",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/suppliers/:path*`,
+      },
+      {
         source: "/api/:path*",
         destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/api/:path*`,
       },
