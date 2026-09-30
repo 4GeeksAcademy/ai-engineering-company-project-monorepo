@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
 import { FileBarChart, Truck } from "lucide-react";
 
 export default function HomePage() {
@@ -8,7 +10,7 @@ export default function HomePage() {
       <p className="mt-2 text-slate-400">Herramientas internas para el equipo de operaciones.</p>
 
       <Link
-        to="/incidents"
+        href="/incidents"
         className="mt-8 flex max-w-sm items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-cyan-400/40"
       >
         <FileBarChart className="text-cyan-400" size={28} />
@@ -19,7 +21,7 @@ export default function HomePage() {
       </Link>
 
       <Link
-        to="/suppliers"
+        href="/suppliers"
         className="mt-4 flex max-w-sm items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-cyan-400/40"
       >
         <Truck className="text-cyan-400" size={28} />

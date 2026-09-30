@@ -75,10 +75,10 @@ ok(calls.filter(isPublic).every((c) => c.auth === null), "el login (público) no
 await nav("Proveedores");
 await page.waitForSelector("tbody tr");
 await page.getByRole("button", { name: "Cerrar sesión" }).click();
-await page.waitForURL("**/login");
-ok(where() === "/login" && (await token()) === null, "logout: token eliminado y redirección a /login");
+await page.waitForURL("**/login**");
+ok(where() === "/login" && (await token()) === null, "logout: token eliminado y redirección a /login (sin página de vuelta)");
 await page.goBack();
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 ok(where() === "/login", "tras el logout, 'atrás' no vuelve a mostrar la vista protegida");
 await login();
 await page.waitForURL(`${APP}/`);
@@ -87,27 +87,40 @@ ok(where() === "/", "tras un logout, el siguiente login va al inicio (no a la ú
 // 4. una llamada protegida devuelve 401: se limpia el token y se va a /login (y se vuelve tras entrar)
 await page.evaluate(() => localStorage.setItem("nexova.token", "token.caducado.invalido"));
 await nav("Proveedores"); // client-side navigation: no reload, the list call gets the 401
-await page.waitForURL("**/login");
-ok(where() === "/login" && (await token()) === null, "401 en GET /api/suppliers: token limpiado y redirección a /login");
+await page.waitForURL("**/login**");
+ok(where() === "/login?next=%2Fsuppliers" && (await token()) === null, "401 en GET /api/suppliers: token limpiado y redirección a /login?next=/suppliers");
 await login();
 await page.waitForURL(`${APP}/suppliers`);
 ok(where() === "/suppliers", "tras volver a entrar, regresa a la vista donde caducó la sesión");
+await page.waitForSelector("tbody tr"); // its list call has finished before the next step starts
 
 // 5. un 401 tardío de un token antiguo no cierra una sesión más nueva
 let release;
+let arrived;
 const held = new Promise((r) => (release = r));
+const requested = new Promise((r) => (arrived = r));
+const heldAuth = [];
 await page.route("**/api/suppliers", async (route) => {
+  heldAuth.push(route.request().headers()["authorization"]);
+  arrived(route.request().headers()["authorization"]);
   await held;
   await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ detail: "Could not validate credentials" }) });
 });
 await nav("Inicio");
+const before = await token();
 await nav("Proveedores"); // this call is held with the current token...
-await page.waitForTimeout(300);
-const newer = await apiToken();
+const sentWith = await requested; // wait until it has really been sent, whatever the page load takes
+// The JWT only holds user_id + exp (to the second): a login within the same second returns the very same
+// token, and then the "old" 401 would be a real 401 for the current one. Make sure the new token differs.
+let newer = await apiToken();
+while (newer === before) {
+  await new Promise((r) => setTimeout(r, 250));
+  newer = await apiToken();
+}
 await page.evaluate((t) => localStorage.setItem("nexova.token", t), newer); // ...meanwhile a new login happens
 release();
 await page.waitForTimeout(800);
-ok((await token()) === newer && where() === "/suppliers", "un 401 de la petición con el token viejo no borra el token nuevo");
+ok(sentWith === `Bearer ${before}` && heldAuth.every((a) => a === `Bearer ${before}`) && (await token()) === newer && where() === "/suppliers", "un 401 de la petición con el token viejo no borra el token nuevo");
 await page.unroute("**/api/suppliers");
 
 // Put the profile back as it was before step 2.

@@ -1,5 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+"use client";
+
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../lib/api";
@@ -59,14 +62,19 @@ function fromApiError(err: unknown): { fields: FieldErrors; general: string | nu
 
 export default function RegisterPage() {
   const { status, register } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [form, setForm] = useState<Form>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
 
-  if (status === "authenticated") return <Navigate to="/" replace />;
+  // Logged in (straight after signing up, or already when opening /register): into the app.
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/");
+  }, [status, router]);
+
+  if (status === "authenticated") return null;
 
   const update = (field: Field) => (value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -90,8 +98,7 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       const outcome = await register(payload);
-      if (outcome === "authenticated") navigate("/", { replace: true });
-      else setCreated(true);
+      if (outcome !== "authenticated") setCreated(true); // otherwise the effect above redirects
     } catch (err) {
       const { fields, general } = fromApiError(err);
       setFieldErrors(fields);
@@ -109,7 +116,7 @@ export default function RegisterPage() {
           <p>Cuenta creada, pero no se pudo iniciar sesión automáticamente. Inicia sesión con tus datos.</p>
         </div>
         <Link
-          to="/login"
+          href="/login"
           className="mt-6 flex w-full items-center justify-center rounded-full bg-cyan-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-300"
         >
           Ir a iniciar sesión
@@ -197,7 +204,7 @@ export default function RegisterPage() {
       </form>
       <p className="mt-4 text-center text-sm text-slate-400">
         ¿Ya tienes cuenta?{" "}
-        <Link to="/login" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/login" className="text-cyan-300 hover:text-cyan-200">
           Inicia sesión
         </Link>
       </p>

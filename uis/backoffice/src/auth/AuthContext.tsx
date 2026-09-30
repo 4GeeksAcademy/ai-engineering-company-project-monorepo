@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { fetchMe, login as apiLogin, register as apiRegister, updateMyProfile } from "../lib/api";
 import { clearToken, getToken, onTokenChange, onTokenChangeInOtherTab } from "../lib/token";
@@ -28,7 +30,9 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<Status>(getToken() ? "loading" : "anonymous");
+  // Always "loading" at first, on the server too: localStorage only exists in the browser, so the token is
+  // read after mounting (otherwise the server HTML and the first browser render would not match).
+  const [status, setStatus] = useState<Status>("loading");
   const [user, setUser] = useState<Me | null>(null);
   const [loggedOut, setLoggedOut] = useState(false);
 
@@ -51,7 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!getToken()) return;
+    if (!getToken()) {
+      setStatus("anonymous");
+      return;
+    }
     let cancelled = false;
     restoreSession(() => cancelled);
     return () => {

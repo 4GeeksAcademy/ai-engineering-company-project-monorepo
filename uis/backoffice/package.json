@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "dev": "next dev -p 5174",
+    "build": "next build",
+    "start": "next start -p 5174",
+    "typecheck": "next typegen && tsc --noEmit",
     "e2e": "node e2e/suppliers.e2e.mjs",
     "e2e:register": "node e2e/register.e2e.mjs",
     "e2e:profile": "node e2e/profile.e2e.mjs",
@@ -15,20 +15,19 @@
     "e2e:token": "node e2e/token.e2e.mjs"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.6.1",
     "lucide-react": "^1.47.0",
+    "next": "^16.3.8",
     "postcss": "^8.5.28",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.4",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.0"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "typescript": "^5.9.3"
   }
 }

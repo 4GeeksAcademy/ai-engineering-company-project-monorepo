@@ -31,18 +31,20 @@ page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => m.type() === "error" && !m.text().includes("422") && !m.text().includes("401") && errors.push(m.text()));
 let fails = 0;
 const ok = (c, msg) => { if (!c) fails++; console.log(`${c ? "PASS" : "FAIL"}  ${msg}`); };
+// The app's own alerts: Next.js adds a hidden route announcer that also has role="alert".
+const appAlert = () => page.locator('[role="alert"]:not(#__next-route-announcer__)');
 const rows = () => page.locator("tbody tr").count();
 const rowOf = (n) => page.locator("tbody tr", { hasText: n });
 
 // 0. sesión: JWT sin estado en el servidor
 await page.goto(URL);
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 ok(new globalThis.URL(page.url()).pathname === "/login", "sin sesión, /suppliers redirige a /login");
 await page.getByLabel("Email").fill(EMAIL);
 await page.getByLabel("Contraseña").fill("contraseña-incorrecta-1");
 await page.getByRole("button", { name: "Entrar" }).click();
-await page.getByRole("alert").waitFor();
-ok(/incorrectos/.test(await page.getByRole("alert").innerText()) && new globalThis.URL(page.url()).pathname === "/login", "contraseña incorrecta: mensaje de error y se queda en /login");
+await appAlert().waitFor();
+ok(/incorrectos/.test(await appAlert().innerText()) && new globalThis.URL(page.url()).pathname === "/login", "contraseña incorrecta: mensaje de error y se queda en /login");
 ok(await page.evaluate(() => localStorage.getItem("nexova.token")) === null, "tras un login fallido no se guarda ningún token");
 await page.getByLabel("Contraseña").fill(PASSWORD);
 await page.getByRole("button", { name: "Entrar" }).click();
@@ -91,16 +93,16 @@ await page.getByRole("button", { name: "Nuevo proveedor" }).click();
 let posts = 0;
 page.on("request", (r) => r.method() === "POST" && posts++);
 await page.getByRole("button", { name: "Guardar" }).click();
-let alert = await page.getByRole("alert").innerText();
+let alert = await appAlert().innerText();
 ok(/nombre es obligatorio/.test(alert) && /tarifa/.test(alert) && /categoría/.test(alert) && posts === 0, `vacío: errores de cliente sin llamar a la API -> "${alert}"`);
 await page.getByLabel("Nombre").fill("   ");
 await page.getByLabel(/Tarifa mensual/).fill("-5");
 await page.getByRole("button", { name: "Guardar" }).click();
-alert = await page.getByRole("alert").innerText();
+alert = await appAlert().innerText();
 ok(/nombre es obligatorio/.test(alert) && /mayor que 0/.test(alert) && posts === 0, "nombre en blanco y tarifa negativa bloqueados en cliente");
 await page.getByLabel(/Email/).fill("no-es-email");
 await page.getByRole("button", { name: "Guardar" }).click();
-ok(/email no es válido/.test(await page.getByRole("alert").innerText()) && posts === 0, "email inválido bloqueado en cliente");
+ok(/email no es válido/.test(await appAlert().innerText()) && posts === 0, "email inválido bloqueado en cliente");
 
 // 3b. la API rechaza (se fuerza moneda incoherente en la petición para pasar la validación de cliente)
 await page.route("**/api/suppliers", async (route) => {
@@ -115,7 +117,7 @@ await page.getByLabel(/Email/).fill("");
 await page.getByRole("button", { name: "Portales de empleo" }).click();
 await page.getByRole("button", { name: "Guardar" }).click();
 await page.waitForFunction(() => document.querySelector('[role="alert"]')?.textContent?.includes("currency"));
-alert = await page.getByRole("alert").innerText();
+alert = await appAlert().innerText();
 ok(/currency must be EUR for country Spain/.test(alert), `error de la API mostrado -> "${alert}"`);
 ok((await rows()) === 15 && (await page.getByLabel("Nombre").inputValue()) === "Proveedor E2E", "tras el rechazo, tabla intacta y datos del formulario conservados");
 await shot("form-error");
@@ -166,17 +168,17 @@ ok(/Activo/.test(await rowOf("Gusto").innerText()), "reactivar: vuelve a 'Activo
 // 6. token caducado/ inválido y cierre de sesión
 await page.evaluate(() => localStorage.setItem("nexova.token", "token.caducado.invalido"));
 await page.goto(URL);
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 ok(await page.evaluate(() => localStorage.getItem("nexova.token")) === null, "token inválido: la API responde 401, se descarta y se pide login");
 await page.getByLabel("Email").fill(EMAIL);
 await page.getByLabel("Contraseña").fill(PASSWORD);
 await page.getByRole("button", { name: "Entrar" }).click();
 await page.waitForSelector("tbody tr");
 await page.getByRole("button", { name: "Cerrar sesión" }).click();
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 ok(await page.evaluate(() => localStorage.getItem("nexova.token")) === null, "cerrar sesión borra el token y vuelve a /login");
 await page.goto(`${APP}/incidents`);
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 ok(true, "tras cerrar sesión, /incidents también redirige a /login");
 
 ok(errors.length === 0, `sin errores de consola/página (${errors.length}) ${errors.slice(0, 2).join(" || ")}`);

@@ -21,7 +21,9 @@ const page = await context.newPage();
 const errors = [];
 const watch = (p) => {
   p.on("pageerror", (e) => errors.push(String(e)));
-  p.on("console", (m) => m.type() === "error" && !m.text().includes("401") && errors.push(m.text()));
+  // A 404 for /no-existe is expected: an unknown URL answers 404, then the app takes you home.
+  const expected = (m) => m.text().includes("401") || (m.text().includes("404") && m.location().url.includes("/no-existe"));
+  p.on("console", (m) => m.type() === "error" && !expected(m) && errors.push(m.text()));
 };
 watch(page);
 let fails = 0;
@@ -39,8 +41,9 @@ const apiCalls = [];
 page.on("request", (r) => /\/(auth\/me|api\/|profiles|users)/.test(r.url()) && apiCalls.push(r.url()));
 for (const route of PROTECTED) {
   await page.goto(`${APP}${route}`);
-  await page.waitForURL("**/login");
-  ok(where(page) === "/login" && (await page.getByRole("navigation", { name: "Navegación principal" }).count()) === 0, `sin token, ${route} redirige a /login sin mostrar la vista`);
+  await page.waitForURL("**/login**");
+  const expected = ["/", "/no-existe"].includes(route) ? "/login" : `/login?next=${encodeURIComponent(route)}`;
+  ok(where(page) === expected && (await page.getByRole("navigation", { name: "Navegación principal" }).count()) === 0, `sin token, ${route} redirige a ${expected} sin mostrar la vista`);
 }
 ok(apiCalls.length === 0, `sin token no se llama a ninguna ruta protegida de la API (${apiCalls.length})`);
 
@@ -51,9 +54,19 @@ for (const route of ["/login", "/register"]) {
   ok(where(page) === route, `${route} es accesible sin sesión`);
 }
 
+// 2b. ?next= solo acepta rutas de esta app: un enlace a /login?next=<otra web> no saca de aquí (open redirect)
+for (const evil of ["https://evil.example.com", "//evil.example.com"]) {
+  await page.goto(`${APP}/login?next=${encodeURIComponent(evil)}`);
+  await login(page);
+  await page.waitForURL(`${APP}/`);
+  ok(page.url() === `${APP}/`, `?next=${evil}: tras el login se queda en la app (/)`);
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await page.waitForURL("**/login**");
+}
+
 // 3. tras el login vuelve a la URL pedida, con su query string
 await page.goto(`${APP}/suppliers?country=Spain`);
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 await login(page);
 await page.waitForURL(`${APP}/suppliers?country=Spain`);
 ok(where(page) === "/suppliers?country=Spain", "tras el login vuelve a /suppliers?country=Spain");
@@ -64,8 +77,8 @@ ok(where(page) === "/", "con sesión, una URL desconocida lleva al inicio");
 // 4. token borrado a mano en la misma pestaña (sin pasar por la app): la siguiente navegación pide login
 await page.evaluate(() => localStorage.removeItem("nexova.token"));
 await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Proveedores" }).click();
-await page.waitForURL("**/login");
-ok(where(page) === "/login", "token borrado en la misma pestaña: al navegar se redirige a /login");
+await page.waitForURL("**/login**");
+ok(where(page) === "/login?next=%2Fsuppliers", "token borrado en la misma pestaña: al navegar se redirige a /login?next=/suppliers");
 
 // 5. dos pestañas: el logout en una cierra la sesión en la otra, sin recargar
 await login(page);
@@ -77,8 +90,8 @@ await other.goto(`${APP}/account/profile`);
 await other.getByLabel("Nombre").waitFor();
 ok(where(other) === "/account/profile", "la segunda pestaña comparte la sesión");
 await page.getByRole("button", { name: "Cerrar sesión" }).click();
-await other.waitForURL("**/login");
-ok(where(other) === "/login" && (await token(other)) === null, "logout en una pestaña: la otra vuelve a /login sin recargar");
+await other.waitForURL("**/login**");
+ok(where(other) === "/login?next=%2Faccount%2Fprofile" && (await token(other)) === null, "logout en una pestaña: la otra vuelve a /login sin recargar (recordando su vista)");
 
 // 6. login en una pestaña: la otra, que estaba en /login, entra sola
 await login(page);

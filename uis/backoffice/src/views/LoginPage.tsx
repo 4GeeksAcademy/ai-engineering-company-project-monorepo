@@ -1,22 +1,30 @@
-import { useState, type FormEvent } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../lib/api";
+import { currentReturnTo } from "../lib/returnTo";
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
 
 export default function LoginPage() {
   const { status, login } = useAuth();
-  const navigate = useNavigate();
-  const from = (useLocation().state as { from?: string } | null)?.from ?? "/";
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (status === "authenticated") return <Navigate to={from} replace />;
+  // Logged in (by this form, by another tab, or already when opening /login): go to ?next= or the home page.
+  useEffect(() => {
+    if (status === "authenticated") router.replace(currentReturnTo());
+  }, [status, router]);
+
+  if (status === "authenticated") return null;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -27,11 +35,10 @@ export default function LoginPage() {
     }
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
-      navigate(from, { replace: true });
+      await login(email.trim(), password); // the effect above redirects
     } catch (err) {
-      // The API answers the same 401 for a wrong password, an unknown email and an account that is
-      // that an admin has switched off, so the message covers all three.
+      // The API answers the same 401 for a wrong password, an unknown email and an account that an
+      // admin has switched off, so the message covers all three.
       setError(
         err instanceof ApiError && err.status === 401
           ? "Email o contraseña incorrectos, o la cuenta está desactivada."
@@ -92,7 +99,7 @@ export default function LoginPage() {
         </button>
         <p className="mt-4 text-center text-sm text-slate-400">
           ¿No tienes cuenta?{" "}
-          <Link to="/register" className="text-cyan-300 hover:text-cyan-200">
+          <Link href="/register" className="text-cyan-300 hover:text-cyan-200">
             Regístrate
           </Link>
         </p>

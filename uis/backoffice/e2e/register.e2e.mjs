@@ -25,6 +25,8 @@ page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => m.type() === "error" && !/40[19]|422|503/.test(m.text()) && errors.push(m.text()));
 let fails = 0;
 const ok = (c, msg) => { if (!c) fails++; console.log(`${c ? "PASS" : "FAIL"}  ${msg}`); };
+// The app's own alerts: Next.js adds a hidden route announcer that also has role="alert".
+const appAlert = () => page.locator('[role="alert"]:not(#__next-route-announcer__)');
 const path = () => new globalThis.URL(page.url()).pathname;
 const token = () => page.evaluate(() => localStorage.getItem("nexova.token"));
 const fieldError = (id) => page.locator(`#${id}-error`);
@@ -73,7 +75,7 @@ ok((await page.getByTestId("current-user").innerText()) === "Usuaria E2E", "la v
 const me = await (await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${stored}` } })).json();
 ok(me.email === NEW_EMAIL && me.is_active && me.role === "user" && me.profile.name === "Usuaria E2E" && me.profile.phone === "+34 600 000 000", "en la API: usuario activo con rol user y perfil con nombre y teléfono; el token es válido");
 await page.getByRole("button", { name: "Cerrar sesión" }).click();
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 
 // 3. email repetido -> 409 mostrado en el campo
 await page.goto(`${APP}/register`);
@@ -104,10 +106,10 @@ await page.getByLabel("Contraseña", { exact: true }).fill("password-e2e-2");
 await page.getByLabel("Repite la contraseña").fill("password-e2e-2");
 await page.getByRole("button", { name: "Crear cuenta" }).click();
 await page.getByRole("status").waitFor();
-ok(/Cuenta creada/.test(await page.getByRole("status").innerText()) && (await page.getByRole("alert").count()) === 0 && (await token()) === null, "login automático fallido: aviso de cuenta creada (no error) y ningún token");
+ok(/Cuenta creada/.test(await page.getByRole("status").innerText()) && (await appAlert().count()) === 0 && (await token()) === null, "login automático fallido: aviso de cuenta creada (no error) y ningún token");
 await page.unroute("**/auth/login");
 await page.getByRole("link", { name: "Ir a iniciar sesión" }).click();
-await page.waitForURL("**/login");
+await page.waitForURL("**/login**");
 await page.getByLabel("Email").fill(OTHER_EMAIL);
 await page.getByLabel("Contraseña").fill("password-e2e-2");
 await page.getByRole("button", { name: "Entrar" }).click();

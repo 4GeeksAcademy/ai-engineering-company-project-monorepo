@@ -39,7 +39,7 @@ page.on("request", (r) => r.url().endsWith("/auth/me") && meCalls++);
 try {
   // 0. vista protegida
   await page.goto(URL);
-  await page.waitForURL("**/login");
+  await page.waitForURL("**/login**");
   ok(path() === "/login", "sin sesión, /account/profile redirige a /login");
   await page.getByLabel("Email").fill(EMAIL);
   await page.getByLabel("Contraseña").fill(PASSWORD);
@@ -102,7 +102,7 @@ try {
   // 6. sesión caducada al guardar -> 401 -> login
   await page.evaluate(() => localStorage.setItem("nexova.token", "token.caducado.invalido"));
   await save.click();
-  await page.waitForURL("**/login");
+  await page.waitForURL("**/login**");
   ok((await page.evaluate(() => localStorage.getItem("nexova.token"))) === null, "token caducado al guardar: 401, se descarta el token y se pide login");
   ok((await apiMe()).profile.address === "Calle Falsa 123, Madrid", "con el 401 no se guarda nada");
 

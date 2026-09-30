@@ -3,8 +3,8 @@ import type { Supplier, SupplierCreate, SupplierStatus } from "../types/supplier
 import type { Me, Profile, ProfileUpdate, SignUpOut, SignUpPayload } from "../types/auth";
 import { clearToken, getToken, setToken } from "./token";
 
-// Vacío = mismo origen: en desarrollo el proxy de Vite reenvía /api a la API local.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+// Vacío = mismo origen: los rewrites de next.config.mjs reenvían las llamadas a la API local.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(
