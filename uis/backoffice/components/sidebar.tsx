@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { priorities, workspaceNav } from "@/lib/workspace-data";
+import { clearToken } from "@/lib/auth";
 
 export function Sidebar() {
+  const router = useRouter();
   const [activeId, setActiveId] = useState("overview");
 
   return (
@@ -54,6 +57,7 @@ export function Sidebar() {
         </div>
       ))}
       <div className="sidebar-bottom">
+        <div className="sidebar-account"><Link href="/account/profile">Profile</Link><button type="button" onClick={() => { clearToken(); router.push("/login"); }}>Log out</button></div>
         <div className="compliance-note">
           <span aria-hidden="true">✓</span>
           <div>

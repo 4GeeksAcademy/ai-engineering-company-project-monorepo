@@ -10,6 +10,22 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/auth/:path*",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/auth/:path*`,
+      },
+      {
+        source: "/api/users/:path*",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/users/:path*`,
+      },
+      {
+        source: "/api/users",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/users`,
+      },
+      {
+        source: "/api/profiles/:path*",
+        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/profiles/:path*`,
+      },
+      {
         source: "/api/suppliers",
         destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/suppliers`,
       },

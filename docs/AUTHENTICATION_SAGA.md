@@ -53,5 +53,6 @@ Add forgot-password, reset-password, and authenticated change-password capabilit
 
 ## Current status
 
-- Phase 1 is the active phase. The repository audit and API source review are complete; implementation has not started.
-- The worktree already contains unrelated user changes and untracked files. Preserve them and stage only explicitly reviewed phase-owned files.
+- Phase 1 — Authentication API: implemented and validated on branch `feature/auth-api`, commit `beba6d9` (`feat(api): add JWT authentication`). Validation recorded in `services/api/AUTHENTICATION_API_PLAN.md`.
+- Phase 2 — Internal authentication flows: active. The authoritative flow specification has been reviewed; the focused phase plan is being created before implementation.
+- The worktree contains unrelated changes and generated/local artifacts. Preserve them and stage only explicitly reviewed phase-owned files.

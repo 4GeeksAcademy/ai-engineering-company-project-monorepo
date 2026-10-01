@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { authFetch } from "@/lib/auth";
 
 type CountItem = { key: string; count: number; percentage: number };
 type IncidentAnalysisResult = {
@@ -18,15 +19,13 @@ type IncidentAnalysisResult = {
   };
 };
 
-// Use the Next.js same-origin proxy so the browser doesn't need to reach the API directly.
-const API_BASE = "";
-
 export function IncidentAnalysis() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<IncidentAnalysisResult | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   async function upload(file?: File) {
     if (!file) return;
@@ -40,7 +39,7 @@ export function IncidentAnalysis() {
     data.append("file", file);
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/incidents/analyze`, { method: "POST", body: data });
+      const response = await authFetch("/incidents/analyze", { method: "POST", headers: {}, body: data });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.detail ?? "Could not analyze this file.");
       setResult(payload as IncidentAnalysisResult);
@@ -60,6 +59,24 @@ export function IncidentAnalysis() {
     event.preventDefault();
     setDragging(false);
     void upload(event.dataTransfer.files[0]);
+  }
+
+  async function exportResults() {
+    setExporting(true);
+    try {
+      const response = await authFetch("/incidents/results/export");
+      if (!response.ok) throw new Error("Could not export the analysis results.");
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "incident-analysis.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not export the analysis results.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
@@ -91,7 +108,7 @@ export function IncidentAnalysis() {
         <div className="incident-results" aria-live="polite">
           <div className="incident-results-heading">
             <div><p className="eyebrow">Analysis complete</p><h2>Network summary</h2><p className="incident-source">Source: {result.source_name}</p></div>
-            <a className="button" href={`${API_BASE}/api/incidents/results/export`}>Download results CSV <span aria-hidden="true">↓</span></a>
+            <button className="button" type="button" onClick={() => void exportResults()} disabled={exporting}>{exporting ? "Exporting…" : "Download results CSV"} <span aria-hidden="true">↓</span></button>
           </div>
           <div className="incident-total-grid">
             <article className="incident-total"><span>Total records</span><strong>{result.totals.total_records}</strong></article>

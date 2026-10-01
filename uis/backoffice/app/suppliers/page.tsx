@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { apiError, authFetch } from "@/lib/auth";
 
 function Sidebar() {
   return (
@@ -35,7 +36,6 @@ type Supplier = {
 
 // Use the same-origin Next proxy so browser clients do not need direct access
 // to the API host/port (which may not be forwarded in a remote workspace).
-const API_URL = "/api";
 const CATEGORIES = [
   "medical_supplies", "laboratory_services", "pharmaceutical", "clinical_software",
   "it_infrastructure", "hr_and_payroll_software", "cleaning_and_facilities",
@@ -47,16 +47,6 @@ const emptyForm: SupplierForm = {
   name: "", country: "USA", categories: ["medical_supplies"], monthly_rate: 1, currency: "USD",
   status: "active", compliance_agreement: null, contract_renewal_date: null, contact_email: null, notes: null,
 };
-
-function apiError(payload: unknown): string {
-  if (payload && typeof payload === "object" && "detail" in payload) {
-    const detail = (payload as { detail: unknown }).detail;
-    return Array.isArray(detail)
-      ? detail.map((issue) => typeof issue === "object" && issue && "msg" in issue ? String(issue.msg) : String(issue)).join("; ")
-      : String(detail);
-  }
-  return "The API request failed.";
-}
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -79,7 +69,7 @@ export default function SuppliersPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_URL}/suppliers${query ? `?${query}` : ""}`);
+      const response = await authFetch(`/suppliers${query ? `?${query}` : ""}`);
       const body = await response.json();
       if (!response.ok) throw new Error(apiError(body));
       setSuppliers(body as Supplier[]);
@@ -96,7 +86,7 @@ export default function SuppliersPage() {
   }, [loadSuppliers]);
 
   async function request(path: string, options?: RequestInit) {
-    const response = await fetch(`${API_URL}${path}`, {
+    const response = await authFetch(path, {
       ...options,
       headers: { "Content-Type": "application/json", ...options?.headers },
     });
