@@ -14,10 +14,13 @@ dependencies = [
     "python-multipart==0.0.20",
     "httpx==0.28.1",
     "tinydb>=4.8.0",
+    "python-jose[cryptography]>=3.5.0",
+    "libpass[bcrypt]>=1.9.0",
 ]
 
 [project.scripts]
 seed = "seed:main"
+seed-users = "seed_users:main"
 
 [project.optional-dependencies]
 test = [

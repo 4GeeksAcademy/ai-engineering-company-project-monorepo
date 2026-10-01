@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from pathlib import Path
 from tinydb import TinyDB
 
+from app.core.security import create_access_token
 from app.main import app
 
 
@@ -32,11 +33,35 @@ def _clean_test_db():
         TEST_DB.unlink()
 
 
+AUTH_HEADERS: dict[str, str] = {}
+
+
+def _seed_staff_token() -> str:
+    """Insert an admin user into the test DB and mint a JWT for it."""
+    db = TinyDB(TEST_DB)
+    uid = db.table("users").insert({
+        "email": "staff@test.com",
+        "hashed_password": "not-used-by-these-tests",
+        "is_active": True,
+        "role": "admin",
+        "created_at": "2026-01-01T00:00:00+00:00",
+    })
+    db.table("profiles").insert({
+        "user_id": uid, "name": "Staff", "phone": None, "address": None,
+    })
+    db.close()
+    return create_access_token(subject=str(uid), role="admin")
+
+
 @pytest.fixture(autouse=True)
 def _patch_db_path(monkeypatch):
-    """Point the suppliers router to the test database for every test."""
+    """Point the suppliers/profiles routers at the test database for every test."""
     monkeypatch.setattr("app.routers.suppliers._DB_PATH", TEST_DB)
+    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
+    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
     _clean_test_db()
+    AUTH_HEADERS.clear()
+    AUTH_HEADERS["Authorization"] = f"Bearer {_seed_staff_token()}"
     yield
     _clean_test_db()
 
@@ -93,7 +118,7 @@ class TestCreateSupplier:
     @pytest.mark.asyncio
     async def test_create_supplier_returns_201(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.post("/api/v1/suppliers/", json=SAMPLE_SUPPLIER)
 
@@ -119,7 +144,7 @@ class TestCreateSupplier:
         }])
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.post("/api/v1/suppliers/", json=SAMPLE_SUPPLIER)
 
@@ -133,7 +158,7 @@ class TestCreateSupplier:
         bad["rate"] = -1
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.post("/api/v1/suppliers/", json=bad)
 
@@ -145,7 +170,7 @@ class TestCreateSupplier:
         bad["rate"] = 0
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.post("/api/v1/suppliers/", json=bad)
 
@@ -157,7 +182,7 @@ class TestCreateSupplier:
         bad["rate"] = -5.0
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.post("/api/v1/suppliers/", json=bad)
 
@@ -169,7 +194,7 @@ class TestListSuppliers:
     @pytest.mark.asyncio
     async def test_list_empty(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get("/api/v1/suppliers/")
 
@@ -184,7 +209,7 @@ class TestListSuppliers:
         ])
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get("/api/v1/suppliers/")
 
@@ -200,7 +225,7 @@ class TestListSuppliers:
         ])
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get("/api/v1/suppliers/", params={"product_category": "Meat"})
 
@@ -217,7 +242,7 @@ class TestListSuppliers:
         ])
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get("/api/v1/suppliers/", params={"status": "suspended"})
 
@@ -234,7 +259,7 @@ class TestListSuppliers:
         ])
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get(
                 "/api/v1/suppliers/",
@@ -259,7 +284,7 @@ class TestGetSupplier:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get(f"/api/v1/suppliers/{doc_id}")
 
@@ -271,7 +296,7 @@ class TestGetSupplier:
     @pytest.mark.asyncio
     async def test_get_supplier_not_found(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get("/api/v1/suppliers/99999")
 
@@ -292,7 +317,7 @@ class TestUpdateRate:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/rate", json={"rate": 5.0}
@@ -314,7 +339,7 @@ class TestUpdateRate:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/rate", json={"rate": 0}
@@ -333,7 +358,7 @@ class TestUpdateRate:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/rate", json={"rate": -3.5}
@@ -344,7 +369,7 @@ class TestUpdateRate:
     @pytest.mark.asyncio
     async def test_update_rate_not_found(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 "/api/v1/suppliers/99999/rate", json={"rate": 5.0}
@@ -366,7 +391,7 @@ class TestUpdateStatus:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/status",
@@ -389,7 +414,7 @@ class TestUpdateStatus:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/status",
@@ -410,7 +435,7 @@ class TestUpdateStatus:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 f"/api/v1/suppliers/{doc_id}/status",
@@ -422,7 +447,7 @@ class TestUpdateStatus:
     @pytest.mark.asyncio
     async def test_update_status_not_found(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.patch(
                 "/api/v1/suppliers/99999/status",
@@ -445,7 +470,7 @@ class TestDeleteSupplier:
         db.close()
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.delete(f"/api/v1/suppliers/{doc_id}")
 
@@ -454,7 +479,7 @@ class TestDeleteSupplier:
 
         # Verify it's gone
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.get(f"/api/v1/suppliers/{doc_id}")
 
@@ -463,7 +488,7 @@ class TestDeleteSupplier:
     @pytest.mark.asyncio
     async def test_delete_supplier_not_found(self):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
         ) as client:
             resp = await client.delete("/api/v1/suppliers/99999")
 

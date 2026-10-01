@@ -5,9 +5,10 @@ from __future__ import annotations
 import io
 from typing import Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
+from app.core.deps import require_any_user
 from app.services.incidents import (
     analyze,
     read_csv_from_bytes,
@@ -22,10 +23,13 @@ _last_analysis: Optional[dict] = None
 
 
 @router.post("/analyze")
-async def analyze_incidents(file: UploadFile = File(...)):
+async def analyze_incidents(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_any_user),
+):
     """
     Accept a CSV file via multipart/form-data, run the same validation
-    analysis as ``analyze.py``, and return a JSON summary.
+    analysis as ``analyze.py``, and return a JSON summary (authenticated).
     """
     global _last_analysis
 
@@ -84,9 +88,9 @@ async def analyze_incidents(file: UploadFile = File(...)):
 
 
 @router.get("/result/export")
-async def export_results():
+async def export_results(current_user: dict = Depends(require_any_user)):
     """
-    Return the last analysis results as a downloadable CSV file.
+    Return the last analysis results as a downloadable CSV file (authenticated).
     If no analysis has been performed yet, return 404.
     """
     if _last_analysis is None:

@@ -10,8 +10,10 @@ python-multipart==0.0.20
 # ── HTTP client (for external calls / AI services) ────────
 httpx==0.28.1
 
-# ── Database (lightweight JSON store) ─────────────────────
+# ── Database and authentication ───────────────────────────
 tinydb==4.9.0
+python-jose[cryptography]>=3.5.0
+libpass[bcrypt]>=1.9.0
 
 # ── Dev / Test ────────────────────────────────────────────
 pytest==8.3.5

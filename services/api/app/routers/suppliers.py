@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from tinydb import TinyDB, where
 
+from app.core.deps import require_any_user, require_staff
 from app.models.schemas import (
     ApiResponse,
     ProductCategory,
@@ -61,8 +62,11 @@ def _doc_to_response(doc: dict) -> dict:
 
 # ── POST /suppliers ───────────────────────────────────────
 @router.post("/", response_model=ApiResponse, status_code=201)
-async def create_supplier(payload: SupplierCreate):
-    """Register a new supplier in the Brasa Points directory."""
+async def create_supplier(
+    payload: SupplierCreate,
+    current_user: dict = Depends(require_staff),
+):
+    """Register a new supplier (staff only — manager or admin)."""
     db = _get_db()
     table = _get_table(db)
 
@@ -100,6 +104,7 @@ async def list_suppliers(
     status: Optional[SupplierStatus] = Query(
         None, description="Filter by status (active/suspended)"
     ),
+    current_user: dict = Depends(require_any_user),
 ):
     """List all suppliers, optionally filtered by product category and/or status."""
     db = _get_db()
@@ -123,8 +128,11 @@ async def list_suppliers(
 
 # ── GET /suppliers/{supplier_id} ──────────────────────────
 @router.get("/{supplier_id}", response_model=ApiResponse)
-async def get_supplier(supplier_id: int):
-    """Return the detail of a supplier by ID."""
+async def get_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(require_any_user),
+):
+    """Return the detail of a supplier by ID (authenticated)."""
     db = _get_db()
     table = _get_table(db)
 
@@ -139,8 +147,12 @@ async def get_supplier(supplier_id: int):
 
 # ── PATCH /suppliers/{supplier_id}/rate ────────────────────
 @router.patch("/{supplier_id}/rate", response_model=ApiResponse)
-async def update_supplier_rate(supplier_id: int, payload: SupplierRateUpdate):
-    """Update a supplier's rate. Automatically records updated_at timestamp."""
+async def update_supplier_rate(
+    supplier_id: int,
+    payload: SupplierRateUpdate,
+    current_user: dict = Depends(require_staff),
+):
+    """Update a supplier's rate (staff only). Records updated_at."""
     db = _get_db()
     table = _get_table(db)
 
@@ -163,8 +175,12 @@ async def update_supplier_rate(supplier_id: int, payload: SupplierRateUpdate):
 
 # ── PATCH /suppliers/{supplier_id}/status ──────────────────
 @router.patch("/{supplier_id}/status", response_model=ApiResponse)
-async def update_supplier_status(supplier_id: int, payload: SupplierStatusUpdate):
-    """Activate or suspend a supplier."""
+async def update_supplier_status(
+    supplier_id: int,
+    payload: SupplierStatusUpdate,
+    current_user: dict = Depends(require_staff),
+):
+    """Activate or suspend a supplier (staff only)."""
     db = _get_db()
     table = _get_table(db)
 
@@ -189,8 +205,11 @@ async def update_supplier_status(supplier_id: int, payload: SupplierStatusUpdate
 
 # ── DELETE /suppliers/{supplier_id} ────────────────────────
 @router.delete("/{supplier_id}", response_model=ApiResponse)
-async def delete_supplier(supplier_id: int):
-    """Remove a supplier from the directory."""
+async def delete_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(require_staff),
+):
+    """Remove a supplier from the directory (staff only)."""
     db = _get_db()
     table = _get_table(db)
 
