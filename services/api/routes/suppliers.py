@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
+from auth.dependencies import get_current_user
 import database
 from models import SupplierCreate, SupplierRateUpdate, SupplierResponse, SupplierStatusUpdate, utc_now
 
-router = APIRouter(prefix="/suppliers", tags=["suppliers"])
+router = APIRouter(prefix="/suppliers", tags=["suppliers"], dependencies=[Depends(get_current_user)])
 
 
 def serialize(record: dict[str, Any]) -> SupplierResponse:

@@ -7,8 +7,10 @@ import sys
 from pathlib import Path
 from threading import Lock
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+
+from auth.dependencies import get_current_user
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ANALYSIS_PACKAGE = REPO_ROOT / "packages" / "incidents-analysis"
@@ -22,7 +24,7 @@ from incidents_analysis import (  # noqa: E402
 )
 from incidents_analysis.report import results_csv  # noqa: E402
 
-router = APIRouter(prefix="/api/incidents", tags=["incidents"])
+router = APIRouter(prefix="/api/incidents", tags=["incidents"], dependencies=[Depends(get_current_user)])
 _last_result = None
 _result_lock = Lock()
 
