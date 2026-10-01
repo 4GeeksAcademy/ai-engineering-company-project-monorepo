@@ -54,5 +54,5 @@ Add forgot-password, reset-password, and authenticated change-password capabilit
 ## Current status
 
 - Phase 1 — Authentication API: implemented and validated on branch `feature/auth-api`, commit `beba6d9` (`feat(api): add JWT authentication`). Validation recorded in `services/api/AUTHENTICATION_API_PLAN.md`.
-- Phase 2 — Internal authentication flows: active. The authoritative flow specification has been reviewed; the focused phase plan is being created before implementation.
+- Phase 2 — Internal authentication flows: implemented and validated on branch `feature/auth-frontend`, commit `c0f9b03` (`feat(backoffice): add internal authentication flows`).
 - The worktree contains unrelated changes and generated/local artifacts. Preserve them and stage only explicitly reviewed phase-owned files.

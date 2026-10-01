@@ -24,6 +24,6 @@ Implement the phase-two authentication experience in `uis/backoffice`, the track
 
 ## Validation and snapshot
 
-- Run `npm run lint` and `npm run build` in `uis/backoffice`.
+- Run `npm run lint` and `npm run build` in `uis/backoffice` (both passed).
 - Exercise registration/login, protected navigation, profile loading/update, logout, and a 401 response against the phase-one API where available.
-- Inspect staged paths and snapshot only reviewed phase-two files on a separate frontend-auth branch. Do not include generated files, local data, secrets, or unrelated worktree changes.
+- Inspect staged paths and snapshot only reviewed phase-two files on a separate frontend-auth branch (completed as `feature/auth-frontend`, commit `c0f9b03`). Do not include generated files, local data, secrets, or unrelated worktree changes.
