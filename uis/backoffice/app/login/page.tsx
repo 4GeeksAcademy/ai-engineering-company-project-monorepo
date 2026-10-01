@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiError, saveToken } from "@/lib/auth";
+import { readApiResponse, saveToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,8 +17,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-      const body = await response.json();
-      if (!response.ok) throw new Error(apiError(body, "Unable to sign in."));
+      const body = await readApiResponse<{ access_token: string }>(response, "Unable to sign in.");
       saveToken(body.access_token);
       router.push("/");
     } catch (cause) {

@@ -26,6 +26,23 @@ export function apiError(payload: unknown, fallback = "The API request failed.")
   return fallback;
 }
 
+export async function readApiResponse<T>(response: Response, fallback: string): Promise<T> {
+  const text = await response.text();
+  let payload: unknown;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      const detail = text.trim().replace(/\s+/g, " ").slice(0, 240);
+      throw new Error(detail
+        ? `The API returned ${response.status} with a non-JSON response: ${detail}`
+        : `The API returned ${response.status} with an unreadable response.`);
+    }
+  }
+  if (!response.ok) throw new Error(apiError(payload, fallback));
+  return payload as T;
+}
+
 export async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const token = getToken();
   const headers = new Headers(options.headers);

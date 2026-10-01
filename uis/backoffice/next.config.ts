@@ -1,6 +1,8 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+const apiServerUrl = process.env.API_SERVER_URL ?? "http://127.0.0.1:8000";
+
 const nextConfig: NextConfig = {
   // The monorepo has several lockfiles, so pin the root to this app.
   turbopack: {
@@ -11,31 +13,31 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/auth/:path*",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/auth/:path*`,
+        destination: `${apiServerUrl}/auth/:path*`,
       },
       {
         source: "/api/users/:path*",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/users/:path*`,
+        destination: `${apiServerUrl}/users/:path*`,
       },
       {
         source: "/api/users",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/users`,
+        destination: `${apiServerUrl}/users`,
       },
       {
         source: "/api/profiles/:path*",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/profiles/:path*`,
+        destination: `${apiServerUrl}/profiles/:path*`,
       },
       {
         source: "/api/suppliers",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/suppliers`,
+        destination: `${apiServerUrl}/suppliers`,
       },
       {
         source: "/api/suppliers/:path*",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/suppliers/:path*`,
+        destination: `${apiServerUrl}/suppliers/:path*`,
       },
       {
         source: "/api/:path*",
-        destination: `${process.env.API_SERVER_URL ?? "http://127.0.0.1:8000"}/api/:path*`,
+        destination: `${apiServerUrl}/api/:path*`,
       },
     ];
   },

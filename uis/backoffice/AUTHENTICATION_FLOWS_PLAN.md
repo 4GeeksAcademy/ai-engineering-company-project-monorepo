@@ -14,7 +14,7 @@ Implement the phase-two authentication experience in `uis/backoffice`, the track
 
 ## Implementation
 
-- Add `/login` and `/register` client pages with field-level validation, API errors, token persistence, and post-auth navigation.
+- Add `/login` and `/register` client pages with field-level validation, API errors, token persistence, and post-auth navigation. Handle non-JSON proxy/upstream responses without leaking JSON parse exceptions.
 - Add `/account/profile` with authenticated identity/profile loading and profile updates.
 - Add a small client auth module for token storage, protected fetches, logout, and the shared 401 response.
 - Add a client-side guard to internal routes because the token exists only in `localStorage`; do not use Next middleware for authentication.

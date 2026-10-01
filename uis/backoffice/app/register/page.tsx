@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiError, saveToken } from "@/lib/auth";
+import { readApiResponse, saveToken } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,11 +26,9 @@ export default function RegisterPage() {
     setErrors({});
     try {
       const registration = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, phone: form.phone || null, address: form.address || null }) });
-      const registrationBody = await registration.json();
-      if (!registration.ok) throw new Error(apiError(registrationBody, "Unable to create the account."));
+      await readApiResponse<unknown>(registration, "Unable to create the account.");
       const login = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: form.email, password: form.password }) });
-      const loginBody = await login.json();
-      if (!login.ok) throw new Error(apiError(loginBody, "Account created, but sign-in failed."));
+      const loginBody = await readApiResponse<{ access_token: string }>(login, "Account created, but sign-in failed.");
       saveToken(loginBody.access_token);
       router.push("/");
     } catch (cause) {
