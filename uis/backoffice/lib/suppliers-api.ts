@@ -3,6 +3,7 @@ import type {
   SupplierCreate,
   ApiResponse,
 } from "./suppliers-types";
+import { authenticatedFetch } from "./authenticated-fetch";
 
 // ── Metadata constants (mirrors candidate-meta.ts pattern) ─────
 
@@ -84,7 +85,7 @@ export async function fetchSupplier(id: number): Promise<Supplier> {
 export async function createSupplier(
   payload: SupplierCreate,
 ): Promise<Supplier> {
-  const res = await fetch("/api/proxy/suppliers", {
+  const res = await authenticatedFetch("/api/proxy/suppliers", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -103,7 +104,7 @@ export async function updateSupplierRate(
   id: number,
   rate: number,
 ): Promise<Supplier> {
-  const res = await fetch(`/api/proxy/suppliers/${id}/rate`, {
+  const res = await authenticatedFetch(`/api/proxy/suppliers/${id}/rate`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ rate }),
@@ -122,7 +123,7 @@ export async function updateSupplierStatus(
   id: number,
   status: "active" | "suspended",
 ): Promise<Supplier> {
-  const res = await fetch(`/api/proxy/suppliers/${id}/status`, {
+  const res = await authenticatedFetch(`/api/proxy/suppliers/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -138,7 +139,7 @@ export async function updateSupplierStatus(
 }
 
 export async function deleteSupplier(id: number): Promise<void> {
-  const res = await fetch(`/api/proxy/suppliers/${id}`, {
+  const res = await authenticatedFetch(`/api/proxy/suppliers/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`Failed to delete supplier (${res.status})`);

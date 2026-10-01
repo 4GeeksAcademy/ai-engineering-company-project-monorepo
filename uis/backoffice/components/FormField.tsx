@@ -31,10 +31,19 @@ export default function FormField({
       <input
         {...inputProps}
         aria-invalid={hasError || undefined}
+        aria-describedby={
+          error && inputProps.id
+            ? `${inputProps.id}-error`
+            : inputProps["aria-describedby"]
+        }
         className={fieldClass}
       />
       {error ? (
-        <span className="text-xs text-rose-600" role="alert">
+        <span
+          id={inputProps.id ? `${inputProps.id}-error` : undefined}
+          className="text-xs text-rose-600"
+          role="alert"
+        >
           {error}
         </span>
       ) : null}
