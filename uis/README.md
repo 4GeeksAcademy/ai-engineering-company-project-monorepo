@@ -2,10 +2,11 @@
 
 This folder contains **all projects with a user interface** for the cross-functional AI Engineering company project — for example: a public website, admin dashboard frontend, ecommerce UI, customer portals, Streamlit/Gradio app or other frontend-only tools.
 
-The two main projects stored here are:
+The main projects stored here are:
 
 - **`website`** — the company's public-facing web presence.
 - **`backoffice`** — the internal admin application. This is the ideal place to develop multiple solutions within a single project: authentication, people management, operations management, internal communication, and other back-office capabilities.
+- HealthCore's supplier directory lives in **`backoffice`** at `/suppliers` and runs on port 3002; a separate frontend server is not needed.
 
 Organize `uis/` by **different concerns** — each subfolder covers a distinct area of the company (for example, public web vs internal operations) and includes its own technical and functional documentation.
 

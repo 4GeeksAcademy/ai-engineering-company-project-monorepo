@@ -1,0 +1,5 @@
+export const DENIAL_RATE_ALERT_THRESHOLD = 8;
+export const NO_SHOW_RATE_ALERT_THRESHOLD = 20;
+export const CME_AT_RISK_PACE_GAP = 15;
+export const LICENCE_FIRST_ALERT_DAYS = 90;
+export const LICENCE_URGENT_ALERT_DAYS = 30;
