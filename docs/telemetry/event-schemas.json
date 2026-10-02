@@ -1,0 +1,595 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TrackFlow Telemetry Event Schemas",
+  "description": "Esquemas validables de todos los eventos de telemetría de TrackFlow. Versión 1.0.",
+  "version": "1.0",
+  "definitions": {
+    "eventEnvelope": {
+      "type": "object",
+      "required": ["eventId", "timestamp", "sessionId", "userId", "event_type", "schemaVersion", "requestId", "properties"],
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Identificador único del evento (UUID v4). Generado en el punto de emisión."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Momento exacto en que ocurrió el evento, ISO 8601 UTC."
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Identificador de la sesión del usuario. Persiste durante toda la sesión autenticada."
+        },
+        "userId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Identificador del usuario autenticado. Vacío para eventos no autenticados."
+        },
+        "event_type": {
+          "type": "string",
+          "pattern": "^[a-z]+_[a-z]+$",
+          "description": "Taxonomía en formato entidad_acción. Verbos en pasado (ej. order_created)."
+        },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$",
+          "description": "Versión del esquema del evento (SemVer simplificado)."
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Identificador de correlación que une frontend, backend y logs."
+        },
+        "properties": {
+          "type": "object",
+          "description": "Payload específico del evento. Solo las claves definidas en el allowlist.",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "inbound_order_created": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "inbound_order_created" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "product_category", "quantity"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén donde se recibe la mercancía." },
+                "client_id": { "type": "string", "description": "Identificador del cliente (marca B2B)." },
+                "product_id": { "type": "string", "description": "Identificador del SKU recibido." },
+                "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría del producto." },
+                "quantity": { "type": "integer", "minimum": 1, "description": "Cantidad de unidades recibidas." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "outbound_order_created": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "outbound_order_created" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "product_category", "quantity"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén que despacha." },
+                "client_id": { "type": "string", "description": "Identificador del cliente (marca B2B)." },
+                "product_id": { "type": "string", "description": "Identificador del SKU despachado." },
+                "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría del producto." },
+                "quantity": { "type": "integer", "minimum": 1, "description": "Cantidad de unidades despachadas." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "stock_threshold_triggered": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "stock_threshold_triggered" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "product_category", "quantity", "min_stock"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén donde ocurrió." },
+                "client_id": { "type": "string", "description": "Identificador del cliente." },
+                "product_id": { "type": "string", "description": "Identificador del SKU." },
+                "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría del producto." },
+                "quantity": { "type": "integer", "minimum": 0, "description": "Stock actual después del movimiento." },
+                "min_stock": { "type": "integer", "minimum": 0, "description": "Umbral mínimo configurado para este SKU/cliente." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "direct_stock_edit_rejected": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "direct_stock_edit_rejected" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "product_category", "quantity_attempted", "reason"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén donde se intentó la modificación." },
+                "client_id": { "type": "string", "description": "Identificador del cliente." },
+                "product_id": { "type": "string", "description": "Identificador del SKU." },
+                "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría del producto." },
+                "quantity_attempted": { "type": "integer", "description": "Cantidad que se intentó establecer." },
+                "reason": { "type": "string", "description": "Razón del rechazo (ej. direct_modification_not_allowed)." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "inventory_discrepancy_detected": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "inventory_discrepancy_detected" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "product_category", "system_quantity", "actual_quantity", "difference"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén donde se detectó la discrepancia." },
+                "client_id": { "type": "string", "description": "Identificador del cliente." },
+                "product_id": { "type": "string", "description": "Identificador del SKU." },
+                "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría del producto." },
+                "system_quantity": { "type": "integer", "description": "Cantidad registrada en el sistema." },
+                "actual_quantity": { "type": "integer", "description": "Cantidad real encontrada en el conteo físico." },
+                "difference": { "type": "integer", "description": "Diferencia (actual - system). Positivo = sobrante, negativo = faltante." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "product_catalog_viewed": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "product_catalog_viewed" },
+            "properties": {
+              "type": "object",
+              "required": ["result_count"],
+              "properties": {
+                "filter_client": { "type": "string", "description": "Cliente por el que se filtró." },
+                "filter_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"], "description": "Categoría por la que se filtró." },
+                "filter_warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén por el que se filtró." },
+                "result_count": { "type": "integer", "minimum": 0, "description": "Número de productos mostrados." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "inbound_order_failed": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "inbound_order_failed" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "quantity", "error_code", "error_message"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén objetivo." },
+                "client_id": { "type": "string", "description": "Identificador del cliente." },
+                "product_id": { "type": "string", "description": "Identificador del SKU." },
+                "quantity": { "type": "integer", "description": "Cantidad intentada." },
+                "error_code": { "type": "string", "description": "Código del error de validación." },
+                "error_message": { "type": "string", "description": "Mensaje descriptivo del error." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "outbound_order_failed": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "outbound_order_failed" },
+            "properties": {
+              "type": "object",
+              "required": ["warehouse", "client_id", "product_id", "quantity_requested", "stock_available", "error_code", "error_message"],
+              "properties": {
+                "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"], "description": "Almacén de origen." },
+                "client_id": { "type": "string", "description": "Identificador del cliente." },
+                "product_id": { "type": "string", "description": "Identificador del SKU." },
+                "quantity_requested": { "type": "integer", "description": "Cantidad solicitada." },
+                "stock_available": { "type": "integer", "minimum": 0, "description": "Stock disponible en el momento del intento." },
+                "error_code": { "type": "string", "description": "Código del error." },
+                "error_message": { "type": "string", "description": "Mensaje descriptivo del error." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "login_attempted": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "login_attempted" },
+            "properties": {
+              "type": "object",
+              "required": ["email", "success", "ip_address"],
+              "properties": {
+                "email": { "type": "string", "format": "email", "description": "⚠️ PII. Email del usuario. Almacenar hasheado (SHA-256). Retención máxima 30 días." },
+                "success": { "type": "boolean", "description": "Indica si el login fue exitoso." },
+                "ip_address": { "type": "string", "description": "⚠️ PII. Dirección IP. Anonimizar truncando último octeto." },
+                "user_agent": { "type": "string", "description": "User-Agent del navegador." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "login_failed": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "login_failed" },
+            "properties": {
+              "type": "object",
+              "required": ["email", "failure_reason", "ip_address", "attempt_count"],
+              "properties": {
+                "email": { "type": "string", "format": "email", "description": "⚠️ PII. Email del usuario. Hasheado. No registrar si el email no existe." },
+                "failure_reason": { "type": "string", "enum": ["invalid_credentials", "user_not_found", "account_locked"], "description": "Razón del fallo." },
+                "ip_address": { "type": "string", "description": "⚠️ PII. IP anonimizada." },
+                "attempt_count": { "type": "integer", "minimum": 1, "description": "Intentos fallidos consecutivos desde esta IP." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "password_reset_requested": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "password_reset_requested" },
+            "properties": {
+              "type": "object",
+              "required": ["email", "source"],
+              "properties": {
+                "email": { "type": "string", "format": "email", "description": "⚠️ PII. Email del usuario. Almacenar hasheado." },
+                "source": { "type": "string", "enum": ["login_page", "forgot_password_page"], "description": "Desde dónde se solicitó el reset." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "session_started": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "session_started" },
+            "properties": {
+              "type": "object",
+              "required": ["role", "ip_address"],
+              "properties": {
+                "role": { "type": "string", "enum": ["admin", "manager", "user"], "description": "Rol del usuario." },
+                "ip_address": { "type": "string", "description": "⚠️ PII. IP anonimizada (último octeto truncado)." },
+                "user_agent": { "type": "string", "description": "User-Agent del navegador." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "session_expired": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "session_expired" },
+            "properties": {
+              "type": "object",
+              "required": ["session_duration_seconds", "expired_reason"],
+              "properties": {
+                "session_duration_seconds": { "type": "integer", "minimum": 0, "description": "Duración de la sesión en segundos." },
+                "expired_reason": { "type": "string", "enum": ["token_expired", "logout", "inactivity"], "description": "Razón de expiración." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "user_registered": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "user_registered" },
+            "properties": {
+              "type": "object",
+              "required": ["role", "registration_method"],
+              "properties": {
+                "role": { "type": "string", "enum": ["admin", "manager", "user"], "description": "Rol asignado al nuevo usuario." },
+                "registration_method": { "type": "string", "enum": ["self_service", "admin_created"], "description": "Método de registro." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "api_latency_recorded": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "api_latency_recorded" },
+            "properties": {
+              "type": "object",
+              "required": ["endpoint", "method", "status_code", "duration_ms", "authenticated"],
+              "properties": {
+                "endpoint": { "type": "string", "description": "Ruta del endpoint (ej. /api/suppliers/)." },
+                "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"], "description": "Método HTTP." },
+                "status_code": { "type": "integer", "description": "Código de respuesta HTTP." },
+                "duration_ms": { "type": "integer", "minimum": 0, "description": "Duración en milisegundos." },
+                "authenticated": { "type": "boolean", "description": "Indica si la petición fue autenticada." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "page_load_time_recorded": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "page_load_time_recorded" },
+            "properties": {
+              "type": "object",
+              "required": ["page", "load_time_ms", "navigation_type"],
+              "properties": {
+                "page": { "type": "string", "description": "Ruta de la página (ej. /incidents, /suppliers)." },
+                "load_time_ms": { "type": "integer", "minimum": 0, "description": "Tiempo total de carga en ms." },
+                "navigation_type": { "type": "string", "enum": ["initial_load", "spa_navigation", "reload"], "description": "Tipo de navegación." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "api_error_rate_recorded": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "api_error_rate_recorded" },
+            "properties": {
+              "type": "object",
+              "required": ["endpoint", "method", "total_requests", "error_count", "error_rate", "period_seconds"],
+              "properties": {
+                "endpoint": { "type": "string", "description": "Ruta del endpoint." },
+                "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"], "description": "Método HTTP." },
+                "total_requests": { "type": "integer", "minimum": 0, "description": "Total de peticiones en el período." },
+                "error_count": { "type": "integer", "minimum": 0, "description": "Peticiones con error (4xx/5xx)." },
+                "error_rate": { "type": "number", "minimum": 0, "maximum": 1, "description": "Tasa de error (error_count / total_requests)." },
+                "period_seconds": { "type": "integer", "minimum": 1, "description": "Período de agregación en segundos." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "frontend_error_captured": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "frontend_error_captured" },
+            "properties": {
+              "type": "object",
+              "required": ["error_type", "error_message", "page"],
+              "properties": {
+                "error_type": { "type": "string", "enum": ["TypeError", "ReferenceError", "RangeError", "unhandled_rejection", "unknown"], "description": "Tipo de error." },
+                "error_message": { "type": "string", "description": "Mensaje del error." },
+                "component_stack": { "type": "string", "description": "Stack de componentes React donde ocurrió." },
+                "page": { "type": "string", "description": "Página donde ocurrió el error." },
+                "line": { "type": "integer", "description": "Línea aproximada del error (source map)." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "api_validation_error": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "api_validation_error" },
+            "properties": {
+              "type": "object",
+              "required": ["endpoint", "field", "error_code", "error_detail"],
+              "properties": {
+                "endpoint": { "type": "string", "description": "Endpoint que rechazó la petición." },
+                "field": { "type": "string", "description": "Campo que falló la validación." },
+                "error_code": { "type": "string", "description": "Código de error de validación." },
+                "error_detail": { "type": "string", "description": "⚠️ Posible PII. Sanitizar para eliminar valores de entrada del usuario." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "network_request_failed": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "network_request_failed" },
+            "properties": {
+              "type": "object",
+              "required": ["endpoint", "method", "error_type", "retry_attempted"],
+              "properties": {
+                "endpoint": { "type": "string", "description": "Endpoint al que se intentaba acceder." },
+                "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"], "description": "Método HTTP." },
+                "error_type": { "type": "string", "enum": ["timeout", "abort", "network_error", "http_error"], "description": "Tipo de error de red." },
+                "http_status": { "type": "integer", "description": "Código de estado HTTP, si se recibió respuesta." },
+                "retry_attempted": { "type": "boolean", "description": "Indica si se intentó un reintento automático." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "page_navigated": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "page_navigated" },
+            "properties": {
+              "type": "object",
+              "required": ["page"],
+              "properties": {
+                "page": { "type": "string", "description": "Ruta de destino (ej. /incidents/summary)." },
+                "source_page": { "type": "string", "description": "Ruta de origen desde la que navegó." },
+                "navigation_time_ms": { "type": "integer", "minimum": 0, "description": "Tiempo de navegación en ms." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "flow_abandoned": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "flow_abandoned" },
+            "properties": {
+              "type": "object",
+              "required": ["flow_name", "current_step", "time_spent_seconds", "abandoned_after"],
+              "properties": {
+                "flow_name": { "type": "string", "enum": ["create_inbound_order", "create_outbound_order", "report_incident"], "description": "Nombre del flujo abandonado." },
+                "current_step": { "type": "string", "description": "Paso en el que se abandonó." },
+                "time_spent_seconds": { "type": "integer", "minimum": 0, "description": "Tiempo invertido antes de abandonar." },
+                "abandoned_after": { "type": "string", "description": "Última acción registrada antes del abandono." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    },
+    "feature_used": {
+      "allOf": [
+        { "$ref": "#/definitions/eventEnvelope" },
+        {
+          "properties": {
+            "event_type": { "const": "feature_used" },
+            "properties": {
+              "type": "object",
+              "required": ["feature_name", "page", "action"],
+              "properties": {
+                "feature_name": { "type": "string", "description": "Nombre de la funcionalidad." },
+                "page": { "type": "string", "description": "Página donde se encuentra la funcionalidad." },
+                "action": { "type": "string", "enum": ["click", "submit", "download"], "description": "Acción específica." }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["event_type", "properties"]
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/inbound_order_created" },
+    { "$ref": "#/definitions/outbound_order_created" },
+    { "$ref": "#/definitions/stock_threshold_triggered" },
+    { "$ref": "#/definitions/direct_stock_edit_rejected" },
+    { "$ref": "#/definitions/inventory_discrepancy_detected" },
+    { "$ref": "#/definitions/product_catalog_viewed" },
+    { "$ref": "#/definitions/inbound_order_failed" },
+    { "$ref": "#/definitions/outbound_order_failed" },
+    { "$ref": "#/definitions/login_attempted" },
+    { "$ref": "#/definitions/login_failed" },
+    { "$ref": "#/definitions/password_reset_requested" },
+    { "$ref": "#/definitions/session_started" },
+    { "$ref": "#/definitions/session_expired" },
+    { "$ref": "#/definitions/user_registered" },
+    { "$ref": "#/definitions/api_latency_recorded" },
+    { "$ref": "#/definitions/page_load_time_recorded" },
+    { "$ref": "#/definitions/api_error_rate_recorded" },
+    { "$ref": "#/definitions/frontend_error_captured" },
+    { "$ref": "#/definitions/api_validation_error" },
+    { "$ref": "#/definitions/network_request_failed" },
+    { "$ref": "#/definitions/page_navigated" },
+    { "$ref": "#/definitions/flow_abandoned" },
+    { "$ref": "#/definitions/feature_used" }
+  ]
+}
