@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-barlow: "Barlow", sans-serif;
+  --font-oswald: "Oswald", sans-serif;
+
+  --color-brasa-cream: #f9ede0;
+  --color-brasa-cream-light: #fff7ec;
+  --color-brasa-bg: #f4efe6;
+  --color-brasa-brown-dark: #2e1f16;
+  --color-brasa-brown: #3a1f14;
+  --color-brasa-brown-mid: #3a271b;
+  --color-brasa-text: #1f1a14;
+  --color-brasa-text-secondary: #5f4432;
+  --color-brasa-gold: #ffca8f;
+  --color-brasa-gold-light: #fff1dc;
+  --color-brasa-orange: #d45d2f;
+  --color-brasa-red: #b23a21;
+  --color-brasa-red-dark: #932d19;
+  --color-brasa-red-deep: #a3321f;
+  --color-brasa-error: #a12e1b;
+  --color-brasa-border: #3a1f14;
+}
+
+/* Mobile menu animation */
+.mobile-menu {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+}
+
+.mobile-menu-open {
+  max-height: 400px;
+  opacity: 1;
+}
+
+/* Hamburger bar animation */
+.hamburger-bar {
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}

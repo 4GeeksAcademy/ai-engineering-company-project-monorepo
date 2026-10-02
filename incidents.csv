@@ -1,0 +1,101 @@
+incident_id,date,location_id,category,description,status,customer_id,satisfaction_score,reporter_id
+BRS-000001,2024-01-14,COL-07,FOOD_QUALITY,Porción servida menor a la estándar del menú,CLOSED,CLI-471507,5,MGR-01
+BRS-000002,2024-01-04,COL-01,SUPPLY,"Bajo stock de carbón para parrillas, pedido urgente enviado",DISCARDED,CLI-777568,,MGR-06
+BRS-000003,2024-01-08,COL-04,SUPPLY,Proveedor de salsas no entregó el pedido semanal,OPEN,CLI-214576,,MGR-08
+BRS-000004,2024-01-06,COL-05,CUSTOMER_COMPLAINT,Queja por ruido excesivo en el área de mesas,CLOSED,,2,MGR-04
+BRS-000005,2024-01-15,FLA-03,EQUIPMENT,Lavaplatos industrial con fuga de agua detectada,OPEN,CLI-179046,,MGR-02
+BRS-000006,2024-01-18,FLA-04,CUSTOMER_COMPLAINT,Cliente insatisfecho con el tiempo de espera en mesa,CLOSED,,5,MGR-02
+BRS-000007,2024-01-08,COL-03,CUSTOMER_COMPLAINT,Reclamación por reserva no encontrada al llegar,CLOSED,CLI-989921,4,MGR-08
+BRS-000008,2024-01-29,COL-01,FOOD_QUALITY,Cliente reporta alimento frío al momento de servir,OPEN,CLI-520521,,MGR-07
+BRS-000009,2024-01-13,COL-05,CUSTOMER_COMPLAINT,Queja por ruido excesivo en el área de mesas,CLOSED,,2,MGR-05
+BRS-000010,2024-01-26,COL-09,SUPPLY,Faltante de bebidas importadas en carta,CLOSED,CLI-865990,5,MGR-08
+BRS-000011,2024-01-10,COL-04,SUPPLY,Falta de carne de res para cortes del menú principal,OPEN,,,MGR-01
+BRS-000012,2024-01-02,COL-10,CUSTOMER_COMPLAINT,Queja por ruido excesivo en el área de mesas,OPEN,CLI-159942,,MGR-03
+BRS-000013,2024-01-17,COL-02,SUPPLY,Retraso en entrega de insumos de limpieza,OPEN,,,MGR-03
+BRS-000014,2024-01-03,FLA-01,FOOD_QUALITY,Cliente reporta alimento frío al momento de servir,DISCARDED,,,MGR-07
+BRS-000015,2024-01-29,COL-10,SUPPLY,Proveedor de salsas no entregó el pedido semanal,OPEN,,,MGR-01
+BRS-000016,2024-01-22,COL-10,STAFF,Empleado no siguió protocolo de uniformidad,CLOSED,CLI-539589,2,MGR-06
+BRS-000017,2024-01-22,FLA-02,SUPPLY,Desabasto de envases para pedidos para llevar,OPEN,CLI-314181,,MGR-04
+BRS-000018,2024-01-05,FLA-01,EQUIPMENT,Sistema de música del local apagado sin respuesta,DISCARDED,,,MGR-05
+BRS-000019,2024-01-30,COL-02,SUPPLY,Falta de carne de res para cortes del menú principal,OPEN,CLI-888387,,MGR-08
+BRS-000020,2024-01-04,COL-02,EQUIPMENT,Refrigerador de bebidas no enfría correctamente,OPEN,CLI-690341,,MGR-04
+BRS-000021,2024-01-30,COL-06,SUPPLY,Falta de carne de res para cortes del menú principal,OPEN,CLI-238890,,MGR-04
+BRS-000022,2024-01-15,FLA-04,FOOD_QUALITY,Producto vencido detectado durante revisión de inventario,CLOSED,CLI-265409,3,MGR-05
+BRS-000023,2024-01-21,COL-09,EQUIPMENT,Falla en la parrilla principal de cocina,DISCARDED,CLI-946305,,MGR-05
+BRS-000024,2024-01-31,COL-03,EQUIPMENT,Terminal POS con error al procesar pagos con tarjeta,CLOSED,CLI-208618,5,MGR-02
+BRS-000025,2024-01-18,COL-03,FOOD_QUALITY,Salsa de la casa con sabor diferente al habitual,CLOSED,CLI-878480,3,MGR-05
+BRS-000026,2024-01-11,COL-04,SUPPLY,Faltante de bebidas importadas en carta,CLOSED,CLI-852470,2,MGR-05
+BRS-000027,2024-01-29,FLA-04,STAFF,Empleado llegó tarde al turno de apertura,CLOSED,CLI-363319,1,MGR-02
+BRS-000028,2024-01-09,COL-01,CUSTOMER_COMPLAINT,Cliente insatisfecho con el tiempo de espera en mesa,OPEN,CLI-969634,,MGR-06
+BRS-000029,2024-01-09,COL-03,EQUIPMENT,Sistema de música del local apagado sin respuesta,CLOSED,CLI-768061,4,MGR-08
+BRS-000030,2024-01-18,COL-01,FOOD_QUALITY,Carne servida en término incorrecto según pedido,CLOSED,CLI-548462,4,MGR-02
+BRS-000031,2024-01-29,COL-03,FOOD_QUALITY,Producto vencido detectado durante revisión de inventario,OPEN,CLI-824586,,MGR-01
+BRS-000032,2024-01-18,COL-03,SUPPLY,"Bajo stock de carbón para parrillas, pedido urgente enviado",OPEN,CLI-710805,,MGR-03
+BRS-000033,2024-01-12,FLA-03,EQUIPMENT,Lavaplatos industrial con fuga de agua detectada,CLOSED,,4,MGR-01
+BRS-000034,2024-01-22,COL-04,EQUIPMENT,Sistema de música del local apagado sin respuesta,CLOSED,CLI-320281,4,MGR-02
+BRS-000035,2024-01-29,FLA-04,STAFF,Queja de cliente sobre comportamiento de mesero,CLOSED,CLI-687080,5,MGR-03
+BRS-000036,2024-01-28,COL-03,SUPPLY,Retraso en entrega de insumos de limpieza,CLOSED,CLI-348237,3,MGR-03
+BRS-000037,2024-01-06,FLA-02,FOOD_QUALITY,Salsa de la casa con sabor diferente al habitual,CLOSED,CLI-125990,4,MGR-07
+BRS-000038,2024-01-26,COL-04,CUSTOMER_COMPLAINT,Queja por temperatura inadecuada del local,CLOSED,CLI-870763,4,MGR-03
+BRS-000039,2024-01-13,FLA-04,EQUIPMENT,Falla en la parrilla principal de cocina,CLOSED,CLI-213346,4,MGR-08
+BRS-000040,2024-01-27,COL-08,CUSTOMER_COMPLAINT,Cliente informa que su pedido tardó más de 40 minutos,CLOSED,,4,MGR-05
+BRS-000041,2024-01-08,COL-01,EQUIPMENT,Sistema de música del local apagado sin respuesta,CLOSED,CLI-338651,3,MGR-04
+BRS-000042,2024-01-28,COL-02,EQUIPMENT,Lavaplatos industrial con fuga de agua detectada,OPEN,CLI-392136,,MGR-05
+BRS-000043,2024-01-13,FLA-01,CUSTOMER_COMPLAINT,Cliente informa que su pedido tardó más de 40 minutos,DISCARDED,CLI-634150,,MGR-01
+BRS-000044,2024-01-08,,CUSTOMER_COMPLAINT,Cliente insatisfecho con el servicio recibido,OPEN,,,MGR-03
+BRS-000045,2024-01-09,COL-03,FOOD_QUALITY,Producto vencido detectado durante revisión de inventario,DISCARDED,,,MGR-05
+BRS-000046,2024-01-20,COL-07,FOOD_QUALITY,Salsa de la casa con sabor diferente al habitual,CLOSED,,4,MGR-06
+BRS-000047,2024-01-04,COL-07,SUPPLY,No se recibió el pedido de vegetales frescos del día,OPEN,CLI-636265,,MGR-04
+BRS-000048,2024-01-23,COL-07,CUSTOMER_COMPLAINT,Cliente insatisfecho con el tiempo de espera en mesa,CLOSED,,1,MGR-04
+BRS-000049,2024-01-25,COL-03,,Incidencia sin categorizar reportada por supervisor,OPEN,,,MGR-05
+BRS-000050,2024-01-31,FLA-01,EQUIPMENT,Terminal POS con error al procesar pagos con tarjeta,DISCARDED,CLI-173372,,MGR-06
+BRS-000051,2024-01-24,COL-05,FOOD_QUALITY,Producto vencido detectado durante revisión de inventario,CLOSED,CLI-230679,1,MGR-05
+BRS-000052,2024-01-13,FLA-02,SUPPLY,Desabasto de envases para pedidos para llevar,CLOSED,CLI-442027,4,MGR-03
+BRS-000053,2024-01-22,COL-07,CUSTOMER_COMPLAINT,Cliente reporta error en la cuenta cobrada,CLOSED,,4,MGR-05
+BRS-000054,2024-01-01,COL-05,CUSTOMER_COMPLAINT,Queja por temperatura inadecuada del local,OPEN,CLI-974224,,MGR-04
+BRS-000055,2024-01-20,FLA-01,EQUIPMENT,Terminal POS con error al procesar pagos con tarjeta,CLOSED,CLI-708158,4,MGR-08
+BRS-000056,2024-01-07,COL-09,SUPPLY,"Bajo stock de carbón para parrillas, pedido urgente enviado",CLOSED,CLI-808446,3,MGR-03
+BRS-000057,2024-01-17,FLA-01,CUSTOMER_COMPLAINT,Cliente informa que su pedido tardó más de 40 minutos,OPEN,CLI-397571,,MGR-02
+BRS-000058,2024-01-08,FLA-01,SUPPLY,Desabasto de envases para pedidos para llevar,CLOSED,CLI-887625,3,MGR-04
+BRS-000059,2024-01-01,COL-01,CUSTOMER_COMPLAINT,Solicitud de devolución por pedido incorrecto entregado,CLOSED,CLI-254511,1,MGR-08
+BRS-000060,2024-01-03,COL-08,CUSTOMER_COMPLAINT,Reclamación por reserva no encontrada al llegar,OPEN,CLI-905819,,MGR-04
+BRS-000061,2024-01-16,COL-07,CUSTOMER_COMPLAINT,Solicitud de devolución por pedido incorrecto entregado,CLOSED,CLI-502630,3,MGR-03
+BRS-000062,2024-01-29,FLA-03,CUSTOMER_COMPLAINT,Queja por trato irrespetuoso del personal de sala,OPEN,CLI-105814,,MGR-07
+BRS-000063,2024-01-26,FLA-02,SUPPLY,No se recibió el pedido de vegetales frescos del día,CLOSED,,2,MGR-08
+BRS-000064,2024-01-08,FLA-04,SUPPLY,Falta de carne de res para cortes del menú principal,CLOSED,,3,MGR-08
+BRS-000065,2024-01-15,FLA-01,STAFF,Empleado no siguió protocolo de uniformidad,OPEN,,,MGR-06
+BRS-000066,2024-01-20,FLA-04,CUSTOMER_COMPLAINT,Reclamación por reserva no encontrada al llegar,OPEN,CLI-564071,,MGR-08
+BRS-000067,2024-01-28,COL-08,FOOD_QUALITY,Porción servida menor a la estándar del menú,CLOSED,CLI-879779,3,MGR-05
+BRS-000068,2024-01-21,COL-05,EQUIPMENT,Lavaplatos industrial con fuga de agua detectada,OPEN,CLI-980660,,MGR-08
+BRS-000069,2024-01-15,COL-02,FOOD_QUALITY,Guarnición servida sin cocción completa,OPEN,CLI-387936,,MGR-05
+BRS-000070,2024-01-11,COL-06,CUSTOMER_COMPLAINT,Queja por trato irrespetuoso del personal de sala,OPEN,,,MGR-03
+BRS-000071,2024-01-13,FLA-02,CUSTOMER_COMPLAINT,Cliente reporta error en la cuenta cobrada,OPEN,,,MGR-04
+BRS-000072,2024-01-14,COL-06,STAFF,Empleado no siguió protocolo de uniformidad,OPEN,,,MGR-08
+BRS-000073,2024-01-27,COL-07,SUPPLY,"Bajo stock de carbón para parrillas, pedido urgente enviado",DISCARDED,CLI-316881,,MGR-01
+BRS-000074,2024-01-19,COL-07,STAFF,Queja de cliente sobre comportamiento de mesero,CLOSED,CLI-902784,2,MGR-01
+BRS-000075,2024-01-25,COL-07,SUPPLY,Retraso en entrega de insumos de limpieza,DISCARDED,CLI-413118,,MGR-07
+BRS-000076,2024-01-18,FLA-03,STAFF,Empleado no siguió protocolo de uniformidad,OPEN,CLI-870319,,MGR-04
+BRS-000077,2024-01-14,COL-08,CUSTOMER_COMPLAINT,Cliente insatisfecho con el tiempo de espera en mesa,CLOSED,CLI-386193,4,MGR-07
+BRS-000078,2024-01-22,FLA-03,FOOD_QUALITY,Porción servida menor a la estándar del menú,CLOSED,,4,MGR-03
+BRS-000079,2024-01-15,FLA-02,EQUIPMENT,,OPEN,,,MGR-07
+BRS-000080,2024-01-20,COL-09,STAFF,Empleado llegó tarde al turno de apertura,CLOSED,CLI-233827,4,MGR-07
+BRS-000081,2024-01-01,COL-02,SUPPLY,Faltante de bebidas importadas en carta,CLOSED,CLI-795205,4,MGR-07
+BRS-000082,2024-01-15,COL-03,EQUIPMENT,Falla en la parrilla principal de cocina,CLOSED,,5,MGR-05
+BRS-000083,2024-01-15,COL-06,CUSTOMER_COMPLAINT,Cliente informa que su pedido tardó más de 40 minutos,DISCARDED,CLI-321941,,MGR-07
+BRS-000084,2024-01-31,FLA-04,FOOD_QUALITY,Porción servida menor a la estándar del menú,CLOSED,,5,MGR-05
+BRS-000085,2024-01-01,FLA-02,STAFF,Empleado no siguió protocolo de uniformidad,CLOSED,CLI-593152,4,MGR-01
+BRS-000086,2024-01-19,COL-07,FOOD_QUALITY,Revisión de temperatura completada sin novedad,CLOSED,,,MGR-02
+BRS-000087,2024-01-08,FLA-01,CUSTOMER_COMPLAINT,Queja por trato irrespetuoso del personal de sala,OPEN,CLI-466960,,MGR-01
+BRS-000088,2024-01-07,FLA-04,SUPPLY,Falta de carne de res para cortes del menú principal,OPEN,CLI-359295,,MGR-03
+BRS-000089,2024-01-16,FLA-01,FOOD_QUALITY,Carne servida en término incorrecto según pedido,CLOSED,,3,MGR-04
+BRS-000090,2024-01-25,COL-06,CUSTOMER_COMPLAINT,Cliente reporta error en la cuenta cobrada,OPEN,CLI-368690,,MGR-02
+BRS-000091,2024-01-31,COL-05,FOOD_QUALITY,Carne servida en término incorrecto según pedido,CLOSED,CLI-271720,3,MGR-01
+BRS-000092,2024-01-22,COL-07,FOOD_QUALITY,Porción servida menor a la estándar del menú,DISCARDED,CLI-703766,,MGR-04
+BRS-000093,2024-01-23,FLA-04,CUSTOMER_COMPLAINT,Solicitud de devolución por pedido incorrecto entregado,CLOSED,,5,MGR-02
+BRS-000094,2024-01-28,FLA-01,CUSTOMER_COMPLAINT,Queja por trato irrespetuoso del personal de sala,CLOSED,CLI-416232,5,MGR-01
+BRS-000095,2024-01-14,FLA-01,CUSTOMER_COMPLAINT,Cliente informa que su pedido tardó más de 40 minutos,DISCARDED,,,MGR-02
+BRS-000096,2024-01-01,FLA-04,EQUIPMENT,Extractor de humos con funcionamiento deficiente,DISCARDED,CLI-457806,,MGR-08
+BRS-000097,2024-01-31,COL-06,EQUIPMENT,Sistema de música del local apagado sin respuesta,CLOSED,,4,MGR-08
+BRS-000098,2024-01-06,FLA-02,CUSTOMER_COMPLAINT,Queja por temperatura inadecuada del local,DISCARDED,CLI-556641,,MGR-08
+BRS-000099,2024-01-24,COL-10,CUSTOMER_COMPLAINT,Queja por temperatura inadecuada del local,CLOSED,CLI-965845,3,MGR-06
+BRS-000100,2024-01-30,COL-02,FOOD_QUALITY,Salsa de la casa con sabor diferente al habitual,OPEN,CLI-971084,,MGR-08

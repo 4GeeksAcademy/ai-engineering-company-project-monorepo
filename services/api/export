@@ -1,0 +1,30 @@
+Metric,Value
+Total Records,15
+Valid Records,5
+Invalid Records,10
+
+Invalid Reason,Count
+score_out_of_range,10
+missing_reporter_id,9
+missing_location_id,1
+invalid_category,1
+
+Category,Count
+CUSTOMER_COMPLAINT,1
+EQUIPMENT,2
+SUPPLY,0
+FOOD_QUALITY,1
+STAFF,1
+
+Status,Count
+OPEN,0
+CLOSED,5
+DISCARDED,0
+
+Satisfaction Score,Count
+1 - Very dissatisfied,1
+2 - Dissatisfied,1
+3 - Neutral,1
+4 - Satisfied,1
+5 - Very satisfied,1
+Average Score,3.00

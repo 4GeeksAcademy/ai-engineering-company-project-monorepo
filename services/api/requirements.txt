@@ -1,0 +1,22 @@
+# ── Core ──────────────────────────────────────────────────
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.3
+pydantic-settings==2.9.1
+
+# ── ASGI server ───────────────────────────────────────────
+python-multipart==0.0.20
+
+# ── HTTP client (for external calls / AI services) ────────
+httpx==0.28.1
+
+# ── Database and authentication ───────────────────────────
+tinydb==4.9.0
+python-jose[cryptography]>=3.5.0
+libpass[bcrypt]>=1.9.0
+resend==2.49.0
+
+# ── Dev / Test ────────────────────────────────────────────
+pytest==8.3.5
+pytest-asyncio==0.25.3
+httpx

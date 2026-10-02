@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Mobile menu toggle — pure CSS, no JS required */
+#nav-toggle:checked ~ header .mobile-nav {
+    max-height: 400px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#nav-toggle:checked ~ header .mobile-nav a {
+    pointer-events: auto;
+}
+
+#nav-toggle:checked ~ header .hamburger-open {
+    display: none;
+}
+
+#nav-toggle:checked ~ header .hamburger-close {
+    display: block;
+}
+
+/* Smooth scroll for anchor links */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+}

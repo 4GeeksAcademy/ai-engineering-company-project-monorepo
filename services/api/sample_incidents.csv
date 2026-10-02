@@ -1,0 +1,16 @@
+incident_id,date,location_id,category,description,status,customer_id,satisfaction_score,reporter_id
+BRS-000001,2026-09-01,COL-01,CUSTOMER_COMPLAINT,Long wait time for food order,CLOSED,CLI-100001,4,MGR-01
+BRS-000002,2026-09-01,FLA-02,EQUIPMENT,Grill not heating properly,OPEN,,MGR-03
+BRS-000003,2026-09-02,COL-05,FOOD_QUALITY,Food was cold when served,CLOSED,,3,MGR-05
+BRS-000004,2026-09-03,,SUPPLY,Missing chicken inventory,OPEN,,MGR-07
+BRS-000005,2026-09-03,FLA-01,STAFF,Staff rude to customer,CLOSED,,5,MGR-02
+BRS-000006,2026-09-04,COL-03,INVALID_CAT,Wrong category test,OPEN,,MGR-04
+BRS-000007,2026-09-04,COL-02,EQUIPMENT,Short desc,CLOSED,,2,MGR-06
+BRS-000008,2026-09-05,FLA-04,CUSTOMER_COMPLAINT,Great service overall,DISCARDED,,MGR-08
+BRS-000009,2026-09-06,COL-08,FOOD_QUALITY,Excellent food quality and presentation,CLOSED,,MGR-09
+BRS-000010,2026-09-07,COL-10,SUPPLY,Need more napkins and utensils,OPEN,,MGR-10
+BRS-000011,2026-09-08,FLA-03,STAFF,New hire needs training,CLOSED,,9,MGR-11
+BRS-000012,2026-09-09,COL-07,CUSTOMER_COMPLAINT,Order was incomplete,OPEN,,MGR-12
+BRS-000013,2026-09-10,COL-04,EQUIPMENT,Deep fryer broken,CLOSED,,1,MGR-13
+BRS-000014,2026-09-11,FLA-01,FOOD_QUALITY,Undercooked meat reported,DISCARDED,,MGR-14
+BRS-000015,2026-09-12,COL-06,SUPPLY,Delivery delayed by supplier,OPEN,,MGR-01
