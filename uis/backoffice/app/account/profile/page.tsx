@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, MapPin, Pencil, Phone, UserRound } from "lucide-react";
+import { KeyRound, Mail, MapPin, Pencil, Phone, UserRound } from "lucide-react";
 import { TOKEN_STORAGE_KEY } from "@/lib/auth";
 import {
   getCurrentAccount,
@@ -91,13 +91,22 @@ export default function ProfilePage() {
             Your contact details for Brasaland operations.
           </p>
         </div>
-        <Link
-          href="/account/profile/edit"
-          className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md bg-brasa-red px-4 py-2.5 text-sm font-semibold text-white outline-none transition-colors hover:bg-brasa-red-dark focus-visible:ring-2 focus-visible:ring-brasa-red focus-visible:ring-offset-2"
-        >
-          <Pencil aria-hidden="true" className="size-4" />
-          Edit profile
-        </Link>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <Link
+            href="/account/profile/edit"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-brasa-red px-4 py-2.5 text-sm font-semibold text-white outline-none transition-colors hover:bg-brasa-red-dark focus-visible:ring-2 focus-visible:ring-brasa-red focus-visible:ring-offset-2"
+          >
+            <Pencil aria-hidden="true" className="size-4" />
+            Edit profile
+          </Link>
+          <Link
+            href="/account/change-password"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-gray-600 outline-none hover:bg-gray-100 hover:text-gray-950 focus-visible:ring-2 focus-visible:ring-brasa-red focus-visible:ring-offset-2"
+          >
+            <KeyRound aria-hidden="true" className="size-4" />
+            Change password
+          </Link>
+        </div>
       </header>
 
       {updateSucceeded ? (

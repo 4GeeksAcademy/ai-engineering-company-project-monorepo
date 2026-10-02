@@ -101,3 +101,15 @@ export async function loginUser(email: string, password: string) {
 
   return response.data;
 }
+
+export async function requestPasswordReset(email: string) {
+  return post<unknown>("/api/proxy/auth/forgot-password", { email });
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  return post<unknown>(
+    "/api/proxy/auth/reset-password",
+    { token, new_password: newPassword },
+    "new_password",
+  );
+}

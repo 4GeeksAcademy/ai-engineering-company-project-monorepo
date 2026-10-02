@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthPanel from "@/components/AuthPanel";
 import FormField from "@/components/FormField";
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSucceeded, setRegistrationSucceeded] = useState(false);
+  const [passwordResetSucceeded, setPasswordResetSucceeded] = useState(false);
 
   useEffect(() => {
     const success = window.sessionStorage.getItem(
@@ -28,6 +30,14 @@ export default function LoginPage() {
     if (success) {
       window.sessionStorage.removeItem("brasaland_registration_success");
       setRegistrationSucceeded(true);
+    }
+
+    const passwordReset = window.sessionStorage.getItem(
+      "brasaland_password_reset_success",
+    );
+    if (passwordReset) {
+      window.sessionStorage.removeItem("brasaland_password_reset_success");
+      setPasswordResetSucceeded(true);
     }
   }, []);
 
@@ -84,6 +94,15 @@ export default function LoginPage() {
         </p>
       ) : null}
 
+      {passwordResetSucceeded ? (
+        <p
+          className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"
+          role="status"
+        >
+          Password reset successfully. Sign in with your new password.
+        </p>
+      ) : null}
+
       <form className="space-y-4" noValidate onSubmit={handleSubmit}>
         <FormField
           id="login-email"
@@ -104,6 +123,14 @@ export default function LoginPage() {
           required
           error={errors.password}
         />
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-brasa-red outline-none hover:text-brasa-red-dark hover:underline focus-visible:ring-2 focus-visible:ring-brasa-red focus-visible:ring-offset-2"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {errors.form && !errors.password ? (
           <p className="text-sm text-rose-600" role="alert">

@@ -1,8 +1,14 @@
 """Application configuration and settings."""
 
 from functools import lru_cache
+from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# services/api (este archivo está en app/core/)
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
 
 
 class Settings(BaseSettings):
@@ -20,6 +26,13 @@ class Settings(BaseSettings):
     # Auth (extend as needed)
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 15
+
+    # Transactional email
+    # pydantic-settings lo lee de la variable de entorno o de .env; "" = sin configurar
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "Brasaland <onboarding@resend.dev>"
+    BACKOFFICE_URL: str = "http://localhost:3002"
 
     # Database (extend when ready)
     DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
@@ -27,11 +40,12 @@ class Settings(BaseSettings):
     # AI / ML
     MODEL_NAME: str = ""
 
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": True,
-    }
+    model_config = SettingsConfigDict(
+        # Ruta absoluta: "./.env" depende del cwd y falla si no lanzas uvicorn desde services/api
+        env_file=str(BASE_DIR / ".env"),
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
 @lru_cache

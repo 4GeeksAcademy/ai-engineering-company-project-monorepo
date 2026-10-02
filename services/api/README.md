@@ -55,6 +55,10 @@ Copy `.env.example` to `.env` and adjust values:
 | `APP_VERSION` | 0.1.0 | Semver version |
 | `DEBUG` | false | Enable debug mode |
 | `SECRET_KEY` | change-me | JWT / signing secret |
+| `PASSWORD_RESET_EXPIRE_MINUTES` | 15 | Password reset link lifetime |
+| `RESEND_API_KEY` | empty | Resend API key used for password reset emails |
+| `RESEND_FROM_EMAIL` | Brasaland <onboarding@resend.dev> | Sender address; use a verified domain in production |
+| `BACKOFFICE_URL` | http://localhost:3002 | Public backoffice URL used in reset links |
 | `DATABASE_URL` | sqlite+aiosqlite:///./dev.db | Database connection string |
 | `CORS_ORIGINS` | ["http://localhost:3000"] | Allowed CORS origins |
 

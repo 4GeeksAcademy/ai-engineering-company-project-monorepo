@@ -5,7 +5,12 @@ import type { ReactNode } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
-const publicRoutes = new Set(["/login", "/register"]);
+const publicRoutes = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 interface AppShellProps {
   children: ReactNode;

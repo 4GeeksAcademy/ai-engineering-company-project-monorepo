@@ -100,3 +100,23 @@ class UserResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(..., pattern=EMAIL_PATTERN)
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
