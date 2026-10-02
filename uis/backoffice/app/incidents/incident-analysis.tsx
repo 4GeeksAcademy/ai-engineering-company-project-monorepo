@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
-import { authFetch } from "@/lib/auth";
+import { ApiRequestError, authFetch, readApiResponse } from "@/lib/auth";
 
 type CountItem = { key: string; count: number; percentage: number };
 type IncidentAnalysisResult = {
@@ -23,6 +23,7 @@ export function IncidentAnalysis() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<IncidentAnalysisResult | null>(null);
   const [error, setError] = useState("");
+  const [errorContext, setErrorContext] = useState<"upload" | "export" | null>(null);
   const [loading, setLoading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -30,9 +31,11 @@ export function IncidentAnalysis() {
   async function upload(file?: File) {
     if (!file) return;
     setError("");
+    setErrorContext(null);
     setResult(null);
     if (!file.name.toLowerCase().endsWith(".csv")) {
       setError("Please select a .csv file.");
+      setErrorContext("upload");
       return;
     }
     const data = new FormData();
@@ -40,11 +43,11 @@ export function IncidentAnalysis() {
     setLoading(true);
     try {
       const response = await authFetch("/incidents/analyze", { method: "POST", headers: {}, body: data });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? "Could not analyze this file.");
-      setResult(payload as IncidentAnalysisResult);
+      const payload = await readApiResponse<IncidentAnalysisResult>(response, "Could not analyze this file. Check the CSV and try again.");
+      setResult(payload);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not connect to the analysis service.");
+      setError(err instanceof ApiRequestError ? err.message : "Could not connect to the analysis service. Check your connection and try again.");
+      setErrorContext("upload");
     } finally {
       setLoading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -62,18 +65,23 @@ export function IncidentAnalysis() {
   }
 
   async function exportResults() {
+    setError("");
+    setErrorContext(null);
     setExporting(true);
     try {
       const response = await authFetch("/incidents/results/export");
-      if (!response.ok) throw new Error("Could not export the analysis results.");
+      if (!response.ok) {
+        await readApiResponse<never>(response, "Could not export the analysis results. Try again.");
+      }
       const url = URL.createObjectURL(await response.blob());
       const link = document.createElement("a");
       link.href = url;
       link.download = "incident-analysis.csv";
       link.click();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not export the analysis results.");
+      setError(cause instanceof ApiRequestError ? cause.message : "Could not export the analysis results. Check your connection and try again.");
+      setErrorContext("export");
     } finally {
       setExporting(false);
     }
@@ -102,7 +110,7 @@ export function IncidentAnalysis() {
         </div>
       </div>
 
-      {error && <div className="incident-alert" role="alert">{error}</div>}
+      {error && <div className="incident-alert" role="alert">{error} {errorContext === "upload" ? <button className="button" type="button" onClick={() => inputRef.current?.click()} disabled={loading}>Choose another CSV</button> : errorContext === "export" && result ? <button className="button" type="button" onClick={() => void exportResults()} disabled={exporting}>{exporting ? "Exporting…" : "Retry export"}</button> : null}</div>}
 
       {result && (
         <div className="incident-results" aria-live="polite">

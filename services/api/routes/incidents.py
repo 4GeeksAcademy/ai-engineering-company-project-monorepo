@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import sys
 from pathlib import Path
 from threading import Lock
@@ -25,6 +26,7 @@ from incidents_analysis import (  # noqa: E402
 from incidents_analysis.report import results_csv  # noqa: E402
 
 router = APIRouter(prefix="/api/incidents", tags=["incidents"], dependencies=[Depends(get_current_user)])
+logger = logging.getLogger(__name__)
 _last_result = None
 _result_lock = Lock()
 
@@ -37,7 +39,11 @@ async def analyze_incidents(file: UploadFile = File(...)) -> dict:
     if Path(filename).suffix.lower() != ".csv":
         raise HTTPException(status_code=415, detail="Upload a .csv file.")
 
-    raw = await file.read()
+    try:
+        raw = await file.read()
+    except OSError as exc:
+        logger.warning("Incident upload could not be read")
+        raise HTTPException(status_code=400, detail="The uploaded file could not be read. Please try again.") from exc
     try:
         # Client-controlled filenames can contain sensitive data; never echo them.
         result = analyze_bytes(raw, source_name="CSV input")
@@ -60,7 +66,11 @@ def export_last_results() -> StreamingResponse:
     if result is None:
         raise HTTPException(status_code=404, detail="No successful incident analysis is available to export.")
 
-    payload = results_csv(result)
+    try:
+        payload = results_csv(result)
+    except (OSError, UnicodeError, ValueError) as exc:
+        logger.error("Incident results could not be prepared for export")
+        raise HTTPException(status_code=500, detail="The analysis results could not be exported. Please try again.") from exc
     return StreamingResponse(
         io.StringIO(payload),
         media_type="text/csv; charset=utf-8",

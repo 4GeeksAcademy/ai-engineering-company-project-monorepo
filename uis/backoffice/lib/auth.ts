@@ -4,6 +4,33 @@ export const TOKEN_KEY = "healthcore_access_token";
 
 type ApiErrorPayload = { detail?: unknown };
 
+export class ApiRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
+const SAFE_API_MESSAGES = new Set([
+  "Incorrect email or password",
+  "Current password is incorrect",
+  "Invalid or expired reset token",
+  "Supplier not found",
+  "Email is already registered",
+  "Only admins may list users",
+  "Only admins may change roles",
+  "Only admins may change account status",
+  "Password changes must use the password recovery flow",
+  "Profile not found",
+  "No successful incident analysis is available to export.",
+  "The file is empty. Upload a CSV with a header row and at least one record.",
+  "The file has no header row.",
+  "The file is not valid UTF-8 text. Export it as a UTF-8 CSV.",
+  "Upload a .csv file.",
+  "The uploaded file could not be read. Please try again.",
+  "The analysis results could not be exported. Please try again.",
+]);
+
 export function getToken(): string | null {
   return window.localStorage.getItem(TOKEN_KEY);
 }
@@ -19,9 +46,8 @@ export function clearToken(): void {
 export function apiError(payload: unknown, fallback = "The API request failed."): string {
   if (payload && typeof payload === "object" && "detail" in payload) {
     const detail = (payload as ApiErrorPayload).detail;
-    return Array.isArray(detail)
-      ? detail.map((issue) => typeof issue === "object" && issue && "msg" in issue ? String(issue.msg) : String(issue)).join("; ")
-      : String(detail);
+    if (Array.isArray(detail)) return "Please check the information and try again.";
+    if (typeof detail === "string" && SAFE_API_MESSAGES.has(detail)) return detail;
   }
   return fallback;
 }
@@ -33,13 +59,10 @@ export async function readApiResponse<T>(response: Response, fallback: string): 
     try {
       payload = JSON.parse(text);
     } catch {
-      const detail = text.trim().replace(/\s+/g, " ").slice(0, 240);
-      throw new Error(detail
-        ? `The API returned ${response.status} with a non-JSON response: ${detail}`
-        : `The API returned ${response.status} with an unreadable response.`);
+      throw new ApiRequestError(fallback);
     }
   }
-  if (!response.ok) throw new Error(apiError(payload, fallback));
+  if (!response.ok) throw new ApiRequestError(apiError(payload, fallback));
   return payload as T;
 }
 

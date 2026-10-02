@@ -260,6 +260,8 @@ def analyze_file(path: str) -> AnalysisResult:
         raise InvalidFormatError("The specified CSV file could not be found.") from exc
     except IsADirectoryError as exc:
         raise InvalidFormatError("The specified path is not a file.") from exc
+    except OSError as exc:
+        raise InvalidFormatError("The specified CSV file could not be read.") from exc
 
     # Never echo a user-controlled filename: names can accidentally contain PHI.
     return analyze_bytes(data, source_name="CSV input")

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { apiError, authFetch } from "@/lib/auth";
+import { ApiRequestError, authFetch, readApiResponse } from "@/lib/auth";
 
 function Sidebar() {
   return (
@@ -55,6 +55,7 @@ export default function SuppliersPage() {
   const [form, setForm] = useState<SupplierForm>(emptyForm);
   const [rateDrafts, setRateDrafts] = useState<Record<number, string>>({});
   const [error, setError] = useState("");
+  const [loadFailed, setLoadFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -68,13 +69,14 @@ export default function SuppliersPage() {
   const loadSuppliers = useCallback(async () => {
     setLoading(true);
     setError("");
+    setLoadFailed(false);
     try {
       const response = await authFetch(`/suppliers${query ? `?${query}` : ""}`);
-      const body = await response.json();
-      if (!response.ok) throw new Error(apiError(body));
-      setSuppliers(body as Supplier[]);
+      const body = await readApiResponse<Supplier[]>(response, "Unable to load suppliers. Check your connection and try again.");
+      setSuppliers(body);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load suppliers. Check that the API is running.");
+      setLoadFailed(true);
+      setError(cause instanceof ApiRequestError ? cause.message : "Unable to load suppliers. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -85,27 +87,27 @@ export default function SuppliersPage() {
     return () => window.clearTimeout(timer);
   }, [loadSuppliers]);
 
-  async function request(path: string, options?: RequestInit) {
+  async function request<T>(path: string, options?: RequestInit): Promise<T | null> {
     const response = await authFetch(path, {
       ...options,
       headers: { "Content-Type": "application/json", ...options?.headers },
     });
     if (response.status === 204) return null;
-    const body = await response.json();
-    if (!response.ok) throw new Error(apiError(body));
-    return body as Supplier;
+    return readApiResponse<T>(response, "Unable to complete this supplier update. Check your connection and try again.");
   }
 
   async function registerSupplier(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
+    setLoadFailed(false);
     try {
-      await request("/suppliers", { method: "POST", body: JSON.stringify(form) });
+      await request<Supplier>("/suppliers", { method: "POST", body: JSON.stringify(form) });
       setForm(emptyForm);
       await loadSuppliers();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to register supplier.");
+      setLoadFailed(false);
+      setError(cause instanceof ApiRequestError ? cause.message : "Unable to register supplier. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -113,25 +115,27 @@ export default function SuppliersPage() {
 
   async function updateRate(supplier: Supplier) {
     setError("");
+    setLoadFailed(false);
     try {
-      const updated = await request(`/suppliers/${supplier.id}/rate`, {
+      const updated = await request<Supplier>(`/suppliers/${supplier.id}/rate`, {
         method: "PATCH", body: JSON.stringify({ monthly_rate: Number(rateDrafts[supplier.id] ?? supplier.monthly_rate) }),
       });
       if (updated) setSuppliers((items) => items.map((item) => item.id === updated.id ? updated : item));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update rate.");
+      setError(cause instanceof ApiRequestError ? cause.message : "Unable to update the supplier rate. Check your connection and try again.");
     }
   }
 
   async function changeStatus(supplier: Supplier) {
     setError("");
+    setLoadFailed(false);
     try {
-      const updated = await request(`/suppliers/${supplier.id}/status`, {
+      const updated = await request<Supplier>(`/suppliers/${supplier.id}/status`, {
         method: "PATCH", body: JSON.stringify({ status: supplier.status === "active" ? "suspended" : "active" }),
       });
       if (updated) setSuppliers((items) => items.map((item) => item.id === updated.id ? updated : item));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update supplier status.");
+      setError(cause instanceof ApiRequestError ? cause.message : "Unable to update supplier status. Check your connection and try again.");
     }
   }
 
@@ -158,8 +162,8 @@ export default function SuppliersPage() {
             <label>Country<select value={country} onChange={(event) => setCountry(event.target.value)}><option value="">All countries</option><option value="USA">USA</option><option value="UK">UK</option></select></label>
             <label>Category<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{CATEGORIES.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></label>
           </div>
-          {error && <div className="supplier-error" role="alert">{error}</div>}
-          {loading ? <p className="supplier-empty">Loading suppliers…</p> : suppliers.length === 0 ? <p className="supplier-empty">No suppliers found for the selected filters.</p> : (
+          {error && <div className="supplier-error" role="alert">{error} {loadFailed && <button className="supplier-small-button" type="button" onClick={() => void loadSuppliers()}>Try again</button>}</div>}
+          {loading ? <p className="supplier-empty" role="status">Loading suppliers…</p> : suppliers.length === 0 ? <p className="supplier-empty">No suppliers found for the selected filters.</p> : (
             <div className="supplier-table-wrap"><table className="supplier-table"><thead><tr><th>Supplier</th><th>Country</th><th>Categories</th><th>Monthly rate</th><th>Compliance</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>{suppliers.map((supplier) => <tr key={supplier.id} className={supplier.status === "suspended" ? "supplier-suspended" : ""}>
                 <td><strong>{supplier.name}</strong>{supplier.contact_email && <small>{supplier.contact_email}</small>}</td><td>{supplier.country}</td><td><div className="supplier-category-list">{supplier.categories.map((item) => <span key={item}>{item.replaceAll("_", " ")}</span>)}</div></td>

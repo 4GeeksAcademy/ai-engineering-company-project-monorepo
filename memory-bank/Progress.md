@@ -15,6 +15,15 @@ The repository does not explicitly identify an active implementation task or cur
 
 **Current work: Not specified.**
 
+## Upcoming authentication phases
+
+The authentication roadmap in [`docs/AUTHENTICATION_SAGA.md`](../docs/AUTHENTICATION_SAGA.md) now sequences two additional syllabus projects after the existing recovery/change phase:
+
+1. **Phase 4 — Error handling:** implementation and listed checks are complete on `feature/auth-recovery`; not separately snapshotted. API plus analyzer tests: 27 passed with one Starlette deprecation warning; backoffice lint/build and diff check passed. Pandas runtime CSV cases remain unverified because pandas is not importable in the configured terminal interpreter; the sample script has safe missing-dependency handling and syntax validation. Source: [ai-eng-error-handling](https://github.com/4GeeksAcademy/ai-engineering-syllabus/blob/main/content/projects/ai-eng-error-handling/README.md). Plan: [`services/api/ERROR_HANDLING_PLAN.md`](../services/api/ERROR_HANDLING_PLAN.md).
+2. **Phase 5 — Building bullet-proof applications:** planned, not started; dependent on phase 4 passing its exit gate and being snapshotted. Source: [ai-eng-building-bullet-proof-applications](https://github.com/4GeeksAcademy/ai-engineering-syllabus/blob/main/content/projects/ai-eng-building-bullet-proof-applications/README.md).
+
+Phase 3 is snapshotted on `feature/auth-recovery` at `2af5061`. Phase 4 implementation checks are recorded in its plan, but it has not been snapshotted separately; phase 5 remains pending that review and snapshot.
+
 ## Remaining work for the memory-bank milestone
 
 - Maintain the project brief, technical context, and progress records as the project evolves.
