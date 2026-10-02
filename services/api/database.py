@@ -1,6 +1,7 @@
 """TinyDB persistence for suppliers, users, and profiles."""
 
 from pathlib import Path
+from threading import RLock
 from typing import Any
 
 from tinydb import Query, TinyDB
@@ -10,6 +11,8 @@ DATABASE_PATH = DATA_DIR / "suppliers.json"
 SUPPLIERS_TABLE = "suppliers"
 USERS_TABLE = "users"
 PROFILES_TABLE = "profiles"
+PASSWORD_RESET_TOKENS_TABLE = "password_reset_tokens"
+_PASSWORD_RESET_LOCK = RLock()
 
 
 def get_database() -> TinyDB:
@@ -104,6 +107,54 @@ def update_user(user_id: int, data: dict[str, Any]) -> dict[str, Any] | None:
         table.update(data, doc_ids=[user_id])
         record = table.get(doc_id=user_id)
     return {**record, "id": int(record.doc_id)} if record else None
+
+
+def change_user_password(user_id: int, hashed_password: str) -> bool:
+    """Update a password and invalidate reset tokens without a local reset race."""
+    with _PASSWORD_RESET_LOCK:
+        with get_database() as database:
+            users = database.table(USERS_TABLE)
+            if users.get(doc_id=user_id) is None:
+                return False
+            users.update({"hashed_password": hashed_password}, doc_ids=[user_id])
+            database.table(PASSWORD_RESET_TOKENS_TABLE).remove(Query().user_id == user_id)
+            return True
+
+
+def create_password_reset_token(user_id: int, token_hash: str, expires_at: str) -> None:
+    """Replace outstanding reset tokens and persist only the token digest."""
+    with _PASSWORD_RESET_LOCK:
+        with get_database() as database:
+            table = database.table(PASSWORD_RESET_TOKENS_TABLE)
+            table.remove(Query().user_id == user_id)
+            table.insert({"user_id": user_id, "token_hash": token_hash, "expires_at": expires_at})
+
+
+def reset_password_with_token(token_hash: str, now: str, hashed_password: str) -> bool:
+    """Validate, consume, and apply a reset under one process-local lock."""
+    with _PASSWORD_RESET_LOCK:
+        with get_database() as database:
+            tokens = database.table(PASSWORD_RESET_TOKENS_TABLE)
+            record = tokens.get(Query().token_hash == token_hash)
+            if record is None or record.get("expires_at", "") <= now:
+                return False
+
+            user_id = int(record["user_id"])
+            users = database.table(USERS_TABLE)
+            user = users.get(doc_id=user_id)
+            if user is None or not user.get("is_active"):
+                tokens.remove(Query().user_id == user_id)
+                return False
+
+            users.update({"hashed_password": hashed_password}, doc_ids=[user_id])
+            tokens.remove(Query().user_id == user_id)
+            return True
+
+
+def invalidate_password_reset_tokens(user_id: int) -> None:
+    with _PASSWORD_RESET_LOCK:
+        with get_database() as database:
+            database.table(PASSWORD_RESET_TOKENS_TABLE).remove(Query().user_id == user_id)
 
 
 def delete_user(user_id: int) -> bool:

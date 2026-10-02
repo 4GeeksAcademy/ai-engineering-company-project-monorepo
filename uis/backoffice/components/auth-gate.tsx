@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { getToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
-const publicPaths = new Set(["/login", "/register"]);
+const publicPaths = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();

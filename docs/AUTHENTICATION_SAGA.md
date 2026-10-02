@@ -54,5 +54,6 @@ Add forgot-password, reset-password, and authenticated change-password capabilit
 ## Current status
 
 - Phase 1 — Authentication API: implemented and validated on branch `feature/auth-api`, commit `beba6d9` (`feat(api): add JWT authentication`). Validation recorded in `services/api/AUTHENTICATION_API_PLAN.md`.
-- Phase 2 — Internal authentication flows: implemented and validated on branch `feature/auth-frontend`, commit `c0f9b03` (`feat(backoffice): add internal authentication flows`).
+- Phase 2 — Internal authentication flows: implemented and validated on branch `feature/auth-frontend`, including API-response hotfix snapshot `7b4c555`.
+- Phase 3 — Password recovery and change: implemented on `feature/auth-recovery`; API suite (**22 passed**), backoffice lint/build, and editor diagnostics passed. Real Resend delivery remains unverified without user-supplied provider configuration. Snapshot is pending reviewed staging; see `services/api/PASSWORD_RECOVERY_PLAN.md`.
 - The worktree contains unrelated changes and generated/local artifacts. Preserve them and stage only explicitly reviewed phase-owned files.
