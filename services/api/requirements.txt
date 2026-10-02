@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+tinydb>=4.8
+-e ../../packages/incidents_analyzer

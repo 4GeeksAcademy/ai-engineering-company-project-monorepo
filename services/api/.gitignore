@@ -1,0 +1,2 @@
+# TinyDB runtime storage (seeded on startup, not source)
+db.json

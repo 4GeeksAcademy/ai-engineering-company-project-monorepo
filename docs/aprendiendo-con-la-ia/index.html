@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aprendiendo con la IA</title>
+<meta name="description" content="Guía visual e interactiva de cómo se construyó el Directorio de Proveedores de Nexova, explicada desde cero.">
+<style>
+:root {
+  --bg: #f6f7fb; --surface: #ffffff; --surface-2: #eef1f8; --text: #1b2033; --muted: #5a6280;
+  --line: #dde2f0; --brand: #5b4bdb; --brand-soft: #e9e6fd;
+  --back: #0f766e; --back-soft: #d5f3ef; --front: #b45309; --front-soft: #fdebd0;
+  --db: #1d4ed8; --db-soft: #dbe7ff; --ok: #15803d; --ok-soft: #d8f5e2;
+  --warn: #b45309; --warn-soft: #fdebd0; --bad: #b91c1c; --bad-soft: #fde0e0;
+  --code-bg: #14172a; --code-text: #e6e9f5; --shadow: 0 1px 2px rgba(20,25,60,.06), 0 6px 20px rgba(20,25,60,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1220; --surface: #181c31; --surface-2: #20253f; --text: #e8eaf6; --muted: #a2a9c8;
+    --line: #2b3153; --brand: #9d8fff; --brand-soft: #2a2652;
+    --back: #4fd1c5; --back-soft: #12403c; --front: #f6ad55; --front-soft: #4a3216;
+    --db: #7aa2ff; --db-soft: #1c2a55; --ok: #5fd68a; --ok-soft: #153a26;
+    --warn: #f6ad55; --warn-soft: #4a3216; --bad: #ff8a8a; --bad-soft: #4a1c1c;
+    --code-bg: #0a0c17; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1220; --surface: #181c31; --surface-2: #20253f; --text: #e8eaf6; --muted: #a2a9c8;
+  --line: #2b3153; --brand: #9d8fff; --brand-soft: #2a2652;
+  --back: #4fd1c5; --back-soft: #12403c; --front: #f6ad55; --front-soft: #4a3216;
+  --db: #7aa2ff; --db-soft: #1c2a55; --ok: #5fd68a; --ok-soft: #153a26;
+  --warn: #f6ad55; --warn-soft: #4a3216; --bad: #ff8a8a; --bad-soft: #4a1c1c;
+  --code-bg: #0a0c17; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--brand); }
+code { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; background: var(--surface-2); padding: .1em .4em; border-radius: 6px; }
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
+h3 { font-size: 1.15rem; }
+p { margin: 0 0 1em; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+section { padding: 56px 0 8px; }
+.eyebrow { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); background: var(--brand-soft); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+.lead { font-size: 1.12rem; color: var(--muted); max-width: 720px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.tag { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; letter-spacing: .03em; }
+.t-back { background: var(--back-soft); color: var(--back); } .t-front { background: var(--front-soft); color: var(--front); }
+.t-db { background: var(--db-soft); color: var(--db); } .t-brand { background: var(--brand-soft); color: var(--brand); }
+.t-ok { background: var(--ok-soft); color: var(--ok); } .t-warn { background: var(--warn-soft); color: var(--warn); } .t-bad { background: var(--bad-soft); color: var(--bad); }
+button { font: inherit; cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--text); padding: 9px 16px; border-radius: 999px; font-weight: 600; transition: transform .1s, background .15s; }
+.btn:hover { background: var(--surface-2); } .btn:active { transform: scale(.97); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); background: var(--brand); }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+
+/* Top bar */
+#top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+#top .wrap { display: flex; align-items: center; gap: 14px; height: 60px; }
+#top .logo { font-weight: 800; white-space: nowrap; }
+#top nav { display: flex; gap: 4px; overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; }
+#top nav a { text-decoration: none; color: var(--muted); font-size: .9rem; font-weight: 600; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+#top nav a:hover, #top nav a.active { background: var(--brand-soft); color: var(--brand); }
+#theme { padding: 6px 12px; font-size: .85rem; }
+@media (max-width: 560px) { #top .logo { display: none; } }
+#progress { position: absolute; left: 0; bottom: -1px; height: 3px; width: 0; background: var(--brand); }
+
+/* Hero */
+.hero { padding: 64px 0 24px; }
+.hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: -.02em; }
+.hero h1 span { color: var(--brand); }
+.stats { margin-top: 28px; }
+.stat { text-align: center; padding: 18px 10px; }
+.stat b { display: block; font-size: 2.2rem; color: var(--brand); line-height: 1.1; }
+.stat span { color: var(--muted); font-size: .92rem; }
+.quote { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 16px 20px; border-radius: 0 14px 14px 0; font-size: 1.08rem; margin-top: 28px; }
+
+/* Before / after + restaurant */
+.ba h3 { display: flex; align-items: center; gap: 8px; }
+.ba ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.resto { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 8px; margin-top: 16px; }
+.resto .node { text-align: center; padding: 18px 12px; border-radius: 16px; border: 2px solid; }
+.resto .node b { display: block; font-size: 1.05rem; }
+.resto .node small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.4; }
+.resto .n1 { border-color: var(--front); background: var(--front-soft); } .resto .n2 { border-color: var(--back); background: var(--back-soft); } .resto .n3 { border-color: var(--db); background: var(--db-soft); }
+.resto .arrow { align-self: center; font-size: 1.6rem; color: var(--muted); }
+@media (max-width: 720px) { .resto { grid-template-columns: 1fr; } .resto .arrow { transform: rotate(90deg); text-align: center; } }
+
+/* Stepper (viaje) */
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 18px 0; }
+.fnode { text-align: center; padding: 14px 6px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); font-weight: 700; font-size: .92rem; transition: all .25s; position: relative; }
+.fnode small { display: block; font-weight: 500; color: var(--muted); font-size: .76rem; margin-top: 2px; }
+.fnode.done { border-color: var(--ok); background: var(--ok-soft); }
+.fnode.now { border-color: var(--brand); background: var(--brand-soft); transform: translateY(-4px); box-shadow: var(--shadow); }
+.fnode.stop { border-color: var(--bad); background: var(--bad-soft); }
+.fnode.skip { opacity: .4; border-style: dashed; }
+@media (max-width: 720px) { .flow { grid-template-columns: 1fr; } }
+.stepbox { min-height: 96px; }
+.stepbox .n { font-size: .8rem; font-weight: 700; color: var(--muted); }
+.stepbox p { margin: 4px 0 0; font-size: 1.05rem; }
+.ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 8px 14px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+
+/* Tree */
+.tree { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 520px) { .tree details { margin-left: 8px; padding-left: 8px; } .tree { font-size: .82rem; } }
+.tree details { margin-left: 18px; border-left: 2px solid var(--line); padding-left: 12px; }
+.tree summary { cursor: pointer; padding: 3px 0; list-style: none; }
+.tree summary::before { content: "▸"; display: inline-block; width: 16px; color: var(--muted); transition: transform .15s; }
+.tree details[open] > summary::before { transform: rotate(90deg); }
+.tree .file { display: block; padding: 3px 0 3px 16px; }
+.tree .file em { font-style: normal; color: var(--muted); font-family: system-ui, sans-serif; font-size: .85rem; }
+.tree > details { margin-left: 0; }
+
+/* HTTP */
+.verb { font-family: ui-monospace, monospace; font-weight: 800; padding: 3px 10px; border-radius: 8px; font-size: .9rem; }
+.v-get { background: var(--db-soft); color: var(--db); } .v-post { background: var(--ok-soft); color: var(--ok); }
+.v-patch { background: var(--warn-soft); color: var(--warn); } .v-del { background: var(--bad-soft); color: var(--bad); }
+.codes { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.code { border-radius: 14px; padding: 12px 14px; }
+.code b { font-size: 1.5rem; display: block; line-height: 1.1; }
+.code span { font-size: .88rem; }
+
+/* Table */
+.tbl { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.tbl th { text-align: left; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 8px 10px; border-bottom: 2px solid var(--line); }
+.tbl td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.scroll { overflow-x: auto; }
+
+/* Playground */
+.pg { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+@media (max-width: 800px) { .pg { grid-template-columns: 1fr; } }
+label { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin: 10px 0 4px; }
+input, select { width: 100%; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--text); }
+.result { border-radius: 14px; padding: 16px; min-height: 180px; }
+.result.ok { background: var(--ok-soft); border: 2px solid var(--ok); } .result.bad { background: var(--bad-soft); border: 2px solid var(--bad); }
+.result .big { font-size: 2rem; font-weight: 800; line-height: 1; }
+.result ul { margin: 10px 0 0; padding-left: 20px; }
+
+/* Terminal */
+.term { background: var(--code-bg); color: var(--code-text); border-radius: 14px; padding: 16px 18px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .86rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
+.term .c { color: #7f88ad; } .term .g { color: #6ee7a0; } .term .y { color: #fcd34d; }
+.cmd { position: relative; margin: 10px 0; }
+.cmd .term { padding-right: 88px; }
+.copy { position: absolute; right: 10px; top: 10px; padding: 5px 12px; font-size: .78rem; background: #262b4a; color: #e6e9f5; border-color: #3a4170; }
+
+/* Demo table (frontend) */
+.demo { width: 100%; border-collapse: collapse; }
+.demo td, .demo th { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+.demo th { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.demo tr.sus td:not(:last-child) { opacity: .5; }
+.badge { border: 0; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: .85rem; }
+.badge.on { background: var(--ok-soft); color: var(--ok); } .badge.off { background: var(--bad-soft); color: var(--bad); }
+.pill { display: inline-block; background: var(--surface-2); border-radius: 999px; padding: 2px 10px; font-size: .8rem; }
+.ctree { font-family: ui-monospace, monospace; font-size: .95rem; line-height: 2; }
+.ctree b { color: var(--front); }
+
+/* Accordion */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.chip { border: 1.5px solid var(--line); background: var(--surface); padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: .88rem; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+details.prob { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+details.prob summary { cursor: pointer; padding: 14px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; list-style: none; }
+details.prob summary::-webkit-details-marker { display: none; }
+details.prob summary::after { content: "+"; margin-left: auto; font-size: 1.4rem; color: var(--muted); }
+details.prob[open] summary::after { content: "–"; }
+details.prob .body { padding: 0 18px 16px; }
+.body dl { margin: 0; } .body dt { font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; margin-top: 10px; }
+.body dd { margin: 2px 0 0; }
+.dt-q { color: var(--bad); } .dt-s { color: var(--ok); } .dt-l { color: var(--brand); }
+.num { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); font-size: .82rem; }
+
+/* Timeline (git) */
+.tl { position: relative; margin: 20px 0; padding-left: 34px; }
+.tl::before { content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 3px; background: var(--line); border-radius: 3px; }
+.tl .it { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; margin-bottom: 12px; }
+.tl .it::before { content: ""; position: absolute; left: -31px; top: 18px; width: 15px; height: 15px; border-radius: 50%; background: var(--brand); border: 3px solid var(--bg); }
+.tl .it.base::before { background: var(--muted); }
+.tl .it b { font-family: ui-monospace, monospace; font-size: .92rem; overflow-wrap: anywhere; }
+.tl .it span.pr { float: right; }
+.tl .it p { margin: 4px 0 0; color: var(--muted); font-size: .94rem; }
+
+/* Glossary */
+#gsearch { max-width: 420px; }
+.gl { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); margin-top: 16px; }
+.gl div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+.gl b { display: block; color: var(--brand); }
+.gl span { color: var(--muted); font-size: .94rem; }
+.empty { color: var(--muted); margin-top: 14px; }
+
+footer { margin: 64px 0 40px; color: var(--muted); font-size: .92rem; }
+.callout { background: var(--warn-soft); border-left: 5px solid var(--warn); border-radius: 0 12px 12px 0; padding: 12px 16px; margin: 16px 0; }
+.callout.info { background: var(--db-soft); border-color: var(--db); }
+.lesson { background: var(--brand-soft); border-radius: 12px; padding: 10px 14px; margin-top: 14px; color: var(--text); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header id="top">
+  <div class="wrap">
+    <div class="logo">Aprendiendo con la IA</div>
+    <nav id="nav" aria-label="Secciones">
+      <a href="#idea">La idea</a><a href="#viaje">Viaje de un dato</a><a href="#backend">Backend</a><a href="#frontend">Frontend</a>
+      <a href="#decisiones">Decisiones</a><a href="#problemas">Problemas</a><a href="#git">Git y ramas</a><a href="#comandos">Comandos</a><a href="#glosario">Glosario</a>
+    </nav>
+    <button id="theme" class="btn" aria-label="Cambiar entre tema claro y oscuro">Tema</button>
+  </div>
+  <div id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <span class="eyebrow">Guía visual para empezar de cero</span>
+  <h1>Cómo se construyó el <span>Directorio de Proveedores</span> de Nexova</h1>
+  <p class="lead">Todo lo que se hizo, por qué se decidió así y cómo se resolvió cada problema, explicado con palabras sencillas, comparaciones de la vida real y demos donde puedes probar cosas tú misma.</p>
+  <div class="grid g4 stats">
+    <div class="card stat"><b>15</b><span>proveedores cargados desde el primer arranque</span></div>
+    <div class="card stat"><b>42</b><span>pruebas automáticas del backend</span></div>
+    <div class="card stat"><b>28</b><span>comprobaciones en navegador real (Chromium y Firefox)</span></div>
+    <div class="card stat"><b>6</b><span>ramas con su pull request, para leerlo en orden</span></div>
+  </div>
+  <div class="quote"><b>La idea en una frase:</b> antes, los proveedores vivían en una hoja de cálculo que cada persona copiaba por su cuenta. Ahora viven en <b>un solo sitio</b> (una base de datos) al que todos acceden desde una página web, y ese sitio <b>no deja entrar datos incorrectos</b>.</div>
+</div>
+
+<!-- LA IDEA -->
+<section id="idea">
+  <span class="eyebrow">1 · La idea</span>
+  <h2>El problema y la solución</h2>
+  <div class="grid g2">
+    <div class="card ba"><h3><span class="tag t-bad">Antes</span> Una hoja de cálculo</h3>
+      <ul><li>Varias versiones circulando por email y nadie sabía cuál era la buena.</li><li>Nadie sabía cuándo había cambiado el precio de un proveedor.</li><li>Podía entrar cualquier dato mal escrito: un país que no existe, un precio negativo.</li></ul></div>
+    <div class="card ba"><h3><span class="tag t-ok">Ahora</span> Una API y una página web</h3>
+      <ul><li>Una única fuente de verdad: una base de datos.</li><li>Cada cambio de tarifa guarda la fecha y hora automáticamente.</li><li>Los datos incorrectos se rechazan antes de guardarse.</li></ul></div>
+  </div>
+
+  <h3 style="margin-top:32px">Piénsalo como un restaurante</h3>
+  <p class="lead">Son dos programas que trabajan juntos. Uno es lo que ves, el otro es donde ocurre el trabajo.</p>
+  <div class="resto">
+    <div class="node n1"><span class="tag t-front">Frontend</span><b>El comedor</b><small>La página web: la carta, las mesas. Lo que ve y toca Patricia.</small></div>
+    <div class="arrow">⇄</div>
+    <div class="node n2"><span class="tag t-back">Backend</span><b>La cocina</b><small>La API: comprueba que el pedido tiene sentido y lo prepara. El jefe de cocina rechaza pedidos imposibles.</small></div>
+    <div class="arrow">⇄</div>
+    <div class="node n3"><span class="tag t-db">Base de datos</span><b>La despensa</b><small>TinyDB: donde se guardan los datos. El cliente nunca entra aquí directamente.</small></div>
+  </div>
+  <p style="margin-top:14px;color:var(--muted)">El camarero que lleva los pedidos de un sitio a otro son las <b>peticiones HTTP</b>.</p>
+
+  <h3 style="margin-top:32px">Mapa de carpetas <span style="font-weight:400;color:var(--muted);font-size:.9rem">(pulsa para abrir)</span></h3>
+  <div class="card tree">
+    <details open><summary><span class="tag t-back">BACKEND</span> services/api/</summary>
+      <span class="file">main.py <em>arranca la API y conecta las piezas</em></span>
+      <span class="file">models.py <em>los modelos Pydantic: las REGLAS de qué datos son válidos</em></span>
+      <span class="file">database.py <em>arranca TinyDB y guarda, busca y cambia datos</em></span>
+      <details open><summary>routes/</summary><span class="file">suppliers.py <em>las puertas de entrada (URLs) del directorio</em></span></details>
+      <span class="file">seed.py <em>carga los 15 proveedores iniciales (uv run seed)</em></span>
+      <span class="file">pyproject.toml <em>permite ejecutar "uv run seed"</em></span>
+      <span class="file">CONTEXT-suppliers.md <em>el encargo original (la "receta")</em></span>
+      <details><summary>core/</summary><span class="file">config.py <em>ajustes generales: dónde está la base de datos</em></span></details>
+      <details><summary>tests/</summary><span class="file">test_suppliers_validation.py <em>pruebas de las reglas</em></span><span class="file">test_suppliers_endpoints.py <em>pruebas de cada endpoint</em></span></details>
+    </details>
+    <details open style="margin-top:8px"><summary><span class="tag t-front">FRONTEND</span> uis/application/</summary>
+      <details open><summary>app/suppliers/</summary>
+        <span class="file">page.tsx <em>la página completa</em></span>
+        <span class="file">SupplierRow.tsx <em>una fila de la tabla</em></span>
+        <span class="file">SupplierForm.tsx <em>el formulario de alta</em></span>
+        <span class="file">api.ts <em>funciones que hablan con la API</em></span>
+        <span class="file">types.ts <em>los tipos de datos (los campos)</em></span>
+      </details>
+      <span class="file">app/main.tsx, App.tsx <em>arranque de la app y la cabecera</em></span>
+      <details><summary>e2e/</summary><span class="file">suppliers.e2e.mjs <em>prueba automática en un navegador real</em></span></details>
+    </details>
+  </div>
+</section>
+
+<!-- VIAJE -->
+<section id="viaje">
+  <span class="eyebrow">2 · Cómo funciona</span>
+  <h2>El viaje de un dato</h2>
+  <p class="lead">Esto pasa cuando Patricia pulsa "Suspender" en Greenhouse. Avanza paso a paso y prueba los dos casos: un dato válido y uno inválido.</p>
+  <div class="card">
+    <div class="seg" role="group" aria-label="Tipo de dato">
+      <button id="vOk" aria-pressed="true">Dato válido: "suspended"</button>
+      <button id="vBad" aria-pressed="false">Dato inválido: "activo"</button>
+    </div>
+    <div class="flow" id="flow"></div>
+    <div class="card stepbox" style="background:var(--surface-2);box-shadow:none" aria-live="polite">
+      <div class="n" id="stepN"></div><p id="stepT"></p>
+    </div>
+    <div class="ctrl">
+      <button class="btn" id="prev">← Anterior</button>
+      <button class="btn primary" id="next">Siguiente →</button>
+      <button class="btn" id="reset">Empezar de nuevo</button>
+    </div>
+  </div>
+</section>
+
+<!-- BACKEND -->
+<section id="backend">
+  <span class="eyebrow">3 · Backend</span>
+  <h2>La API: el cerebro que protege los datos</h2>
+  <p class="lead">Una API es un programa que espera peticiones y responde. Cada petición tiene una dirección y un verbo, que es la acción.</p>
+
+  <div class="grid g4">
+    <div class="card"><span class="verb v-get">GET</span><p style="margin:10px 0 0">"Dame información"<br><code>GET /suppliers</code></p></div>
+    <div class="card"><span class="verb v-post">POST</span><p style="margin:10px 0 0">"Crea algo nuevo"<br><code>POST /suppliers</code></p></div>
+    <div class="card"><span class="verb v-patch">PATCH</span><p style="margin:10px 0 0">"Cambia una parte"<br><code>PATCH /suppliers/1/rate</code></p></div>
+    <div class="card"><span class="verb v-del">DELETE</span><p style="margin:10px 0 0">"Borra" (solo activos)<br><code>DELETE /suppliers/3</code></p></div>
+  </div>
+
+  <h3 style="margin-top:28px">Tres archivos, cada uno con un solo trabajo</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag t-back">models.py</span><h3 style="margin-top:8px">El reglamento</h3><p style="margin:0;color:var(--muted)">Define qué datos son válidos. Si quieres cambiar una regla, solo tocas aquí.</p></div>
+    <div class="card"><span class="tag t-back">routes/suppliers.py</span><h3 style="margin-top:8px">La recepción</h3><p style="margin:0;color:var(--muted)">Recibe las peticiones, las deriva y traduce los errores a códigos HTTP.</p></div>
+    <div class="card"><span class="tag t-back">database.py</span><h3 style="margin-top:8px">El almacén</h3><p style="margin:0;color:var(--muted)">Arranca TinyDB, guarda y busca en la base de datos, un archivo <code>db.json</code>. <code>seed.py</code> la llena al empezar.</p></div>
+  </div>
+
+  <h3 style="margin-top:28px">Los códigos de respuesta</h3>
+  <div class="codes">
+    <div class="code t-ok"><b>200</b><span>Todo bien</span></div>
+    <div class="code t-ok"><b>201</b><span>Creado</span></div>
+    <div class="code t-ok"><b>204</b><span>Hecho, sin nada que devolver</span></div>
+    <div class="code t-warn"><b>404</b><span>No encontrado (un id que no existe)</span></div>
+    <div class="code t-warn"><b>409</b><span>Conflicto (borrar un proveedor suspendido)</span></div>
+    <div class="code t-bad"><b>422</b><span>Datos inválidos</span></div>
+  </div>
+
+  <h3 style="margin-top:28px">El modelo: los campos de un proveedor</h3>
+  <div class="card scroll"><table class="tbl">
+    <tr><th>Campo</th><th>Qué es</th><th>Regla</th></tr>
+    <tr><td><code>name</code></td><td>Nombre</td><td>Obligatorio, no vacío</td></tr>
+    <tr><td><code>country</code></td><td>País</td><td>Solo <code>Spain</code> o <code>USA</code></td></tr>
+    <tr><td><code>categories</code></td><td>Tipo de servicio</td><td>Lista, mínimo una, solo las 9 permitidas</td></tr>
+    <tr><td><code>monthly_rate</code></td><td>Tarifa mensual</td><td>Número <b>mayor que 0</b></td></tr>
+    <tr><td><code>currency</code></td><td>Moneda</td><td><code>EUR</code> si es Spain, <code>USD</code> si es USA</td></tr>
+    <tr><td><code>status</code></td><td>Estado</td><td>Solo <code>active</code> o <code>suspended</code></td></tr>
+    <tr><td><code>updated_at</code></td><td>Cuándo cambió la tarifa</td><td><b>Lo pone el servidor</b>, nunca el cliente</td></tr>
+    <tr><td><code>contract_renewal_date</code>, <code>contact_email</code>, <code>notes</code></td><td>Extras</td><td>Opcionales; el email, si existe, debe parecer un email</td></tr>
+  </table></div>
+
+  <h3 style="margin-top:28px">Pruébalo tú: el validador (Pydantic)</h3>
+  <p class="lead">Es el "jefe de cocina" que rechaza pedidos imposibles. Cambia los valores y mira qué responde la API. Las reglas y mensajes son los reales.</p>
+  <div class="card pg">
+    <div>
+      <label for="pName">Nombre</label><input id="pName" value="Proveedor de prueba">
+      <label for="pCountry">País</label>
+      <select id="pCountry"><option>Spain</option><option>USA</option><option>France</option><option value="">(vacío)</option></select>
+      <label for="pCur">Moneda</label>
+      <select id="pCur"><option>EUR</option><option>USD</option></select>
+      <label for="pRate">Tarifa mensual</label><input id="pRate" value="99.5" inputmode="decimal">
+      <label for="pStatus">Estado (escribe lo que quieras)</label><input id="pStatus" value="active">
+      <div class="ctrl"><button class="btn" data-preset="ok">Ejemplo válido</button><button class="btn" data-preset="status">Estado raro</button><button class="btn" data-preset="rate">Tarifa 0</button><button class="btn" data-preset="cur">Moneda mal</button></div>
+    </div>
+    <div class="result" id="pResult" aria-live="polite"></div>
+  </div>
+
+  <h3 style="margin-top:28px">El seeder: llenar la base de datos al empezar</h3>
+  <p class="lead">Un <b>seeder</b> ("sembrador") carga los datos iniciales para que la demo nunca empiece vacía. Es <b>idempotente</b>: ejecutarlo dos veces no duplica nada.</p>
+  <div class="card">
+    <div class="term" id="seedTerm" aria-live="polite"></div>
+    <div class="ctrl"><button class="btn primary" id="seedRun">Ejecutar uv run seed</button><button class="btn" id="seedReset">Ejecutar uv run seed --reset</button><button class="btn" id="seedClear">Vaciar la base (simulado)</button></div>
+    <p style="margin:12px 0 0;color:var(--muted)">Estado de la base: <b id="seedState"></b></p>
+  </div>
+
+  <div class="callout info"><b>La fecha de auditoría.</b> El tech lead pidió saber cuándo cambia una tarifa. Por eso <code>updated_at</code> lo escribe el servidor con la hora actual cada vez que se cambia <code>monthly_rate</code>. Cambiar el estado o las notas no la toca.</div>
+</section>
+
+<!-- FRONTEND -->
+<section id="frontend">
+  <span class="eyebrow">4 · Frontend</span>
+  <h2>La página web que ve Patricia</h2>
+  <p class="lead">Está hecha con <b>React</b> (piezas reutilizables, como LEGO), <b>TypeScript</b> (un corrector que avisa de errores antes de ejecutar), <b>Tailwind</b> (estilos) y <b>Vite</b> (arranca la página y hace de proxy).</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3>Piezas (componentes)</h3>
+      <div class="ctree">
+        <b>page.tsx</b> <span style="color:var(--muted)">← la página: carga datos y coordina</span><br>
+        &nbsp;&nbsp;├─ <b>SupplierForm</b> <span style="color:var(--muted)">← formulario "Nuevo proveedor"</span><br>
+        &nbsp;&nbsp;└─ <b>SupplierRow</b> <span style="color:var(--muted)">← una fila (se repite 15 veces)</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>El estado: la memoria de la página</h3>
+      <p style="margin:0;color:var(--muted)">La página recuerda la lista, el filtro elegido y los errores. Cuando algo de eso cambia, React redibuja <b>solo lo que cambió</b>. Por eso la tabla se actualiza sin recargar.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px">Una mini versión de la tabla (funciona de verdad)</h3>
+  <p class="lead">Filtra por país y pulsa el botón de estado. Fíjate en que la página no se recarga y en cómo se distingue un proveedor suspendido.</p>
+  <div class="card scroll">
+    <div style="max-width:260px;margin-bottom:8px"><label for="fCountry" style="margin-top:0">Filtrar por país</label>
+      <select id="fCountry"><option value="">Todos los países</option><option>Spain</option><option>USA</option></select></div>
+    <table class="demo"><thead><tr><th>Proveedor</th><th>País</th><th>Categoría</th><th>Tarifa mensual</th><th>Estado</th></tr></thead><tbody id="demoBody"></tbody></table>
+    <p id="demoCount" style="margin:10px 0 0;color:var(--muted);font-size:.9rem"></p>
+  </div>
+
+  <div class="grid g3" style="margin-top:20px">
+    <div class="card"><span class="tag t-front">Filtros</span><p style="margin:8px 0 0;color:var(--muted)">Filtran la lista que la página ya tiene en memoria. Es instantáneo. Con miles de proveedores se pediría el filtrado a la API, que ya lo sabe hacer.</p></div>
+    <div class="card"><span class="tag t-front">Formulario</span><p style="margin:8px 0 0;color:var(--muted)">Valida en la página antes de enviar (nombre, tarifa &gt; 0, categoría, email). Y si la API aun así rechaza, muestra su mensaje. La moneda se calcula sola según el país.</p></div>
+    <div class="card"><span class="tag t-front">Tarifa y estado</span><p style="margin:8px 0 0;color:var(--muted)">La pantalla cambia <b>después</b> de que la API responde, para no mostrar algo que en realidad no se guardó.</p></div>
+  </div>
+  <div class="callout info"><b>¿Por qué validar en dos sitios?</b> La página da respuesta inmediata a la persona. La API es la <b>última defensa</b> y nunca se puede saltar.</div>
+  <div class="callout"><b>El proxy.</b> La página vive en el puerto 5175 y la API en el 8000. Un navegador no deja que una página hable libremente con otro "domicilio". Vite hace de intermediario: recibe <code>/api/suppliers</code> y se lo pasa a la API.</div>
+</section>
+
+<!-- DECISIONES -->
+<section id="decisiones">
+  <span class="eyebrow">5 · Decisiones</span>
+  <h2>Lo que se decidió (y por qué)</h2>
+  <div class="grid g2">
+    <div class="card"><span class="num">1</span> <b>Seguir la estructura que ya existía</b><p style="margin:8px 0 0;color:var(--muted)">En <code>services/api/</code> ya había un módulo con <code>router</code>, <code>schemas</code> y <code>service</code>. Se copió esa organización. Un proyecto es más fácil de entender cuando todo se parece.</p></div>
+    <div class="card"><span class="num">2</span> <b>Usar exactamente los datos del encargo</b><p style="margin:8px 0 0;color:var(--muted)">Al principio se inventó una lista de ejemplo. Cuando llegó el archivo verdadero, se reescribió todo y se comprobó con un script que campos, categorías, estados y los 15 proveedores coinciden dato por dato. <i>Cuando falta información, di qué supusiste.</i></p></div>
+    <div class="card"><span class="num">3</span> <b>No inventar un archivo que no existía</b><p style="margin:8px 0 0;color:var(--muted)">Se pidió leer <code>CONTEXT-company.md</code>. Se buscó en todo el repositorio y no existe. Se dijo claramente en lugar de aparentar haberlo leído.</p></div>
+    <div class="card"><span class="num">4</span> <b>Preguntar cuando la duda es real</b><p style="margin:8px 0 0;color:var(--muted)">"Parte desde cero" podía significar borrar código de otros hitos. Se preguntó antes de tocar nada. Una pregunta de 10 segundos es más barata que borrar algo por error.</p></div>
+    <div class="card"><span class="num">5</span> <b>Base de datos ligera: TinyDB</b><p style="margin:8px 0 0;color:var(--muted)">Lo pidió el tech lead: un archivo, sin servidor. Perfecto para empezar, pero no aguanta muchos usuarios escribiendo a la vez; por eso el README avisa y dice que luego se pasará a Postgres.</p></div>
+    <div class="card"><span class="num">6</span> <b>Estados en inglés</b><p style="margin:8px 0 0;color:var(--muted)">El encargo define <code>active</code> y <code>suspended</code>. Aunque la empresa sea española, se respetó el encargo: <code>"activo"</code> se rechaza.</p></div>
+    <div class="card"><span class="num">7</span> <b>Reorganizar para la entrega</b><p style="margin:8px 0 0;color:var(--muted)">La entrega pidió una estructura concreta. Como el código ya funcionaba, solo se <b>movió</b> con <code>git mv</code> (conservando el historial) y se adaptaron los imports. Las mismas 42 pruebas y las 28 comprobaciones de navegador pasan igual antes y después: reorganizar no es reescribir.</p></div>
+  </div>
+</section>
+
+<!-- PROBLEMAS -->
+<section id="problemas">
+  <span class="eyebrow">6 · Problemas</span>
+  <h2>Lo que salió mal y cómo se arregló</h2>
+  <p class="lead">Programar no es escribir código perfecto a la primera: es tomar decisiones y arreglar errores. Aquí están los 19, incluidos los errores propios; cuatro salieron de la revisión final contra el encargo y el último de la reorganización para la entrega. Filtra por tema y abre cada uno.</p>
+  <div class="chips" id="chips" role="group" aria-label="Filtrar problemas por tema"></div>
+  <div id="probs"></div>
+</section>
+
+<!-- GIT -->
+<section id="git">
+  <span class="eyebrow">7 · Git y ramas</span>
+  <h2>Cómo se ordenó el trabajo</h2>
+  <div class="grid g3">
+    <div class="card"><span class="tag t-brand">Commit</span><p style="margin:8px 0 0;color:var(--muted)">Un "guardado" de tu proyecto, como en un videojuego, con un mensaje que explica qué cambió.</p></div>
+    <div class="card"><span class="tag t-brand">Rama</span><p style="margin:8px 0 0;color:var(--muted)">Una copia donde trabajas una idea sin estropear la versión oficial (<code>main</code>).</p></div>
+    <div class="card"><span class="tag t-brand">Pull Request</span><p style="margin:8px 0 0;color:var(--muted)">Una propuesta: "he hecho esto, ¿lo revisas y lo unes?". Muestra solo lo que cambió.</p></div>
+  </div>
+  <p style="margin-top:20px">Todo el trabajo estaba en <code>main</code>. Para que sea fácil de entender se crearon <b>6 ramas encadenadas</b>: cada una parte de la anterior y muestra una etapa (después se sumaron una rama de correcciones y otra con esta guía). En GitHub, abre la pestaña <b>Pull requests</b> y recórrelos del #3 al #10; en cada uno, <b>Files changed</b> enseña solo esa etapa.</p>
+  <div class="tl">
+    <div class="it base"><b>base/pre-suppliers</b><p>El punto de partida, justo antes de este trabajo.</p></div>
+    <div class="it"><b>feature/suppliers-01-api</b><span class="pr tag t-brand">PR #3</span><p>La API: modelo Pydantic, TinyDB, seeder inicial y endpoints.</p></div>
+    <div class="it"><b>feature/suppliers-02-backoffice-page</b><span class="pr tag t-brand">PR #4</span><p>La página web: tabla, filtros, formulario, tarifa y estado (entonces en el backoffice).</p></div>
+    <div class="it"><b>feature/suppliers-03-seeder</b><span class="pr tag t-brand">PR #5</span><p><code>uv run seed</code>, sin duplicados y con conteo en consola.</p></div>
+    <div class="it"><b>feature/suppliers-04-rate-filters-delete</b><span class="pr tag t-brand">PR #6</span><p>Endpoint de tarifa, filtros del listado y borrado.</p></div>
+    <div class="it"><b>feature/suppliers-05-tests-and-routes</b><span class="pr tag t-brand">PR #7</span><p>35 tests y las rutas en <code>/suppliers</code>.</p></div>
+    <div class="it"><b>feature/suppliers-06-ui-validation-e2e</b><span class="pr tag t-brand">PR #8</span><p>Validación del formulario, <code>contact_email</code> y test en navegador.</p></div>
+    <div class="it"><b>fix/audit-followups</b><span class="pr tag t-brand">PR #9</span><p>Revisión final contra el encargo: no borrar suspendidos (409), validar el email y resaltar mejor las renovaciones.</p></div>
+    <div class="it"><b>docs/aprendiendo-con-la-ia</b><span class="pr tag t-brand">PR #10</span><p>Esta guía.</p></div>
+    <div class="it"><b>delivery/suppliers-directory</b><span class="pr tag t-brand">Entrega</span><p>La estructura final que pide la entrega (<code>models.py</code>, <code>database.py</code>, <code>routes/</code>, <code>seed.py</code> y <code>uis/application/app/suppliers/</code>) más las 3 capturas del PR al repositorio original.</p></div>
+  </div>
+  <div class="callout info"><b>Honestidad.</b> Las ramas se crearon <i>después</i>, apuntando a commits que ya estaban en <code>main</code>: por eso <code>main</code> no cambió ni se reescribió. Como los commits estaban entremezclados en el tiempo, el PR #7 junta backend con un arreglo de frontend.</div>
+  <div class="callout"><b>Regla de aquí en adelante:</b> cada cambio nuevo va en su propia rama y se propone con un Pull Request, sin tocar <code>main</code> directamente. Nunca se usó <code>git push --force</code>.</div>
+
+  <h3 style="margin-top:28px">Los tests: la lista de revisión del piloto</h3>
+  <div class="grid g2">
+    <div class="card"><span class="tag t-back">Backend · 42 pruebas</span><p style="margin:8px 0 0;color:var(--muted)">Comprueban que el modelo tiene los campos del encargo, que un estado o tarifa inválidos dan 422 <b>sin llegar a la base</b>, que el cliente no puede enviar <code>updated_at</code>, y los 201, 404, 409 y 204 de cada endpoint. Cada test usa una base temporal.</p></div>
+    <div class="card"><span class="tag t-front">Navegador · 28 comprobaciones</span><p style="margin:8px 0 0;color:var(--muted)">Abre un navegador de verdad (Chromium y Firefox, con Playwright) y usa la página como una persona: filtra, rellena mal el formulario, cambia una tarifa y un estado, y comprueba que <b>también quedó guardado en el servidor</b>.</p></div>
+  </div>
+</section>
+
+<!-- COMANDOS -->
+<section id="comandos">
+  <span class="eyebrow">8 · Comandos</span>
+  <h2>Ver el proyecto funcionando</h2>
+  <p class="lead">Necesitas <b>dos terminales</b> en VS Code (menú Terminal → Nueva terminal): una para la API y otra para la página.</p>
+  <div class="callout info"><b>¿Dónde está la raíz del repositorio?</b> Es la carpeta principal del proyecto: <code>/workspaces/ai-engineering-company-project-monorepo-INES</code>. Si tu terminal no está ahí, escribe el comando de abajo.</div>
+  <div class="cmd"><div class="term">cd /workspaces/ai-engineering-company-project-monorepo-INES</div><button class="btn copy">Copiar</button></div>
+  <h3>Terminal 1 · la API</h3>
+  <div class="cmd"><div class="term">cd services/api
+uv run uvicorn main:app --reload --port 8000</div><button class="btn copy">Copiar</button></div>
+  <p style="color:var(--muted)">Carga sola los 15 proveedores. Lista en bruto: <code>localhost:8000/suppliers</code>. Documentación interactiva, donde pruebas cada acción con un botón: <code>localhost:8000/docs</code>.</p>
+  <h3>Terminal 2 · la página (desde la raíz)</h3>
+  <div class="cmd"><div class="term">npm run dev:application</div><button class="btn copy">Copiar</button></div>
+  <p style="color:var(--muted)">Abre <code>localhost:5175/suppliers</code>. En Codespaces, abre el puerto <b>5175</b> desde la pestaña <b>Puertos</b>.</p>
+  <h3>Volver a los datos iniciales (antes de una demo)</h3>
+  <div class="cmd"><div class="term">cd services/api
+uv run seed --reset</div><button class="btn copy">Copiar</button></div>
+  <h3>Ejecutar las pruebas del backend</h3>
+  <div class="cmd"><div class="term">cd services/api
+uv run --with pytest --with httpx pytest -q</div><button class="btn copy">Copiar</button></div>
+  <div class="callout"><b>Si <code>uv run seed</code> dice "Failed to spawn"</b>, estás en la carpeta equivocada: uv busca el <code>pyproject.toml</code> en la carpeta donde estás. Ejecútalo dentro de <code>services/api</code>, o desde la raíz con <code>uv run --project services/api seed</code>.</div>
+</section>
+
+<!-- GLOSARIO -->
+<section id="glosario">
+  <span class="eyebrow">9 · Glosario</span>
+  <h2>Las palabras difíciles, explicadas</h2>
+  <label for="gsearch" style="margin-top:0">Busca una palabra</label>
+  <input id="gsearch" type="search" placeholder="Por ejemplo: API, commit, proxy…" autocomplete="off">
+  <div class="gl" id="gl"></div>
+  <p class="empty" id="gEmpty" hidden>No hay ninguna palabra con ese texto.</p>
+</section>
+
+<footer>
+  <p><b>Consejos para seguir aprendiendo:</b> (1) Abre <code>models.py</code>, cambia <code>gt=0</code> a <code>gt=10</code> y mira qué test falla; luego deshazlo. (2) Abre <code>localhost:8000/docs</code> y pulsa "Try it out" en cada endpoint. (3) Rompe cosas a propósito: los errores enseñan más que los aciertos. (4) Lee un test para entender una función. (5) Pregunta siempre el "porqué".</p>
+  <p>Esta guía también existe en texto en los archivos <code>README.md</code> y <code>01</code> a <code>06</code> de esta misma carpeta.</p>
+</footer>
+</main>
+
+<script>
+/* ---------- Tema y barra superior ---------- */
+(function () {
+  var root = document.documentElement, btn = document.getElementById("theme");
+  try { var saved = localStorage.getItem("theme"); if (saved) root.setAttribute("data-theme", saved); } catch (e) {}
+  btn.addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var bar = document.getElementById("progress"), links = [].slice.call(document.querySelectorAll("#nav a"));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  function onScroll() {
+    var h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.width = (h > 0 ? scrollY / h * 100 : 0) + "%";
+    var cur = 0;
+    secs.forEach(function (s, i) { if (s && s.getBoundingClientRect().top < 140) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle("active", i === cur && scrollY > 200); });
+  }
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+})();
+
+/* ---------- Viaje de un dato ---------- */
+(function () {
+  var nodes = [["Navegador", "la página"], ["Vite", "proxy"], ["API", "FastAPI"], ["Pydantic", "validación"], ["TinyDB", "db.json"]];
+  var flow = document.getElementById("flow"), valid = true, step = 0;
+  var steps = function () {
+    return [
+      { n: 0, t: "Patricia pulsa «Suspender» en Greenhouse. La página prepara una petición: PATCH /api/suppliers/5/status con el cuerpo " + (valid ? '{"status": "suspended"}' : '{"status": "activo"}') + "." },
+      { n: 1, t: "El servidor de desarrollo (Vite) recibe la petición y, como empieza por /api, se la reenvía a la API en el puerto 8000. A esto se le llama proxy." },
+      { n: 2, t: "La API (FastAPI) recibe la petición en la ruta correcta y pasa el cuerpo al validador, sin tocar aún la base de datos." },
+      valid
+        ? { n: 3, t: "Pydantic revisa: «suspended» es uno de los dos estados permitidos (active o suspended). Todo correcto, el dato pasa.", state: "done" }
+        : { n: 3, t: "Pydantic revisa: «activo» NO es un estado permitido (solo active o suspended). La petición se rechaza aquí mismo con un error 422.", state: "stop" },
+      valid
+        ? { n: 4, t: "TinyDB guarda el cambio de estado en el archivo db.json.", state: "done" }
+        : { n: 4, t: "TinyDB ni se entera. Los datos inválidos nunca llegan a la base de datos: por eso los datos guardados siempre son fiables.", state: "skip" },
+      valid
+        ? { n: 5, t: "La API responde 200 con el proveedor ya actualizado. La página cambia el botón a rojo «Suspendido» y apaga la fila, sin recargar." }
+        : { n: 5, t: "La API responde 422 con el motivo: «Input should be 'active' or 'suspended'». La página muestra un aviso en rojo y el estado no cambia." }
+    ];
+  };
+  function render() {
+    var s = steps(), cur = s[step];
+    flow.innerHTML = "";
+    nodes.forEach(function (nd, i) {
+      var d = document.createElement("div"), cls = "fnode";
+      if (cur.n === 5) {
+        cls += (!valid && i === 4) ? " skip" : (!valid && i === 3) ? " stop" : " done";
+      } else if (i === cur.n) { cls += cur.state === "stop" ? " stop" : cur.state === "skip" ? " skip" : " now"; }
+      else if (i < cur.n) cls += " done";
+      d.className = cls; d.innerHTML = nd[0] + "<small>" + nd[1] + "</small>";
+      flow.appendChild(d);
+    });
+    document.getElementById("stepN").textContent = "Paso " + (step + 1) + " de " + s.length;
+    document.getElementById("stepT").textContent = cur.t;
+    document.getElementById("prev").disabled = step === 0;
+    document.getElementById("next").disabled = step === s.length - 1;
+  }
+  document.getElementById("next").onclick = function () { step = Math.min(step + 1, steps().length - 1); render(); };
+  document.getElementById("prev").onclick = function () { step = Math.max(step - 1, 0); render(); };
+  document.getElementById("reset").onclick = function () { step = 0; render(); };
+  function setValid(v) { valid = v; step = 0;
+    document.getElementById("vOk").setAttribute("aria-pressed", v); document.getElementById("vBad").setAttribute("aria-pressed", !v); render(); }
+  document.getElementById("vOk").onclick = function () { setValid(true); };
+  document.getElementById("vBad").onclick = function () { setValid(false); };
+  render();
+})();
+
+/* ---------- Validador (Pydantic simulado con las reglas reales) ---------- */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var res = $("pResult");
+  var CURRENCY = { Spain: "EUR", USA: "USD" };
+  function check() {
+    var errs = [], name = $("pName").value.trim(), country = $("pCountry").value, cur = $("pCur").value,
+        rateRaw = $("pRate").value.trim().replace(",", "."), status = $("pStatus").value;
+    if (!name) errs.push(["name", "String should have at least 1 character"]);
+    if (country !== "Spain" && country !== "USA") errs.push(["country", country ? "Input should be 'Spain' or 'USA'" : "Field required"]);
+    var rate = Number(rateRaw);
+    if (rateRaw === "" || isNaN(rate)) errs.push(["monthly_rate", "Input should be a valid number"]);
+    else if (!(rate > 0)) errs.push(["monthly_rate", "Input should be greater than 0"]);
+    if (status !== "active" && status !== "suspended") errs.push(["status", "Input should be 'active' or 'suspended'"]);
+    if (CURRENCY[country] && cur !== CURRENCY[country]) errs.push(["(varios campos)", "currency must be " + CURRENCY[country] + " for country " + country]);
+    if (errs.length) {
+      res.className = "result bad";
+      res.innerHTML = '<div class="big" style="color:var(--bad)">422</div><p style="margin:6px 0 0"><b>Datos inválidos: la API los rechaza.</b> No llegan a la base de datos.</p><ul>' +
+        errs.map(function (e) { return "<li><code>" + e[0] + "</code>: " + e[1] + "</li>"; }).join("") + "</ul>";
+    } else {
+      res.className = "result ok";
+      res.innerHTML = '<div class="big" style="color:var(--ok)">201</div><p style="margin:6px 0 0"><b>Creado.</b> Todo cumple las reglas: se guarda en TinyDB con el id 16 y <code>updated_at</code> lo pone el servidor.</p>';
+    }
+  }
+  ["pName", "pCountry", "pCur", "pRate", "pStatus"].forEach(function (id) { $(id).addEventListener("input", check); });
+  var presets = {
+    ok: { pName: "Proveedor de prueba", pCountry: "Spain", pCur: "EUR", pRate: "99.5", pStatus: "active" },
+    status: { pStatus: "activo" }, rate: { pRate: "0" }, cur: { pCountry: "Spain", pCur: "USD" }
+  };
+  [].forEach.call(document.querySelectorAll("[data-preset]"), function (b) {
+    b.onclick = function () {
+      var p = b.getAttribute("data-preset");
+      if (p !== "ok") presets.ok && Object.keys(presets.ok).forEach(function (k) { $(k).value = presets.ok[k]; });
+      Object.keys(presets[p]).forEach(function (k) { $(k).value = presets[p][k]; });
+      check();
+    };
+  });
+  check();
+})();
+
+/* ---------- Seeder simulado ---------- */
+(function () {
+  var term = document.getElementById("seedTerm"), stateEl = document.getElementById("seedState"), count = 0;
+  function show(cmd, inserted, skipped) {
+    term.innerHTML = '<span class="c">$ cd services/api</span>\n<span class="c">$ ' + cmd + '</span>\n<span class="g">Seeding finished: ' + inserted + ' records inserted, ' + skipped + ' skipped (already present).</span>\nTotal suppliers in database: <span class="y">' + count + '</span> (.../services/api/suppliers/db.json)';
+    stateEl.textContent = count + " proveedores";
+  }
+  document.getElementById("seedRun").onclick = function () { var ins = 15 - count; count = 15; show("uv run seed", ins, 15 - ins); };
+  document.getElementById("seedReset").onclick = function () { count = 15; show("uv run seed --reset", 15, 0); };
+  document.getElementById("seedClear").onclick = function () { count = 0; term.innerHTML = '<span class="c">La base de datos está vacía. Ejecuta uv run seed para llenarla.</span>'; stateEl.textContent = "0 proveedores (vacía)"; };
+  count = 0; term.innerHTML = '<span class="c">La base de datos está vacía. Pulsa «Ejecutar uv run seed» y luego púlsalo otra vez para ver que no duplica.</span>'; stateEl.textContent = "0 proveedores (vacía)";
+})();
+
+/* ---------- Mini tabla del frontend ---------- */
+(function () {
+  var data = [
+    { n: "LinkedIn Talent Solutions", c: "Spain", cat: "Portales de empleo", r: "1200,00 €", on: true },
+    { n: "Workable", c: "Spain", cat: "ATS", r: "299,00 €", on: true },
+    { n: "Greenhouse", c: "USA", cat: "ATS", r: "620,00 US$", on: false },
+    { n: "HireVue", c: "USA", cat: "Videoentrevista", r: "540,00 US$", on: true },
+    { n: "Coursera for Teams", c: "USA", cat: "Formación", r: "399,00 US$", on: false }
+  ];
+  var body = document.getElementById("demoBody"), sel = document.getElementById("fCountry");
+  function render() {
+    body.innerHTML = ""; var shown = 0;
+    data.forEach(function (d, i) {
+      if (sel.value && d.c !== sel.value) return; shown++;
+      var tr = document.createElement("tr"); if (!d.on) tr.className = "sus";
+      tr.innerHTML = "<td><b>" + d.n + "</b></td><td>" + d.c + '</td><td><span class="pill">' + d.cat + "</span></td><td>" + d.r + "</td>";
+      var td = document.createElement("td"), b = document.createElement("button");
+      b.className = "badge " + (d.on ? "on" : "off"); b.textContent = d.on ? "Activo" : "Suspendido";
+      b.setAttribute("aria-label", (d.on ? "Suspender " : "Activar ") + d.n);
+      b.onclick = function () { d.on = !d.on; render(); };
+      td.appendChild(b); tr.appendChild(td); body.appendChild(tr);
+    });
+    document.getElementById("demoCount").textContent = shown + " de " + data.length + " proveedores (la página no se ha recargado)";
+  }
+  sel.onchange = render; render();
+})();
+
+/* ---------- Problemas ---------- */
+(function () {
+  var P = [
+    ["back", "La ruta no coincidía con lo pedido", "Se creó /api/suppliers, pero los criterios pedían /suppliers. Quien probara /suppliers habría recibido un 404.", "Las mismas rutas se sirven en dos direcciones: /suppliers (la documentada) y /api/suppliers (la que usa la página). No se podía cambiar solo una porque el proxy de Vite solo reenvía lo que empieza por /api, y /suppliers es además una página del frontend.", "Lee los criterios con lupa: un detalle pequeño como una ruta puede invalidar todo."],
+    ["back", "El cliente podía enviar la fecha de auditoría", "Si alguien mandaba updated_at en una petición, la API lo ignoraba sin avisar. No se guardaba, pero tampoco decía «esto no lo puedes enviar».", "extra=\"forbid\" en los modelos de entrada: ahora responde 422. Además hay tests que lo comprueban.", "Rechazar lo que no debe entrar es mejor que ignorarlo en silencio."],
+    ["back", "El seeder tenía un hueco", "La primera versión solo sembraba si la base estaba completamente vacía. Si ya había un proveedor propio, no cargaba los 15.", "Ahora compara por nombre y añade solo los que faltan. Al arrancar la API se mantiene la regla antigua (solo si está vacía): como el nombre se puede editar, reponer por nombre podría duplicar un proveedor renombrado. Reponer por nombre es algo que se hace a mano con uv run seed.", "Una decisión puede tener sentido en un sitio y ser un riesgo en otro."],
+    ["tools", "uv run seed fallaba", "Ejecutado desde la raíz del repositorio salió «Failed to spawn: seed».", "uv busca el pyproject.toml en la carpeta donde estás, y la raíz no tiene uno. Se ejecuta desde services/api, o desde la raíz con uv run --project services/api seed. Quedó escrito en el README.", "Muchos errores son de «dónde estoy», no de «qué escribí»."],
+    ["back", "Tarifa cero o negativa", "La regla ya estaba (gt=0), pero había tres caminos que aceptan tarifa: el alta, la ruta /rate y la edición general.", "Se comprobó en los tres caminos y que, tras cada rechazo, la base de datos quedó intacta.", "Comprueba todas las puertas, no solo la principal."],
+    ["back", "¿Cuándo se actualiza updated_at?", "La edición general solo actualiza updated_at si la tarifa realmente cambió; la ruta /rate lo hace siempre.", "Se dejó así y se avisó: llamar a /rate es una acción explícita «cambiar la tarifa», así que se registra siempre. Si se prefiere lo contrario, es un cambio de una línea.", "Cuando dos opciones son válidas, elige una, explícala y avisa."],
+    ["front", "Un mensaje de error con «:» sobrante", "Cuando la API rechazaba algo que afecta a varios campos (moneda que no cuadra con el país), el mensaje salía como «: currency must be…».", "Se arregló en lib/api.ts para que el mensaje salga limpio.", "Los detalles pequeños también cuentan para quien usa la página."],
+    ["front", "Un error sin capturar", "Al editar una tarifa, si la API la rechazaba, el error se «escapaba» sin ser recogido y aparecía en la consola del navegador.", "Se captura en esa fila: el editor se queda abierto para corregir y el aviso rojo lo muestra la página.", "Un error visible para la persona es mejor que uno escondido en la consola."],
+    ["back", "El borrado contradice el encargo", "El encargo dice que los suspendidos no se eliminan, para conservar el historial. Al principio no se hizo DELETE; luego se pidió expresamente y se permitió borrar a cualquiera, dejando solo una nota de aviso. Eso seguía contradiciendo el encargo.", "En la revisión final se cumplieron las dos cosas: DELETE borra a los proveedores activos (204) y a los suspendidos los rechaza con 409, explicando por qué. Un id inexistente sigue dando 404. Un test lo comprueba: Greenhouse (suspendido) no se puede borrar, pero si se reactiva sí.", "Un aviso en un comentario no es cumplir una regla. Si el encargo dice «no», el código debe impedirlo."],
+    ["test", "Un test que daba un «aprobado» falso", "Al comprobar que el botón cambia de verde a rojo, la primera medida salió casi igual (dos verdes). Estaba midiendo a mitad de la animación de color y el test dijo «correcto» cuando no lo era.", "Esperar a que termine la animación y comprobar los colores exactos: verde rgb(110, 231, 183) frente a rojo rgb(253, 164, 175).", "Un test que siempre pasa no prueba nada. Desconfía de un «todo verde»."],
+    ["test", "No había navegador para probar la página", "Al principio solo se comprobaba que el código compilaba. Eso no demuestra que la pantalla funcione.", "Se instaló Playwright, que abre un navegador real y usa la página como una persona. Ahí aparecieron dos huecos reales: faltaba mostrar contact_email y la validación dejaba pasar un nombre de solo espacios.", "Compilar no es lo mismo que funcionar."],
+    ["tools", "Comandos que se mataban a sí mismos", "Varias veces un comando salió con «Exit code 144». Se usaba pkill -f \"uvicorn main:app\" para detener el servidor, pero el propio comando contenía ese texto, así que pkill se detenía a sí mismo.", "Guardar el script en un archivo y ejecutarlo por su ruta, para que ese texto no aparezca en la línea de comandos.", "No todos los errores están en tu código; a veces está en cómo lo lanzas."],
+    ["git", "package-lock.json cambiado sin motivo", "Aparecía modificado antes de empezar: un npm más antiguo quitaba campos «libc».", "No afecta al código, así que se commiteó aparte, en su propio commit, para poder revertirlo sin tocar nada más.", "Un commit, una idea."],
+    ["git", "El archivo de la base de datos no debe subirse", "db.json se genera al ejecutar la API. Subirlo a Git sería subir datos de prueba y provocar conflictos.", "Se añadió a .gitignore, dentro de services/api/ para que el backend sea autocontenido.", "Lo que se puede generar, no se guarda."],
+    ["back", "El email no se validaba en la API", "El formulario comprobaba que el email pareciera un email, pero la API aceptaba cualquier texto en contact_email. Quien llamara a la API directamente se saltaba la comprobación.", "La API también lo valida (algo con @ y un dominio). Es opcional: si no se envía o es null, no se comprueba. Se añadieron tests para los dos casos.", "La validación de la página es comodidad; la de la API es la que protege de verdad."],
+    ["front", "El resaltado de renovaciones apenas se veía", "Las renovaciones a 60 días o menos tenían un fondo ámbar casi invisible (5% de opacidad). Cumplía, pero no «destacaba visualmente» como pide el encargo. Además, con los datos iniciales todas las fechas son de 2025, así que nunca se veía en acción.", "Fondo más marcado y una barra ámbar a la izquierda. Y el test crea proveedores con renovación a 30 y a 61 días para comprobar que se resalta uno y el otro no.", "Si algo depende de los datos y los datos no lo activan, pruébalo con datos creados a propósito."],
+    ["test", "Otro test con nombre confuso", "El test nuevo daba fallo aunque la página estaba bien: buscaba el texto «Renueva en» en la fila del proveedor de prueba, pero el propio nombre del proveedor era «Renueva en 61 dias».", "Buscar el texto exacto del aviso («Renueva en N días», con tilde), que el nombre no contiene.", "Cuando un test falla, primero pregunta si falla el programa o falla el test."],
+    ["test", "Probar en un solo navegador", "Todas las pruebas de la página se habían hecho solo en Chromium.", "La prueba acepta E2E_BROWSER=firefox y se ejecutó también en Firefox: pasa en ambos.", "Cada navegador puede comportarse distinto: prueba en más de uno."]
+    ,
+    ["git", "Un comando antiguo cambió de rama por sorpresa", "Durante la reorganización, una tarea que había quedado colgada en segundo plano terminó de golpe y ejecutó por fin sus últimas órdenes: git branch -f y git switch. Sin avisar, movió el árbol de trabajo a otra rama, con la estructura antigua del backend, y desplazó hacia atrás el puntero local de la rama de la guía.", "No se perdió nada: el commit de la guía seguía en GitHub y el del backend estaba en su rama. Se guardaron los cambios sin commitear con git stash, se volvió a la rama correcta, se recuperaron con git stash pop y se restauró la rama de la guía. Después se repitieron las pruebas.", "Git casi nunca pierde trabajo si lo has commiteado o subido. Antes de «arreglar» algo raro, mira qué pasó (git status, git reflog). Y no dejes tareas largas en segundo plano con comandos de Git al final."]
+  ];
+  var L = { all: "Todos", back: "Backend", front: "Frontend", test: "Tests", git: "Git", tools: "Herramientas" };
+  var TAGC = { back: "t-back", front: "t-front", test: "t-warn", git: "t-brand", tools: "t-db" };
+  var chips = document.getElementById("chips"), box = document.getElementById("probs"), cur = "all";
+  Object.keys(L).forEach(function (k) {
+    var b = document.createElement("button"); b.className = "chip"; b.textContent = L[k]; b.setAttribute("aria-pressed", k === "all");
+    b.onclick = function () { cur = k; [].forEach.call(chips.children, function (c) { c.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); draw(); };
+    chips.appendChild(b);
+  });
+  function draw() {
+    box.innerHTML = "";
+    P.forEach(function (p, i) {
+      if (cur !== "all" && p[0] !== cur) return;
+      var d = document.createElement("details"); d.className = "prob";
+      d.innerHTML = '<summary><span class="num">' + (i + 1) + '</span><span class="tag ' + TAGC[p[0]] + '">' + L[p[0]] + "</span> " + p[1] + "</summary>" +
+        '<div class="body"><dl><dt class="dt-q">Qué pasó</dt><dd>' + p[2] + '</dd><dt class="dt-s">Cómo se resolvió</dt><dd>' + p[3] + '</dd></dl><div class="lesson"><b>Lección:</b> ' + p[4] + "</div></div>";
+      box.appendChild(d);
+    });
+  }
+  draw();
+})();
+
+/* ---------- Glosario ---------- */
+(function () {
+  var G = [
+    ["API", "Programa que recibe peticiones y responde. Es la «cocina» del restaurante."], ["Backend", "La parte que no se ve: guarda datos y aplica reglas."],
+    ["Frontend", "La parte que se ve: la página web."], ["Endpoint", "Cada «puerta» de la API, por ejemplo GET /suppliers."],
+    ["Petición (request)", "Un mensaje al servidor: «dame la lista»."], ["Respuesta (response)", "Lo que el servidor devuelve."],
+    ["JSON", "Formato de texto para intercambiar datos: {\"name\": \"Gusto\", \"country\": \"USA\"}."], ["CRUD", "Las 4 acciones básicas: Crear, Leer, Actualizar y Borrar."],
+    ["HTTP", "El idioma con el que se hablan el navegador y el servidor."], ["Código 200", "Todo bien."], ["Código 201", "Se creó algo."], ["Código 204", "Hecho, sin nada que devolver."],
+    ["Código 404", "No se encontró lo que pedías."], ["Código 409", "Conflicto: lo que pides choca con una regla (borrar un proveedor suspendido)."], ["Código 422", "Los datos enviados no son válidos."],
+    ["Validación", "Comprobar que un dato cumple las reglas antes de aceptarlo."], ["Pydantic", "La herramienta que valida los datos en el backend."],
+    ["Enum", "Lista cerrada de valores permitidos, como una máquina de refrescos con botones fijos."], ["Modelo / schema", "La descripción de los campos y reglas de algo (un proveedor)."],
+    ["TinyDB", "Base de datos muy simple que guarda todo en un archivo db.json."], ["Base de datos", "Lugar donde se guardan los datos de forma ordenada y permanente."],
+    ["Persistencia", "Que los datos sigan ahí después de apagar y encender el programa."], ["Seeder", "Script que llena la base de datos con datos iniciales."],
+    ["Idempotente", "Que repetirlo no cambia el resultado (el seeder no duplica)."], ["FastAPI", "La herramienta con la que se construye la API en Python."],
+    ["Uvicorn", "El programa que «enciende» la API y la deja escuchando."], ["uv", "Herramienta que instala y ejecuta programas de Python."],
+    ["React", "Herramienta para construir páginas con piezas reutilizables."], ["Componente", "Una pieza reutilizable de la página."],
+    ["Estado (state)", "Lo que la página recuerda: la lista, los filtros, los errores."], ["Proxy", "Intermediario que reenvía las peticiones de un sitio a otro."],
+    ["Vite", "Herramienta que arranca la página en tu ordenador."], ["Tailwind", "Herramienta para dar estilo con clases cortas."],
+    ["TypeScript", "JavaScript con tipos, que evita errores antes de ejecutar."], ["Test", "Programa que comprueba que otro programa funciona."],
+    ["e2e (end to end)", "Test que usa la página en un navegador real, de punta a punta."], ["Playwright", "La herramienta que controla el navegador en los tests e2e."],
+    ["Git", "Sistema que guarda la historia de tu proyecto."], ["Commit", "Un «guardado» con mensaje dentro de Git."],
+    ["Rama (branch)", "Línea de trabajo paralela, para no tocar la versión oficial."], ["main", "La rama oficial del proyecto."],
+    ["Pull Request (PR)", "Propuesta para unir una rama a otra, para que se revise."], ["Fork", "Tu copia personal de un repositorio en GitHub."],
+    ["Push", "Subir tus commits a GitHub."], [".gitignore", "Lista de archivos que Git debe ignorar (como db.json)."],
+    ["Repositorio (repo)", "La carpeta del proyecto con toda su historia."], ["Monorepo", "Un repositorio que contiene varios proyectos a la vez."],
+    ["Raíz del repositorio", "La carpeta principal del proyecto: /workspaces/ai-engineering-company-project-monorepo-INES."], ["Codespace", "Un ordenador en la nube, con VS Code en el navegador, donde trabajas."]
+  ];
+  var box = document.getElementById("gl"), inp = document.getElementById("gsearch"), empty = document.getElementById("gEmpty");
+  function draw() {
+    var q = inp.value.trim().toLowerCase(), n = 0; box.innerHTML = "";
+    G.forEach(function (g) {
+      if (q && (g[0] + " " + g[1]).toLowerCase().indexOf(q) < 0) return; n++;
+      var d = document.createElement("div"); d.innerHTML = "<b></b><span></span>";
+      d.children[0].textContent = g[0]; d.children[1].textContent = g[1]; box.appendChild(d);
+    });
+    empty.hidden = n > 0;
+  }
+  inp.addEventListener("input", draw); draw();
+})();
+
+/* ---------- Botones de copiar ---------- */
+[].forEach.call(document.querySelectorAll(".copy"), function (b) {
+  b.onclick = function () {
+    var text = b.previousElementSibling.textContent;
+    var done = function () { b.textContent = "¡Copiado!"; setTimeout(function () { b.textContent = "Copiar"; }, 1500); };
+    try { navigator.clipboard.writeText(text).then(done, function () { b.textContent = "Selecciona y copia"; }); }
+    catch (e) { b.textContent = "Selecciona y copia"; }
+  };
+});
+</script>
+</body>
+</html>

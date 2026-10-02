@@ -2,9 +2,10 @@
 
 This folder contains **all projects with a user interface** for the cross-functional AI Engineering company project — for example: a public website, admin dashboard frontend, ecommerce UI, customer portals, Streamlit/Gradio app or other frontend-only tools.
 
-The two main projects stored here are:
+The main projects stored here are:
 
 - **`website`** — the company's public-facing web presence.
+- **`application`** — the supplier directory (`app/suppliers/`): list, filters, create, rate and status changes against `services/api`.
 - **`backoffice`** — the internal admin application. This is the ideal place to develop multiple solutions within a single project: authentication, people management, operations management, internal communication, and other back-office capabilities.
 
 Organize `uis/` by **different concerns** — each subfolder covers a distinct area of the company (for example, public web vs internal operations) and includes its own technical and functional documentation.

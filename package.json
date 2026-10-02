@@ -1,0 +1,22 @@
+{
+  "name": "nexova-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --workspace uis/website run dev",
+    "build": "npm --workspace uis/website run build",
+    "preview": "npm --workspace uis/website run preview",
+    "typecheck": "npm --workspace uis/website run typecheck",
+    "dev:backoffice": "npm --workspace uis/backoffice run dev",
+    "build:backoffice": "npm --workspace uis/backoffice run build",
+    "typecheck:backoffice": "npm --workspace uis/backoffice run typecheck",
+    "dev:application": "npm --workspace uis/application run dev",
+    "build:application": "npm --workspace uis/application run build",
+    "typecheck:application": "npm --workspace uis/application run typecheck"
+  },
+  "workspaces": [
+    "uis/website",
+    "uis/backoffice",
+    "uis/application"
+  ]
+}
