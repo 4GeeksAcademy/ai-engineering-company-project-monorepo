@@ -1,0 +1,10 @@
+[
+  {"question": "¿Cuál es el plazo del envío estándar?", "expected_source_documents": ["sla-delivery"]},
+  {"question": "¿Qué ocurre con el SLA durante Black Friday, Navidad y Rebajas?", "expected_source_documents": ["sla-delivery"]},
+  {"question": "¿Cuál es la ventana estándar de devolución?", "expected_source_documents": ["returns-policy"]},
+  {"question": "¿Cómo se gestionan las devoluciones internacionales?", "expected_source_documents": ["returns-policy"]},
+  {"question": "¿Qué transportista tiene mejor cobertura rural en Aragón?", "expected_source_documents": ["carrier-coverage"]},
+  {"question": "¿Qué transportista conviene para paquetes pesados en Estados Unidos?", "expected_source_documents": ["carrier-coverage"]},
+  {"question": "¿Cuánto cuesta almacenar en Los Ángeles y Zaragoza?", "expected_source_documents": ["storage-pricing"]},
+  {"question": "¿Quién debe aprobar un descuento de almacenamiento?", "expected_source_documents": ["storage-pricing"]}
+]
