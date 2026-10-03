@@ -17,7 +17,7 @@ src/
 │   ├── (app)/                session required
 │   │   ├── layout.tsx        layout guard: <RequireAuth> + sidebar
 │   │   ├── page.tsx          /
-│   │   ├── incidents/        /incidents (manager), /incidents/[incidentId] (detail), /incidents/analysis (CSV report)
+│   │   ├── incidents/        /incidents (manager), /incidents/new (register), /incidents/[incidentId] (detail), /incidents/analysis (CSV report)
 │   │   ├── suppliers/        /suppliers
 │   │   └── account/profile/  /account/profile
 │   └── not-found.tsx         unknown URL → /
@@ -143,3 +143,41 @@ no connection, a conflict (the incident changed state meanwhile, so it is reload
 (`src/lib/errors.ts`); an unexpected rendering error lands on `app/(app)/error.tsx`. Customer emails are masked in
 the list and only shown in the detail. Check it end to end with `npm run e2e:incidents` (see the header of
 `e2e/incidents.e2e.mjs`).
+
+### Registering an incident (`/incidents/new`)
+
+Reachable from the sidebar ("Nueva incidencia"). One form (`components/incidents/IncidentForm.tsx`, also used to edit)
+with every field of the model: the five mandatory ones (title, category, origin, **branch**, description) are labelled
+"obligatorio", the other three (client company, agent, customer email) "opcional". The status, id and dates are not
+asked for: the incident is created `open` and the server assigns the rest.
+
+- **Branch** is always visible and mandatory (`central` by default, "when no specific branch applies"). When the origin is
+  *Sucursal* it is highlighted (amber frame and a note), `central` is emptied and the field gets the focus, because the API
+  refuses `central` for a branch incident; going back to another origin restores `central`.
+- **Loading**: while sending, the button is disabled and reads "Registrando…" with a spinner, every control is locked
+  (`<fieldset disabled>`, `aria-busy`) and a synchronous guard stops a fast double click from sending twice.
+- **Errors in plain Spanish, next to the field**: the form validates first with the shared rules
+  (`validateIncidentDraft`); what still comes back from the API (`400` with the problematic `field`) is translated by
+  `friendlyFieldError` (`lib/errors.ts`) and shown under that field, with the focus on the first one and a summary
+  ("Revisa los 3 campos marcados"). Network and server failures use `describeError` ("No se pudo conectar…", "El servidor ha
+  tenido un problema… referencia abc12345"); what was typed is never lost.
+- **Success**: the form is cleared (origin *Cliente*, branch `central`) and a confirmation ("Incidencia NXV-000102 registrada
+  correctamente", with links to the incident and the list) receives the focus.
+
+### The panel (`/incidents`)
+
+"Panel de incidencias": summary cards, filters (status, origin, branch, category, text, client, agent, dates), a paginated
+list and, in each row, the status control.
+
+- **Loading**: "Cargando incidencias…" on the first load and "Actualizando…" over the previous table on every filter, sort or
+  page change; the table is dimmed meanwhile.
+- **If loading fails**: a clear message with a **Reintentar** button (`describeError`: no connection, server problem…); the
+  previous table, if any, stays visible.
+- **No data**: without filters, "Todavía no hay incidencias registradas" with a button to register the first; with filters,
+  "Ninguna incidencia coincide con estos filtros" with **Limpiar filtros**.
+- **Change the status from the list**: every non-final row has a "Cambiar…" dropdown offering only the valid moves
+  (`allowed_transitions` from the API). The new status is shown **at once** ("Guardando…"); when the server answers, the row
+  takes the saved data and the summary cards are refreshed. Resolving or discarding (final) asks for confirmation first. If the
+  server refuses (connection, 409 conflict, 500…) the row **goes back to its previous status**, is highlighted ("No se guardó")
+  and a message says what failed and that the previous state was restored; after a conflict the list is reloaded.
+  `RowStatusControl.tsx` is the control; `IncidentsPage.tsx#handleChangeStatus` holds the optimistic update and the undo.

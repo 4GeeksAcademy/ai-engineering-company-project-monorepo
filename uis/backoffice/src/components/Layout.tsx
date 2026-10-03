@@ -3,12 +3,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
+import { ClipboardList, FilePlus2, FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 
 const navItems = [
   { href: "/", label: "Inicio", icon: LayoutDashboard, end: true },
-  { href: "/incidents", label: "Incidencias", icon: ClipboardList, end: false, exclude: "/incidents/analysis" },
+  { href: "/incidents", label: "Incidencias", icon: ClipboardList, end: false, exclude: ["/incidents/analysis", "/incidents/new"] },
+  { href: "/incidents/new", label: "Nueva incidencia", icon: FilePlus2, end: false },
   { href: "/incidents/analysis", label: "Análisis de incidentes", icon: FileBarChart, end: false },
   { href: "/suppliers", label: "Proveedores", icon: Truck, end: false },
   { href: "/account/profile", label: "Mi perfil", icon: UserCircle, end: false },
@@ -27,7 +28,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <nav className="mt-8 space-y-1" aria-label="Navegación principal">
           {navItems.map(({ href, label, icon: Icon, end, exclude }) => {
             const isActive =
-              !(exclude && pathname.startsWith(exclude)) &&
+              !exclude?.some((path) => pathname.startsWith(path)) &&
               (end ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
             return (
               <Link

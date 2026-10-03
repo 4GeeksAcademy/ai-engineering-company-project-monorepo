@@ -22,6 +22,8 @@ export class ApiError extends Error {
     public fieldErrors: Record<string, string> = {},
     /** Reference of a 500 (`error_id`): the team finds the details in the server log with it. */
     public errorId?: string,
+    /** Machine type of each field error (`missing`, `enum`, `value_error`…), keyed like `fieldErrors`. */
+    public fieldTypes: Record<string, string> = {},
   ) {
     super(message);
   }
@@ -34,16 +36,20 @@ async function toApiError(response: Response): Promise<ApiError> {
       return new ApiError(body.detail, response.status, {}, typeof body.error_id === "string" ? body.error_id : undefined);
     if (Array.isArray(body.detail)) {
       const fieldErrors: Record<string, string> = {};
+      const fieldTypes: Record<string, string> = {};
       const message = body.detail
-        .map((e: { loc?: unknown[]; msg?: string }) => {
-          const field = e.loc?.slice(1).join(".");
+        .map((e: { loc?: unknown[]; msg?: string; type?: string; field?: string | null }) => {
+          const field = e.field ?? e.loc?.slice(1).join(".");
           const text = (e.msg ?? "").replace(/^Value error, /, "");
-          if (field && !(field in fieldErrors)) fieldErrors[field] = text;
+          if (field && !(field in fieldErrors)) {
+            fieldErrors[field] = text;
+            if (e.type) fieldTypes[field] = e.type;
+          }
           return field ? `${field}: ${text}` : text;
         })
         .join("; ");
       // POST /api/incidents answers 400 with a ready-to-read `message` next to the per-field `detail`.
-      return new ApiError(typeof body.message === "string" ? body.message : message, response.status, fieldErrors);
+      return new ApiError(typeof body.message === "string" ? body.message : message, response.status, fieldErrors, undefined, fieldTypes);
     }
   } catch {
     /* not JSON: fall back to the status text */
