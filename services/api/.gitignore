@@ -1,0 +1,11 @@
+# TinyDB runtime storage (seeded on startup, not source)
+suppliers/db.json
+
+# Managed incidents store (loaded with seed_incidents.py, created at runtime)
+incidents/db.json
+
+# Internal users store (password hashes, created at runtime)
+users/db.json
+
+# User profiles store (display names and contact data, created at runtime)
+profiles/db.json

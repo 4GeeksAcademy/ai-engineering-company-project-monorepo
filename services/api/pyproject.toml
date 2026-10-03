@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexova-api"
+version = "0.1.0"
+description = "Nexova centralized FastAPI backend."
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    "tinydb>=4.8",
+    "python-jose[cryptography]>=3.3",
+    "email-validator>=2.0",
+    "incidents-analyzer",
+    "libpass[bcrypt]>=1.9",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+seed = "seed:main"
+create-user = "auth.cli:main"
+
+[tool.uv.sources]
+incidents-analyzer = { path = "../../packages/shared/incidents_analyzer", editable = true }
+
+[tool.setuptools]
+py-modules = ["main", "seed"]
+
+[tool.setuptools.packages.find]
+include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
