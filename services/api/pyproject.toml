@@ -30,7 +30,7 @@ seed = "seed:main"
 create-user = "auth.cli:main"
 
 [tool.uv.sources]
-incidents-analyzer = { path = "../../packages/incidents_analyzer", editable = true }
+incidents-analyzer = { path = "../../packages/shared/incidents_analyzer", editable = true }
 
 [tool.setuptools]
 py-modules = ["main", "seed"]

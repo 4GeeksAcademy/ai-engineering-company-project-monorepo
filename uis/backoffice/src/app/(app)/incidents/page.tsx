@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import IncidentsAnalysisPage from "@/views/IncidentsAnalysisPage";
+import IncidentsPage from "@/views/IncidentsPage";
 
-export const metadata: Metadata = { title: "Análisis de incidentes" };
+export const metadata: Metadata = { title: "Incidencias" };
 
-export default IncidentsAnalysisPage;
+export default IncidentsPage;

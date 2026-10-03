@@ -8,10 +8,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import JSONResponse
 
-# Routes that receive passwords. FastAPI's default 422 body echoes the rejected
-# ``input`` of every field, which would send a (too short / too long) password
-# back in the response and into proxy and access logs.
-_CREDENTIAL_PATHS = ("/auth", "/users")
+# Routes that receive secrets or personal data: passwords, and the customer_email of an
+# incident. FastAPI's default 422 body echoes the rejected ``input`` of every field,
+# which would send that value back in the response and into proxy and access logs.
+_CREDENTIAL_PATHS = ("/auth", "/users", "/api/incidents")
 
 
 async def validation_error_handler(request: Request, exc: RequestValidationError):

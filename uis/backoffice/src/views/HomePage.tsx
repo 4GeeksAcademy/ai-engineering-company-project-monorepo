@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileBarChart, Truck } from "lucide-react";
+import { ClipboardList, FileBarChart, Truck } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -12,6 +12,17 @@ export default function HomePage() {
       <Link
         href="/incidents"
         className="mt-8 flex max-w-sm items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-cyan-400/40"
+      >
+        <ClipboardList className="text-cyan-400" size={28} />
+        <div>
+          <p className="font-semibold text-white">Incidencias</p>
+          <p className="text-sm text-slate-400">Registra, filtra y gestiona los tickets de soporte</p>
+        </div>
+      </Link>
+
+      <Link
+        href="/incidents/analysis"
+        className="mt-4 flex max-w-sm items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-cyan-400/40"
       >
         <FileBarChart className="text-cyan-400" size={28} />
         <div>

@@ -4,11 +4,83 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 
 ## Domains implemented
 
-- **`incidents/`** — Support ticket CSV analysis ("Analizador de Incidencias"). Validates and computes metrics on Nexova support-incident exports, per the rules in [scripts/CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md). Reuses the same [`incidents_analyzer`](../../packages/incidents_analyzer) package as the CLI script in `scripts/analyze.py`, so both run identical validation/metrics logic.
+- **`incidents/`** — Support ticket CSV analysis ("Analizador de Incidencias"). Validates and computes metrics on Nexova support-incident exports, per the rules in [scripts/CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md). Reuses the same [`incidents_analyzer`](../../packages/shared/incidents_analyzer) package as the CLI script in `scripts/analyze.py`, so both run identical validation/metrics logic.
+- **`incidents/` (incident manager)** — The live ticket manager that replaces analysing CSVs by hand: create, edit, move through a lifecycle, filter and summarise incidents, under `/api/incidents` (see [Incident manager](#incident-manager)).
 - **`users/`** — Internal accounts (email + password, bcrypt-hashed through `libpass`) with full CRUD, stored in TinyDB.
 - **`profiles/`** — One `Profile` per user (strictly one-to-one through `user_id`, the `User.id`): the **name and the contact data** (`contact_email`, `phone`, `address`) live here, not in `User`. Stored in TinyDB (`profiles/db.json`, gitignored).
 - **`auth/`** — Login (OAuth2 password flow + JWT carrying the user `id`) and the `get_current_user` dependency used to protect every other domain.
 - **`suppliers/`** — Supplier directory ("Directorio de Proveedores", Patricia Solís / Nexova). Replaces the HR spreadsheet with a [TinyDB](https://tinydb.readthedocs.io/)-backed store, seeded on startup with the 15 suppliers from [`suppliers/seed_data.py`](./suppliers/seed_data.py) (spec: [CONTEXT-suppliers.md](./suppliers/CONTEXT-suppliers.md)). Pydantic (`suppliers/schemas.py`) rejects with `422` any missing `country`, a `status` outside `active`/`suspended`, empty `categories`, or a `currency` that doesn't match the country (Spain→EUR, USA→USD). Suspending (not deleting) is the preferred way to retire a supplier.
+
+## Incident manager
+
+Stored in TinyDB (`incidents/db.json`, gitignored), keyed by `id` (`NXV-000101`, the next free number). Rules (categories, statuses, origins, transitions, patterns, limits) come from the shared contract [`packages/shared/incidents/contract.json`](../../packages/shared/incidents/contract.json), through the same `incidents_analyzer` package the CLI script uses; the backoffice reads the same file.
+
+**Data model** (`incidents/incident_schemas.py`, `IncidentRecord`):
+
+| Field | Rule |
+| --- | --- |
+| `id` | auto (`NXV-` + 6 digits); never accepted from the client |
+| `title` | required, 3-120 chars |
+| `description` | required, 5-1000 chars |
+| `category` | required: `TECHNICAL`, `BILLING`, `ACCESS`, `HR_QUERY`, `COMPLAINT` (as in [CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md)) |
+| `status` | `open`, `in_progress`, `resolved`, `discarded`; `open` on creation, changed only through the status endpoint |
+| `origin` | required: `customer`, `branch`, `internal` |
+| `branch` | required, ≤ 60 chars; **`central` when it does not apply** (case-insensitive, stored as `central`). If `origin` is `branch` it must name a real branch, not `central` |
+| `created_at`, `updated_at` | auto (UTC); `updated_at` moves on every edit or status change |
+| `client_company`, `agent_id` (`AGT-07`), `customer_email` | optional extras from the helpdesk CSV (the email is sensitive: masked in lists, never searchable, never echoed in errors) |
+| `satisfaction_score` | 1-5, optional, only on `resolved` |
+| `discard_reason` | 5-300 chars, required to discard, only on `discarded` |
+| `history` | audit trail: created / imported / status_changed / edited (edits log the *names* of the fields, never values) |
+
+Unknown fields are rejected (`extra=forbid`), values must match exactly (`"web"`, `"Customer"`, `"closed"` are refused) and `IncidentRecord` re-checks the lifecycle invariants on every write, so no path (API, seed, merge on edit) can store an inconsistent incident.
+
+**Lifecycle** (`incidents/incident_lifecycle.py`, pure functions; table in the contract):
+
+```
+open ──► in_progress ──► resolved      satisfaction_score optional
+  │         │  ▲
+  │         ▼  └── back to open
+  └──────► discarded                    discard_reason required
+resolved / discarded ──► open           reopen: score / reason are cleared
+```
+
+Any other move is `409` (notably `open → resolved`: it has to be worked on first). Content can only be edited while `open` or `in_progress`. There is no delete: discarding retires an incident and keeps its history.
+
+| Method & path | Purpose |
+| --- | --- |
+| `GET /api/incidents` | Paginated list. Filters (AND): `status`, `category`, `origin` (repeatable), `branch`, `agent_id`, `client_company` (contains), `q` (id / title / description / client / branch), `date_from`, `date_to` (creation day). `sort` = `created_at \| id \| updated_at`, `order`, `page`, `page_size` (≤ 100). |
+| `GET /api/incidents/summary` | Dashboard numbers for the same filters: totals and percentages by status and category, by origin, backlog (`open` + `in_progress`) by category, satisfaction, top branches and clients. |
+| `GET /api/incidents/facets` | Distinct branches, clients and agents, to fill dropdowns. |
+| `POST /api/incidents` | Create (always `open`). |
+| `GET /api/incidents/{id}` | Full incident with `history`, `allowed_transitions` and `editable`. |
+| `PATCH /api/incidents/{id}` | Edit content fields (only the ones sent; required ones cannot be `null`, optional ones can be cleared with `null`). |
+| `PATCH /api/incidents/{id}/status` | Lifecycle move: `{"status": "in_progress"}`, `{"status": "resolved", "satisfaction_score": 4}`, `{"status": "discarded", "discard_reason": "…"}`, `{"status": "open"}`. |
+
+**Errors**: `401` no session · `404` unknown incident · `409` the incident's state forbids it (forbidden transition, editing a resolved incident) · `422` invalid or missing data, per field, as `detail: [{loc, msg}]`. The `422` body never echoes the rejected values.
+
+**Seed** — loads the historical CSV (`data/raw/incidents-nexova.csv`) with [`scripts/seed_incidents.py`](../../scripts/seed_incidents.py) (logic in [`incidents/seeding.py`](./incidents/seeding.py)); run it with this API's environment:
+
+```
+.venv/bin/python ../../scripts/seed_incidents.py            # load (idempotent)
+.venv/bin/python ../../scripts/seed_incidents.py --reset    # wipe the incidents first
+.venv/bin/python ../../scripts/seed_incidents.py --csv other.csv --db /tmp/incidents.json
+```
+
+Each row passes the shared `validate_record` (the CSV rules) and is then transformed and validated again by `IncidentRecord`. **Invalid rows are not inserted**; they are listed with line, id and the rules they break, never the email (with the provided file: 96 inserted, 4 rejected — lines 18, 44, 87 and 91). The CSV predates this model, so (maps in the shared contract; the CONTEXT does not define them):
+
+| CSV | Incident |
+| --- | --- |
+| `ticket_id` | `id` |
+| `description` | `title` (shortened at a word boundary if > 120; `description` keeps the full text) |
+| `date` | `created_at` and `updated_at` (00:00 UTC) |
+| `status` `OPEN / CLOSED / DISCARDED` | `open / resolved / discarded` |
+| `category` | same value (`csvCategoryMap`, identity today) |
+| `location` / `ubicacion` (optional column) | `branch`; the provided CSV has none, so `central` |
+| — | `origin` = `customer` |
+
+Idempotent: an id already stored is skipped and never overwritten (later work on an incident survives a re-run). At the end the script compares `/api/incidents/summary` with the metrics expected from the transformed CSV (computed with the shared `analyze`) and exits `1` on any difference; with the provided file: 96 incidents, 27 open / 56 resolved / 13 discarded, satisfaction 3.84 over 56. The comparison is skipped when the database also holds incidents that are not from the CSV. Unlike suppliers, the incidents database is **not** seeded on startup — run the seed once.
+
+Limitations: TinyDB and the id counter are single-process (see `incidents/incident_store.py`); a second API worker needs a real database.
 
 ## Authentication
 

@@ -42,6 +42,11 @@ def get_suppliers_db_path() -> Path:
     return Path(__file__).resolve().parent.parent / "suppliers" / "db.json"
 
 
+def get_incidents_db_path() -> Path:
+    """TinyDB file for the managed incidents (gitignored runtime state)."""
+    return Path(__file__).resolve().parent.parent / "incidents" / "db.json"
+
+
 def get_users_db_path() -> Path:
     """TinyDB file for the internal users (gitignored runtime state)."""
     return Path(__file__).resolve().parent.parent / "users" / "db.json"

@@ -3,12 +3,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
+import { ClipboardList, FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 
 const navItems = [
   { href: "/", label: "Inicio", icon: LayoutDashboard, end: true },
-  { href: "/incidents", label: "Análisis de incidentes", icon: FileBarChart, end: false },
+  { href: "/incidents", label: "Incidencias", icon: ClipboardList, end: false, exclude: "/incidents/analysis" },
+  { href: "/incidents/analysis", label: "Análisis de incidentes", icon: FileBarChart, end: false },
   { href: "/suppliers", label: "Proveedores", icon: Truck, end: false },
   { href: "/account/profile", label: "Mi perfil", icon: UserCircle, end: false },
 ];
@@ -24,8 +25,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         </p>
         <p className="px-2 text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
         <nav className="mt-8 space-y-1" aria-label="Navegación principal">
-          {navItems.map(({ href, label, icon: Icon, end }) => {
-            const isActive = end ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+          {navItems.map(({ href, label, icon: Icon, end, exclude }) => {
+            const isActive =
+              !(exclude && pathname.startsWith(exclude)) &&
+              (end ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
             return (
               <Link
                 key={href}

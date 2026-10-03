@@ -1,7 +1,8 @@
 # Nexova Backoffice (`uis/backoffice`)
 
-Internal operations app, built with **Next.js 16 (App Router)**, React 19 and Tailwind. Tools: **Análisis de
-incidentes** (uploads a support-ticket CSV to `services/api` and shows the validation/metrics report),
+Internal operations app, built with **Next.js 16 (App Router)**, React 19 and Tailwind. Tools: **Incidencias**
+(the incident manager: summary panel, filters by status/category/origin/branch, list, report/edit form, detail with lifecycle and history),
+**Análisis de incidentes** (uploads a support-ticket CSV to `services/api` and shows the validation/metrics report),
 **Proveedores** (supplier directory) and **Mi perfil**.
 
 ## Structure
@@ -16,7 +17,7 @@ src/
 │   ├── (app)/                session required
 │   │   ├── layout.tsx        layout guard: <RequireAuth> + sidebar
 │   │   ├── page.tsx          /
-│   │   ├── incidents/        /incidents
+│   │   ├── incidents/        /incidents (manager), /incidents/[incidentId] (detail), /incidents/analysis (CSV report)
 │   │   ├── suppliers/        /suppliers
 │   │   └── account/profile/  /account/profile
 │   └── not-found.tsx         unknown URL → /
@@ -131,3 +132,14 @@ With the API and the backoffice running (`npm run dev`, or `npm run build && npm
 - `npm run e2e:token` — token lifecycle (needs the supplier seed).
 
 All five pass against `next dev` and against the production build. See the header of each file in `e2e/`.
+
+## Incident manager
+
+`/incidents` loads the incidents of the API (load the history once with `services/api/.venv/bin/python scripts/seed_incidents.py`).
+Types, labels, the lifecycle table and the form validations come from `@repo/shared-types`
+([`packages/shared`](../../packages/shared)), the same contract the API enforces, so the form rejects what the API
+would reject, in Spanish and per field. Anything that still fails on the server is shown as a clear message:
+no connection, a conflict (the incident changed state meanwhile, so it is reloaded), not found, or a server error
+(`src/lib/errors.ts`); an unexpected rendering error lands on `app/(app)/error.tsx`. Customer emails are masked in
+the list and only shown in the detail. Check it end to end with `npm run e2e:incidents` (see the header of
+`e2e/incidents.e2e.mjs`).

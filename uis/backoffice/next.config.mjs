@@ -20,6 +20,8 @@ const allowedDevOrigins =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // packages/shared ships TypeScript source (no build step), so Next compiles it with the app.
+  transpilePackages: ["@repo/shared-types"],
   allowedDevOrigins,
   async rewrites() {
     return [

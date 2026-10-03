@@ -15,19 +15,17 @@ from __future__ import annotations
 
 import csv
 import io
-import re
 from dataclasses import dataclass, field
 from typing import IO, Iterable
 
-VALID_CATEGORIES: tuple[str, ...] = (
-    "TECHNICAL",
-    "BILLING",
-    "ACCESS",
-    "HR_QUERY",
-    "COMPLAINT",
+from .contract import (
+    AGENT_ID_PATTERN,
+    DESCRIPTION_MIN,
+    SCORE_MAX,
+    SCORE_MIN,
+    VALID_CATEGORIES,
+    VALID_STATUSES,
 )
-
-VALID_STATUSES: tuple[str, ...] = ("OPEN", "CLOSED", "DISCARDED")
 
 REQUIRED_COLUMNS: tuple[str, ...] = (
     "ticket_id",
@@ -40,8 +38,6 @@ REQUIRED_COLUMNS: tuple[str, ...] = (
     "customer_email",
     "satisfaction_score",
 )
-
-_AGENT_ID_PATTERN = re.compile(r"^AGT-\d{2}$")
 
 
 def missing_required_columns(fieldnames: Iterable[str] | None) -> list[str]:
@@ -138,8 +134,12 @@ def read_rows(source: str | IO[str]) -> list[dict[str, str]]:
     raise TypeError(f"Unsupported CSV source type: {type(source)!r}")
 
 
-def _validate_record(row: dict[str, str]) -> list[str]:
-    """Return the list of rule keys violated by a single row. Empty means valid."""
+def validate_record(row: dict[str, str]) -> list[str]:
+    """Return the list of rule keys violated by a single raw CSV row. Empty means valid.
+
+    Public so that anything importing incidents (the seed script, the API)
+    applies exactly the rules the CLI analysis reports on.
+    """
     violations: list[str] = []
 
     if not (row.get("client_company") or "").strip():
@@ -150,11 +150,11 @@ def _validate_record(row: dict[str, str]) -> list[str]:
         violations.append("invalid_or_missing_category")
 
     description = (row.get("description") or "").strip()
-    if len(description) < 5:
+    if len(description) < DESCRIPTION_MIN:
         violations.append("invalid_description")
 
     agent_id = (row.get("agent_id") or "").strip()
-    if not agent_id or not _AGENT_ID_PATTERN.match(agent_id):
+    if not agent_id or not AGENT_ID_PATTERN.match(agent_id):
         violations.append("invalid_or_missing_agent_id")
 
     email = (row.get("customer_email") or "").strip()
@@ -169,7 +169,7 @@ def _validate_record(row: dict[str, str]) -> list[str]:
 
     if raw_score:
         score = _parse_int(raw_score)
-        if score is None or not (1 <= score <= 5):
+        if score is None or not (SCORE_MIN <= score <= SCORE_MAX):
             violations.append("score_out_of_range")
 
     return violations
@@ -195,7 +195,7 @@ def analyze(rows: Iterable[dict[str, str]], source_name: str) -> AnalysisResult:
     score_sum = 0
 
     for row in rows:
-        violations = _validate_record(row)
+        violations = validate_record(row)
 
         if violations:
             for rule_key in violations:

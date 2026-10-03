@@ -9,7 +9,12 @@
     "typecheck": "npm --workspace uis/website run typecheck",
     "dev:backoffice": "npm --workspace uis/backoffice run dev",
     "build:backoffice": "npm --workspace uis/backoffice run build",
-    "typecheck:backoffice": "npm --workspace uis/backoffice run typecheck"
+    "typecheck:backoffice": "npm --workspace uis/backoffice run typecheck",
+    "test:shared": "npm --workspace packages/shared run test"
   },
-  "workspaces": ["uis/website", "uis/backoffice"]
+  "workspaces": [
+    "packages/shared",
+    "uis/website",
+    "uis/backoffice"
+  ]
 }

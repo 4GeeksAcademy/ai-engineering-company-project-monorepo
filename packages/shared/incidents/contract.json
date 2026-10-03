@@ -1,0 +1,76 @@
+{
+  "$comment": "Single source of truth for the incident domain rules. Read by incidents_analyzer (Python: CLI script + API) and by the TypeScript in types/incidents.ts (backoffice). Change a rule here, never in a copy.",
+  "categories": [
+    "TECHNICAL",
+    "BILLING",
+    "ACCESS",
+    "HR_QUERY",
+    "COMPLAINT"
+  ],
+  "statuses": [
+    "open",
+    "in_progress",
+    "resolved",
+    "discarded"
+  ],
+  "origins": [
+    "customer",
+    "branch",
+    "internal"
+  ],
+  "defaultBranch": "central",
+  "transitions": {
+    "open": [
+      "in_progress",
+      "discarded"
+    ],
+    "in_progress": [
+      "resolved",
+      "open",
+      "discarded"
+    ],
+    "resolved": [
+      "open"
+    ],
+    "discarded": [
+      "open"
+    ]
+  },
+  "editableStatuses": [
+    "open",
+    "in_progress"
+  ],
+  "csvStatuses": [
+    "OPEN",
+    "CLOSED",
+    "DISCARDED"
+  ],
+  "csvStatusMap": {
+    "OPEN": "open",
+    "CLOSED": "resolved",
+    "DISCARDED": "discarded"
+  },
+  "csvCategoryMap": {
+    "TECHNICAL": "TECHNICAL",
+    "BILLING": "BILLING",
+    "ACCESS": "ACCESS",
+    "HR_QUERY": "HR_QUERY",
+    "COMPLAINT": "COMPLAINT"
+  },
+  "patterns": {
+    "id": "^NXV-\\d{6}$",
+    "agentId": "^AGT-\\d{2}$"
+  },
+  "limits": {
+    "titleMin": 3,
+    "titleMax": 120,
+    "branchMax": 60,
+    "clientCompanyMax": 120,
+    "descriptionMin": 5,
+    "descriptionMax": 1000,
+    "discardReasonMin": 5,
+    "discardReasonMax": 300,
+    "scoreMin": 1,
+    "scoreMax": 5
+  }
+}

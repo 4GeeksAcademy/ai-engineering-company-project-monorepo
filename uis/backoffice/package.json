@@ -9,12 +9,14 @@
     "start": "next start -p 5174",
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "node e2e/suppliers.e2e.mjs",
+    "e2e:incidents": "node e2e/incidents.e2e.mjs",
     "e2e:register": "node e2e/register.e2e.mjs",
     "e2e:profile": "node e2e/profile.e2e.mjs",
     "e2e:guard": "node e2e/guard.e2e.mjs",
     "e2e:token": "node e2e/token.e2e.mjs"
   },
   "dependencies": {
+    "@repo/shared-types": "*",
     "autoprefixer": "^10.6.1",
     "lucide-react": "^1.47.0",
     "next": "^16.3.8",

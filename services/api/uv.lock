@@ -463,7 +463,7 @@ wheels = [
 [[package]]
 name = "incidents-analyzer"
 version = "0.1.0"
-source = { editable = "../../packages/incidents_analyzer" }
+source = { editable = "../../packages/shared/incidents_analyzer" }
 
 [[package]]
 name = "iniconfig"
@@ -514,7 +514,7 @@ dev = [
 requires-dist = [
     { name = "email-validator", specifier = ">=2.0" },
     { name = "fastapi", specifier = ">=0.115" },
-    { name = "incidents-analyzer", editable = "../../packages/incidents_analyzer" },
+    { name = "incidents-analyzer", editable = "../../packages/shared/incidents_analyzer" },
     { name = "libpass", extras = ["bcrypt"], specifier = ">=1.9" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3" },

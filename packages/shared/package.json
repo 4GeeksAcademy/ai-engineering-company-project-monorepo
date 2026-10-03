@@ -5,11 +5,18 @@
   "description": "Shared types for AI Engineering transversal projects",
   "main": "types/index.ts",
   "types": "types/index.ts",
-  "scripts": {},
+  "scripts": {
+    "test": "node --test \"test/*.test.ts\""
+  },
   "keywords": [
     "types",
     "shared"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "exports": {
+    ".": "./types/index.ts",
+    "./incidents": "./types/incidents.ts",
+    "./incidents/contract.json": "./incidents/contract.json"
+  }
 }
