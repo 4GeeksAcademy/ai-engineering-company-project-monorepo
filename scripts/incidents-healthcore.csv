@@ -1,0 +1,101 @@
+incident_id,date,clinic_id,country,category,description,status,patient_id,satisfaction_score
+HC-000071,2026-03-15,US-GA-03,US,ADMINISTRATIVE,Insurance card on file was outdated and not flagged at check-in.,DISCARDED,PAT-100071,
+HC-000060,2026-03-04,UK-LON-01,UK,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,CLOSED,PAT-100060,5
+HC-000099,2026-03-15,US-TX-01,US,ADMINISTRATIVE,Insurance card on file was outdated and not flagged at check-in.,OPEN,,
+HC-000062,2026-03-06,UK-MAN-01,UK,ADMINISTRATIVE,Paperwork listed the wrong clinic location for a follow-up visit.,CLOSED,PAT-100062,5
+HC-000015,2026-03-15,US-GA-01,US,CLINICAL_CARE,Medication change was made without a discussion of side effects.,CLOSED,PAT-100015,2
+HC-000052,2026-03-24,US-GA-02,US,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,CLOSED,PAT-100052,4
+HC-000061,2026-03-05,US-GA-02,US,BILLING,Insurance copay was charged twice for the same consultation.,DISCARDED,PAT-100061,
+HC-000035,2026-03-07,US-GA-03,US,ADMINISTRATIVE,Insurance card on file was outdated and not flagged at check-in.,CLOSED,PAT-100035,4
+HC-000026,2026-03-26,UK-MAN-01,UK,ACCESSIBILITY,Hearing loop was not working during the consultation.,CLOSED,PAT-100026,4
+HC-000020,2026-03-20,US-TX-03,US,BILLING,Explanation of benefits did not match the amount billed after the visit.,CLOSED,PAT-100020,5
+HC-000016,2026-03-16,UK-LON-02,UK,ADMINISTRATIVE,Medical records request took longer than the stated ten-day window.,OPEN,PAT-100016,
+HC-000042,2026-03-14,US-GA-01,US,BILLING,Unexpected facility fee appeared on a statement for a routine check-up.,CLOSED,PAT-100042,4
+HC-000078,2026-03-22,UK-LON-01,UK,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,DISCARDED,PAT-100078,
+HC-000027,2026-03-27,UK-LON-01,UK,ADMINISTRATIVE,Insurance card on file was outdated and not flagged at check-in.,CLOSED,PAT-100027,4
+HC-000025,2026-03-25,UK-LON-02,UK,ACCESSIBILITY,"Clinic entrance ramp was blocked, so a wheelchair user could not enter.",CLOSED,PAT-100025,3
+HC-000076,2026-03-20,US-FL-02,US,ACCESSIBILITY,No Spanish-speaking coordinator was available at the Florida clinic.,CLOSED,PAT-100076,4
+HC-000024,2026-03-24,US-GA-01,US,BILLING,Explanation of benefits did not match the amount billed after the visit.,DISCARDED,PAT-100024,
+HC-000058,2026-03-02,US-FL-02,US,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,OPEN,PAT-100058,
+HC-000055,2026-03-27,US-TX-02,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,CLOSED,PAT-100055,4
+HC-000012,2026-03-12,US-FL-01,US,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,OPEN,PAT-100012,
+HC-000067,2026-03-11,US-FL-02,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100067,
+HC-000040,2026-03-12,UK-LON-02,UK,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,CLOSED,PAT-100040,1
+HC-000005,2026-03-05,US-FL-03,US,BILLING,Insurance copay was charged twice for the same consultation.,OPEN,PAT-100005,
+HC-000030,2026-03-02,US-FL-01,US,ADMINISTRATIVE,Paperwork listed the wrong clinic location for a follow-up visit.,CLOSED,PAT-100030,4
+HC-000038,2026-03-10,UK-MAN-01,UK,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,CLOSED,PAT-100038,5
+HC-000043,2026-03-15,US-GA-02,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100043,
+HC-000072,2026-03-16,US-TX-01,US,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,CLOSED,PAT-100072,3
+HC-000097,2026-03-13,US-GA-02,US,OTHER,Patient asked for a category that is not in the HealthCore list.,OPEN,PAT-100097,
+HC-000050,2026-03-22,US-FL-03,US,BILLING,Unexpected facility fee appeared on a statement for a routine check-up.,CLOSED,PAT-100050,3
+HC-000023,2026-03-23,UK-MAN-01,UK,BILLING,UK private invoice listed a procedure the clinician said was included.,DISCARDED,PAT-100023,
+HC-000054,2026-03-26,UK-LON-01,UK,ACCESSIBILITY,Hearing loop was not working during the consultation.,CLOSED,PAT-100054,1
+HC-000029,2026-03-01,US-TX-03,US,BILLING,Insurance copay was charged twice for the same consultation.,OPEN,PAT-100029,
+HC-000011,2026-03-11,UK-MAN-01,UK,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100011,
+HC-000049,2026-03-21,US-FL-02,US,ACCESSIBILITY,"Clinic entrance ramp was blocked, so a wheelchair user could not enter.",DISCARDED,PAT-100049,
+HC-000075,2026-03-19,US-FL-01,US,ACCESSIBILITY,Written after-visit summary was not offered in the patient's preferred language.,CLOSED,PAT-100075,4
+HC-000095,2026-03-11,US-XX-99,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100095,
+HC-000001,2026-03-01,US-TX-02,US,ACCESSIBILITY,"Clinic entrance ramp was blocked, so a wheelchair user could not enter.",CLOSED,PAT-100001,4
+HC-000003,2026-03-03,US-FL-01,US,CLINICAL_CARE,Medication change was made without a discussion of side effects.,OPEN,PAT-100003,
+HC-000056,2026-03-28,US-TX-03,US,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,CLOSED,PAT-100056,4
+HC-000085,2026-03-01,US-FL-02,US,APPOINTMENT,Patient waited over an hour past the scheduled appointment time.,CLOSED,PAT-100085,4
+HC-000093,2026-03-09,UK-LON-01,UK,APPOINTMENT,Patient waited over an hour past the scheduled appointment time.,CLOSED,PAT-100093,3
+HC-000006,2026-03-06,US-GA-01,US,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,OPEN,PAT-100006,
+HC-000004,2026-03-04,UK-LON-02,UK,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,OPEN,PAT-100004,
+HC-000047,2026-03-19,US-TX-03,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,CLOSED,PAT-100047,5
+HC-000074,2026-03-18,US-TX-03,US,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,CLOSED,PAT-100074,4
+HC-000033,2026-03-05,UK-LON-01,UK,BILLING,Insurance copay was charged twice for the same consultation.,CLOSED,PAT-100033,4
+HC-000063,2026-03-07,UK-LON-01,UK,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,DISCARDED,PAT-100063,
+HC-000089,2026-03-05,US-GA-03,US,APPOINTMENT,Patient waited over an hour past the scheduled appointment time.,DISCARDED,PAT-100089,
+HC-000044,2026-03-16,US-GA-03,US,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,CLOSED,PAT-100044,4
+HC-000053,2026-03-25,US-GA-03,US,BILLING,Insurance copay was charged twice for the same consultation.,OPEN,PAT-100053,
+HC-000022,2026-03-22,US-FL-02,US,ACCESSIBILITY,Hearing loop was not working during the consultation.,CLOSED,PAT-100022,5
+HC-000046,2026-03-18,UK-LON-02,UK,CLINICAL_CARE,Concern that symptoms were dismissed during the consultation.,CLOSED,PAT-100046,4
+HC-000079,2026-03-23,US-GA-02,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,CLOSED,PAT-100079,4
+HC-000066,2026-03-10,US-FL-01,US,ADMINISTRATIVE,Paperwork listed the wrong clinic location for a follow-up visit.,OPEN,PAT-100066,
+HC-000019,2026-03-19,US-TX-02,US,ACCESSIBILITY,Written after-visit summary was not offered in the patient's preferred language.,OPEN,PAT-100019,
+HC-000064,2026-03-08,UK-LON-02,UK,ACCESSIBILITY,No Spanish-speaking coordinator was available at the Florida clinic.,OPEN,PAT-100064,
+HC-000082,2026-03-26,US-TX-02,US,APPOINTMENT,Cancellation was processed late and the slot was not offered to the waitlist.,OPEN,PAT-100082,
+HC-000036,2026-03-08,UK-LON-01,UK,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,CLOSED,PAT-100036,3
+HC-000084,2026-03-28,UK-LON-01,UK,ACCESSIBILITY,No Spanish-speaking coordinator was available at the Florida clinic.,OPEN,PAT-100084,
+HC-000007,2026-03-07,UK-LON-02,UK,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,CLOSED,PAT-100007,3
+HC-000070,2026-03-14,US-GA-02,US,CLINICAL_CARE,Concern that symptoms were dismissed during the consultation.,CLOSED,PAT-100070,4
+HC-000008,2026-03-08,UK-MAN-01,UK,ACCESSIBILITY,No Spanish-speaking coordinator was available at the Florida clinic.,OPEN,PAT-100008,
+HC-000077,2026-03-21,US-FL-03,US,ACCESSIBILITY,"Clinic entrance ramp was blocked, so a wheelchair user could not enter.",CLOSED,PAT-100077,3
+HC-000018,2026-03-18,US-TX-01,US,BILLING,Unexpected facility fee appeared on a statement for a routine check-up.,CLOSED,PAT-100018,2
+HC-000014,2026-03-14,US-FL-03,US,ACCESSIBILITY,Hearing loop was not working during the consultation.,OPEN,PAT-100014,
+HC-000081,2026-03-25,US-TX-01,US,ADMINISTRATIVE,Specialist referral letter was missing required clinic details.,CLOSED,PAT-100081,5
+HC-000087,2026-03-03,UK-LON-01,UK,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,CLOSED,PAT-100087,3
+HC-000068,2026-03-12,US-FL-03,US,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,OPEN,PAT-100068,
+HC-000091,2026-03-07,UK-LON-02,UK,BILLING,UK private invoice listed a procedure the clinician said was included.,CLOSED,PAT-100091,4
+HC-000057,2026-03-01,UK-LON-01,UK,APPOINTMENT,Patient waited over an hour past the scheduled appointment time.,CLOSED,PAT-100057,4
+HC-000021,2026-03-21,US-FL-01,US,CLINICAL_CARE,Follow-up for lab results was delayed beyond the promised window.,OPEN,PAT-100021,
+HC-000037,2026-03-09,UK-LON-02,UK,ADMINISTRATIVE,Specialist referral letter was missing required clinic details.,CLOSED,PAT-100037,4
+HC-000048,2026-03-20,US-FL-01,US,BILLING,Explanation of benefits did not match the amount billed after the visit.,OPEN,PAT-100048,
+HC-000032,2026-03-04,UK-MAN-01,UK,BILLING,Explanation of benefits did not match the amount billed after the visit.,CLOSED,PAT-100032,4
+HC-000009,2026-03-09,US-TX-01,US,APPOINTMENT,Patient waited over an hour past the scheduled appointment time.,DISCARDED,PAT-100009,
+HC-000045,2026-03-17,US-TX-01,US,ACCESSIBILITY,"Clinic entrance ramp was blocked, so a wheelchair user could not enter.",CLOSED,PAT-100045,2
+HC-000094,2026-03-10,US-FL-02,US,ADMINISTRATIVE,Paperwork listed the wrong clinic location for a follow-up visit.,OPEN,PAT-100094,
+HC-000096,2026-03-12,US-TX-01,UK,BILLING,Explanation of benefits did not match the amount billed after the visit.,OPEN,PAT-100096,
+HC-000065,2026-03-09,UK-MAN-01,UK,BILLING,Insurance copay was charged twice for the same consultation.,OPEN,PAT-100065,
+HC-000028,2026-03-28,US-TX-02,US,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,OPEN,PAT-100028,
+HC-000069,2026-03-13,UK-LON-01,UK,ADMINISTRATIVE,Specialist referral letter was missing required clinic details.,DISCARDED,PAT-100069,
+HC-000088,2026-03-04,UK-LON-02,UK,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,CLOSED,PAT-100088,2
+HC-000013,2026-03-13,US-FL-02,US,CLINICAL_CARE,Follow-up for lab results was delayed beyond the promised window.,CLOSED,PAT-100013,3
+HC-000073,2026-03-17,US-TX-02,US,ADMINISTRATIVE,Specialist referral letter was missing required clinic details.,CLOSED,PAT-100073,3
+HC-000080,2026-03-24,US-GA-03,US,ADMINISTRATIVE,Medical records request took longer than the stated ten-day window.,CLOSED,PAT-100080,3
+HC-000090,2026-03-06,US-TX-01,US,BILLING,Unexpected facility fee appeared on a statement for a routine check-up.,DISCARDED,PAT-100090,
+HC-000002,2026-03-02,UK-MAN-01,UK,CLINICAL_CARE,Concern that symptoms were dismissed during the consultation.,CLOSED,PAT-100002,5
+HC-000010,2026-03-10,UK-LON-02,UK,CLINICAL_CARE,Concern that symptoms were dismissed during the consultation.,CLOSED,PAT-100010,5
+HC-000098,2026-03-14,UK-MAN-01,UK,ACCESSIBILITY,wait,OPEN,PAT-100098,
+HC-000059,2026-03-03,US-FL-03,US,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100059,
+HC-000039,2026-03-11,US-FL-01,US,BILLING,UK private invoice listed a procedure the clinician said was included.,OPEN,PAT-100039,
+HC-000083,2026-03-27,US-TX-03,US,CLINICAL_CARE,Medication change was made without a discussion of side effects.,CLOSED,PAT-100083,1
+HC-000100,2026-03-16,UK-LON-02,UK,CLINICAL_CARE,Patient reported that the treatment plan was not explained before discharge.,CLOSED,PAT-100100,
+HC-000017,2026-03-17,US-GA-03,US,BILLING,Insurance copay was charged twice for the same consultation.,CLOSED,PAT-100017,4
+HC-000051,2026-03-23,UK-LON-01,UK,APPOINTMENT,No-show follow-up call never reached the patient after a missed visit.,OPEN,PAT-100051,
+HC-000034,2026-03-06,US-GA-02,US,BILLING,Unexpected facility fee appeared on a statement for a routine check-up.,CLOSED,PAT-100034,2
+HC-000031,2026-03-03,US-FL-02,US,ACCESSIBILITY,Written after-visit summary was not offered in the patient's preferred language.,CLOSED,PAT-100031,3
+HC-000041,2026-03-13,US-FL-03,US,BILLING,Insurance copay was charged twice for the same consultation.,DISCARDED,PAT-100041,
+HC-000092,2026-03-08,US-TX-03,US,APPOINTMENT,Same-day booking was unavailable; next open slot was more than two weeks away.,DISCARDED,PAT-100092,
+HC-000086,2026-03-02,US-FL-03,US,ACCESSIBILITY,Hearing loop was not working during the consultation.,DISCARDED,PAT-100086,
