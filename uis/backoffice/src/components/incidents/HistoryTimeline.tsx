@@ -5,7 +5,7 @@ const FIELD_LABELS: Record<string, string> = {
   description: "descripción",
   category: "categoría",
   origin: "origen",
-  branch: "sucursal",
+  branch: "oficina",
   client_company: "empresa cliente",
   agent_id: "agente",
   customer_email: "email del cliente",

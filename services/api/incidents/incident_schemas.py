@@ -23,15 +23,11 @@ from pydantic import (
     EmailStr,
     Field,
     StringConstraints,
-    ValidationInfo,
-    field_validator,
     model_validator,
 )
 
-from incidents_analyzer.rules import normalize_branch
 from incidents_analyzer.contract import (
     AGENT_ID_PATTERN,
-    BRANCH_MAX,
     CLIENT_COMPANY_MAX,
     DESCRIPTION_MAX,
     DESCRIPTION_MIN,
@@ -44,10 +40,12 @@ from incidents_analyzer.contract import (
     STATUSES,
     TITLE_MAX,
     TITLE_MIN,
-    VALID_CATEGORIES,
+    BRANCHES,
+    CATEGORIES,
 )
 
-IncidentCategory = StrEnum("IncidentCategory", {name: name for name in VALID_CATEGORIES})
+IncidentCategory = StrEnum("IncidentCategory", {name: name for name in CATEGORIES})
+IncidentBranch = StrEnum("IncidentBranch", {name: name for name in BRANCHES})
 IncidentStatus = StrEnum("IncidentStatus", {name: name for name in STATUSES})
 IncidentOrigin = StrEnum("IncidentOrigin", {name: name for name in ORIGINS})
 
@@ -55,7 +53,6 @@ _Text = StringConstraints(strip_whitespace=True)
 IncidentId = Annotated[str, _Text, StringConstraints(pattern=ID_PATTERN.pattern)]
 Title = Annotated[str, _Text, StringConstraints(min_length=TITLE_MIN, max_length=TITLE_MAX)]
 Description = Annotated[str, _Text, StringConstraints(min_length=DESCRIPTION_MIN, max_length=DESCRIPTION_MAX)]
-Branch = Annotated[str, _Text, StringConstraints(min_length=1, max_length=BRANCH_MAX)]
 ClientCompany = Annotated[str, _Text, StringConstraints(min_length=1, max_length=CLIENT_COMPANY_MAX)]
 AgentId = Annotated[str, _Text, StringConstraints(pattern=AGENT_ID_PATTERN.pattern)]
 DiscardReason = Annotated[
@@ -74,7 +71,7 @@ def mask_email(email: str) -> str:
 
 
 class _Content(BaseModel):
-    """What the reporter provides. Field order matters: ``origin`` before ``branch``."""
+    """What the reporter provides."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -82,15 +79,10 @@ class _Content(BaseModel):
     description: Description
     category: IncidentCategory
     origin: IncidentOrigin
-    branch: Branch
+    branch: IncidentBranch
     client_company: ClientCompany | None = None
     agent_id: AgentId | None = None
     customer_email: EmailStr | None = None
-
-    @field_validator("branch")
-    @classmethod
-    def branch_matches_origin(cls, value: str, info: ValidationInfo) -> str:
-        return normalize_branch(value, info.data.get("origin"))
 
 
 class IncidentCreate(_Content):
@@ -107,7 +99,7 @@ class IncidentUpdate(BaseModel):
     description: Description | None = None
     category: IncidentCategory | None = None
     origin: IncidentOrigin | None = None
-    branch: Branch | None = None
+    branch: IncidentBranch | None = None
     client_company: ClientCompany | None = None
     agent_id: AgentId | None = None
     customer_email: EmailStr | None = None
@@ -242,7 +234,7 @@ class IncidentSummary(BaseModel):
     category_counts: dict[str, int]
     category_percentages: dict[str, float]
     origin_counts: dict[str, int]
-    # Per branch ("sede"); ``central`` is always present, so an empty database is not an empty object.
+    # Per branch ("sede"): the four offices, always all present (0 when none).
     branch_counts: dict[str, int]
     branch_percentages: dict[str, float]
     # open + in_progress, per category: the backlog.

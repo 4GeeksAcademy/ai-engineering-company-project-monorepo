@@ -13,12 +13,12 @@ URL = "/api/incidents"
 
 # id -> (category, origin, branch, status)
 CASES = {
-    "NXV-000001": ("TECHNICAL", "customer", "central", "open"),
-    "NXV-000002": ("BILLING", "customer", "central", "in_progress"),
-    "NXV-000003": ("ACCESS", "branch", "Valencia", "open"),
-    "NXV-000004": ("TECHNICAL", "branch", "Madrid", "resolved"),
-    "NXV-000005": ("HR_QUERY", "internal", "central", "discarded"),
-    "NXV-000006": ("COMPLAINT", "branch", "Valencia", "in_progress"),
+    "NXV-000001": ("technical_failure", "customer", "central", "open"),
+    "NXV-000002": ("process_error", "customer", "central", "in_progress"),
+    "NXV-000003": ("client_complaint", "branch", "valencia_operations", "open"),
+    "NXV-000004": ("technical_failure", "branch", "miami_office", "resolved"),
+    "NXV-000005": ("staff_issue", "internal", "central", "discarded"),
+    "NXV-000006": ("sla_breach", "branch", "valencia_operations", "in_progress"),
 }
 
 
@@ -76,23 +76,25 @@ def test_filter_by_origin(client, origin):
     assert ids(client.get(URL, params={"origin": origin})) == expected(origin={origin}) != set()
 
 
-@pytest.mark.parametrize("branch", ["central", "Valencia", "Madrid"])
+@pytest.mark.parametrize("branch", ["central", "valencia_operations", "miami_office"])
 def test_filter_by_branch(client, branch):
     assert ids(client.get(URL, params={"branch": branch})) == expected(branch={branch}) != set()
 
 
-@pytest.mark.parametrize("category", ["TECHNICAL", "BILLING", "ACCESS", "HR_QUERY", "COMPLAINT"])
+@pytest.mark.parametrize("category", ["technical_failure", "process_error", "client_complaint", "staff_issue", "sla_breach"])
 def test_filter_by_category(client, category):
     assert ids(client.get(URL, params={"category": category})) == expected(category={category}) != set()
 
 
-def test_branch_filter_ignores_case_and_surrounding_spaces(client):
-    assert ids(client.get(URL, params={"branch": "  vALENCIA "})) == {"NXV-000003", "NXV-000006"}
-    assert ids(client.get(URL, params={"branch": "CENTRAL"})) == expected(branch={"central"})
+def test_remote_is_a_valid_filter_even_with_no_incidents(client):
+    assert client.get(URL, params={"branch": "remote"}).json()["total"] == 0
 
 
-def test_branch_filter_is_exact_not_a_substring(client):
-    assert ids(client.get(URL, params={"branch": "Valen"})) == set()
+@pytest.mark.parametrize("branch", ["Valencia", "valencia", "CENTRAL", "  central ", "Valencia — Operaciones", "x" * 61])
+def test_the_branch_filter_takes_the_exact_value_of_an_office(client, branch):
+    response = client.get(URL, params={"branch": branch})
+    assert response.status_code == 400 and response.json()["detail"][0]["field"] == "branch"
+    assert "must be one of: 'central', 'valencia_operations', 'miami_office' or 'remote'" in response.json()["message"]
 
 
 # --- several values of the same filter (OR) ----------------------------------------------------
@@ -100,7 +102,7 @@ def test_branch_filter_is_exact_not_a_substring(client):
 def test_a_repeated_parameter_matches_any_of_the_values(client):
     assert ids(client.get(URL, params={"status": ["open", "in_progress"]})) == expected(status={"open", "in_progress"})
     assert ids(client.get(URL, params={"origin": ["branch", "internal"]})) == expected(origin={"branch", "internal"})
-    assert ids(client.get(URL, params={"category": ["TECHNICAL", "ACCESS"]})) == expected(category={"TECHNICAL", "ACCESS"})
+    assert ids(client.get(URL, params={"category": ["technical_failure", "client_complaint"]})) == expected(category={"technical_failure", "client_complaint"})
 
 
 # --- combinations (AND) ------------------------------------------------------------------------
@@ -109,12 +111,12 @@ def test_a_repeated_parameter_matches_any_of_the_values(client):
     "params,wanted",
     [
         ({"status": "open", "origin": "branch"}, {"status": {"open"}, "origin": {"branch"}}),
-        ({"status": "in_progress", "branch": "Valencia"}, {"status": {"in_progress"}, "branch": {"Valencia"}}),
-        ({"origin": "customer", "category": "TECHNICAL"}, {"origin": {"customer"}, "category": {"TECHNICAL"}}),
-        ({"category": "TECHNICAL", "branch": "central", "status": "open"}, {"category": {"TECHNICAL"}, "branch": {"central"}, "status": {"open"}}),
+        ({"status": "in_progress", "branch": "valencia_operations"}, {"status": {"in_progress"}, "branch": {"valencia_operations"}}),
+        ({"origin": "customer", "category": "technical_failure"}, {"origin": {"customer"}, "category": {"technical_failure"}}),
+        ({"category": "technical_failure", "branch": "central", "status": "open"}, {"category": {"technical_failure"}, "branch": {"central"}, "status": {"open"}}),
         (
-            {"status": ["open", "resolved"], "origin": ["branch", "customer"], "branch": "Madrid", "category": "TECHNICAL"},
-            {"status": {"open", "resolved"}, "origin": {"branch", "customer"}, "branch": {"Madrid"}, "category": {"TECHNICAL"}},
+            {"status": ["open", "resolved"], "origin": ["branch", "customer"], "branch": "miami_office", "category": "technical_failure"},
+            {"status": {"open", "resolved"}, "origin": {"branch", "customer"}, "branch": {"miami_office"}, "category": {"technical_failure"}},
         ),
     ],
 )
@@ -129,7 +131,7 @@ def test_a_combination_without_matches_is_an_empty_page_not_an_error(client):
 
 
 def test_blank_filters_are_ignored(client):
-    assert ids(client.get(URL, params={"branch": "", "q": "  "})) == set(CASES)
+    assert ids(client.get(URL, params={"q": "  "})) == set(CASES)
 
 
 # --- invalid values ----------------------------------------------------------------------------
@@ -141,7 +143,7 @@ def test_blank_filters_are_ignored(client):
         ({"status": "closed"}, "status"),  # the CSV vocabulary is not accepted
         ({"origin": "web"}, "origin"),
         ({"category": "technical"}, "category"),
-        ({"branch": "x" * 61}, "branch"),
+        ({"branch": "Valencia"}, "branch"),
     ],
 )
 def test_values_outside_the_allowed_lists_are_rejected_naming_the_filter(client, params, field):

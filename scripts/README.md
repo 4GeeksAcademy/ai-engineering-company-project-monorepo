@@ -34,4 +34,4 @@ Loads the historical helpdesk export into the incident manager's database (`serv
   services/api/.venv/bin/python scripts/seed_incidents.py --reset      # wipe the incidents first
   services/api/.venv/bin/python scripts/seed_incidents.py --csv other.csv --db /tmp/incidents.json
   ```
-- **Details and mapping table**: [`services/api/README.md`](../services/api/README.md#incident-manager). The CONTEXT does not define the maps; they live in [`packages/shared/incidents/contract.json`](../packages/shared/incidents/contract.json).
+- **Details and mapping table**: [`services/api/README.md`](../services/api/README.md#incident-manager). The maps are those of the CONTEXT (`CONTEXT-nexova.es.md`); they live in [`packages/shared/incidents/contract.json`](../packages/shared/incidents/contract.json).

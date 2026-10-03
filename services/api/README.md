@@ -22,10 +22,10 @@ Stored in TinyDB (`incidents/db.json`, gitignored), keyed by `id` (`NXV-000101`,
 | `id` | auto (`NXV-` + 6 digits); never accepted from the client |
 | `title` | required, 3-120 chars |
 | `description` | required, 5-1000 chars |
-| `category` | required: `TECHNICAL`, `BILLING`, `ACCESS`, `HR_QUERY`, `COMPLAINT` (as in [CONTEXT-nexova.md](../../scripts/CONTEXT-nexova.md)) |
+| `category` | required, exactly one of `technical_failure`, `process_error`, `client_complaint`, `candidate_issue`, `staff_issue`, `sla_breach`, `data_quality`, `other` (see [CONTEXT-nexova.es.md](../../CONTEXT-nexova.es.md-Gestor%20de%20Incidencias%20Centralizado)). Filtering by `sla_breach` is just `?category=sla_breach` |
 | `status` | `open`, `in_progress`, `resolved`, `discarded`; `open` on creation, changed only through the status endpoint |
 | `origin` | required: `customer`, `branch`, `internal` |
-| `branch` | required, ≤ 60 chars; **`central` when it does not apply** (case-insensitive, stored as `central`). If `origin` is `branch` it must name a real branch, not `central` |
+| `branch` | required, exactly one of the four offices: `central` (Central — Sede Valencia; also when no office applies), `valencia_operations` (Valencia — Operaciones), `miami_office` (Miami Office), `remote` (Remoto, employee with no fixed office). Any origin can use any office |
 | `created_at`, `updated_at` | auto (UTC); `updated_at` moves on every edit or status change |
 | `client_company`, `agent_id` (`AGT-07`), `customer_email` | optional extras from the helpdesk CSV (the email is sensitive: masked in lists, never searchable, never echoed in errors) |
 | `satisfaction_score` | 1-5, optional, only on `resolved` |
@@ -74,7 +74,7 @@ Anything else is `409` with a message that says why (`cannot go from open to res
 POST /api/incidents   {"title": "ab", "category": "SPAM", "origin": "web", "branch": "central"}
 
 400 {
-  "message": "The request is not valid: title must have at least 3 characters; description is required; category must be one of: 'TECHNICAL', 'BILLING', 'ACCESS', 'HR_QUERY' or 'COMPLAINT'; origin must be one of: 'customer', 'branch' or 'internal'.",
+  "message": "The request is not valid: title must have at least 3 characters; description is required; category must be one of: 'technical_failure', 'process_error', 'client_complaint', 'candidate_issue', 'staff_issue', 'sla_breach', 'data_quality' or 'other'; origin must be one of: 'customer', 'branch' or 'internal'.",
   "detail": [
     {"field": "title", "loc": ["body", "title"], "msg": "title must have at least 3 characters", "type": "string_too_short"},
     "…"
@@ -94,25 +94,25 @@ Every problem is reported at once, and a `400` never quotes what was sent (it co
 .venv/bin/python ../../scripts/seed_incidents.py --csv other.csv --db /tmp/incidents.json
 ```
 
-Each row passes the shared `validate_record` (the CSV rules) and is then transformed and validated again by `IncidentRecord`. **Invalid rows are not inserted**; they are listed with line, id and the rules they break, never the email (with the provided file: 96 inserted, 4 rejected — lines 18, 44, 87 and 91). The CSV predates this model, so (maps in the shared contract; the CONTEXT does not define them):
+Each row passes the shared `validate_record` (the CSV rules) and is then transformed and validated again by `IncidentRecord`. **Invalid rows are not inserted**; they are listed with line, id and the rules they break, never the email (with the provided file: 96 inserted, 4 rejected — lines 18, 44, 87 and 91). The CSV predates this model, so (maps in the shared contract, as defined by the CONTEXT):
 
 | CSV | Incident |
 | --- | --- |
-| `ticket_id` | `id` |
-| `description` | `title` (shortened at a word boundary if > 120; `description` keeps the full text) |
+| `ticket_id` | **not stored**: it only controls duplicates (kept in the `seed_imports` table; without a `ticket_id`, `title + created_at` is used). The incident gets its own `id` |
+| `description` | `title` (its first 120 characters, trimmed; a row whose title would be empty is discarded) and `description` (copied literally) |
 | `date` | `created_at` and `updated_at` (00:00 UTC) |
 | `status` `OPEN / CLOSED / DISCARDED` | `open / resolved / discarded` |
-| `category` | same value (`csvCategoryMap`, identity today) |
+| `category` | `TECHNICAL`, `ACCESS` → `technical_failure`; `BILLING`, `HR_QUERY` → `process_error`; `COMPLAINT` → `client_complaint` |
 | `location` / `ubicacion` (optional column) | `branch`; the provided CSV has none, so `central` |
 | — | `origin` = `customer` |
 
-Idempotent: an id already stored is skipped and never overwritten (later work on an incident survives a re-run). At the end the script compares `/api/incidents/summary` with the metrics expected from the transformed CSV (computed with the shared `analyze`) and exits `1` on any difference; with the provided file: 96 incidents, 27 open / 56 resolved / 13 discarded, satisfaction 3.84 over 56. The comparison is skipped when the database also holds incidents that are not from the CSV. Unlike suppliers, the incidents database is **not** seeded on startup — run the seed once.
+Idempotent: an id already stored is skipped and never overwritten (later work on an incident survives a re-run). At the end the script compares `/api/incidents/summary` with the metrics expected from the transformed CSV (computed with the shared `analyze`) and exits `1` on any difference; with the provided file: 96 incidents, 27 open / 56 resolved / 13 discarded, `technical_failure` 49 / `process_error` 35 / `client_complaint` 12, satisfaction 3.84 over 56 (the figures of the CONTEXT). The comparison is skipped when the database also holds incidents that are not from the CSV. Unlike suppliers, the incidents database is **not** seeded on startup — run the seed once.
 
 Limitations: TinyDB and the id counter are single-process (see `incidents/incident_store.py`); a second API worker needs a real database.
 
 ### Shared logic
 
-The API owns no copy of the domain rules. The CSV validation (`validate_record`, `analyze`), the lifecycle helpers (`allowed_transitions`, `is_editable`), the origin/branch rule (`normalize_branch`) and the CSV → incident translation (`transform`) are imported from [`packages/shared/incidents_analyzer`](../../packages/shared/incidents_analyzer); the seed script and `scripts/analyze.py` use the same functions. What stays here is what needs the framework: the pydantic models, the store, the routes. `tests/test_shared_logic.py` fails if a rule is copied outside the shared package.
+The API owns no copy of the domain rules. The CSV validation (`validate_record`, `analyze`), the lifecycle helpers (`allowed_transitions`, `is_editable`), the office resolver (`branch_value`) and the CSV → incident translation (`transform`) are imported from [`packages/shared/incidents_analyzer`](../../packages/shared/incidents_analyzer); the seed script and `scripts/analyze.py` use the same functions. What stays here is what needs the framework: the pydantic models, the store, the routes. `tests/test_shared_logic.py` fails if a rule is copied outside the shared package.
 
 ## Authentication
 

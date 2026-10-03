@@ -34,15 +34,27 @@ def test_resolved_and_discarded_are_final():
     assert not any(rules.is_editable(s) for s in finals)
 
 
-def test_central_is_normalised_whatever_its_case():
-    assert rules.normalize_branch("Central", "customer") == "central"
-    assert rules.normalize_branch("CENTRAL", None) == "central"
-    assert rules.normalize_branch("Valencia Centro", "internal") == "Valencia Centro"
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("central", "central"),
+        ("Central — Sede Valencia", "central"),
+        ("  VALENCIA_OPERATIONS ", "valencia_operations"),
+        ("Valencia — Operaciones", "valencia_operations"),
+        ("miami office", "miami_office"),
+        ("Miami Office", "miami_office"),
+        ("remote", "remote"),
+        ("Remoto (empleado sin sede fija)", "remote"),
+        ("Valencia", None),  # ambiguous: neither `central` nor `valencia_operations`
+        ("hq", None),
+        ("", None),
+    ],
+)
+def test_branch_value_resolves_a_value_or_a_display_name(text, expected):
+    assert rules.branch_value(text) == expected
 
 
-def test_an_incident_from_a_branch_must_name_it():
-    assert rules.normalize_branch("Valencia", "branch") == "Valencia"
-    with pytest.raises(ValueError, match="must name it"):
-        rules.normalize_branch("central", "branch")
-    with pytest.raises(ValueError):
-        rules.normalize_branch("CENTRAL", "branch")
+def test_there_are_exactly_four_offices_and_remote_is_not_central():
+    assert contract.BRANCHES == ("central", "valencia_operations", "miami_office", "remote")
+    assert len(set(contract.BRANCH_LABELS.values())) == 4
+    assert rules.branch_value("remote") != rules.branch_value("central")

@@ -1,11 +1,14 @@
 {
-  "$comment": "Single source of truth for the incident domain rules. Read by incidents_analyzer (Python: CLI script + API) and by the TypeScript in types/incidents.ts (backoffice). Change a rule here, never in a copy.",
+  "$comment": "Single source of truth for the incident domain rules (CONTEXT-nexova.es.md — Gestor de Incidencias Centralizado). Read by incidents_analyzer (Python: CLI scripts + API) and by types/incidents.ts (backoffice). `categories` and `branches` are the exact values the manager accepts; `csvCategories` / `csvStatuses` are the helpdesk CSV vocabulary (CSV analysis) and the csv*Map entries translate it. Change a rule here, never in a copy.",
   "categories": [
-    "TECHNICAL",
-    "BILLING",
-    "ACCESS",
-    "HR_QUERY",
-    "COMPLAINT"
+    "technical_failure",
+    "process_error",
+    "client_complaint",
+    "candidate_issue",
+    "staff_issue",
+    "sla_breach",
+    "data_quality",
+    "other"
   ],
   "statuses": [
     "open",
@@ -17,6 +20,24 @@
     "customer",
     "branch",
     "internal"
+  ],
+  "branches": [
+    {
+      "value": "central",
+      "label": "Central — Sede Valencia"
+    },
+    {
+      "value": "valencia_operations",
+      "label": "Valencia — Operaciones"
+    },
+    {
+      "value": "miami_office",
+      "label": "Miami Office"
+    },
+    {
+      "value": "remote",
+      "label": "Remoto (empleado sin sede fija)"
+    }
   ],
   "defaultBranch": "central",
   "transitions": {
@@ -45,12 +66,19 @@
     "CLOSED": "resolved",
     "DISCARDED": "discarded"
   },
+  "csvCategories": [
+    "TECHNICAL",
+    "BILLING",
+    "ACCESS",
+    "HR_QUERY",
+    "COMPLAINT"
+  ],
   "csvCategoryMap": {
-    "TECHNICAL": "TECHNICAL",
-    "BILLING": "BILLING",
-    "ACCESS": "ACCESS",
-    "HR_QUERY": "HR_QUERY",
-    "COMPLAINT": "COMPLAINT"
+    "TECHNICAL": "technical_failure",
+    "BILLING": "process_error",
+    "ACCESS": "technical_failure",
+    "HR_QUERY": "process_error",
+    "COMPLAINT": "client_complaint"
   },
   "patterns": {
     "id": "^NXV-\\d{6}$",
@@ -59,7 +87,6 @@
   "limits": {
     "titleMin": 3,
     "titleMax": 120,
-    "branchMax": 60,
     "clientCompanyMax": 120,
     "descriptionMin": 5,
     "descriptionMax": 1000,

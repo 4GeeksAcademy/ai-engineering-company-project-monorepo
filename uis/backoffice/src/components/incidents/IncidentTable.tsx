@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { CATEGORY_LABELS, ORIGIN_LABELS, type IncidentListItem, type IncidentStatus } from "@repo/shared-types";
+import { BRANCH_LABELS, CATEGORY_LABELS, ORIGIN_LABELS, type IncidentListItem, type IncidentStatus } from "@repo/shared-types";
 import type { SortField, SortOrder } from "../../lib/api";
 import RowStatusControl from "./RowStatusControl";
 
@@ -34,7 +34,7 @@ export default function IncidentTable({ items, sort, order, onSort, saving, fail
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Título</th>
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Categoría</th>
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Origen</th>
-            <th scope="col" className="px-4 py-3 uppercase tracking-wider">Sucursal</th>
+            <th scope="col" className="px-4 py-3 uppercase tracking-wider">Oficina</th>
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Estado</th>
             {sortable("created_at", "Creada")}
           </tr>
@@ -54,7 +54,7 @@ export default function IncidentTable({ items, sort, order, onSort, saving, fail
               <td className="max-w-sm truncate px-4 py-3" title={i.title}>{i.title}</td>
               <td className="whitespace-nowrap px-4 py-3">{CATEGORY_LABELS[i.category]}</td>
               <td className="whitespace-nowrap px-4 py-3 text-slate-400">{ORIGIN_LABELS[i.origin]}</td>
-              <td className="whitespace-nowrap px-4 py-3 text-slate-400">{i.branch}</td>
+              <td className="whitespace-nowrap px-4 py-3 text-slate-400">{BRANCH_LABELS[i.branch]}</td>
               <td className="px-4 py-3">
                 <RowStatusControl item={i} saving={saving[i.id]} failed={failedId === i.id} onChange={onChangeStatus} />
               </td>

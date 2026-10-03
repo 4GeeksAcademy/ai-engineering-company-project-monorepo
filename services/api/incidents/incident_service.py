@@ -12,7 +12,7 @@ from typing import Literal
 
 from pydantic import ValidationError
 
-from incidents_analyzer.contract import DEFAULT_BRANCH
+from incidents_analyzer.contract import BRANCHES
 
 from . import incident_lifecycle as lifecycle
 from . import incident_store as store
@@ -71,7 +71,7 @@ class IncidentFilters:
     statuses: tuple[str, ...] = ()
     categories: tuple[str, ...] = ()
     origins: tuple[str, ...] = ()
-    branch: str | None = None  # case-insensitive, exact
+    branch: str | None = None  # one of the four offices (see the contract)
     agent_id: str | None = None
     client_company: str | None = None  # case-insensitive "contains"
     q: str | None = None  # case-insensitive "contains" over id, title, description, client and branch
@@ -85,7 +85,7 @@ class IncidentFilters:
             return False
         if self.origins and doc["origin"] not in self.origins:
             return False
-        if self.branch and doc["branch"].casefold() != self.branch.casefold():
+        if self.branch and doc["branch"] != self.branch:
             return False
         if self.agent_id and doc["agent_id"] != self.agent_id:
             return False
@@ -251,7 +251,7 @@ def summarize(filters: IncidentFilters) -> IncidentSummary:
     status_counts = {s.value: 0 for s in IncidentStatus} | Counter(d["status"] for d in docs)
     category_counts = {c.value: 0 for c in IncidentCategory} | Counter(d["category"] for d in docs)
     origin_counts = {o.value: 0 for o in IncidentOrigin} | Counter(d["origin"] for d in docs)
-    branch_counts = {DEFAULT_BRANCH: 0} | dict(sorted(Counter(d["branch"] for d in docs).items(), key=lambda item: (-item[1], item[0])))
+    branch_counts = {branch: 0 for branch in BRANCHES} | Counter(d["branch"] for d in docs)
     active = Counter(d["category"] for d in docs if d["status"] in (IncidentStatus.open, IncidentStatus.in_progress))
     scores = [d["satisfaction_score"] for d in docs if d.get("satisfaction_score") is not None]
     distribution = Counter(scores)
@@ -279,4 +279,4 @@ def facets() -> IncidentFacets:
     def distinct(field: str) -> list[str]:
         return sorted({doc[field] for doc in docs if doc.get(field)}, key=str.casefold)
 
-    return IncidentFacets(branches=distinct("branch"), clients=distinct("client_company"), agents=distinct("agent_id"))
+    return IncidentFacets(branches=list(BRANCHES), clients=distinct("client_company"), agents=distinct("agent_id"))

@@ -59,20 +59,20 @@ await shot("incidents-list");
 await page.getByRole("button", { name: "Abierta" }).click();
 const open = await countWhere((n) => n < 96);
 ok(open === Number(await stat("Abiertas")) && open > 0, `filtro por estado Abierta: ${open} incidencias`);
-await page.getByLabel("Filtrar por categoría").selectOption("BILLING");
+await page.getByLabel("Filtrar por categoría").selectOption("process_error");
 const openBilling = await countWhere((n) => n < 27);
 ok(openBilling > 0 && openBilling < open, `filtros combinados (estado + categoría): ${openBilling}`);
 await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
 ok((await countWhere((n) => n === 96)) === total0, "limpiar filtros vuelve al total");
 await page.getByLabel("Filtrar por origen").selectOption("branch");
 await page.getByText("Ninguna incidencia coincide con estos filtros.").waitFor();
-ok(true, "filtro por origen Sucursal: el histórico CSV es todo de clientes, sin resultados");
+ok(true, "filtro por origen Personal de oficina: el histórico CSV es todo de clientes, sin resultados");
 await page.getByLabel("Filtrar por origen").selectOption("customer");
-await page.getByLabel("Filtrar por sucursal").selectOption("central");
-ok((await countWhere((n) => n === 96)) === total0, "filtro por origen Cliente + sucursal central: todo el histórico");
+await page.getByLabel("Filtrar por oficina").selectOption("central");
+ok((await countWhere((n) => n === 96)) === total0, "filtro por origen Cliente + oficina Central: todo el histórico");
 await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
 await countWhere((n) => n === 96);
-await page.getByLabel("Buscar por id, título, cliente o sucursal").fill("zzz-sin-resultados");
+await page.getByLabel("Buscar por id, título, cliente u oficina").fill("zzz-sin-resultados");
 await page.getByText("Ninguna incidencia coincide con estos filtros.").waitFor();
 ok(true, "búsqueda sin resultados: mensaje claro");
 await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
@@ -94,20 +94,22 @@ const form = page.locator("form[aria-label='Registrar incidencia']");
 for (const id of ["title", "category", "origin", "branch", "description", "client_company", "agent_id", "customer_email"]) {
   if (!(await form.locator(`#incident-${id}`).isVisible())) { ok(false, `campo ${id} visible`); }
 }
-ok(true, "están todos los campos del modelo: título, categoría, origen, sucursal, descripción, empresa, agente y email");
+ok(true, "están todos los campos del modelo: título, categoría, origen, oficina, descripción, empresa, agente y email");
 ok((await form.getByText("obligatorio", { exact: true }).count()) === 5 && (await form.getByText("opcional", { exact: true }).count()) === 3, "5 campos obligatorios y 3 opcionales, indicado en cada etiqueta");
-ok((await form.locator("#incident-branch").inputValue()) === "central" && (await form.locator("#incident-branch").isVisible()), "sucursal siempre visible, con «central» por defecto");
-ok((await form.locator("[data-highlighted]").count()) === 0, "con origen Cliente la sucursal no está destacada");
+ok((await form.locator("#incident-branch").inputValue()) === "central" && (await form.locator("#incident-branch").isVisible()), "oficina siempre visible, con «Central» por defecto");
+ok((await form.locator("#incident-branch option").allInnerTexts()).join("|") === "Central — Sede Valencia|Valencia — Operaciones|Miami Office|Remoto (empleado sin sede fija)", "el desplegable ofrece exactamente las 4 oficinas del CONTEXT, con su nombre, incluido «Remoto»");
+ok((await form.locator("#incident-category option").allInnerTexts()).length === 9, "la categoría ofrece las 8 del CONTEXT (más «Selecciona…»)");
+ok((await form.locator("[data-highlighted]").count()) === 0, "con origen Cliente la oficina no está destacada");
 await shot("incidents-new-form");
 
 // origin = branch: the branch is highlighted, emptied and focused
 await form.locator("#incident-origin").selectOption("branch");
-ok((await form.locator("[data-highlighted='true'] #incident-branch").count()) === 1, "origen Sucursal: la sucursal se destaca visualmente");
-ok(/viene de una sucursal/.test(await form.locator("[data-highlighted='true']").innerText()), "…con una nota que explica por qué");
-ok((await form.locator("#incident-branch").inputValue()) === "" && (await form.locator("#incident-branch").evaluate((el) => el === document.activeElement)), "…se vacía «central» y el foco va a la sucursal");
+ok((await form.locator("[data-highlighted='true'] #incident-branch").count()) === 1, "origen Personal de oficina: la oficina se destaca visualmente");
+ok(/reporta personal de una oficina/.test(await form.locator("[data-highlighted='true']").innerText()), "…con una nota que explica por qué");
+ok((await form.locator("#incident-branch").inputValue()) === "central", "…«Central» sigue siendo una opción válida (es una oficina real)");
 await shot("incidents-new-branch-highlight");
 await form.locator("#incident-origin").selectOption("customer");
-ok((await form.locator("#incident-branch").inputValue()) === "central" && (await form.locator("[data-highlighted]").count()) === 0, "al volver a Cliente se restaura «central» y se quita el destacado");
+ok((await form.locator("#incident-branch").inputValue()) === "central" && (await form.locator("[data-highlighted]").count()) === 0, "al volver a Cliente se quita el destacado");
 
 // errors next to each field, in plain Spanish
 await form.getByRole("button", { name: "Registrar incidencia" }).click();
@@ -120,15 +122,12 @@ await shot("incidents-new-errors");
 await page.locator("#incident-title").fill("ab");
 ok((await page.locator("#incident-title-error").count()) === 0, "al escribir en un campo desaparece su error (se vuelve a validar al enviar)");
 
-// origin Sucursal + «central» is refused with a specific message
+// choose the office from the list
 await page.locator("#incident-title").fill("VPN se cae");
-await page.locator("#incident-category").selectOption("TECHNICAL");
+await page.locator("#incident-category").selectOption("technical_failure");
 await page.locator("#incident-description").fill("La VPN se cae cada diez minutos");
 await page.locator("#incident-origin").selectOption("branch");
-await page.locator("#incident-branch").fill("Central");
-await form.getByRole("button", { name: "Registrar incidencia" }).click();
-ok(/Si viene de una sucursal, indica cuál/.test(await page.locator("#incident-branch-error").innerText()), "origen Sucursal con «central»: error específico junto a la sucursal");
-await page.locator("#incident-branch").fill("Valencia Centro");
+await page.locator("#incident-branch").selectOption("valencia_operations");
 await page.locator("#incident-customer_email").fill("no-es-un-email");
 await form.getByRole("button", { name: "Registrar incidencia" }).click();
 ok(/email válido/.test(await page.locator("#incident-customer_email-error").innerText()), "email opcional pero inválido: error junto al campo");
@@ -141,7 +140,7 @@ await page.route("**/api/incidents", (route) =>
 await form.getByRole("button", { name: "Registrar incidencia" }).click();
 await page.locator("#incident-title-error").waitFor();
 ok(/demasiado corto/.test(await page.locator("#incident-title-error").innerText()) && !/must have/.test(await form.innerText()), "error del servidor: junto al campo y en castellano, sin texto técnico");
-ok((await page.locator("#incident-description").inputValue()) === "La VPN se cae cada diez minutos" && (await page.locator("#incident-branch").inputValue()) === "Valencia Centro", "lo escrito no se pierde");
+ok((await page.locator("#incident-description").inputValue()) === "La VPN se cae cada diez minutos" && (await page.locator("#incident-branch").inputValue()) === "valencia_operations", "lo escrito no se pierde");
 await page.unroute("**/api/incidents");
 await page.route("**/api/incidents", (route) => route.request().method() !== "POST" ? route.fallback() : route.abort());
 await form.getByRole("button", { name: "Registrar incidencia" }).click();
@@ -178,12 +177,12 @@ const ticket = (await created.innerText()).match(/NXV-\d{6}/)[0];
 
 // success: confirmation + cleared form
 ok(await created.evaluate((el) => el === document.activeElement), "tras el éxito el foco va al mensaje de confirmación");
-ok(/«VPN se cae»/.test(await created.innerText()) && /sucursal Valencia Centro/.test(await created.innerText()), "la confirmación resume lo registrado");
+ok(/«VPN se cae»/.test(await created.innerText()) && /Valencia — Operaciones/.test(await created.innerText()), "la confirmación resume lo registrado");
 ok(
   (await page.locator("#incident-title").inputValue()) === "" && (await page.locator("#incident-description").inputValue()) === "" &&
     (await page.locator("#incident-category").inputValue()) === "" && (await page.locator("#incident-origin").inputValue()) === "customer" &&
     (await page.locator("#incident-branch").inputValue()) === "central" && (await page.locator("#incident-customer_email").inputValue()) === "",
-  "el formulario queda limpio (origen Cliente, sucursal «central») y sin errores",
+  "el formulario queda limpio (origen Cliente, oficina «Central») y sin errores",
 );
 ok((await form.locator("p.text-rose-300").count()) === 0 && (await form.getByRole("alert").count()) === 0, "…sin restos de errores");
 await shot("incidents-new-success");
@@ -195,7 +194,7 @@ ok(Number(await stat("Total")) === total0 + 1, `incidencia ${ticket} registrada 
 // 4. detail + lifecycle: open -> in_progress -> resolved; resolved is final
 await page.getByRole("link", { name: ticket }).click();
 await page.getByRole("heading", { name: new RegExp(ticket) }).waitFor();
-ok((await page.getByText("Valencia Centro").first().isVisible()) && (await page.getByRole("button", { name: "Editar" }).isVisible()), "detalle: abierta, de la sucursal Valencia Centro y editable");
+ok((await page.getByText("Valencia — Operaciones").first().isVisible()) && (await page.getByRole("button", { name: "Editar" }).isVisible()), "detalle: abierta, de la oficina Valencia — Operaciones y editable");
 ok((await page.getByRole("button", { name: "Resolver", exact: true }).count()) === 0, "desde Abierta no se puede resolver directamente");
 ok((await page.getByRole("button", { name: /Abrir|Reabrir/ }).count()) === 0, "no hay forma de volver a Abierta");
 await page.getByRole("button", { name: "Poner en curso", exact: true }).click();
@@ -225,7 +224,7 @@ await shot("incidents-detail");
 // 4b. discard from Abierta: the reason is optional but, if given, must be meaningful
 await page.goto(`${APP}/incidents/new`);
 await page.locator("#incident-title").fill("Aviso duplicado");
-await page.locator("#incident-category").selectOption("ACCESS");
+await page.locator("#incident-category").selectOption("other");
 await page.locator("#incident-description").fill("Registrada por error, ya existe otra");
 await page.getByRole("button", { name: "Registrar incidencia" }).click();
 const second = page.getByRole("status").filter({ hasText: /Incidencia NXV-\d{6} registrada correctamente/ });
@@ -261,7 +260,7 @@ await page.goto(`${APP}/incidents`);
 await page.getByRole("status").filter({ hasText: "Cargando incidencias…" }).waitFor();
 ok(true, "primera carga: indicador «Cargando incidencias…»");
 await page.locator("tbody tr").first().waitFor();
-await page.getByLabel("Filtrar por categoría").selectOption("ACCESS");
+await page.getByLabel("Filtrar por categoría").selectOption("technical_failure");
 await page.getByRole("status").filter({ hasText: "Actualizando…" }).waitFor();
 ok(true, "al filtrar: indicador «Actualizando…» sobre la tabla anterior");
 await page.unroute(LIST);
@@ -269,7 +268,7 @@ await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
 await countWhere((n) => n >= 90);
 
 await page.route(LIST, (route) => route.abort());
-await page.getByLabel("Filtrar por categoría").selectOption("BILLING");
+await page.getByLabel("Filtrar por categoría").selectOption("process_error");
 const failure = page.getByRole("alert").filter({ hasText: "No se pudo conectar con el servidor" });
 await failure.waitFor();
 ok(await failure.getByRole("button", { name: "Reintentar" }).isVisible(), "si falla la carga: mensaje claro con botón «Reintentar»");
@@ -301,7 +300,7 @@ await summaryBox.locator("[role=alert]").waitFor();
 ok((await summaryBox.getAttribute("data-summary-state")) === "error" && /El resumen no está disponible/.test(await summaryBox.innerText()), "si el resumen falla: aviso claro en su sitio, sin romper la página");
 await page.locator("tbody tr").first().waitFor();
 ok(await rowsVisible(), "…la lista se carga y se ve con normalidad");
-await page.getByLabel("Filtrar por categoría").selectOption("ACCESS");
+await page.getByLabel("Filtrar por categoría").selectOption("technical_failure");
 await countWhere((n) => n < 96);
 ok(true, "…y los filtros siguen funcionando mientras el resumen está caído");
 await shot("incidents-summary-failed");
@@ -339,7 +338,7 @@ await page.unroute(SUMMARY);
 
 // a failed refresh keeps the last numbers on screen
 await page.route(SUMMARY, (route) => route.abort());
-await page.getByLabel("Filtrar por categoría").selectOption("BILLING");
+await page.getByLabel("Filtrar por categoría").selectOption("process_error");
 await summaryBox.locator("[role=alert]").waitFor();
 ok(/Se muestran los últimos datos recibidos/.test(await summaryBox.innerText()) && (await summaryBox.getByText("Satisfacción media").isVisible()), "si falla una actualización: se conservan los últimos datos, avisando");
 await page.unroute(SUMMARY);

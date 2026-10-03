@@ -6,14 +6,26 @@
  */
 import contract from "../incidents/contract.json" with { type: "json" };
 
-export type IncidentCategory = "TECHNICAL" | "BILLING" | "ACCESS" | "HR_QUERY" | "COMPLAINT";
+export type IncidentCategory =
+  | "technical_failure"
+  | "process_error"
+  | "client_complaint"
+  | "candidate_issue"
+  | "staff_issue"
+  | "sla_breach"
+  | "data_quality"
+  | "other";
 export type IncidentStatus = "open" | "in_progress" | "resolved" | "discarded";
 export type IncidentOrigin = "customer" | "branch" | "internal";
+export type IncidentBranch = "central" | "valencia_operations" | "miami_office" | "remote";
 
 export const INCIDENT_CATEGORIES = contract.categories as IncidentCategory[];
 export const INCIDENT_STATUSES = contract.statuses as IncidentStatus[];
 export const INCIDENT_ORIGINS = contract.origins as IncidentOrigin[];
-export const DEFAULT_BRANCH = contract.defaultBranch;
+export const INCIDENT_BRANCHES = contract.branches.map((b) => b.value) as IncidentBranch[];
+export const DEFAULT_BRANCH = contract.defaultBranch as IncidentBranch;
+/** Display name of each office, as in the CONTEXT ("Central — Sede Valencia"…). */
+export const BRANCH_LABELS = Object.fromEntries(contract.branches.map((b) => [b.value, b.label])) as Record<IncidentBranch, string>;
 export const TRANSITIONS = contract.transitions as Record<IncidentStatus, IncidentStatus[]>;
 export const LIMITS = contract.limits;
 
@@ -21,11 +33,26 @@ const AGENT_ID = new RegExp(contract.patterns.agentId);
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const CATEGORY_LABELS: Record<IncidentCategory, string> = {
-  TECHNICAL: "Técnica",
-  BILLING: "Facturación",
-  ACCESS: "Accesos",
-  HR_QUERY: "Consulta de RR. HH.",
-  COMPLAINT: "Queja",
+  technical_failure: "Fallo técnico",
+  process_error: "Error de proceso",
+  client_complaint: "Queja de cliente",
+  candidate_issue: "Problema de candidato",
+  staff_issue: "Incidencia de personal",
+  sla_breach: "Incumplimiento de SLA",
+  data_quality: "Calidad de datos",
+  other: "Otra",
+};
+
+/** What each category covers (CONTEXT), shown as help in the form. */
+export const CATEGORY_HELP: Record<IncidentCategory, string> = {
+  technical_failure: "Fallo de un sistema o herramienta (ATS, HubSpot, Zendesk, infraestructura).",
+  process_error: "Error en un proceso operativo: selección, incorporación, formación, facturación.",
+  client_complaint: "Queja o reclamación de un cliente corporativo sobre el servicio.",
+  candidate_issue: "Problema reportado por o relacionado con un candidato en proceso.",
+  staff_issue: "Incidencia interna de RR. HH.: ausencia, conflicto, accidente, baja.",
+  sla_breach: "Incumplimiento de un SLA comprometido con un cliente.",
+  data_quality: "Error o inconsistencia en datos de candidatos, clientes o reportes.",
+  other: "Cualquier incidencia que no encaje en las anteriores.",
 };
 
 export const STATUS_LABELS: Record<IncidentStatus, string> = {
@@ -37,7 +64,7 @@ export const STATUS_LABELS: Record<IncidentStatus, string> = {
 
 export const ORIGIN_LABELS: Record<IncidentOrigin, string> = {
   customer: "Cliente",
-  branch: "Sucursal",
+  branch: "Personal de oficina",
   internal: "Interno",
 };
 
@@ -68,7 +95,7 @@ interface IncidentBase {
   category: IncidentCategory;
   status: IncidentStatus;
   origin: IncidentOrigin;
-  branch: string;
+  branch: IncidentBranch;
   client_company: string | null;
   agent_id: string | null;
   satisfaction_score: number | null;
@@ -109,9 +136,9 @@ export interface IncidentSummary {
   category_counts: Record<IncidentCategory, number>;
   category_percentages: Record<IncidentCategory, number>;
   origin_counts: Record<IncidentOrigin, number>;
-  /** Per branch (sede), biggest first; `central` is always present. */
-  branch_counts: Record<string, number>;
-  branch_percentages: Record<string, number>;
+  /** Per office (sede): the four, always present, in the order of the CONTEXT. */
+  branch_counts: Record<IncidentBranch, number>;
+  branch_percentages: Record<IncidentBranch, number>;
   /** open + in_progress, per category: the backlog. */
   active_by_category: Record<IncidentCategory, number>;
   satisfaction_average: number | null;
@@ -122,7 +149,7 @@ export interface IncidentSummary {
 }
 
 export interface IncidentFacets {
-  branches: string[];
+  branches: IncidentBranch[];
   clients: string[];
   agents: string[];
 }
@@ -131,7 +158,7 @@ export interface IncidentFilters {
   status: IncidentStatus[];
   category: IncidentCategory[];
   origin: IncidentOrigin[];
-  branch: string;
+  branch: IncidentBranch | "";
   agent_id: string;
   client_company: string;
   q: string;
@@ -181,12 +208,12 @@ export function maskEmail(email: string): string {
   return `${local.slice(0, 1)}***@${domain}`;
 }
 
-/** Same rules as the API: required fields, allowed values, and "an incident from a branch names the branch". */
+/** Same rules as the API: required fields and exactly the values the CONTEXT allows. */
 export function validateIncidentDraft(draft: IncidentDraft): FieldErrors<keyof IncidentDraft> {
   const errors: FieldErrors<keyof IncidentDraft> = {};
   const title = draft.title.trim();
   const description = draft.description.trim();
-  const branch = draft.branch.trim();
+  const branch = draft.branch;
   const company = draft.client_company.trim();
   const agent = draft.agent_id.trim();
   const email = draft.customer_email.trim();
@@ -199,10 +226,7 @@ export function validateIncidentDraft(draft: IncidentDraft): FieldErrors<keyof I
     errors.description = `La descripción no puede superar los ${LIMITS.descriptionMax} caracteres.`;
   if (!(INCIDENT_CATEGORIES as string[]).includes(draft.category)) errors.category = "Selecciona una categoría.";
   if (!(INCIDENT_ORIGINS as string[]).includes(draft.origin)) errors.origin = "Indica el origen de la incidencia.";
-  if (!branch) errors.branch = `Indica la sucursal (usa «${DEFAULT_BRANCH}» si no aplica).`;
-  else if (branch.length > LIMITS.branchMax) errors.branch = `La sucursal no puede superar los ${LIMITS.branchMax} caracteres.`;
-  else if (draft.origin === "branch" && branch.toLowerCase() === DEFAULT_BRANCH)
-    errors.branch = `Si viene de una sucursal, indica cuál («${DEFAULT_BRANCH}» es para cuando no aplica).`;
+  if (!(INCIDENT_BRANCHES as string[]).includes(branch)) errors.branch = "Selecciona la sede de la incidencia («Central» si no corresponde a una oficina concreta).";
   if (company.length > LIMITS.clientCompanyMax)
     errors.client_company = `La empresa no puede superar los ${LIMITS.clientCompanyMax} caracteres.`;
   if (agent && !AGENT_ID.test(agent)) errors.agent_id = "El agente debe tener el formato AGT-07.";

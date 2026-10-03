@@ -140,7 +140,7 @@ export default function IncidentsPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white">Panel de incidencias</h1>
-          <p className="mt-2 text-slate-400">Gestión centralizada de las incidencias de clientes, sucursales y equipos internos de Nexova.</p>
+          <p className="mt-2 text-slate-400">Gestión centralizada de las incidencias de clientes, oficinas y equipos internos de Nexova.</p>
         </div>
         <Link
           href="/incidents/new"

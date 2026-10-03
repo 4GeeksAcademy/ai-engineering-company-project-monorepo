@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import type { Incident, IncidentFacets } from "@repo/shared-types";
+import { BRANCH_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
 import IncidentForm from "../components/incidents/IncidentForm";
 import { getIncidentFacets } from "../lib/api";
 
@@ -25,7 +25,7 @@ export default function NewIncidentPage() {
     <div className="mx-auto max-w-3xl">
       <header>
         <h1 className="text-3xl font-bold text-white">Registrar incidencia</h1>
-        <p className="mt-2 text-slate-400">Da de alta una incidencia de un cliente, de una sucursal o interna.</p>
+        <p className="mt-2 text-slate-400">Da de alta una incidencia de un cliente, de una oficina o interna.</p>
       </header>
 
       {created && (
@@ -39,7 +39,7 @@ export default function NewIncidentPage() {
           <div>
             <p className="font-semibold text-emerald-100">Incidencia {created.id} registrada correctamente.</p>
             <p className="mt-1 text-emerald-200/80">
-              «{created.title}» ({created.origin === "branch" ? `sucursal ${created.branch}` : `sede ${created.branch}`}) está abierta.{" "}
+              «{created.title}» ({BRANCH_LABELS[created.branch]}) está abierta.{" "}
               <Link href={`/incidents/${created.id}`} className="font-medium underline hover:text-white">
                 Ver incidencia
               </Link>{" "}
@@ -53,7 +53,7 @@ export default function NewIncidentPage() {
       )}
 
       <div className="mt-6">
-        <IncidentForm branches={facets.branches} agents={facets.agents} clients={facets.clients} onSaved={setCreated} />
+        <IncidentForm agents={facets.agents} clients={facets.clients} onSaved={setCreated} />
       </div>
     </div>
   );

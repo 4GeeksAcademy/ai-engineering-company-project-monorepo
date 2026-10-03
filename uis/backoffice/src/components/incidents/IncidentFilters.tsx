@@ -1,12 +1,15 @@
 import { X } from "lucide-react";
 import {
+  BRANCH_LABELS,
   CATEGORY_LABELS,
   EMPTY_FILTERS,
+  INCIDENT_BRANCHES,
   INCIDENT_CATEGORIES,
   INCIDENT_ORIGINS,
   INCIDENT_STATUSES,
   ORIGIN_LABELS,
   STATUS_LABELS,
+  type IncidentBranch,
   type IncidentCategory,
   type IncidentFacets,
   type IncidentFilters,
@@ -35,8 +38,8 @@ export default function IncidentFiltersBar({ filters, facets, onChange }: Props)
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="search"
-          aria-label="Buscar por id, título, cliente o sucursal"
-          placeholder="Buscar id, título, cliente o sucursal…"
+          aria-label="Buscar por id, título, cliente u oficina"
+          placeholder="Buscar id, título, cliente u oficina…"
           value={filters.q}
           onChange={(e) => set("q", e.target.value)}
           className={`${inputClass} max-w-xs`}
@@ -57,11 +60,11 @@ export default function IncidentFiltersBar({ filters, facets, onChange }: Props)
             </option>
           ))}
         </select>
-        <select aria-label="Filtrar por sucursal" value={filters.branch} onChange={(e) => set("branch", e.target.value)} className={selectClass}>
-          <option value="">Todas las sucursales</option>
-          {facets.branches.map((b) => (
+        <select aria-label="Filtrar por oficina" value={filters.branch} onChange={(e) => set("branch", e.target.value as IncidentBranch | "")} className={selectClass}>
+          <option value="">Todas las oficinas</option>
+          {INCIDENT_BRANCHES.map((b) => (
             <option key={b} value={b}>
-              {b}
+              {BRANCH_LABELS[b]}
             </option>
           ))}
         </select>

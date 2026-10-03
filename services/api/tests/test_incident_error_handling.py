@@ -18,10 +18,11 @@ URL = "/api/incidents"
 VALID = {
     "title": "VPN drops",
     "description": "VPN drops every ten minutes",
-    "category": "TECHNICAL",
+    "category": "technical_failure",
     "origin": "customer",
     "branch": "central",
 }
+ALL_BRANCHES = ["central", "valencia_operations", "miami_office", "remote"]
 SECRET = "boom: /srv/nexova/secret_module.py line 42 password=hunter2"
 
 
@@ -143,7 +144,7 @@ def test_a_corrupt_database_file_is_a_generic_500_not_a_trace(tmp_path, monkeypa
         ("patch", "{existing}", {"json": {}}, None),
         ("patch", "{existing}", {"json": {"title": None}}, None),
         ("patch", "{existing}", {"json": {"title": "x"}}, "title"),
-        ("patch", "{existing}", {"json": {"origin": "branch"}}, "branch"),  # branch is "central": the merged record is invalid
+        ("patch", "{existing}", {"json": {"branch": "Valencia"}}, "branch"),  # exactly one of the four offices
         ("patch", "{existing}/status", {"json": {"status": "closed"}}, "status"),
         ("patch", "{existing}/status", {"json": {"status": "in_progress", "title": "x"}}, "title"),
         ("patch", "{existing}/status", {"json": {"status": "in_progress", "satisfaction_score": 3}}, "satisfaction_score"),
@@ -207,7 +208,7 @@ def empty_reads(client):
     summary = client.get(f"{URL}/summary")
     assert summary.status_code == 200
     facets = client.get(f"{URL}/facets")
-    assert facets.status_code == 200 and facets.json() == {"branches": [], "clients": [], "agents": []}
+    assert facets.status_code == 200 and facets.json() == {"branches": ALL_BRANCHES, "clients": [], "agents": []}
     assert client.get(f"{URL}/NXV-000001").status_code == 404  # a missing incident is a 404, not a failure
     return summary.json()
 
@@ -218,7 +219,7 @@ def test_reads_on_an_empty_database(client):
 
 def test_reads_with_every_filter_on_an_empty_database(client):
     params = {
-        "status": ["open", "resolved"], "category": "ACCESS", "origin": "branch", "branch": "Madrid",
+        "status": ["open", "resolved"], "category": "client_complaint", "origin": "branch", "branch": "miami_office",
         "agent_id": "AGT-01", "client_company": "x", "q": "text", "date_from": "2024-01-01", "date_to": "2024-12-31",
         "sort": "id", "order": "asc", "page": 3, "page_size": 5,
     }
@@ -238,14 +239,14 @@ def test_reads_on_real_empty_files(tmp_path, monkeypatch, auth_headers, content)
 
 
 def test_documents_left_by_an_older_data_model_are_skipped_not_fatal(client, db):
-    db.insert({"ticket_id": "NXV-000007", "status": "OPEN", "category": "ACCESS"})  # the first version of the model
+    db.insert({"ticket_id": "NXV-000007", "status": "OPEN", "category": "client_complaint"})  # the first version of the model
     db.insert({"id": "NXV-000008"})  # half-written
     db.insert({"x": 1})  # no id at all
     created = client.post(URL, json=VALID).json()
     assert created["id"] == "NXV-000009"  # unreadable documents still reserve their id: it is never reused
     assert [i["id"] for i in client.get(URL).json()["items"]] == [created["id"]]
     assert client.get(f"{URL}/summary").json()["total"] == 1
-    assert client.get(f"{URL}/facets").json()["branches"] == ["central"]
+    assert client.get(f"{URL}/facets").json()["branches"] == ALL_BRANCHES
     assert client.get(f"{URL}/NXV-000008").status_code == 404
 
 
@@ -254,8 +255,10 @@ def test_documents_left_by_an_older_data_model_are_skipped_not_fatal(client, db)
 # =================================================================================================
 
 ZERO_STATUS = {"open": 0, "in_progress": 0, "resolved": 0, "discarded": 0}
-ZERO_CATEGORY = {"TECHNICAL": 0, "BILLING": 0, "ACCESS": 0, "HR_QUERY": 0, "COMPLAINT": 0}
+CATEGORIES = ["technical_failure", "process_error", "client_complaint", "candidate_issue", "staff_issue", "sla_breach", "data_quality", "other"]
+ZERO_CATEGORY = {c: 0 for c in CATEGORIES}
 ZERO_ORIGIN = {"customer": 0, "branch": 0, "internal": 0}
+ZERO_BRANCH = {b: 0 for b in ALL_BRANCHES}
 
 
 def test_the_summary_of_an_empty_database_is_all_zeros(client):
@@ -267,8 +270,8 @@ def test_the_summary_of_an_empty_database_is_all_zeros(client):
         "category_counts": ZERO_CATEGORY,
         "category_percentages": {k: 0.0 for k in ZERO_CATEGORY},
         "origin_counts": ZERO_ORIGIN,
-        "branch_counts": {"central": 0},
-        "branch_percentages": {"central": 0.0},
+        "branch_counts": ZERO_BRANCH,
+        "branch_percentages": {k: 0.0 for k in ZERO_BRANCH},
         "active_by_category": ZERO_CATEGORY,
         "satisfaction_average": None,  # there is no score to average (0 would be a score nobody can give)
         "satisfaction_scored": 0,
@@ -281,7 +284,7 @@ def test_the_summary_of_an_empty_database_is_all_zeros(client):
 def test_the_summary_is_zero_when_the_filters_match_nothing(client):
     client.post(URL, json=VALID)
     summary = client.get(f"{URL}/summary", params={"status": "resolved", "origin": "internal"}).json()
-    assert summary["total"] == 0 and summary["status_counts"] == ZERO_STATUS and summary["branch_counts"] == {"central": 0}
+    assert summary["total"] == 0 and summary["status_counts"] == ZERO_STATUS and summary["branch_counts"] == ZERO_BRANCH
 
 
 def test_the_summary_totals_by_status_category_origin_and_branch(client):
@@ -290,29 +293,31 @@ def test_the_summary_totals_by_status_category_origin_and_branch(client):
         for step in steps:
             assert client.patch(f"{URL}/{incident_id}/status", json={"status": step}).status_code == 200
 
-    make("customer", "central", "TECHNICAL")
-    make("customer", "central", "BILLING", ["in_progress"])
-    make("branch", "Valencia", "ACCESS", ["in_progress", "resolved"])
-    make("branch", "Valencia", "ACCESS", ["discarded"])
-    make("branch", "Madrid", "TECHNICAL")
-    make("internal", "central", "COMPLAINT", ["in_progress"])
+    make("customer", "central", "technical_failure")
+    make("customer", "central", "process_error", ["in_progress"])
+    make("branch", "valencia_operations", "client_complaint", ["in_progress", "resolved"])
+    make("branch", "valencia_operations", "client_complaint", ["discarded"])
+    make("branch", "miami_office", "technical_failure")
+    make("internal", "remote", "sla_breach", ["in_progress"])
     summary = client.get(f"{URL}/summary").json()
 
     assert summary["total"] == 6
     assert summary["status_counts"] == {"open": 2, "in_progress": 2, "resolved": 1, "discarded": 1}
-    assert summary["category_counts"] == {"TECHNICAL": 2, "BILLING": 1, "ACCESS": 2, "HR_QUERY": 0, "COMPLAINT": 1}
+    assert summary["category_counts"] == ZERO_CATEGORY | {"technical_failure": 2, "process_error": 1, "client_complaint": 2, "sla_breach": 1}
     assert summary["origin_counts"] == {"customer": 2, "branch": 3, "internal": 1}
-    assert summary["branch_counts"] == {"central": 3, "Valencia": 2, "Madrid": 1}
-    assert list(summary["branch_counts"]) == ["central", "Valencia", "Madrid"]  # biggest first
-    assert summary["branch_percentages"] == {"central": 50.0, "Valencia": 33.3, "Madrid": 16.7}
-    assert summary["active_by_category"] == {"TECHNICAL": 2, "BILLING": 1, "ACCESS": 0, "HR_QUERY": 0, "COMPLAINT": 1}
+    assert summary["branch_counts"] == {"central": 2, "valencia_operations": 2, "miami_office": 1, "remote": 1}
+    assert list(summary["branch_counts"]) == ALL_BRANCHES  # always the four, in the order of the CONTEXT
+    assert summary["branch_percentages"] == {"central": 33.3, "valencia_operations": 33.3, "miami_office": 16.7, "remote": 16.7}
+    assert summary["active_by_category"] == ZERO_CATEGORY | {"technical_failure": 2, "process_error": 1, "sla_breach": 1}
     for counts in ("status_counts", "category_counts", "origin_counts", "branch_counts"):
         assert sum(summary[counts].values()) == summary["total"], counts
 
 
-def test_a_branch_with_a_total_of_zero_still_lists_central_first(client):
-    client.post(URL, json={**VALID, "origin": "branch", "branch": "Valencia"})
-    assert client.get(f"{URL}/summary").json()["branch_counts"] == {"central": 0, "Valencia": 1}
+def test_remote_is_counted_apart_from_central_and_valencia_operations(client):
+    for branch in ("remote", "remote", "central", "valencia_operations"):
+        client.post(URL, json={**VALID, "branch": branch})
+    counts = client.get(f"{URL}/summary").json()["branch_counts"]
+    assert counts == {"central": 1, "valencia_operations": 1, "miami_office": 0, "remote": 2}
 
 
 def test_the_summary_requires_authentication(db):

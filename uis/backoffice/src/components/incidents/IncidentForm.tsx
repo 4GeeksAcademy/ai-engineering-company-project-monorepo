@@ -1,8 +1,11 @@
 import { FormEvent, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
+  BRANCH_LABELS,
+  CATEGORY_HELP,
   CATEGORY_LABELS,
   DEFAULT_BRANCH,
+  INCIDENT_BRANCHES,
   INCIDENT_CATEGORIES,
   INCIDENT_ORIGINS,
   LIMITS,
@@ -10,6 +13,7 @@ import {
   validateIncidentDraft,
   type FieldErrors,
   type Incident,
+  type IncidentCategory,
   type IncidentDraft,
 } from "@repo/shared-types";
 import { ApiError, createIncident, updateIncident, type IncidentFields } from "../../lib/api";
@@ -19,7 +23,6 @@ import { ErrorBanner, Field, inputClass } from "./Field";
 interface Props {
   /** Present = edit that incident (only the fields that changed are sent); absent = register a new one. */
   incident?: Incident;
-  branches: string[];
   agents: string[];
   clients: string[];
   /** Called with the saved incident. When registering, the form has already been cleared. */
@@ -51,7 +54,7 @@ const EMPTY: IncidentDraft = {
   customer_email: "",
 };
 
-export default function IncidentForm({ incident, branches, agents, clients, onSaved, onCancel }: Props) {
+export default function IncidentForm({ incident, agents, clients, onSaved, onCancel }: Props) {
   const [draft, setDraft] = useState<IncidentDraft>(
     incident
       ? {
@@ -70,7 +73,6 @@ export default function IncidentForm({ incident, branches, agents, clients, onSa
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const sending = useRef(false); // state updates are async: this stops a fast double click from sending twice
-  const branchInput = useRef<HTMLInputElement>(null);
 
   const fromBranch = draft.origin === "branch";
   const problems = FIELDS.filter((key) => errors[key]);
@@ -79,22 +81,8 @@ export default function IncidentForm({ incident, branches, agents, clients, onSa
 
   const set = (key: keyof IncidentDraft) => (value: string) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
-    // origin and branch are validated together
-    const stale = key === "origin" || key === "branch" ? ["origin", "branch"] : [key];
-    if (stale.some((k) => errors[k as keyof IncidentDraft]))
-      setErrors((prev) => ({ ...prev, ...Object.fromEntries(stale.map((k) => [k, undefined])) }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
     setFormError(null);
-  };
-
-  const changeOrigin = (origin: string) => {
-    set("origin")(origin);
-    if (origin === "branch" && draft.branch.trim().toLowerCase() === DEFAULT_BRANCH) {
-      // "central" is not valid for a branch: leave it empty so the person types the real one.
-      setDraft((prev) => ({ ...prev, origin, branch: "" }));
-      setTimeout(() => branchInput.current?.focus(), 0);
-    } else if (origin !== "branch" && draft.origin === "branch" && !draft.branch.trim()) {
-      setDraft((prev) => ({ ...prev, origin, branch: DEFAULT_BRANCH }));
-    }
   };
 
   const props = (key: keyof IncidentDraft) => ({
@@ -187,7 +175,13 @@ export default function IncidentForm({ incident, branches, agents, clients, onSa
               <input {...props("title")} maxLength={LIMITS.titleMax} autoComplete="off" required />
             </Field>
           </div>
-          <Field id="incident-category" label="Categoría" required error={errors.category}>
+          <Field
+            id="incident-category"
+            label="Categoría"
+            required
+            error={errors.category}
+            hint={draft.category ? CATEGORY_HELP[draft.category as IncidentCategory] : undefined}
+          >
             <select {...props("category")} required>
               <option value="">Selecciona…</option>
               {INCIDENT_CATEGORIES.map((c) => (
@@ -198,7 +192,7 @@ export default function IncidentForm({ incident, branches, agents, clients, onSa
             </select>
           </Field>
           <Field id="incident-origin" label="Origen" required error={errors.origin}>
-            <select {...props("origin")} onChange={(e) => changeOrigin(e.target.value)} required>
+            <select {...props("origin")} required>
               {INCIDENT_ORIGINS.map((o) => (
                 <option key={o} value={o}>
                   {ORIGIN_LABELS[o]}
@@ -210,19 +204,20 @@ export default function IncidentForm({ incident, branches, agents, clients, onSa
           <div className="sm:col-span-2">
             <Field
               id="incident-branch"
-              label="Sucursal"
+              label="Oficina"
               required
               error={errors.branch}
               highlight={fromBranch}
-              highlightNote="Esta incidencia viene de una sucursal: indica cuál. «central» no vale en este caso."
-              hint={`Escribe «${DEFAULT_BRANCH}» cuando no aplique una sucursal concreta.`}
+              highlightNote="La incidencia la reporta personal de una oficina: elige cuál."
+              hint="«Central» es la sede de Valencia y se usa cuando no corresponde a una oficina concreta; «Remoto» es para empleados sin sede fija."
             >
-              <input {...props("branch")} ref={branchInput} list="incident-branches" maxLength={LIMITS.branchMax} autoComplete="off" required />
-              <datalist id="incident-branches">
-                {Array.from(new Set([DEFAULT_BRANCH, ...branches])).map((b) => (
-                  <option key={b} value={b} />
+              <select {...props("branch")} required>
+                {INCIDENT_BRANCHES.map((value) => (
+                  <option key={value} value={value}>
+                    {BRANCH_LABELS[value]}
+                  </option>
                 ))}
-              </datalist>
+              </select>
             </Field>
           </div>
 

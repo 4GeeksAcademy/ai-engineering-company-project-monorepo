@@ -17,7 +17,7 @@ if (!EMAIL || !PASSWORD) {
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: 1500, height: 1100 } });
 
 await page.goto(`${APP}/incidents`);
 await page.waitForURL("**/login**");
@@ -32,7 +32,7 @@ await page.waitForLoadState("networkidle");
 const summary = page.locator("section[aria-label='Resumen de incidencias']");
 await summary.locator("[data-summary-state='ready']").waitFor().catch(() => undefined);
 await page.waitForFunction(() => document.querySelector("section[aria-label='Resumen de incidencias']")?.getAttribute("data-summary-state") === "ready");
-await page.screenshot({ path: `${OUT}/incident-summary-panel.png`, clip: { x: 256, y: 0, width: 1244, height: 660 } });
+await page.screenshot({ path: `${OUT}/incident-summary-panel.png`, clip: { x: 256, y: 0, width: 1244, height: 770 } });
 
 // 2. the list with data loaded (filters + table)
 await page.evaluate(() => document.querySelector("form[role=search]").scrollIntoView({ block: "start" }));
@@ -42,8 +42,9 @@ await page.screenshot({ path: `${OUT}/incident-panel-list.png`, fullPage: false 
 // 3. the registration form with a validation error showing
 await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Nueva incidencia" }).click();
 await page.getByRole("heading", { name: "Registrar incidencia" }).waitFor();
-await page.locator("#incident-title").fill("ab"); // too short: title, category and branch will show errors
-await page.locator("#incident-origin").selectOption("branch"); // highlights the branch and leaves it empty
+await page.locator("#incident-title").fill("ab"); // too short: the title and the missing category show errors
+await page.locator("#incident-origin").selectOption("branch"); // highlights the office
+await page.locator("#incident-branch").selectOption("valencia_operations");
 await page.locator("#incident-description").fill("La VPN de la oficina se cae cada diez minutos");
 await page.getByRole("button", { name: "Registrar incidencia" }).click();
 await page.locator("#incident-title-error").waitFor();

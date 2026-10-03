@@ -10,7 +10,8 @@ Two status vocabularies coexist on purpose: ``CSV_STATUSES`` (OPEN / CLOSED /
 DISCARDED) is what the helpdesk exports and what the CSV analysis validates;
 ``STATUSES`` (open / in_progress / resolved / discarded) is the lifecycle of
 the incident manager. ``CSV_STATUS_MAP`` translates the first into the second, and
-``CSV_CATEGORY_MAP`` the CSV categories into the manager's (identical today).
+``CSV_CATEGORY_MAP`` the CSV categories (TECHNICAL, BILLING…) into the manager's
+(technical_failure, process_error…).
 """
 
 from __future__ import annotations
@@ -29,7 +30,12 @@ except FileNotFoundError as exc:  # pragma: no cover - only on a non-editable in
         "Install incidents_analyzer in editable mode from packages/shared/incidents_analyzer."
     ) from exc
 
-VALID_CATEGORIES: tuple[str, ...] = tuple(_contract["categories"])
+# Incident manager categories (exact values the manager accepts).
+CATEGORIES: tuple[str, ...] = tuple(_contract["categories"])
+
+# CSV export categories: what the CSV analysis validates. (`VALID_CATEGORIES` keeps the name the analysis uses.)
+CSV_CATEGORIES: tuple[str, ...] = tuple(_contract["csvCategories"])
+VALID_CATEGORIES = CSV_CATEGORIES
 
 # CSV export vocabulary (CSV analysis).
 CSV_STATUSES: tuple[str, ...] = tuple(_contract["csvStatuses"])
@@ -40,6 +46,8 @@ CSV_CATEGORY_MAP: dict[str, str] = dict(_contract["csvCategoryMap"])
 # Incident manager vocabulary.
 STATUSES: tuple[str, ...] = tuple(_contract["statuses"])
 ORIGINS: tuple[str, ...] = tuple(_contract["origins"])
+BRANCHES: tuple[str, ...] = tuple(branch["value"] for branch in _contract["branches"])
+BRANCH_LABELS: dict[str, str] = {branch["value"]: branch["label"] for branch in _contract["branches"]}
 DEFAULT_BRANCH: str = _contract["defaultBranch"]
 TRANSITIONS: dict[str, tuple[str, ...]] = {
     status: tuple(targets) for status, targets in _contract["transitions"].items()
@@ -52,7 +60,6 @@ AGENT_ID_PATTERN = re.compile(_contract["patterns"]["agentId"])
 _limits = _contract["limits"]
 TITLE_MIN: int = _limits["titleMin"]
 TITLE_MAX: int = _limits["titleMax"]
-BRANCH_MAX: int = _limits["branchMax"]
 CLIENT_COMPANY_MAX: int = _limits["clientCompanyMax"]
 DESCRIPTION_MIN: int = _limits["descriptionMin"]
 DESCRIPTION_MAX: int = _limits["descriptionMax"]

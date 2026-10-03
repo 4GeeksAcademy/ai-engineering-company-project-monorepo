@@ -78,7 +78,8 @@ def test_the_api_uses_the_shared_validation_and_rules():
     assert "validate_record" in " ".join(used) or "incidents_analyzer.import_problems" in used or "incidents_analyzer.transform.import_problems" in used
     assert "seeding.py" in used["incidents_analyzer.transform.import_problems"]
     assert "incident_lifecycle.py" in used["incidents_analyzer.rules.allowed_transitions"]
-    assert "incident_schemas.py" in used["incidents_analyzer.rules.normalize_branch"]
+    assert "incident_schemas.py" in used["incidents_analyzer.contract.CATEGORIES"]  # the categories of the model
+    assert "incident_schemas.py" in used["incidents_analyzer.contract.BRANCHES"]  # and its four offices
     assert "service.py" in used["incidents_analyzer.analyze"] or "service.py" in used["incidents_analyzer"]
 
 
@@ -96,7 +97,10 @@ def test_the_script_and_the_api_validate_the_csv_identically():
 _COPIES = [
     (re.compile(r"\^AGT-"), "agent id pattern"),
     (re.compile(r"\^NXV-"), "incident id pattern"),
-    (re.compile(r"[\"']HR_QUERY[\"']"), "category list"),
+    (re.compile(r"[\"']HR_QUERY[\"']"), "csv category list"),
+    (re.compile(r"[\"']staff_issue[\"']"), "category list"),
+    (re.compile(r"[\"']valencia_operations[\"']"), "branch list"),
+    (re.compile(r"[\"']miami_office[\"']"), "branch list"),
     (re.compile(r"[\"']in_progress[\"']\s*:\s*\["), "transition table"),
     (re.compile(r"CSV_STATUS_MAP\s*=|STATUS_MAP\s*=\s*\{"), "status map"),
     (re.compile(r"TRANSITIONS\s*=\s*\{|ALLOWED\s*=\s*\{"), "transition table"),

@@ -85,11 +85,12 @@ def main(argv: list[str]) -> int:
         for difference in differences:
             print(f"  - {difference}")
         return 1
-    status = expected["status_counts"]
+    status, category = expected["status_counts"], expected["category_counts"]
     print(
         "Summary check OK — /api/incidents/summary matches the CSV: "
-        f"{expected['total']} incidents (open {status['open']}, resolved {status['resolved']}, "
-        f"discarded {status['discarded']}), satisfaction {expected['satisfaction_average']} over {expected['satisfaction_scored']}."
+        f"{expected['total']} incidents (open {status['open']}, resolved {status['resolved']}, discarded {status['discarded']}; "
+        f"technical_failure {category['technical_failure']}, process_error {category['process_error']}, "
+        f"client_complaint {category['client_complaint']}), satisfaction {expected['satisfaction_average']} over {expected['satisfaction_scored']}."
     )
     return 0
 

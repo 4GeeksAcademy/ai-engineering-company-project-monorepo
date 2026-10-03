@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Pencil } from "lucide-react";
-import { CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
+import { BRANCH_LABELS, CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
 import { ErrorBanner } from "../components/incidents/Field";
 import HistoryTimeline from "../components/incidents/HistoryTimeline";
 import IncidentForm from "../components/incidents/IncidentForm";
@@ -124,7 +124,6 @@ export default function IncidentDetailPage() {
         <IncidentForm
           incident={incident}
           agents={facets.agents}
-          branches={facets.branches}
           clients={facets.clients}
           onSaved={(updated) => handleSaved(updated, "Cambios guardados.")}
           onCancel={() => setEditing(false)}
@@ -136,7 +135,7 @@ export default function IncidentDetailPage() {
             <Detail label="Última modificación">{new Date(incident.updated_at).toLocaleString("es-ES")}</Detail>
             <Detail label="Categoría">{CATEGORY_LABELS[incident.category]}</Detail>
             <Detail label="Origen">{ORIGIN_LABELS[incident.origin]}</Detail>
-            <Detail label="Sucursal">{incident.branch}</Detail>
+            <Detail label="Oficina">{BRANCH_LABELS[incident.branch]}</Detail>
             <Detail label="Empresa cliente">{incident.client_company ?? "—"}</Detail>
             <Detail label="Agente">{incident.agent_id ?? "—"}</Detail>
             <Detail label="Email del cliente">{incident.customer_email ?? "—"}</Detail>

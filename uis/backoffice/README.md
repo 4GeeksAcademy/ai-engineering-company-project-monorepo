@@ -151,9 +151,10 @@ with every field of the model: the five mandatory ones (title, category, origin,
 "obligatorio", the other three (client company, agent, customer email) "opcional". The status, id and dates are not
 asked for: the incident is created `open` and the server assigns the rest.
 
-- **Branch** is always visible and mandatory (`central` by default, "when no specific branch applies"). When the origin is
-  *Sucursal* it is highlighted (amber frame and a note), `central` is emptied and the field gets the focus, because the API
-  refuses `central` for a branch incident; going back to another origin restores `central`.
+- **Oficina (branch)** is always visible and mandatory: a dropdown with exactly the four offices of the CONTEXT and their display
+  names (*Central — Sede Valencia*, *Valencia — Operaciones*, *Miami Office*, *Remoto (empleado sin sede fija)*), `central` by
+  default. When the origin is *Personal de oficina* it is highlighted (amber frame and a note). *Categoría* offers the eight
+  categories of the CONTEXT, with a one-line explanation of the chosen one.
 - **Loading**: while sending, the button is disabled and reads "Registrando…" with a spinner, every control is locked
   (`<fieldset disabled>`, `aria-busy`) and a synchronous guard stops a fast double click from sending twice.
 - **Errors in plain Spanish, next to the field**: the form validates first with the shared rules
@@ -161,7 +162,7 @@ asked for: the incident is created `open` and the server assigns the rest.
   `friendlyFieldError` (`lib/errors.ts`) and shown under that field, with the focus on the first one and a summary
   ("Revisa los 3 campos marcados"). Network and server failures use `describeError` ("No se pudo conectar…", "El servidor ha
   tenido un problema… referencia abc12345"); what was typed is never lost.
-- **Success**: the form is cleared (origin *Cliente*, branch `central`) and a confirmation ("Incidencia NXV-000102 registrada
+- **Success**: the form is cleared (origin *Cliente*, office *Central*) and a confirmation ("Incidencia NXV-000102 registrada
   correctamente", with links to the incident and the list) receives the focus.
 
 ### The panel (`/incidents`)

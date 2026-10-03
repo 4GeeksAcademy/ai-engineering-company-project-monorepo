@@ -60,9 +60,33 @@ def next_incident_id() -> str:
         return f"NXV-{max(numbers, default=0) + 1:06d}"
 
 
-def truncate() -> None:
+def next_incident_ids(count: int) -> list[str]:
+    """The next ``count`` free ids, in order. Call and insert under ``lock``."""
     with lock:
-        get_db().truncate()
+        first = int(next_incident_id().split("-")[1])
+        return [f"NXV-{first + i:06d}" for i in range(count)]
+
+
+def truncate() -> None:
+    """Remove every incident and the record of what the seed loaded."""
+    with lock:
+        get_db().drop_tables()
+
+
+# What the seed already loaded, by the key of the source row (the CSV ``ticket_id``). It lives in its own table:
+# the incident itself does not store it, but running the seed twice must not duplicate anything.
+_IMPORTS = "seed_imports"
+
+
+def imported_keys() -> set[str]:
+    with lock:
+        return {doc["key"] for doc in get_db().table(_IMPORTS).all()}
+
+
+def record_imports(entries: list[tuple[str, str]]) -> None:
+    """Remember ``(source key, incident id)`` pairs."""
+    with lock:
+        get_db().table(_IMPORTS).insert_multiple({"key": key, "incident_id": incident_id} for key, incident_id in entries)
 
 
 def insert_many(docs: list[dict]) -> None:

@@ -9,8 +9,8 @@ here once**; `scripts/`, `services/` and `uis/` consume it, never copy it.
 | `incidents_analyzer/` | Python package (standard library only; install editable): the CSV validation and metrics of the first project, and the pure rules of the incident manager. | `scripts/`, `services/api` |
 | &nbsp;&nbsp;`contract.py` | Loads the JSON as Python constants. | |
 | &nbsp;&nbsp;`core.py` | CSV validation and report: `validate_record`, `analyze`, `format_report`, `to_export_rows`… | `scripts/analyze.py`, API CSV analysis, seed |
-| &nbsp;&nbsp;`rules.py` | `allowed_transitions`, `is_editable`, `normalize_branch` (origin vs. branch). | API lifecycle and model |
-| &nbsp;&nbsp;`transform.py` | CSV row → incident: status/category maps, description → title, date → created_at, location → branch, origin; `import_problems` (= `validate_record` + known status + real date); `to_incident_fields`. | `scripts/seed_incidents.py` via `services/api` |
+| &nbsp;&nbsp;`rules.py` | `allowed_transitions`, `is_editable`, `branch_value` (an office by its value or display name). | API lifecycle and model |
+| &nbsp;&nbsp;`transform.py` | CSV row → incident: status/category maps, description → title (first 120 characters), date → created_at, location → branch, origin; the `ticket_id` only becomes a `source_key` to avoid duplicates; `import_problems` (= `validate_record` + known status + real date); `to_incident_fields`. | `scripts/seed_incidents.py` via `services/api` |
 | `types/` | TypeScript source (no build step), published as `@repo/shared-types`: incident types, labels, lifecycle helpers and form validations, built on the same JSON. | `uis/backoffice` |
 | `test/`, `incidents_analyzer/tests/` | The TypeScript side (`npm run test:shared`) and the Python side (`pytest packages/shared/incidents_analyzer`, with the API's virtualenv). | |
 

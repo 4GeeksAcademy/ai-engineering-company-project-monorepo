@@ -23,7 +23,7 @@ export function describeError(err: unknown, fallback: string): string {
  */
 export function friendlyFieldError(field: string, type: string | undefined, known?: string): string {
   if (known) return known;
-  if (field === "branch" && type === "value_error") return "Si el origen es Sucursal, indica de qué sucursal viene.";
+  if (field === "branch") return "Elige una de las oficinas de la lista.";
   if (field === "customer_email") return "Indica un email válido (ejemplo: cliente@empresa.com).";
   switch (type) {
     case "missing":

@@ -1,13 +1,13 @@
 """Pure rules of the incident domain that more than one consumer needs.
 
 Standard library only (like the rest of this package): the API, the scripts
-and the tests use these, and none of them has to own a copy. The table of
-transitions and the default branch come from ``contract.py``.
+and the tests use these, and none of them has to own a copy. The tables
+(transitions, branches) come from ``contract.py``.
 """
 
 from __future__ import annotations
 
-from .contract import DEFAULT_BRANCH, EDITABLE_STATUSES, TRANSITIONS
+from .contract import BRANCH_LABELS, BRANCHES, EDITABLE_STATUSES, TRANSITIONS
 
 
 def allowed_transitions(status: str) -> list[str]:
@@ -20,16 +20,11 @@ def is_editable(status: str) -> bool:
     return str(status) in EDITABLE_STATUSES
 
 
-def normalize_branch(branch: str, origin: str | None) -> str:
-    """``Central`` and ``central`` are the same place; and an incident that comes from a
-    branch has to say which one (``central`` is for "does not apply").
-
-    Raises ``ValueError`` with a message meant for people.
-    """
-    if branch.casefold() == DEFAULT_BRANCH:
-        branch = DEFAULT_BRANCH
-    if origin == "branch" and branch == DEFAULT_BRANCH:
-        raise ValueError(
-            f"An incident that comes from a branch must name it ('{DEFAULT_BRANCH}' is for when it does not apply)"
-        )
-    return branch
+def branch_value(text: str) -> str | None:
+    """The branch a free text refers to, by its value (``miami_office``) or its display name
+    (``Miami Office``), ignoring case and surrounding spaces; ``None`` if it is not one of Nexova's."""
+    wanted = " ".join(str(text).split()).casefold()
+    for value in BRANCHES:
+        if wanted in (value.casefold(), BRANCH_LABELS[value].casefold()):
+            return value
+    return None

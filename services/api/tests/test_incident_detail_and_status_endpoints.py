@@ -18,9 +18,9 @@ CSV = Path(__file__).resolve().parents[3] / "data" / "raw" / "incidents-nexova.c
 NEW = {
     "title": "VPN drops",
     "description": "VPN drops every ten minutes",
-    "category": "TECHNICAL",
+    "category": "technical_failure",
     "origin": "branch",
-    "branch": "Valencia",
+    "branch": "valencia_operations",
     "client_company": "Acme",
     "agent_id": "AGT-07",
     "customer_email": "jane.doe@acme.com",
@@ -243,7 +243,7 @@ def test_score_and_reason_only_apply_to_their_status(client):
 
 # --- only the status is updated ------------------------------------------------------------------
 
-@pytest.mark.parametrize("extra", [{"title": "New title"}, {"branch": "Madrid"}, {"origin": "internal"}, {"id": "NXV-000777"}, {"updated_at": "2020-01-01T00:00:00Z"}])
+@pytest.mark.parametrize("extra", [{"title": "New title"}, {"branch": "miami_office"}, {"origin": "internal"}, {"id": "NXV-000777"}, {"updated_at": "2020-01-01T00:00:00Z"}])
 def test_other_fields_cannot_be_changed_through_the_status_endpoint(client, extra):
     before = create(client)
     response = move(client, before["id"], "in_progress", **extra)

@@ -13,7 +13,7 @@ from .core import (
     to_export_rows,
     validate_record,
 )
-from .rules import allowed_transitions, is_editable, normalize_branch
+from .rules import allowed_transitions, branch_value, is_editable
 from .transform import import_problems, to_incident_fields
 
 __all__ = [
@@ -23,7 +23,7 @@ __all__ = [
     "allowed_transitions",
     "import_problems",
     "is_editable",
-    "normalize_branch",
+    "branch_value",
     "to_incident_fields",
     "REQUIRED_COLUMNS",
     "VALID_CATEGORIES",

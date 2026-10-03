@@ -32,4 +32,4 @@ Carga el export histórico del helpdesk en la base del gestor de incidencias (`s
   services/api/.venv/bin/python scripts/seed_incidents.py --reset      # borra las incidencias antes
   services/api/.venv/bin/python scripts/seed_incidents.py --csv otro.csv --db /tmp/incidents.json
   ```
-- **Detalle y tabla de mapeo**: [`services/api/README.md`](../services/api/README.md#incident-manager). El CONTEXT no define los mapas; viven en [`packages/shared/incidents/contract.json`](../packages/shared/incidents/contract.json).
+- **Detalle y tabla de mapeo**: [`services/api/README.md`](../services/api/README.md#incident-manager). Los mapas son los del CONTEXT (`CONTEXT-nexova.es.md`); viven en [`packages/shared/incidents/contract.json`](../packages/shared/incidents/contract.json).

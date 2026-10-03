@@ -10,10 +10,11 @@ from incidents import incident_store as store
 from main import app
 
 URL = "/api/incidents"
+BRANCH_SENTENCE = "branch must be one of: 'central', 'valencia_operations', 'miami_office' or 'remote'"
 VALID = {
     "title": "VPN drops",
     "description": "VPN drops every ten minutes",
-    "category": "TECHNICAL",
+    "category": "technical_failure",
     "origin": "customer",
     "branch": "central",
 }
@@ -74,16 +75,17 @@ def test_400_has_a_readable_message_and_a_detail_per_field(client):
         ({"title": "ab"}, "title must have at least 3 characters"),
         ({"title": "x" * 121}, "title must have at most 120 characters"),
         ({"description": "abc"}, "description must have at least 5 characters"),
-        ({"category": "SPAM"}, "category must be one of: 'TECHNICAL', 'BILLING', 'ACCESS', 'HR_QUERY' or 'COMPLAINT'"),
+        ({"category": "SPAM"}, "category must be one of: 'technical_failure', 'process_error', 'client_complaint', 'candidate_issue', 'staff_issue', 'sla_breach', 'data_quality' or 'other'"),
         ({"origin": "web"}, "origin must be one of: 'customer', 'branch' or 'internal'"),
-        ({"branch": "   "}, "branch cannot be empty"),
+        ({"branch": "   "}, BRANCH_SENTENCE),
+        ({"branch": "Valencia"}, BRANCH_SENTENCE),  # exactly one of the four offices, not a free text
+        ({"branch": "Central"}, BRANCH_SENTENCE),
         ({"agent_id": "AGT-7"}, "agent_id does not have a valid format"),
         ({"customer_email": "nope"}, "customer_email must be a valid email address"),
         ({"title": 42}, "title has the wrong type"),
         ({"title": None}, "title has the wrong type"),
         ({"status": "resolved"}, "status is not a field you can set"),
         ({"id": "NXV-000999"}, "id is not a field you can set"),
-        ({"origin": "branch", "branch": "central"}, "An incident that comes from a branch must name it ('central' is for when it does not apply)"),
     ],
 )
 def test_each_problem_is_explained_in_a_sentence(client, overrides, sentence):
@@ -145,3 +147,28 @@ def test_the_whole_incident_api_uses_400_but_other_domains_keep_422(client):
 def test_the_docs_advertise_400_not_422_for_creation(client):
     responses = client.get("/openapi.json").json()["paths"]["/api/incidents"]["post"]["responses"]
     assert "400" in responses and "422" not in responses and "201" in responses
+
+
+# --- the values the CONTEXT allows -----------------------------------------------------------------
+
+@pytest.mark.parametrize("category", ["technical_failure", "process_error", "client_complaint", "candidate_issue", "staff_issue", "sla_breach", "data_quality", "other"])
+def test_each_of_the_eight_categories_is_accepted(client, category):
+    assert client.post(URL, json={**VALID, "category": category}).json()["category"] == category
+
+
+@pytest.mark.parametrize("old", ["TECHNICAL", "BILLING", "ACCESS", "HR_QUERY", "COMPLAINT", "Technical_Failure", "complaint"])
+def test_the_csv_categories_and_other_spellings_are_not_accepted(client, old):
+    response = client.post(URL, json={**VALID, "category": old})
+    assert response.status_code == 400 and response.json()["detail"][0]["field"] == "category"
+
+
+@pytest.mark.parametrize("branch", ["central", "valencia_operations", "miami_office", "remote"])
+def test_each_of_the_four_offices_is_accepted(client, branch):
+    assert client.post(URL, json={**VALID, "branch": branch}).json()["branch"] == branch
+
+
+@pytest.mark.parametrize("origin", ["customer", "branch", "internal"])
+@pytest.mark.parametrize("branch", ["central", "valencia_operations", "miami_office", "remote"])
+def test_any_origin_can_go_with_any_office_central_included(client, origin, branch):
+    """`central` is the HQ in Valencia, a real office: staff there report as `branch` too."""
+    assert client.post(URL, json={**VALID, "origin": origin, "branch": branch}).status_code == 201

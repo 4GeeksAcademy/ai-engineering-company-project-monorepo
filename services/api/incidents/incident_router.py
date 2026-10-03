@@ -18,6 +18,7 @@ from core.errors import InvalidRequest
 
 from . import incident_service as service
 from .incident_schemas import (
+    IncidentBranch,
     IncidentCategory,
     IncidentCreate,
     IncidentFacets,
@@ -44,7 +45,7 @@ def get_filters(
     ] = None,
     category: Annotated[list[IncidentCategory] | None, Query(description="Only these categories (repeatable).")] = None,
     origin: Annotated[list[IncidentOrigin] | None, Query(description="Only these origins (repeatable).")] = None,
-    branch: Annotated[str | None, Query(max_length=60, description="Only this branch (case-insensitive, exact), e.g. `central`.")] = None,
+    branch: Annotated[IncidentBranch | None, Query(description="Only this office: `central`, `valencia_operations`, `miami_office` or `remote`.")] = None,
     agent_id: Annotated[str | None, Query(max_length=20)] = None,
     client_company: Annotated[str | None, Query(max_length=120)] = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
@@ -57,7 +58,7 @@ def get_filters(
         statuses=tuple(s.value for s in status_ or ()),
         categories=tuple(c.value for c in category or ()),
         origins=tuple(o.value for o in origin or ()),
-        branch=(branch or "").strip() or None,
+        branch=branch.value if branch else None,
         agent_id=agent_id or None,
         client_company=(client_company or "").strip() or None,
         q=(q or "").strip() or None,

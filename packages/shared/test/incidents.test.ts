@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  BRANCH_LABELS,
+  INCIDENT_BRANCHES,
   INCIDENT_CATEGORIES,
   INCIDENT_ORIGINS,
   INCIDENT_STATUSES,
@@ -16,7 +18,7 @@ import {
 const valid = {
   title: "VPN se cae",
   description: "La VPN se cae cada diez minutos",
-  category: "TECHNICAL",
+  category: "technical_failure",
   origin: "customer",
   branch: "central",
   client_company: "",
@@ -24,9 +26,20 @@ const valid = {
   customer_email: "",
 };
 
-test("categories, statuses and origins are the ones in the shared contract", () => {
+test("categories, offices, statuses and origins are the ones in the shared contract (and the CONTEXT)", () => {
   const contract = JSON.parse(readFileSync(new URL("../incidents/contract.json", import.meta.url), "utf8"));
   assert.deepEqual(INCIDENT_CATEGORIES, contract.categories);
+  assert.deepEqual(INCIDENT_CATEGORIES, [
+    "technical_failure", "process_error", "client_complaint", "candidate_issue",
+    "staff_issue", "sla_breach", "data_quality", "other",
+  ]);
+  assert.deepEqual(INCIDENT_BRANCHES, ["central", "valencia_operations", "miami_office", "remote"]);
+  assert.deepEqual(BRANCH_LABELS, {
+    central: "Central — Sede Valencia",
+    valencia_operations: "Valencia — Operaciones",
+    miami_office: "Miami Office",
+    remote: "Remoto (empleado sin sede fija)",
+  });
   assert.deepEqual(INCIDENT_STATUSES, ["open", "in_progress", "resolved", "discarded"]);
   assert.deepEqual(INCIDENT_STATUSES, contract.statuses);
   assert.deepEqual(INCIDENT_ORIGINS, ["customer", "branch", "internal"]);
@@ -47,10 +60,21 @@ test("optional fields are only checked when filled in", () => {
   assert.deepEqual(validateIncidentDraft({ ...valid, agent_id: "AGT-07", customer_email: "a@b.co" }), {});
 });
 
-test("an incident from a branch must name it; central is for when it does not apply", () => {
-  assert.ok(validateIncidentDraft({ ...valid, origin: "branch", branch: "Central" }).branch);
-  assert.deepEqual(validateIncidentDraft({ ...valid, origin: "branch", branch: "Valencia" }), {});
-  assert.deepEqual(validateIncidentDraft({ ...valid, origin: "internal", branch: "central" }), {});
+test("the branch is exactly one of the four offices; central is a real office for any origin", () => {
+  for (const branch of INCIDENT_BRANCHES) assert.deepEqual(validateIncidentDraft({ ...valid, branch }), {});
+  for (const origin of ["customer", "branch", "internal"]) {
+    assert.deepEqual(validateIncidentDraft({ ...valid, origin, branch: "central" }), {});
+  }
+  for (const branch of ["Central", "Valencia", "valencia", "miami", " remote", "hq"]) {
+    assert.ok(validateIncidentDraft({ ...valid, branch }).branch, branch);
+  }
+});
+
+test("only the categories of the CONTEXT are valid (not the CSV ones)", () => {
+  for (const category of INCIDENT_CATEGORIES) assert.deepEqual(validateIncidentDraft({ ...valid, category }), {});
+  for (const category of ["TECHNICAL", "BILLING", "technical", "spam", ""]) {
+    assert.ok(validateIncidentDraft({ ...valid, category }).category, category);
+  }
 });
 
 test("lifecycle table: resolved and discarded are final", () => {
