@@ -51,7 +51,19 @@ export default function IncidentSummaryPanel({ summary }: { summary: IncidentSum
               ))}
             </div>
           </div>
-          <RankCard title="Sucursales con más incidencias" items={summary.top_branches} />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h3 className="font-semibold text-white">Por sucursal</h3>
+            <div className="mt-4 space-y-3">
+              {Object.entries(summary.branch_counts)
+                .slice(0, 6)
+                .map(([branch, count]) => (
+                  <BreakdownBar key={branch} label={branch} count={count} percentage={summary.branch_percentages[branch]} />
+                ))}
+            </div>
+            {Object.keys(summary.branch_counts).length > 6 && (
+              <p className="mt-3 text-xs text-slate-500">Y {Object.keys(summary.branch_counts).length - 6} sucursales más. Usa el filtro para verlas.</p>
+            )}
+          </div>
           <RankCard title="Clientes con más incidencias" items={summary.top_clients} empty="Ninguna incidencia indica cliente." />
         </div>
       )}

@@ -20,6 +20,8 @@ export class ApiError extends Error {
     public status: number,
     /** Per-field messages of a 422 (FastAPI validation), keyed by the body field name. */
     public fieldErrors: Record<string, string> = {},
+    /** Reference of a 500 (`error_id`): the team finds the details in the server log with it. */
+    public errorId?: string,
   ) {
     super(message);
   }
@@ -28,7 +30,8 @@ export class ApiError extends Error {
 async function toApiError(response: Response): Promise<ApiError> {
   try {
     const body = await response.json();
-    if (typeof body.detail === "string") return new ApiError(body.detail, response.status);
+    if (typeof body.detail === "string")
+      return new ApiError(body.detail, response.status, {}, typeof body.error_id === "string" ? body.error_id : undefined);
     if (Array.isArray(body.detail)) {
       const fieldErrors: Record<string, string> = {};
       const message = body.detail
@@ -39,7 +42,8 @@ async function toApiError(response: Response): Promise<ApiError> {
           return field ? `${field}: ${text}` : text;
         })
         .join("; ");
-      return new ApiError(message, response.status, fieldErrors);
+      // POST /api/incidents answers 400 with a ready-to-read `message` next to the per-field `detail`.
+      return new ApiError(typeof body.message === "string" ? body.message : message, response.status, fieldErrors);
     }
   } catch {
     /* not JSON: fall back to the status text */

@@ -29,7 +29,7 @@ Stored in TinyDB (`incidents/db.json`, gitignored), keyed by `id` (`NXV-000101`,
 | `created_at`, `updated_at` | auto (UTC); `updated_at` moves on every edit or status change |
 | `client_company`, `agent_id` (`AGT-07`), `customer_email` | optional extras from the helpdesk CSV (the email is sensitive: masked in lists, never searchable, never echoed in errors) |
 | `satisfaction_score` | 1-5, optional, only on `resolved` |
-| `discard_reason` | 5-300 chars, required to discard, only on `discarded` |
+| `discard_reason` | 5-300 chars, optional, only on `discarded` |
 | `history` | audit trail: created / imported / status_changed / edited (edits log the *names* of the fields, never values) |
 
 Unknown fields are rejected (`extra=forbid`), values must match exactly (`"web"`, `"Customer"`, `"closed"` are refused) and `IncidentRecord` re-checks the lifecycle invariants on every write, so no path (API, seed, merge on edit) can store an inconsistent incident.
@@ -38,25 +38,53 @@ Unknown fields are rejected (`extra=forbid`), values must match exactly (`"web"`
 
 ```
 open ──► in_progress ──► resolved      satisfaction_score optional
-  │         │  ▲
-  │         ▼  └── back to open
-  └──────► discarded                    discard_reason required
-resolved / discarded ──► open           reopen: score / reason are cleared
+  │          │
+  └──────────┴────────► discarded      discard_reason optional
 ```
 
-Any other move is `409` (notably `open → resolved`: it has to be worked on first). Content can only be edited while `open` or `in_progress`. There is no delete: discarding retires an incident and keeps its history.
+| From | Allowed moves |
+| --- | --- |
+| `open` | `in_progress`, `discarded` |
+| `in_progress` | `resolved`, `discarded` |
+| `resolved`, `discarded` | none: they are **final** |
+
+Anything else is `409` with a message that says why (`cannot go from open to resolved. Allowed: in_progress, discarded.` / `is resolved, a final status: it cannot change to open.`). An incident cannot be resolved without having been worked on, and nothing goes back to `open`. Content can only be edited while `open` or `in_progress`. There is no delete: discarding retires an incident and keeps its history.
 
 | Method & path | Purpose |
 | --- | --- |
 | `GET /api/incidents` | Paginated list. Filters (AND): `status`, `category`, `origin` (repeatable), `branch`, `agent_id`, `client_company` (contains), `q` (id / title / description / client / branch), `date_from`, `date_to` (creation day). `sort` = `created_at \| id \| updated_at`, `order`, `page`, `page_size` (≤ 100). |
-| `GET /api/incidents/summary` | Dashboard numbers for the same filters: totals and percentages by status and category, by origin, backlog (`open` + `in_progress`) by category, satisfaction, top branches and clients. |
+| `GET /api/incidents/summary` | Totals (and percentages) **by status, category, origin and branch** for the same filters, plus the backlog (`open` + `in_progress`) by category, satisfaction and top branches / clients. **With no data every count is `0`** (`central` is always listed in `branch_counts`; `satisfaction_average` is `null` because there is no score to average). |
 | `GET /api/incidents/facets` | Distinct branches, clients and agents, to fill dropdowns. |
-| `POST /api/incidents` | Create (always `open`). |
-| `GET /api/incidents/{id}` | Full incident with `history`, `allowed_transitions` and `editable`. |
+| `POST /api/incidents` | Create (always `open`; `id`, `created_at`, `updated_at` are set by the server). `201` with the incident and a `Location` header. An invalid request is a **`400`** (see below). |
+| `GET /api/incidents/{id}` | The incident's detail: content, status, full `customer_email`, `history`, `allowed_transitions` and `editable`. `404` (`{"detail": "Incident NXV-000999 not found"}`) if it does not exist. |
 | `PATCH /api/incidents/{id}` | Edit content fields (only the ones sent; required ones cannot be `null`, optional ones can be cleared with `null`). |
-| `PATCH /api/incidents/{id}/status` | Lifecycle move: `{"status": "in_progress"}`, `{"status": "resolved", "satisfaction_score": 4}`, `{"status": "discarded", "discard_reason": "…"}`, `{"status": "open"}`. |
+| `PATCH /api/incidents/{id}/status` | Changes **only the status** and returns the updated incident: `{"status": "in_progress"}`. Optional detail of the move: `satisfaction_score` (1-5, only with `resolved`) or `discard_reason` (only with `discarded`). Any other field is rejected (`422`); an unknown status is `422`; an invalid move is `409`; an unknown id is `404` (checked before the move). |
 
-**Errors**: `401` no session · `404` unknown incident · `409` the incident's state forbids it (forbidden transition, editing a resolved incident) · `422` invalid or missing data, per field, as `detail: [{loc, msg}]`. The `422` body never echoes the rejected values.
+**Errors** — the same on every `/api/incidents` route:
+
+| Status | When | Body |
+| --- | --- | --- |
+| `400` | Invalid input: a missing or invalid field in the body, a bad filter or paging value, a malformed JSON body, a rule such as origin/branch. | `message` + `detail` naming each problematic field |
+| `401` | No valid session (checked before anything else). | `{"detail": …}` |
+| `404` | The incident does not exist. | `{"detail": "Incident NXV-000999 not found"}` |
+| `409` | The incident's state forbids it: invalid transition, editing a final incident. | `{"detail": …}` |
+| `500` | Anything unexpected. **Always generic**: no stack trace, exception text or path ever reaches the client. | `{"detail": "Internal server error. Please try again later.", "error_id": "9f3a1c2e"}` |
+
+```json
+POST /api/incidents   {"title": "ab", "category": "SPAM", "origin": "web", "branch": "central"}
+
+400 {
+  "message": "The request is not valid: title must have at least 3 characters; description is required; category must be one of: 'TECHNICAL', 'BILLING', 'ACCESS', 'HR_QUERY' or 'COMPLAINT'; origin must be one of: 'customer', 'branch' or 'internal'.",
+  "detail": [
+    {"field": "title", "loc": ["body", "title"], "msg": "title must have at least 3 characters", "type": "string_too_short"},
+    "…"
+  ]
+}
+```
+
+Every problem is reported at once, and a `400` never quotes what was sent (it could be the customer's email). Other domains (suppliers, users, profiles, auth) keep FastAPI's `422`. The `error_id` of a `500` is also written, with the full traceback, to the server log (`Unhandled error [9f3a1c2e] on GET /api/incidents/summary`), so a report can be matched with its cause; the 500 handler lives in `core/errors.py` (`catch_unhandled_errors`) and sits inside the CORS middleware, so the browser can read it.
+
+**Reads never fail on an empty database**: with no file, an empty or blank file, or no incidents at all, the list is an empty page, the summary is all zeros and the facets are empty lists; asking for one incident is a plain `404`. Documents this version cannot read (e.g. left by an older data model) are skipped and logged instead of breaking every read — their ids are still never reused. A corrupt file is the one case that is a `500`.
 
 **Seed** — loads the historical CSV (`data/raw/incidents-nexova.csv`) with [`scripts/seed_incidents.py`](../../scripts/seed_incidents.py) (logic in [`incidents/seeding.py`](./incidents/seeding.py)); run it with this API's environment:
 

@@ -109,6 +109,9 @@ export interface IncidentSummary {
   category_counts: Record<IncidentCategory, number>;
   category_percentages: Record<IncidentCategory, number>;
   origin_counts: Record<IncidentOrigin, number>;
+  /** Per branch (sede), biggest first; `central` is always present. */
+  branch_counts: Record<string, number>;
+  branch_percentages: Record<string, number>;
   /** open + in_progress, per category: the backlog. */
   active_by_category: Record<IncidentCategory, number>;
   satisfaction_average: number | null;
@@ -221,9 +224,11 @@ export function validateStatusChange(
   const errors: FieldErrors<"status" | "satisfaction_score" | "discard_reason"> = {};
   if (!allowedTransitions(current).includes(change.status)) {
     errors.status =
-      current === change.status
-        ? `La incidencia ya está ${STATUS_LABELS[current].toLowerCase()}.`
-        : `No se puede pasar de ${STATUS_LABELS[current]} a ${STATUS_LABELS[change.status]}.`;
+      allowedTransitions(current).length === 0
+        ? `La incidencia está ${STATUS_LABELS[current].toLowerCase()}: es un estado final y no puede cambiar.`
+        : current === change.status
+          ? `La incidencia ya está ${STATUS_LABELS[current].toLowerCase()}.`
+          : `No se puede pasar de ${STATUS_LABELS[current]} a ${STATUS_LABELS[change.status]}.`;
     return errors;
   }
   const score = change.satisfaction_score;
@@ -232,14 +237,13 @@ export function validateStatusChange(
     else if (!Number.isInteger(score) || score < LIMITS.scoreMin || score > LIMITS.scoreMax)
       errors.satisfaction_score = `La satisfacción debe estar entre ${LIMITS.scoreMin} y ${LIMITS.scoreMax}.`;
   }
-  if (change.status === "discarded") {
-    const reason = (change.discard_reason ?? "").trim();
-    if (reason.length < LIMITS.discardReasonMin)
-      errors.discard_reason = `Explica el motivo (al menos ${LIMITS.discardReasonMin} caracteres).`;
+  const reason = (change.discard_reason ?? "").trim();
+  if (reason) {
+    if (change.status !== "discarded") errors.discard_reason = "El motivo solo se indica al descartar.";
+    else if (reason.length < LIMITS.discardReasonMin)
+      errors.discard_reason = `El motivo debe tener al menos ${LIMITS.discardReasonMin} caracteres (o déjalo vacío).`;
     else if (reason.length > LIMITS.discardReasonMax)
       errors.discard_reason = `El motivo no puede superar los ${LIMITS.discardReasonMax} caracteres.`;
-  } else if (change.discard_reason) {
-    errors.discard_reason = "El motivo solo se indica al descartar.";
   }
   return errors;
 }

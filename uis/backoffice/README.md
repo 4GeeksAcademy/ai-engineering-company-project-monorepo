@@ -1,7 +1,7 @@
 # Nexova Backoffice (`uis/backoffice`)
 
 Internal operations app, built with **Next.js 16 (App Router)**, React 19 and Tailwind. Tools: **Incidencias**
-(the incident manager: summary panel, filters by status/category/origin/branch, list, report/edit form, detail with lifecycle and history),
+(the incident manager: summary panel, filters by status/category/origin/branch, list, report/edit form, detail with lifecycle and history; `resolved` and `discarded` are final),
 **Análisis de incidentes** (uploads a support-ticket CSV to `services/api` and shows the validation/metrics report),
 **Proveedores** (supplier directory) and **Mi perfil**.
 

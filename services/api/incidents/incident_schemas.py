@@ -211,6 +211,24 @@ class IncidentOut(_IncidentView):
     history: list[HistoryEntry]
 
 
+class ErrorDetail(BaseModel):
+    detail: str
+
+
+class FieldProblem(BaseModel):
+    field: str | None  # the problematic field (None when it is the body as a whole)
+    loc: list[str | int]
+    msg: str
+    type: str
+
+
+class InvalidRequestResponse(BaseModel):
+    """Body of the ``400`` the incident API answers when a request is invalid."""
+
+    message: str
+    detail: list[FieldProblem]
+
+
 class IncidentPage(BaseModel):
     items: list[IncidentListItem]
     total: int
@@ -225,7 +243,8 @@ class CountItem(BaseModel):
 
 
 class IncidentSummary(BaseModel):
-    """Dashboard numbers for the incidents matching the current filters."""
+    """Dashboard numbers for the incidents matching the current filters. With none, every
+    count is 0 (and the satisfaction average is ``null``: there is no score to average)."""
 
     total: int
     status_counts: dict[str, int]
@@ -233,6 +252,9 @@ class IncidentSummary(BaseModel):
     category_counts: dict[str, int]
     category_percentages: dict[str, float]
     origin_counts: dict[str, int]
+    # Per branch ("sede"); ``central`` is always present, so an empty database is not an empty object.
+    branch_counts: dict[str, int]
+    branch_percentages: dict[str, float]
     # open + in_progress, per category: the backlog.
     active_by_category: dict[str, int]
     satisfaction_average: float | None

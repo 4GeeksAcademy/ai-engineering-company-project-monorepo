@@ -26,15 +26,10 @@
     ],
     "in_progress": [
       "resolved",
-      "open",
       "discarded"
     ],
-    "resolved": [
-      "open"
-    ],
-    "discarded": [
-      "open"
-    ]
+    "resolved": [],
+    "discarded": []
   },
   "editableStatuses": [
     "open",

@@ -3,6 +3,7 @@ lifecycle, list with filters and summarise."""
 
 from __future__ import annotations
 
+import logging
 import math
 from collections import Counter
 from dataclasses import dataclass
@@ -10,6 +11,8 @@ from datetime import date, datetime, timezone
 from typing import Literal
 
 from pydantic import ValidationError
+
+from incidents_analyzer.contract import DEFAULT_BRANCH
 
 from . import incident_lifecycle as lifecycle
 from . import incident_store as store
@@ -40,6 +43,8 @@ __all__ = [
     "InvalidIncidentUpdateError",
     "TransitionNotAllowedError",
 ]
+
+logger = logging.getLogger(__name__)
 
 SortField = Literal["created_at", "id", "updated_at"]
 SortOrder = Literal["asc", "desc"]
@@ -128,9 +133,24 @@ def _to_list_item(doc: dict) -> IncidentListItem:
     return IncidentListItem(**_view(doc), customer_email_masked=mask_email(email) if email else None)
 
 
+def _is_readable(doc: dict) -> bool:
+    """A stored document this version can read. Anything else (e.g. left by an older data model)
+    is skipped and logged instead of breaking every read."""
+    try:
+        IncidentRecord.model_validate(doc)
+    except ValidationError:
+        logger.warning("Skipping unreadable incident document %r", doc.get("id", "(no id)"))
+        return False
+    return True
+
+
+def _readable_docs() -> list[dict]:
+    return [doc for doc in store.all_docs() if _is_readable(doc)]
+
+
 def _require(incident_id: str) -> dict:
     doc = store.get(incident_id)
-    if doc is None:
+    if doc is None or not _is_readable(doc):
         raise IncidentNotFoundError(incident_id)
     return doc
 
@@ -174,9 +194,7 @@ def update_incident(incident_id: str, payload: IncidentUpdate, *, actor: str) ->
                 **{**doc, **changes, "updated_at": now.isoformat(), "history": [*doc["history"], entry]}
             )
         except ValidationError as exc:
-            raise InvalidIncidentUpdateError(
-                exc.errors(include_url=False, include_context=False, include_input=False)
-            ) from exc
+            raise InvalidIncidentUpdateError(exc.errors(include_url=False, include_input=False)) from exc
         new_doc = record.model_dump(mode="json")
         store.replace(incident_id, new_doc)
     return _to_out(new_doc)
@@ -192,7 +210,7 @@ def change_status(incident_id: str, change: StatusChange, *, actor: str) -> Inci
 
 
 def _filtered(filters: IncidentFilters) -> list[dict]:
-    return [doc for doc in store.all_docs() if filters.matches(doc)]
+    return [doc for doc in _readable_docs() if filters.matches(doc)]
 
 
 def list_incidents(
@@ -233,6 +251,7 @@ def summarize(filters: IncidentFilters) -> IncidentSummary:
     status_counts = {s.value: 0 for s in IncidentStatus} | Counter(d["status"] for d in docs)
     category_counts = {c.value: 0 for c in IncidentCategory} | Counter(d["category"] for d in docs)
     origin_counts = {o.value: 0 for o in IncidentOrigin} | Counter(d["origin"] for d in docs)
+    branch_counts = {DEFAULT_BRANCH: 0} | dict(sorted(Counter(d["branch"] for d in docs).items(), key=lambda item: (-item[1], item[0])))
     active = Counter(d["category"] for d in docs if d["status"] in (IncidentStatus.open, IncidentStatus.in_progress))
     scores = [d["satisfaction_score"] for d in docs if d.get("satisfaction_score") is not None]
     distribution = Counter(scores)
@@ -243,6 +262,8 @@ def summarize(filters: IncidentFilters) -> IncidentSummary:
         category_counts=category_counts,
         category_percentages=_percentages(category_counts, total),
         origin_counts=origin_counts,
+        branch_counts=branch_counts,
+        branch_percentages=_percentages(branch_counts, total),
         active_by_category={c.value: active.get(c.value, 0) for c in IncidentCategory},
         satisfaction_average=round(sum(scores) / len(scores), 2) if scores else None,
         satisfaction_scored=len(scores),
@@ -253,7 +274,7 @@ def summarize(filters: IncidentFilters) -> IncidentSummary:
 
 
 def facets() -> IncidentFacets:
-    docs = store.all_docs()
+    docs = _readable_docs()
 
     def distinct(field: str) -> list[str]:
         return sorted({doc[field] for doc in docs if doc.get(field)}, key=str.casefold)

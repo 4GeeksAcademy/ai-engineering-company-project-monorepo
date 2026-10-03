@@ -117,7 +117,7 @@ export default function IncidentDetailPage() {
       {notice && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{notice}</p>}
       {error && <ErrorBanner message={error} />}
       {!incident.editable && (
-        <p className="text-sm text-slate-500">Las incidencias resueltas o descartadas no se pueden editar. Reábrela para modificarla.</p>
+        <p className="text-sm text-slate-500">Las incidencias resueltas o descartadas son finales: no se pueden editar.</p>
       )}
 
       {editing ? (

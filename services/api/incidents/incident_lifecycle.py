@@ -1,14 +1,13 @@
 """Incident lifecycle rules. Pure functions over stored documents: no I/O, no HTTP.
 
     open ──► in_progress ──► resolved      (satisfaction_score 1-5 is optional)
-      │          │  ▲
-      │          ▼  └── back to open
-      └──────► discarded                    (needs discard_reason)
-    resolved / discarded ──► open           (reopen: score / reason are cleared)
+      │          │
+      └──────────┴────────► discarded      (discard_reason is optional)
 
-Any other move is refused; in particular an incident cannot be resolved
-without having been worked on (open -> resolved). Content can only be edited
-while open or in progress. The transition table comes from the shared contract.
+``resolved`` and ``discarded`` are final: nothing leaves them. Any other move
+is refused; in particular an incident cannot be resolved without having been
+worked on (open -> resolved), nor go back to open. Content can only be edited
+while open or in progress. The table comes from the shared contract.
 """
 
 from __future__ import annotations
@@ -27,23 +26,24 @@ class LifecycleError(Exception):
 class TransitionNotAllowedError(LifecycleError):
     def __init__(self, incident_id: str, current: str, target: str):
         self.allowed = allowed_transitions(current)
-        allowed = ", ".join(self.allowed) or "none"
-        if current == target:
+        if not self.allowed:
+            message = f"Incident {incident_id} is {current}, a final status: it cannot change to {target}."
+        elif current == target:
             message = f"Incident {incident_id} is already {current}."
         else:
-            message = f"Incident {incident_id} cannot go from {current} to {target}. Allowed: {allowed}."
+            message = f"Incident {incident_id} cannot go from {current} to {target}. Allowed: {', '.join(self.allowed)}."
         super().__init__(message)
 
 
 class IncidentLockedError(LifecycleError):
     def __init__(self, incident_id: str, current: str):
         super().__init__(
-            f"Incident {incident_id} is {current} and can no longer be edited. Reopen it first."
+            f"Incident {incident_id} is {current}, a final status: it can no longer be edited."
         )
 
 
 class FieldProblemError(LifecycleError):
-    """A status change is missing (or has an extra) field: reported against that field (422)."""
+    """A status change is missing (or has an extra) field: reported against that field (400)."""
 
     def __init__(self, field: str, message: str):
         self.field = field
@@ -66,7 +66,7 @@ def ensure_editable(doc: dict) -> None:
 def apply_status_change(doc: dict, change: StatusChange, *, actor: str, now: datetime) -> dict:
     """Return the incident document after moving it to ``change.status``.
 
-    Raises ``TransitionNotAllowedError`` (409) or ``FieldProblemError`` (422).
+    Raises ``TransitionNotAllowedError`` (409) or ``FieldProblemError`` (400).
     The input is not modified.
     """
     current, target = doc["status"], change.status.value
@@ -76,10 +76,7 @@ def apply_status_change(doc: dict, change: StatusChange, *, actor: str, now: dat
     score, reason = change.satisfaction_score, change.discard_reason
     if score is not None and target != IncidentStatus.resolved:
         raise FieldProblemError("satisfaction_score", "A satisfaction score only applies when resolving")
-    if target == IncidentStatus.discarded:
-        if reason is None:
-            raise FieldProblemError("discard_reason", "Discarding an incident requires a reason")
-    elif reason is not None:
+    if reason is not None and target != IncidentStatus.discarded:
         raise FieldProblemError("discard_reason", "A discard reason only applies when discarding")
 
     entry = {

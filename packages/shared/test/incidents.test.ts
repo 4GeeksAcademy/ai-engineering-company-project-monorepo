@@ -53,29 +53,44 @@ test("an incident from a branch must name it; central is for when it does not ap
   assert.deepEqual(validateIncidentDraft({ ...valid, origin: "internal", branch: "central" }), {});
 });
 
-test("lifecycle table", () => {
+test("lifecycle table: resolved and discarded are final", () => {
   assert.deepEqual(allowedTransitions("open"), ["in_progress", "discarded"]);
-  assert.deepEqual(allowedTransitions("in_progress"), ["resolved", "open", "discarded"]);
-  assert.deepEqual(allowedTransitions("resolved"), ["open"]);
-  assert.deepEqual(allowedTransitions("discarded"), ["open"]);
+  assert.deepEqual(allowedTransitions("in_progress"), ["resolved", "discarded"]);
+  assert.deepEqual(allowedTransitions("resolved"), []);
+  assert.deepEqual(allowedTransitions("discarded"), []);
   assert.equal(isEditable("open"), true);
   assert.equal(isEditable("in_progress"), true);
   assert.equal(isEditable("resolved"), false);
+  assert.equal(isEditable("discarded"), false);
 });
 
-test("resolving: score is optional but 1-5; discarding needs a reason; each only where it applies", () => {
+test("every pair of statuses is checked against the table", () => {
+  const valid: Record<string, string[]> = { open: ["in_progress", "discarded"], in_progress: ["resolved", "discarded"], resolved: [], discarded: [] };
+  for (const from of INCIDENT_STATUSES) {
+    for (const to of INCIDENT_STATUSES) {
+      const errors = validateStatusChange(from, { status: to });
+      assert.equal(!errors.status, valid[from].includes(to), `${from} -> ${to}`);
+    }
+  }
+});
+
+test("resolving: the score is optional but 1-5; discarding: the reason is optional but 5+ chars; each only where it applies", () => {
   assert.deepEqual(validateStatusChange("in_progress", { status: "resolved" }), {});
   assert.deepEqual(validateStatusChange("in_progress", { status: "resolved", satisfaction_score: 4 }), {});
   assert.ok(validateStatusChange("in_progress", { status: "resolved", satisfaction_score: 6 }).satisfaction_score);
   assert.ok(validateStatusChange("open", { status: "in_progress", satisfaction_score: 3 }).satisfaction_score);
+  assert.deepEqual(validateStatusChange("open", { status: "discarded" }), {});
+  assert.deepEqual(validateStatusChange("open", { status: "discarded", discard_reason: "   " }), {});
   assert.ok(validateStatusChange("open", { status: "discarded", discard_reason: "ok" }).discard_reason);
   assert.deepEqual(validateStatusChange("open", { status: "discarded", discard_reason: "Duplicado de otra" }), {});
   assert.ok(validateStatusChange("open", { status: "in_progress", discard_reason: "motivo largo" }).discard_reason);
 });
 
-test("forbidden moves are reported on status", () => {
+test("forbidden moves are reported on status; a final status says so", () => {
   assert.ok(validateStatusChange("open", { status: "resolved" }).status);
-  assert.ok(validateStatusChange("resolved", { status: "discarded", discard_reason: "motivo largo" }).status);
+  assert.ok(validateStatusChange("in_progress", { status: "open" }).status);
+  assert.match(validateStatusChange("resolved", { status: "open" }).status ?? "", /estado final/);
+  assert.match(validateStatusChange("discarded", { status: "in_progress" }).status ?? "", /estado final/);
   assert.match(validateStatusChange("open", { status: "open" }).status ?? "", /ya está/);
 });
 

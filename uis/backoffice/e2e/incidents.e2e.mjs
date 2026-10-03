@@ -109,40 +109,56 @@ const ticket = (await created.innerText()).match(/NXV-\d{6}/)[0];
 await page.waitForFunction((n) => document.body.innerText.includes(`${n}`), total0 + 1);
 ok(Number(await stat("Total")) === total0 + 1, `incidencia ${ticket} creada (sin cliente ni email) y el resumen se actualiza`);
 
-// 4. detail + lifecycle
+// 4. detail + lifecycle: open -> in_progress -> resolved; resolved is final
 await page.getByRole("link", { name: ticket }).click();
 await page.getByRole("heading", { name: new RegExp(ticket) }).waitFor();
 ok((await page.getByText("Valencia Centro").first().isVisible()) && (await page.getByRole("button", { name: "Editar" }).isVisible()), "detalle: abierta, de la sucursal Valencia Centro y editable");
 ok((await page.getByRole("button", { name: "Resolver", exact: true }).count()) === 0, "desde Abierta no se puede resolver directamente");
+ok((await page.getByRole("button", { name: /Abrir|Reabrir/ }).count()) === 0, "no hay forma de volver a Abierta");
 await page.getByRole("button", { name: "Poner en curso", exact: true }).click();
 await page.getByRole("button", { name: /Confirmar: poner en curso/ }).click();
 await page.getByText("Estado actualizado.").waitFor();
 ok((await page.getByRole("button", { name: "Editar" }).isVisible()) && (await page.getByRole("button", { name: "Resolver", exact: true }).isVisible()), "en curso: sigue editable y ya se puede resolver");
-await page.getByRole("button", { name: "Resolver", exact: true }).click();
-await page.locator("label", { hasText: /^4Satisfecho$/ }).click();
-await page.getByRole("button", { name: /Confirmar: resolver/ }).click();
-await page.getByText("4 / 5").waitFor();
-ok((await page.getByRole("button", { name: "Editar" }).count()) === 0, "resuelta con puntuación 4; ya no se puede editar");
-ok((await page.getByRole("button", { name: "Descartar" }).count()) === 0, "desde Resuelta no se puede descartar (solo reabrir)");
-await page.getByRole("button", { name: "Reabrir", exact: true }).click();
-await page.getByRole("button", { name: /Confirmar: reabrir/ }).click();
-await page.getByRole("button", { name: "Editar" }).waitFor();
-ok(true, "reabierta: vuelve a ser editable");
+ok((await page.getByRole("button", { name: /Abrir|Reabrir|Devolver/ }).count()) === 0, "en curso: no se puede volver a Abierta");
 await page.getByRole("button", { name: "Editar" }).click();
 await page.locator("#incident-title").fill("VPN se cae cada cinco minutos");
 await page.getByRole("button", { name: "Guardar cambios" }).click();
 await page.getByText("Cambios guardados.").waitFor();
 ok(await page.getByText("VPN se cae cada cinco minutos").first().isVisible(), "edición guardada");
+await page.getByRole("button", { name: "Resolver", exact: true }).click();
+await page.locator("label", { hasText: /^4Satisfecho$/ }).click();
+await page.getByRole("button", { name: /Confirmar: resolver/ }).click();
+await page.getByText("4 / 5").waitFor();
+ok(
+  (await page.getByRole("button", { name: "Editar" }).count()) === 0 &&
+    (await page.locator("section[aria-label='Cambiar estado'] button").count()) === 0 &&
+    /estado final/.test(await page.locator("section[aria-label='Cambiar estado']").innerText()),
+  "resuelta: estado final, sin botones de edición ni de cambio de estado",
+);
+const history = await page.locator("section[aria-label='Historial'] li").allInnerTexts();
+ok(history.length === 4 && history[0].includes("En curso → Resuelta") && history.at(-1).includes("Incidencia creada"), `historial completo (${history.length} eventos)`);
+await shot("incidents-detail");
+
+// 4b. discard from Abierta: the reason is optional but, if given, must be meaningful
+await page.goto(`${APP}/incidents`);
+await page.getByRole("button", { name: "Nueva incidencia" }).click();
+await page.locator("#incident-title").fill("Aviso duplicado");
+await page.locator("#incident-category").selectOption("ACCESS");
+await page.locator("#incident-description").fill("Registrada por error, ya existe otra");
+await page.getByRole("button", { name: "Crear incidencia" }).click();
+const second = page.getByRole("status").filter({ hasText: /Incidencia NXV-\d{6} creada/ });
+await second.waitFor();
+const secondId = (await second.innerText()).match(/NXV-\d{6}/)[0];
+await page.getByRole("link", { name: secondId }).click();
+await page.getByRole("heading", { name: new RegExp(secondId) }).waitFor();
 await page.getByRole("button", { name: "Descartar", exact: true }).click();
-await page.getByLabel("Motivo del descarte").fill("ok");
+await page.getByLabel("Motivo del descarte (opcional)").fill("ok");
 await page.getByRole("button", { name: /Confirmar: descartar/ }).click();
-ok(/motivo/i.test(await page.locator("#reason-error").innerText()), "descartar con motivo corto: error de validación");
-await page.getByLabel("Motivo del descarte").fill("Duplicada de otra incidencia");
+ok(/motivo/i.test(await page.locator("#reason-error").innerText()), "descartar con un motivo demasiado corto: error de validación");
+await page.getByLabel("Motivo del descarte (opcional)").fill("");
 await page.getByRole("button", { name: /Confirmar: descartar/ }).click();
 await page.getByText("Estado actualizado.").waitFor();
-const history = await page.locator("section[aria-label='Historial'] li").allInnerTexts();
-ok(history.length === 6 && history[0].includes("Abierta → Descartada") && history.at(-1).includes("Incidencia creada"), `historial completo (${history.length} eventos)`);
-await shot("incidents-detail");
+ok(/estado final/.test(await page.locator("section[aria-label='Cambiar estado']").innerText()), "descartada sin motivo: estado final");
 
 // 5. errors a user can act on
 await page.goto(`${APP}/incidents/NXV-999999`);

@@ -12,7 +12,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from auth.router import router as auth_router
 from core.config import get_allowed_origins, get_jwt_secret
-from core.errors import validation_error_handler
+from core.errors import (
+    InvalidRequest,
+    catch_unhandled_errors,
+    document_400_for_the_incident_api,
+    invalid_request_handler,
+    validation_error_handler,
+)
 from incidents.incident_router import router as incident_manager_router
 from incidents.router import router as incidents_router
 from profiles import service as profiles_service
@@ -35,6 +41,9 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Nexova API", lifespan=lifespan)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(InvalidRequest, invalid_request_handler)
+# Added before CORS so it sits inside it: a 500 still carries the CORS headers the browser needs.
+app.middleware("http")(catch_unhandled_errors)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,6 +64,7 @@ app.include_router(incidents_router)  # CSV analysis; first, so its fixed paths 
 app.include_router(incident_manager_router)
 app.include_router(suppliers_router, prefix="/suppliers")
 app.include_router(suppliers_router, prefix="/api/suppliers", include_in_schema=False)
+document_400_for_the_incident_api(app)
 
 
 @app.get("/health")

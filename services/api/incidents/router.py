@@ -29,9 +29,9 @@ async def analyze_incidents(file: UploadFile) -> AnalyzeResponse:
     except service.NotCsvFileError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except service.MissingColumnsError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except service.EmptyCsvError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except UnicodeDecodeError as exc:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, detail="File is not valid UTF-8 text."

@@ -121,14 +121,14 @@ def test_optional_fields_can_be_given_or_left_out(empty, client):
 def test_each_required_field_is_enforced(empty, client, field):
     body = {k: v for k, v in NEW.items() if k != field}
     response = client.post(BASE, json=body)
-    assert response.status_code == 422 and fields_in(response) == {field}
+    assert response.status_code == 400 and fields_in(response) == {field}
     assert store.all_docs() == []
 
 
 @pytest.mark.parametrize("field", REQUIRED)
 def test_required_fields_cannot_be_null_or_blank(empty, client, field):
-    assert client.post(BASE, json={**NEW, field: None}).status_code == 422
-    assert client.post(BASE, json={**NEW, field: "   "}).status_code == 422
+    assert client.post(BASE, json={**NEW, field: None}).status_code == 400
+    assert client.post(BASE, json={**NEW, field: "   "}).status_code == 400
 
 
 @pytest.mark.parametrize(
@@ -151,7 +151,7 @@ def test_required_fields_cannot_be_null_or_blank(empty, client, field):
 )
 def test_allowed_values_and_unknown_fields_are_rejected_without_echoing(empty, client, overrides, field):
     response = client.post(BASE, json={**NEW, **overrides})
-    assert response.status_code == 422 and field in fields_in(response)
+    assert response.status_code == 400 and field in fields_in(response)
     assert "not-an-email" not in response.text and "SPAM" not in response.text
     assert store.all_docs() == []
 
@@ -161,7 +161,7 @@ def test_branch_is_normalised_and_required_for_branch_origin(empty, client):
     assert create(client, origin="branch", branch="Valencia Centro")["branch"] == "Valencia Centro"
     assert create(client, origin="internal", branch="Miami")["origin"] == "internal"
     response = client.post(BASE, json={**NEW, "origin": "branch", "branch": "Central"})
-    assert response.status_code == 422 and fields_in(response) == {"branch"}
+    assert response.status_code == 400 and fields_in(response) == {"branch"}
 
 
 def test_unknown_incident_is_404_with_a_clear_message(seeded, client):
@@ -199,119 +199,18 @@ def test_patch_with_no_effective_change_does_not_touch_history(seeded, client):
 )
 def test_patch_rejects_empty_nulls_status_id_and_invalid_values(seeded, client, payload):
     incident = create(client)["id"]
-    assert client.patch(f"{BASE}/{incident}", json=payload).status_code == 422
+    assert client.patch(f"{BASE}/{incident}", json=payload).status_code == 400
 
 
 def test_patch_revalidates_origin_against_the_stored_branch(seeded, client):
     incident = create(client)["id"]  # branch = central
     response = client.patch(f"{BASE}/{incident}", json={"origin": "branch"})
-    assert response.status_code == 422 and "branch" in fields_in(response)
+    assert response.status_code == 400 and "branch" in fields_in(response)
     assert client.get(f"{BASE}/{incident}").json()["origin"] == "customer"
     assert client.patch(f"{BASE}/{incident}", json={"origin": "branch", "branch": "Madrid"}).status_code == 200
 
 
-def test_in_progress_is_editable_but_resolved_is_not_until_reopened(seeded, client):
-    incident = create(client)["id"]
-    move(client, incident, "in_progress")
-    assert client.patch(f"{BASE}/{incident}", json={"title": "Still working on it"}).status_code == 200
-    move(client, incident, "resolved")
-    locked = client.patch(f"{BASE}/{incident}", json={"title": "Changed after resolving"})
-    assert locked.status_code == 409 and "Reopen" in locked.json()["detail"]
-    move(client, incident, "open")
-    assert client.patch(f"{BASE}/{incident}", json={"title": "Changed after reopening"}).status_code == 200
-
-
-# --- lifecycle -------------------------------------------------------------------------------
-
-def test_happy_path_open_in_progress_resolved_keeps_the_audit_trail(seeded, client):
-    incident = create(client)["id"]
-    working = move(client, incident, "in_progress").json()
-    assert working["status"] == "in_progress" and working["allowed_transitions"] == ["resolved", "open", "discarded"]
-    done = move(client, incident, "resolved", satisfaction_score=4).json()
-    assert done["status"] == "resolved" and done["satisfaction_score"] == 4
-    assert done["allowed_transitions"] == ["open"] and done["editable"] is False
-    assert [(h["from_status"], h["to_status"]) for h in done["history"][1:]] == [("open", "in_progress"), ("in_progress", "resolved")]
-
-
-def test_satisfaction_score_is_optional_when_resolving_but_must_be_1_to_5(seeded, client):
-    incident = create(client)["id"]
-    move(client, incident, "in_progress")
-    for bad in (0, 6, -1):
-        assert move(client, incident, "resolved", satisfaction_score=bad).status_code == 422
-    assert client.get(f"{BASE}/{incident}").json()["status"] == "in_progress"
-    assert move(client, incident, "resolved").json()["satisfaction_score"] is None
-
-
-def test_score_only_applies_when_resolving(seeded, client):
-    incident = create(client)["id"]
-    response = move(client, incident, "in_progress", satisfaction_score=3)
-    assert response.status_code == 422 and response.json()["detail"][0]["loc"] == ["body", "satisfaction_score"]
-
-
-def test_cannot_resolve_without_working_on_it(seeded, client):
-    incident = create(client)["id"]
-    response = move(client, incident, "resolved")
-    assert response.status_code == 409 and "cannot go from open to resolved" in response.json()["detail"]
-    assert client.get(f"{BASE}/{incident}").json()["status"] == "open"
-
-
-def test_discard_requires_a_reason_from_open_or_in_progress(seeded, client):
-    for first in ("open", "in_progress"):
-        incident = create(client)["id"]
-        if first == "in_progress":
-            move(client, incident, "in_progress")
-        assert move(client, incident, "discarded").json()["detail"][0]["loc"] == ["body", "discard_reason"]
-        assert move(client, incident, "discarded", discard_reason="ok").status_code == 422  # too short
-        assert move(client, incident, "discarded", discard_reason="Duplicate of NXV-000001", satisfaction_score=3).status_code == 422
-        body = move(client, incident, "discarded", discard_reason="Duplicate of NXV-000001").json()
-        assert body["discard_reason"] == "Duplicate of NXV-000001" and body["history"][-1]["note"] == "Duplicate of NXV-000001"
-
-
-def test_reason_only_applies_when_discarding(seeded, client):
-    incident = create(client)["id"]
-    response = move(client, incident, "in_progress", discard_reason="Not needed here")
-    assert response.status_code == 422 and fields_in(response) == {"discard_reason"}
-
-
-def test_reopen_clears_score_and_reason(seeded, client):
-    incident = create(client)["id"]
-    move(client, incident, "in_progress")
-    move(client, incident, "resolved", satisfaction_score=2)
-    reopened = move(client, incident, "open").json()
-    assert reopened["status"] == "open" and reopened["satisfaction_score"] is None and reopened["editable"]
-    move(client, incident, "discarded", discard_reason="Entered by mistake")
-    assert move(client, incident, "open").json()["discard_reason"] is None
-
-
-def test_in_progress_can_go_back_to_open(seeded, client):
-    incident = create(client)["id"]
-    move(client, incident, "in_progress")
-    assert move(client, incident, "open").json()["status"] == "open"
-
-
-@pytest.mark.parametrize("source", contract.STATUSES)
-@pytest.mark.parametrize("target", contract.STATUSES)
-def test_the_whole_transition_table_is_enforced(seeded, client, source, target):
-    """Every (source, target) pair: allowed pairs succeed, all others are 409 and change nothing."""
-    incident = create(client)["id"]
-    path = {"open": [], "in_progress": ["in_progress"], "resolved": ["in_progress", "resolved"], "discarded": ["discarded"]}
-    for step in path[source]:
-        extra = {"discard_reason": "Not a real incident"} if step == "discarded" else {}
-        assert move(client, incident, step, **extra).status_code == 200
-    extra = {"discard_reason": "Not a real incident"} if target == "discarded" else {}
-    response = move(client, incident, target, **extra)
-    if target in contract.TRANSITIONS[source]:
-        assert response.status_code == 200 and response.json()["status"] == target
-    else:
-        assert response.status_code == 409 and incident in response.json()["detail"]
-        assert client.get(f"{BASE}/{incident}").json()["status"] == source
-
-
-def test_unknown_status_is_422_and_unknown_incident_is_404(seeded, client):
-    incident = create(client)["id"]
-    assert move(client, incident, "closed").status_code == 422  # the CSV vocabulary is not accepted
-    assert move(client, "NXV-999999", "open").status_code == 404
-
+# --- lifecycle: see test_incident_detail_and_status_endpoints.py ---------------------------------
 
 def test_stored_incidents_cannot_break_the_lifecycle_invariants():
     from pydantic import ValidationError
@@ -363,7 +262,7 @@ def test_filter_by_origin_and_branch(seeded, client):
     assert client.get(BASE, params={"origin": ["branch", "internal"]}).json()["total"] == 2
     assert client.get(BASE, params={"branch": "valencia centro"}).json()["total"] == 1
     assert client.get(BASE, params={"branch": "central"}).json()["total"] == 96 + 1
-    assert client.get(BASE, params={"origin": "web"}).status_code == 422
+    assert client.get(BASE, params={"origin": "web"}).status_code == 400
 
 
 def test_text_search_matches_title_client_branch_but_never_the_email(seeded, client):
@@ -378,14 +277,14 @@ def test_date_range_filters_on_creation_day_and_rejects_a_bad_range(seeded, clie
     in_range = client.get(BASE, params={"date_from": "2024-01-10", "date_to": "2024-01-12", "page_size": 100}).json()
     assert 0 < in_range["total"] < 96
     assert all("2024-01-10" <= i["created_at"][:10] <= "2024-01-12" for i in in_range["items"])
-    assert client.get(BASE, params={"date_from": "2024-02-01", "date_to": "2024-01-01"}).status_code == 422
+    assert client.get(BASE, params={"date_from": "2024-02-01", "date_to": "2024-01-01"}).status_code == 400
 
 
-def test_invalid_query_values_are_422(seeded, client):
-    assert client.get(BASE, params={"status": "OPEN"}).status_code == 422
-    assert client.get(BASE, params={"page": 0}).status_code == 422
-    assert client.get(BASE, params={"page_size": 1000}).status_code == 422
-    assert client.get(BASE, params={"sort": "title"}).status_code == 422
+def test_invalid_query_values_are_400(seeded, client):
+    assert client.get(BASE, params={"status": "OPEN"}).status_code == 400
+    assert client.get(BASE, params={"page": 0}).status_code == 400
+    assert client.get(BASE, params={"page_size": 1000}).status_code == 400
+    assert client.get(BASE, params={"sort": "title"}).status_code == 400
 
 
 def test_facets_list_branches_clients_and_agents(seeded, client):

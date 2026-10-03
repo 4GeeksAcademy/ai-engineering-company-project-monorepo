@@ -8,12 +8,14 @@ worker would need a real database.
 
 from __future__ import annotations
 
+import re
 import threading
 
 from tinydb import Query, TinyDB
 
 from core.config import get_incidents_db_path
 
+_ID = re.compile(r"NXV-(\d{6})")
 _db: TinyDB | None = None
 lock = threading.RLock()
 
@@ -21,7 +23,11 @@ lock = threading.RLock()
 def get_db() -> TinyDB:
     global _db
     if _db is None:
-        _db = TinyDB(get_incidents_db_path())
+        path = get_incidents_db_path()
+        # A file with nothing but whitespace is an empty database (TinyDB only accepts a 0-byte one).
+        if path.is_file() and not path.read_text(encoding="utf-8", errors="replace").strip():
+            path.write_text("", encoding="utf-8")
+        _db = TinyDB(path)
     return _db
 
 
@@ -50,7 +56,7 @@ def replace(incident_id: str, doc: dict) -> None:
 def next_incident_id() -> str:
     """``NXV-`` + the highest number in use + 1. Call and insert under ``lock``."""
     with lock:
-        numbers = [int(doc["id"].split("-")[1]) for doc in get_db().all()]
+        numbers = [int(m.group(1)) for doc in get_db().all() if (m := _ID.fullmatch(str(doc.get("id", ""))))]
         return f"NXV-{max(numbers, default=0) + 1:06d}"
 
 
