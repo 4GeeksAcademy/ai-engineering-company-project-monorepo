@@ -219,8 +219,8 @@ export function listIncidents(
   return incidentsRequest<IncidentPage>(`?${params}`);
 }
 
-export const getIncidentSummary = (filters: IncidentFilters) =>
-  incidentsRequest<IncidentSummary>(`/summary?${filtersQuery(filters)}`);
+export const getIncidentSummary = (filters: IncidentFilters, signal?: AbortSignal) =>
+  incidentsRequest<IncidentSummary>(`/summary?${filtersQuery(filters)}`, { signal });
 
 export const getIncidentFacets = () => incidentsRequest<IncidentFacets>("/facets");
 

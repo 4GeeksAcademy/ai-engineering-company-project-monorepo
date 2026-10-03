@@ -181,3 +181,16 @@ list and, in each row, the status control.
   server refuses (connection, 409 conflict, 500…) the row **goes back to its previous status**, is highlighted ("No se guardó")
   and a message says what failed and that the previous state was restored; after a conflict the list is reloaded.
   `RowStatusControl.tsx` is the control; `IncidentsPage.tsx#handleChangeStatus` holds the optimistic update and the undo.
+
+### The summary cards never take the page down
+
+`SummarySection.tsx` loads `GET /api/incidents/summary` **on its own**, apart from the list: the same filters apply, but a slow or
+failing summary does not hold back (or break) the filters, the list or the status changes.
+
+- **Loading**: placeholders with the shape of the cards and "Cargando el resumen…"; after 4 s it adds "Está tardando más de lo
+  normal; la lista sigue disponible"; after 20 s the request is given up ("El resumen tarda demasiado en responder") and offered again.
+- **Failure** (no connection, 500 with its reference, a response that is not a summary): an amber notice in the summary's place
+  with **Reintentar**; the list works normally.
+- **A failed refresh keeps the last numbers** (dimmed) and says so.
+- If the panel itself throws while drawing, an error boundary replaces only the summary with a notice.
+- The list's own "Reintentar" and every status change reload the summary too.

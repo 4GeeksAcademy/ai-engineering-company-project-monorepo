@@ -8,9 +8,11 @@ Usage (needs the API's dependencies: pydantic, tinydb ...):
     services/api/.venv/bin/python scripts/seed_incidents.py --db /tmp/incidents.json
 
 Reads ``data/raw/incidents-nexova.csv`` by default, validates every row with the
-shared ``incidents_analyzer`` rules, transforms it into the incident model
-(see ``services/api/incidents/seeding.py`` for the maps) and inserts it with
-``origin: "customer"``. Invalid rows are NOT inserted: they are listed here
+shared ``incidents_analyzer`` rules (``packages/shared``: ``import_problems``),
+transforms it into the incident model (``incidents_analyzer.transform``: the maps
+are in ``packages/shared/incidents/contract.json``) and inserts it with
+``origin: "customer"``. Only the API's model and store (``services/api/incidents/seeding.py``)
+are needed besides the shared package, hence the API's environment. Invalid rows are NOT inserted: they are listed here
 with their line, id and the rules they break — never the customer's email.
 Running it again never duplicates data. At the end it checks that the numbers
 ``GET /api/incidents/summary`` gives match those expected from the CSV.

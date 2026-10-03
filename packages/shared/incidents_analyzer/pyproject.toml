@@ -11,3 +11,7 @@ dependencies = []
 
 [tool.setuptools.packages.find]
 include = ["incidents_analyzer*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]

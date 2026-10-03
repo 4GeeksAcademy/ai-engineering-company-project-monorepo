@@ -8,7 +8,7 @@ Usage:
 Validates every record against the rules in ``CONTEXT-nexova.md``, prints a
 summary, and offers to export the results to ``results.csv`` (one metric per
 row). Validation and metrics logic lives in the shared ``incidents_analyzer``
-package (see ``packages/incidents_analyzer``) so the API in ``services/api``
+package (see ``packages/shared/incidents_analyzer``) so the API in ``services/api``
 runs the exact same code — see rule 4 of the project brief.
 
 Never prints, logs, or exports individual customer_email addresses (see

@@ -46,34 +46,7 @@ def rows() -> list[dict[str, str]]:
     return read_rows(str(CSV))
 
 
-# --- transformations -------------------------------------------------------------------------
-
-def test_status_map_covers_the_csv_vocabulary():
-    assert [seeding.map_status(s) for s in ("OPEN", "CLOSED", "DISCARDED")] == ["open", "resolved", "discarded"]
-    with pytest.raises(KeyError):
-        seeding.map_status("PENDING")
-
-
-def test_category_map_covers_every_csv_category():
-    assert {seeding.map_category(c) for c in contract.VALID_CATEGORIES} == set(contract.VALID_CATEGORIES)
-
-
-def test_title_comes_from_the_description():
-    assert seeding.title_from_description("  Short   one ") == "Short one"
-    long = seeding.title_from_description("word " * 60)
-    assert len(long) <= contract.TITLE_MAX and long.endswith("…") and "  " not in long
-
-
-def test_date_becomes_created_at_at_midnight_utc():
-    assert seeding.created_at_from_date("2024-03-05").isoformat() == "2024-03-05T00:00:00+00:00"
-
-
-def test_branch_comes_from_a_location_column_or_defaults_to_central():
-    assert seeding.branch_from_row(ROW) == "central"
-    assert seeding.branch_from_row({**ROW, "ubicacion": " Valencia Centro "}) == "Valencia Centro"
-    assert seeding.branch_from_row({**ROW, "location": "Miami", "ubicacion": "Valencia"}) == "Miami"
-    assert seeding.branch_from_row({**ROW, "location": "  "}) == "central"
-
+# --- a row becomes an incident (the pure transformation is tested in packages/shared) ------------
 
 def test_a_row_becomes_a_customer_incident(db):
     seeding.seed_rows([{**ROW, "location": "Miami"}])

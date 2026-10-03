@@ -28,11 +28,11 @@ from pydantic import (
     model_validator,
 )
 
+from incidents_analyzer.rules import normalize_branch
 from incidents_analyzer.contract import (
     AGENT_ID_PATTERN,
     BRANCH_MAX,
     CLIENT_COMPANY_MAX,
-    DEFAULT_BRANCH,
     DESCRIPTION_MAX,
     DESCRIPTION_MIN,
     DISCARD_REASON_MAX,
@@ -71,16 +71,6 @@ def mask_email(email: str) -> str:
     """``elena.smith@icloud.com`` -> ``e***@icloud.com``. Lists never expose the full address."""
     local, _, domain = email.partition("@")
     return f"{local[:1]}***@{domain}"
-
-
-def normalize_branch(branch: str, origin: str | None) -> str:
-    """``Central`` and ``central`` are the same place; and an incident that comes
-    from a branch has to say which one (``central`` is for "does not apply")."""
-    if branch.casefold() == DEFAULT_BRANCH:
-        branch = DEFAULT_BRANCH
-    if origin == IncidentOrigin.branch and branch == DEFAULT_BRANCH:
-        raise ValueError(f"An incident that comes from a branch must name it ('{DEFAULT_BRANCH}' is for when it does not apply)")
-    return branch
 
 
 class _Content(BaseModel):

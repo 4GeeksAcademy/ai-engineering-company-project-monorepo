@@ -7,14 +7,14 @@
 ``resolved`` and ``discarded`` are final: nothing leaves them. Any other move
 is refused; in particular an incident cannot be resolved without having been
 worked on (open -> resolved), nor go back to open. Content can only be edited
-while open or in progress. The table comes from the shared contract.
+while open or in progress. The table and ``allowed_transitions`` / ``is_editable`` come from the shared package.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
 
-from incidents_analyzer.contract import EDITABLE_STATUSES, TRANSITIONS
+from incidents_analyzer.rules import allowed_transitions, is_editable
 
 from .incident_schemas import IncidentStatus, StatusChange
 
@@ -48,14 +48,6 @@ class FieldProblemError(LifecycleError):
     def __init__(self, field: str, message: str):
         self.field = field
         super().__init__(message)
-
-
-def allowed_transitions(status: str) -> list[str]:
-    return list(TRANSITIONS.get(str(status), ()))
-
-
-def is_editable(status: str) -> bool:
-    return str(status) in EDITABLE_STATUSES
 
 
 def ensure_editable(doc: dict) -> None:

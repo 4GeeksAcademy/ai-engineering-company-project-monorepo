@@ -19,7 +19,7 @@ Validates and computes metrics on a Nexova support-incident CSV export, per the 
   ```bash
   python scripts/analyze.py data/raw/incidents-nexova.csv
   ```
-- **Same logic as the API**: the validation/metrics code lives in [`packages/shared/incidents_analyzer`](../packages/shared/incidents_analyzer) and is reused as-is by the `incidents` domain in [`services/api`](../services/api), so the script and the API can never drift apart.
+- **Same logic as the API**: the validation/metrics code lives in [`packages/shared/incidents_analyzer`](../packages/shared/incidents_analyzer) (see its [README](../packages/shared/README.md)) and is reused as-is by the `incidents` domain in [`services/api`](../services/api) and by `seed_incidents.py`, so the scripts and the API can never drift apart.
 - **Privacy**: never prints, logs, or exports individual `customer_email` values, per the stakeholder note in `CONTEXT-nexova.md`.
 
 ### `seed_incidents.py` — load the CSV history into the incident manager

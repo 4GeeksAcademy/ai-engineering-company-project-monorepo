@@ -11,16 +11,14 @@ import {
   type IncidentListItem,
   type IncidentPage,
   type IncidentStatus,
-  type IncidentSummary,
 } from "@repo/shared-types";
 import IncidentFiltersBar from "../components/incidents/IncidentFilters";
-import IncidentSummaryPanel from "../components/incidents/IncidentSummaryPanel";
+import SummarySection from "../components/incidents/SummarySection";
 import IncidentTable from "../components/incidents/IncidentTable";
 import { ErrorBanner } from "../components/incidents/Field";
 import {
   changeIncidentStatus,
   getIncidentFacets,
-  getIncidentSummary,
   listIncidents,
   type SortField,
   type SortOrder,
@@ -45,7 +43,7 @@ export default function IncidentsPage() {
   const [page, setPage] = useState(1);
 
   const [list, setList] = useState<IncidentPage | null>(null);
-  const [summary, setSummary] = useState<IncidentSummary | null>(null);
+  const [summaryVersion, setSummaryVersion] = useState(0); // bump to reload the summary cards
   const [facets, setFacets] = useState<IncidentFacets>({ branches: [], clients: [], agents: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,11 +64,10 @@ export default function IncidentsPage() {
     if (rangeInvalid) return;
     const request = ++latest.current;
     setLoading(true);
-    Promise.all([listIncidents(applied, { sort, order, page, pageSize: PAGE_SIZE }), getIncidentSummary(applied)])
-      .then(([nextList, nextSummary]) => {
+    listIncidents(applied, { sort, order, page, pageSize: PAGE_SIZE })
+      .then((nextList) => {
         if (request !== latest.current) return;
         setList(nextList);
-        setSummary(nextSummary);
         setError(null);
         // A page that no longer exists (e.g. after filtering) falls back to the last one.
         if (nextList.pages > 0 && page > nextList.pages) setPage(nextList.pages);
@@ -119,7 +116,7 @@ export default function IncidentsPage() {
         allowed_transitions: saved.allowed_transitions,
         editable: saved.editable,
       }));
-      getIncidentSummary(applied).then(setSummary).catch(() => undefined); // the totals follow the change
+      setSummaryVersion((v) => v + 1); // the totals follow the change
     } catch (err) {
       replaceItem(item.id, () => before); // undo
       const why = describeError(err, "No se pudo cambiar el estado.");
@@ -154,7 +151,9 @@ export default function IncidentsPage() {
         </Link>
       </header>
 
-      <div className="mt-8">{summary ? <IncidentSummaryPanel summary={summary} /> : null}</div>
+      <div className="mt-8">
+        <SummarySection filters={applied} refreshKey={summaryVersion + reloadKey} paused={rangeInvalid} />
+      </div>
 
       <div className="mt-8">
         <IncidentFiltersBar filters={filters} facets={facets} onChange={changeFilters} />

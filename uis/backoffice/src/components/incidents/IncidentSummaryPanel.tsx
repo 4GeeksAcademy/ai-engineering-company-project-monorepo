@@ -11,7 +11,7 @@ export default function IncidentSummaryPanel({ summary }: { summary: IncidentSum
   const average = summary.satisfaction_average;
   const counts = summary.status_counts;
   return (
-    <section aria-label="Resumen de incidencias" className="space-y-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
         <StatCard label="Total" value={summary.total} />
         <StatCard label="Abiertas" value={counts.open} tone={counts.open > 0 ? "warn" : "default"} />
@@ -67,7 +67,7 @@ export default function IncidentSummaryPanel({ summary }: { summary: IncidentSum
           <RankCard title="Clientes con más incidencias" items={summary.top_clients} empty="Ninguna incidencia indica cliente." />
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

@@ -110,6 +110,10 @@ Idempotent: an id already stored is skipped and never overwritten (later work on
 
 Limitations: TinyDB and the id counter are single-process (see `incidents/incident_store.py`); a second API worker needs a real database.
 
+### Shared logic
+
+The API owns no copy of the domain rules. The CSV validation (`validate_record`, `analyze`), the lifecycle helpers (`allowed_transitions`, `is_editable`), the origin/branch rule (`normalize_branch`) and the CSV → incident translation (`transform`) are imported from [`packages/shared/incidents_analyzer`](../../packages/shared/incidents_analyzer); the seed script and `scripts/analyze.py` use the same functions. What stays here is what needs the framework: the pydantic models, the store, the routes. `tests/test_shared_logic.py` fails if a rule is copied outside the shared package.
+
 ## Authentication
 
 Every route except `POST /auth/login`, `POST /users` (sign-up), `GET /health` and the docs (`/docs`, `/openapi.json`) needs a valid session: `Authorization: Bearer <JWT>`. Without one the API answers `401` (with `WWW-Authenticate: Bearer`).

@@ -13,7 +13,8 @@
     "e2e:register": "node e2e/register.e2e.mjs",
     "e2e:profile": "node e2e/profile.e2e.mjs",
     "e2e:guard": "node e2e/guard.e2e.mjs",
-    "e2e:token": "node e2e/token.e2e.mjs"
+    "e2e:token": "node e2e/token.e2e.mjs",
+    "screenshots": "node e2e/screenshots.mjs"
   },
   "dependencies": {
     "@repo/shared-types": "*",

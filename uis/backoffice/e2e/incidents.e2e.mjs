@@ -290,6 +290,62 @@ ok(Number(await stat("Total")) === 0, "…y el resumen en cero");
 await page.unroute(LIST);
 await page.unroute("**/api/incidents/summary?**");
 
+// the summary loads on its own: slow, failing or malformed, the page keeps working
+const SUMMARY = "**/api/incidents/summary?**";
+const summaryBox = page.locator("section[aria-label='Resumen de incidencias']");
+const rowsVisible = async () => (await page.locator("tbody tr").count()) > 0;
+
+await page.route(SUMMARY, (route) => route.abort());
+await page.goto(`${APP}/incidents`);
+await summaryBox.locator("[role=alert]").waitFor();
+ok((await summaryBox.getAttribute("data-summary-state")) === "error" && /El resumen no está disponible/.test(await summaryBox.innerText()), "si el resumen falla: aviso claro en su sitio, sin romper la página");
+await page.locator("tbody tr").first().waitFor();
+ok(await rowsVisible(), "…la lista se carga y se ve con normalidad");
+await page.getByLabel("Filtrar por categoría").selectOption("ACCESS");
+await countWhere((n) => n < 96);
+ok(true, "…y los filtros siguen funcionando mientras el resumen está caído");
+await shot("incidents-summary-failed");
+await page.getByLabel("Filtrar por categoría").selectOption("");
+await countWhere((n) => n >= 90); // wait for the (debounced) filter to apply before retrying
+await page.unroute(SUMMARY);
+await summaryBox.getByRole("button", { name: "Reintentar" }).click();
+await page.waitForFunction(() => document.querySelector("section[aria-label='Resumen de incidencias']")?.getAttribute("data-summary-state") === "ready");
+ok(Number(await stat("Total")) >= 90, "«Reintentar» recupera el resumen");
+
+await page.route(SUMMARY, (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ detail: "Internal server error. Please try again later.", error_id: "sum00001" }) }));
+await page.goto(`${APP}/incidents`);
+await summaryBox.locator("[role=alert]").waitFor();
+ok(/sum00001/.test(await summaryBox.innerText()) && !/Internal server error/.test(await summaryBox.innerText()) && (await rowsVisible() || (await page.locator("tbody tr").first().waitFor(), true)), "error 500 del resumen: mensaje en castellano con referencia y la lista intacta");
+await page.unroute(SUMMARY);
+
+await page.route(SUMMARY, (route) => route.fulfill({ json: { unexpected: true } }));
+await page.goto(`${APP}/incidents`);
+await summaryBox.locator("[role=alert]").waitFor();
+await page.locator("tbody tr").first().waitFor();
+ok(/No se pudo cargar el resumen/.test(await summaryBox.innerText()) && !errors.length, "una respuesta inesperada no rompe la página (ni lanza errores de JavaScript)");
+await page.unroute(SUMMARY);
+
+await page.route(SUMMARY, slow(5500));
+await page.goto(`${APP}/incidents`);
+await summaryBox.getByText("Cargando el resumen…").waitFor();
+ok(await summaryBox.locator(".animate-pulse").isVisible(), "mientras carga: marcador con la forma de las tarjetas");
+await page.locator("tbody tr").first().waitFor();
+ok((await summaryBox.getAttribute("data-summary-state")) === "loading", "…y la lista ya está disponible aunque el resumen siga cargando");
+await summaryBox.getByText("Está tardando más de lo normal").waitFor();
+ok(true, "si tarda: aviso «Está tardando más de lo normal; la lista sigue disponible»");
+await page.waitForFunction(() => document.querySelector("section[aria-label='Resumen de incidencias']")?.getAttribute("data-summary-state") === "ready");
+ok(Number(await stat("Total")) >= 90, "al llegar, el resumen aparece");
+await page.unroute(SUMMARY);
+
+// a failed refresh keeps the last numbers on screen
+await page.route(SUMMARY, (route) => route.abort());
+await page.getByLabel("Filtrar por categoría").selectOption("BILLING");
+await summaryBox.locator("[role=alert]").waitFor();
+ok(/Se muestran los últimos datos recibidos/.test(await summaryBox.innerText()) && (await summaryBox.getByText("Satisfacción media").isVisible()), "si falla una actualización: se conservan los últimos datos, avisando");
+await page.unroute(SUMMARY);
+await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
+await countWhere((n) => n >= 90);
+
 // status from the row
 await page.goto(`${APP}/incidents`);
 await page.getByRole("button", { name: "Abierta" }).click();
