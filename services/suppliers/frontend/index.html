@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directorio de Proveedores | Brasaland</title>
+</head>
+
+<body>
+
+    <h1>Directorio de Proveedores Brasaland</h1>
+
+    <label>
+        País:
+        <select id="countryFilter">
+            <option value="">Todos</option>
+            <option value="Colombia">Colombia</option>
+            <option value="USA">USA</option>
+        </select>
+    </label>
+
+    <label>
+        Categoría:
+        <select id="categoryFilter">
+            <option value="">Todas</option>
+            <option value="carne">Carne</option>
+            <option value="verduras_y_hortalizas">Verduras y hortalizas</option>
+            <option value="salsas_y_condimentos">Salsas y condimentos</option>
+            <option value="bebidas">Bebidas</option>
+            <option value="packaging">Packaging</option>
+            <option value="productos_limpieza">Productos limpieza</option>
+            <option value="lacteos">Lácteos</option>
+            <option value="carbon_y_combustible">Carbón y combustible</option>
+        </select>
+    </label>
+
+    <button onclick="loadSuppliers()">Buscar</button>
+
+    <hr>
+
+    <h2>Registrar proveedor</h2>
+
+    <form id="supplierForm">
+        <input id="name" placeholder="Nombre" required>
+
+        <select id="country" required>
+            <option value="">País</option>
+            <option value="Colombia">Colombia</option>
+            <option value="USA">USA</option>
+        </select>
+
+        <input id="category" placeholder="Categoría" required>
+
+        <input
+            id="rate"
+            type="number"
+            step="0.01"
+            placeholder="Tarifa"
+            required
+        >
+
+        <input
+            id="currency"
+            placeholder="Moneda (COP/USD)"
+            required
+        >
+
+        <input
+            id="email"
+            type="email"
+            placeholder="Email"
+        >
+
+        <button type="submit">Registrar proveedor</button>
+    </form>
+
+    <hr>
+
+    <div id="suppliers"></div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        async function loadSuppliers() {
+            const country = document.getElementById("countryFilter").value;
+            const category = document.getElementById("categoryFilter").value;
+
+            const params = new URLSearchParams();
+
+            if (country) {
+                params.append("country", country);
+            }
+
+            if (category) {
+                params.append("category", category);
+            }
+
+            const response = await fetch(
+                `${API_URL}/suppliers?${params}`
+            );
+
+            const suppliers = await response.json();
+
+            const container = document.getElementById("suppliers");
+
+            if (suppliers.length === 0) {
+                container.innerHTML = "<p>No hay proveedores.</p>";
+                return;
+            }
+
+            container.innerHTML = suppliers.map(supplier => `
+                <div>
+                    <h2>${supplier.name}</h2>
+                    <p>País: ${supplier.country}</p>
+                    <p>Categorías: ${supplier.categories.join(", ")}</p>
+                    <p>Tarifa: ${supplier.rate_per_unit} ${supplier.currency}</p>
+                    <p>Estado: ${supplier.status}</p>
+                    <p>Contacto: ${supplier.contact_email || "No disponible"}</p>
+                    <hr>
+                </div>
+            `).join("");
+        }
+
+        document
+            .getElementById("supplierForm")
+            .addEventListener("submit", async function(event) {
+
+                event.preventDefault();
+
+                const supplier = {
+                    name: document.getElementById("name").value,
+                    country: document.getElementById("country").value,
+                    categories: [
+                        document.getElementById("category").value
+                    ],
+                    rate_per_unit: Number(
+                        document.getElementById("rate").value
+                    ),
+                    currency: document.getElementById("currency").value,
+                    status: "active",
+                    contact_email:
+                        document.getElementById("email").value || null
+                };
+
+                const response = await fetch(
+                    `${API_URL}/suppliers`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(supplier)
+                    }
+                );
+
+                if (response.ok) {
+                    alert("Proveedor registrado correctamente");
+
+                    document.getElementById("supplierForm").reset();
+
+                    loadSuppliers();
+                } else {
+                    const error = await response.json();
+
+                    alert(
+                        "Error: " +
+                        (error.detail || "No se pudo registrar")
+                    );
+                }
+            });
+
+        loadSuppliers();
+    </script>
+
+</body>
+</html>
