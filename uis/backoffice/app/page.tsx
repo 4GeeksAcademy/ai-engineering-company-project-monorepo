@@ -78,8 +78,28 @@ const sampleInput: BrasalandBusinessInput = {
   ],
 };
 
-export default function Home() {
-  const snapshot = buildBrasalandSnapshot(sampleInput);
+async function loadBusinessInput(): Promise<BrasalandBusinessInput> {
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://backend:8000";
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/weekly-input`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(1500),
+    });
+    if (!response.ok) {
+      throw new Error(`Backend respondió HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as BrasalandBusinessInput;
+  } catch (error) {
+    console.warn("No se pudo consultar el backend; se usan datos de muestra.", error);
+    return sampleInput;
+  }
+}
+
+export default async function Home() {
+  const businessInput = await loadBusinessInput();
+  const snapshot = buildBrasalandSnapshot(businessInput);
 
   return (
     <div className="backoffice-shell">

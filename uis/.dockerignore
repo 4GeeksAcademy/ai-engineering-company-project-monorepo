@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+**/out
+**/build
+**/coverage
+**/.turbo
+**/.git
+**/.env*
+*.log

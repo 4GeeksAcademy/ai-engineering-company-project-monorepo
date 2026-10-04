@@ -1,0 +1,62 @@
+services:
+  interfaces:
+    build:
+      context: ./uis
+      dockerfile: Dockerfile
+      additional_contexts:
+        shared: ./packages/shared
+    env_file:
+      - .env
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEBSITE_PORT}:3000"
+      - "${BACKOFFICE_PORT}:3001"
+    volumes:
+      - ./uis/website:/workspace/uis/website
+      - ./uis/backoffice:/workspace/uis/backoffice
+      - ./packages/shared:/workspace/packages/shared
+      - website_node_modules:/workspace/uis/website/node_modules
+      - backoffice_node_modules:/workspace/uis/backoffice/node_modules
+      - website_next:/workspace/uis/website/.next
+      - backoffice_next:/workspace/uis/backoffice/.next
+    networks:
+      - brasaland
+
+  backend:
+    build:
+      context: ./services
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./services:/app
+    networks:
+      - brasaland
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  website_node_modules:
+  backoffice_node_modules:
+  website_next:
+  backoffice_next:
+
+networks:
+  brasaland:
+    name: brasaland-dev-network
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
