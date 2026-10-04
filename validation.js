@@ -4,7 +4,8 @@ if (form) {
   const status = document.querySelector("#form-status");
   const resumeInput = form.elements.resume;
   const maximumResumeBytes = 5 * 1024 * 1024;
-  const allowedResumeExtensions = /\.(pdf|docx?)$/i;
+  const allowedResumeExtensions = /\.(pdf|docx)$/i;
+  const minimumContentLengths = { fullName: 2, role: 2, skills: 20 };
 
   function getErrorMessage(field) {
     if (field.name === "resume") {
@@ -14,8 +15,18 @@ if (form) {
       if (file.size > maximumResumeBytes) return "The file must be 5 MB or smaller.";
     }
 
-    if (field.validity.valid) return "";
     if (field.validity.valueMissing) return "This field is required.";
+
+    const minimumContentLength = minimumContentLengths[field.name];
+    if (minimumContentLength && field.value.trim().length < minimumContentLength) {
+      return `Enter at least ${minimumContentLength} non-whitespace characters.`;
+    }
+
+    if (field.name === "phone" && (field.value.match(/\d/g) || []).length < 7) {
+      return "Enter a phone number with at least 7 digits.";
+    }
+
+    if (field.validity.valid) return "";
     if (field.validity.typeMismatch) return "Enter a valid email address.";
     if (field.validity.patternMismatch) return "Enter a valid phone number, including country code if applicable.";
     if (field.validity.tooShort) return `Enter at least ${field.minLength} characters.`;
