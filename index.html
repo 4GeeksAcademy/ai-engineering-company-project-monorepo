@@ -17,20 +17,48 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "MedicalOrganization",
-        "name": "HealthCore",
-        "foundingDate": "2011",
-        "description": "Founded in 2011 by Dr. Sandra Okonkwo, HealthCore operates 9 clinics in Texas, Florida, and Georgia in the United States and 3 clinics in London and Manchester in the United Kingdom, providing primary care, specialist consultations, chronic disease management, and preventive health programmes.",
-        "founder": {
-          "@type": "Person",
-          "name": "Dr. Sandra Okonkwo"
-        },
-        "areaServed": [
-          { "@type": "Country", "name": "United States" },
-          { "@type": "Country", "name": "United Kingdom" }
-        ],
-        "medicalSpecialty": "PrimaryCare",
-        "numberOfEmployees": { "@type": "QuantitativeValue", "value": 200 }
+        "@graph": [
+          {
+            "@type": "MedicalOrganization",
+            "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#organization",
+            "name": "HealthCore",
+            "foundingDate": "2011",
+            "description": "Founded in 2011 by Dr. Sandra Okonkwo, HealthCore operates 9 clinics in Texas, Florida, and Georgia in the United States and 3 clinics in London and Manchester in the United Kingdom, providing primary care, specialist consultations, chronic disease management, and preventive health programmes.",
+            "founder": {
+              "@type": "Person",
+              "name": "Dr. Sandra Okonkwo"
+            },
+            "areaServed": [
+              { "@type": "Country", "name": "United States" },
+              { "@type": "State", "name": "Texas" },
+              { "@type": "State", "name": "Florida" },
+              { "@type": "State", "name": "Georgia" },
+              { "@type": "Country", "name": "United Kingdom" },
+              { "@type": "City", "name": "London" },
+              { "@type": "City", "name": "Manchester" }
+            ],
+            "medicalSpecialty": "PrimaryCare",
+            "numberOfEmployees": { "@type": "QuantitativeValue", "value": 200 }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#website",
+            "url": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/",
+            "name": "HealthCore",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#organization" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#webpage",
+            "url": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/",
+            "name": "HealthCore | Care that moves with you",
+            "description": "HealthCore brings accessible, high-quality primary and specialist care to communities across the United States and the United Kingdom.",
+            "inLanguage": "en",
+            "isPartOf": { "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#website" },
+            "about": { "@id": "https://fantastic-halibut-699grvjr7ww5f4grq-3000.app.github.dev/#organization" }
+          }
+        ]
       }
     </script>
   </head>
