@@ -13,3 +13,22 @@ Organize `uis/` by **different concerns** — each subfolder covers a distinct a
 - **Recommendation**: document in this file (or in sub-READMEs) the applications you add, their objective, the technology used, and how to run them.
 
 > _Estas instrucciones también están disponibles en [español](./README.es.md)._
+
+## Current apps
+
+### `website`
+- Stack: Next.js + TypeScript
+- Purpose: public corporate website for Brasaland.
+- Run:
+	- `cd uis/website`
+	- `npm install`
+	- `npm run dev`
+
+### `backoffice`
+- Stack: Next.js + TypeScript
+- Purpose: internal operational entry point and dashboards.
+- Integration: imports shared business logic from `packages/shared/types/index.ts` via `@repo/shared-types`.
+- Run:
+	- `cd uis/backoffice`
+	- `npm install`
+	- `npm run dev`
