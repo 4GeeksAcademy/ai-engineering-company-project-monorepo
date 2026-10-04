@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
+
+services/api/.env
+services/api/auth/auth.json
+services/api/auth/profiles.json

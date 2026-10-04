@@ -1,4 +1,4 @@
-from io import BytesIO
+﻿from io import BytesIO
 
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -161,3 +161,12 @@ async def analyze_incidents(file: UploadFile = File(...)):
             2,
         ),
     }
+
+from services.api.auth.routes import router as auth_router
+app.include_router(auth_router)
+
+from services.api.auth.users_routes import router as users_router
+app.include_router(users_router)
+
+from services.api.auth.profiles_routes import router as profiles_router
+app.include_router(profiles_router)
