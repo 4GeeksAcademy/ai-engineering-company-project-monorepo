@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@layer base {
+	a {
+		display: inline-flex;
+		min-width: 48px;
+		min-height: 48px;
+		padding: 12px;
+	}
+
+	button {
+		min-width: 48px;
+		min-height: 48px;
+		padding: 12px;
+	}
+
+	body {
+		font-size: 16px;
+	}
+}
