@@ -13,3 +13,22 @@ Organiza `uis/` por **distintas áreas de la compañía** — cada subcarpeta ag
 - **Recomendación**: documenta en este archivo (o en sub-READMEs) las aplicaciones que vayas añadiendo, su objetivo, tecnología usada y cómo ejecutarlas.
 
 > _These instructions are also available in [English](./README.md)._
+
+## Aplicaciones actuales
+
+### `website`
+- Stack: Next.js + TypeScript
+- Objetivo: web corporativa publica de Brasaland.
+- Ejecucion:
+	- `cd uis/website`
+	- `npm install`
+	- `npm run dev`
+
+### `backoffice`
+- Stack: Next.js + TypeScript
+- Objetivo: punto de entrada interno operativo y de visualizacion.
+- Integracion: importa logica compartida desde `packages/shared/types/index.ts` via `@repo/shared-types`.
+- Ejecucion:
+	- `cd uis/backoffice`
+	- `npm install`
+	- `npm run dev`

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="290" viewBox="0 0 1600 290" role="img" aria-labelledby="title description">
+  <title id="title">docker compose ps</title>
+  <desc id="description">Both development containers are running. Backend is healthy on port 8000 and interfaces publishes ports 3000 and 3001.</desc>
+  <rect width="1600" height="290" rx="12" fill="#111318"/>
+  <rect width="1600" height="48" rx="12" fill="#242832"/>
+  <circle cx="24" cy="24" r="6" fill="#ff5f57"/>
+  <circle cx="46" cy="24" r="6" fill="#febc2e"/>
+  <circle cx="68" cy="24" r="6" fill="#28c840"/>
+  <text x="800" y="30" fill="#e6e8ed" font-family="monospace" font-size="15" text-anchor="middle">docker compose ps</text>
+  <g fill="#aeb5c2" font-family="monospace" font-size="14">
+    <text x="32" y="88">NAME</text>
+    <text x="790" y="88">SERVICE</text>
+    <text x="970" y="88">STATUS</text>
+    <text x="1190" y="88">PORTS</text>
+  </g>
+  <path d="M32 101H1568" stroke="#343945"/>
+  <g fill="#d9dee8" font-family="monospace" font-size="14">
+    <text x="32" y="140">ai-engineering-company-monorepoo-backend-1</text>
+    <text x="790" y="140">backend</text>
+    <text x="970" y="140" fill="#5bd18b">Up 30 minutes (healthy)</text>
+    <text x="1190" y="140">0.0.0.0:8000-&gt;8000/tcp</text>
+    <text x="32" y="201">ai-engineering-company-monorepoo-interfaces-1</text>
+    <text x="790" y="201">interfaces</text>
+    <text x="970" y="201" fill="#5bd18b">Up 30 minutes</text>
+    <text x="1190" y="201">0.0.0.0:3000-3001-&gt;3000-3001/tcp</text>
+  </g>
+  <text x="32" y="260" fill="#858d9b" font-family="monospace" font-size="12">Captured from the running Compose services for PR evidence.</text>
+</svg>
