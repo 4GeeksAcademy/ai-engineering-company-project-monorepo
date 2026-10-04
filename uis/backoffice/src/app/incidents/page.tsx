@@ -10,14 +10,10 @@ import type {
   FormEvent
 } from "react";
 
-
-type BreakdownValue = {
-
-  count: number;
-
-  percentage: number;
-
-};
+import {
+  BreakdownList,
+  MetricCard,
+} from "./components";
 
 
 type Satisfaction = {
@@ -59,13 +55,13 @@ type AnalysisResult = {
   by_category:
     Record<
       string,
-      BreakdownValue
+      { count: number; percentage: number }
     >;
 
   by_status:
     Record<
       string,
-      BreakdownValue
+      { count: number; percentage: number }
     >;
 
   satisfaction:
@@ -76,21 +72,16 @@ type AnalysisResult = {
 
 export default function IncidentsPage() {
 
-
   const [
     file,
     setFile,
-  ] = useState<
-    File | null
-  >(null);
+  ] = useState<File | null>(null);
 
 
   const [
     result,
     setResult,
-  ] = useState<
-    AnalysisResult | null
-  >(null);
+  ] = useState<AnalysisResult | null>(null);
 
 
   const [
@@ -445,77 +436,13 @@ export default function IncidentsPage() {
 
 
             <section className="metrics">
-
-
-              <article className="metric">
-
-                <span>
-                  Total
-                </span>
-
-                <strong>
-                  {
-                    result
-                      .total_records
-                  }
-                </strong>
-
-              </article>
-
-
-              <article className="metric">
-
-                <span>
-                  Válidos
-                </span>
-
-                <strong>
-                  {
-                    result
-                      .valid_records
-                  }
-                </strong>
-
-              </article>
-
-
-              <article className="metric">
-
-                <span>
-                  Inválidos
-                </span>
-
-                <strong>
-                  {
-                    result
-                      .invalid_records
-                  }
-                </strong>
-
-              </article>
-
-
-              <article className="metric">
-
-                <span>
-                  Satisfacción
-                </span>
-
-                <strong>
-
-                  {
-                    result
-                      .satisfaction
-                      .average
-                      ?.toFixed(2)
-                    ?? "N/A"
-                  }
-
-                </strong>
-
-              </article>
-
-
+              <MetricCard label="Total" value={result.total_records} />
+              <MetricCard label="Válidos" value={result.valid_records} />
+              <MetricCard label="Inválidos" value={result.invalid_records} />
+              <MetricCard
+                label="Satisfacción"
+                value={result.satisfaction.average?.toFixed(2) ?? "N/A"}
+              />
             </section>
 
 
@@ -596,51 +523,7 @@ export default function IncidentsPage() {
                 </h2>
 
 
-                <ul className="dataList">
-
-
-                  {
-                    Object.entries(
-
-                      result
-                        .by_category
-
-                    ).map(
-                      ([
-                        category,
-                        data,
-                      ]) => (
-
-                        <li key={category}>
-
-                          <span>
-                            {category}
-                          </span>
-
-                          <strong>
-
-                            {data.count}
-
-                            {" "}
-
-                            (
-                            {
-                              data
-                                .percentage
-                                .toFixed(1)
-                            }
-                            %)
-
-                          </strong>
-
-                        </li>
-
-                      )
-                    )
-                  }
-
-
-                </ul>
+                <BreakdownList items={result.by_category} />
 
 
               </article>
@@ -654,51 +537,7 @@ export default function IncidentsPage() {
                 </h2>
 
 
-                <ul className="dataList">
-
-
-                  {
-                    Object.entries(
-
-                      result
-                        .by_status
-
-                    ).map(
-                      ([
-                        status,
-                        data,
-                      ]) => (
-
-                        <li key={status}>
-
-                          <span>
-                            {status}
-                          </span>
-
-                          <strong>
-
-                            {data.count}
-
-                            {" "}
-
-                            (
-                            {
-                              data
-                                .percentage
-                                .toFixed(1)
-                            }
-                            %)
-
-                          </strong>
-
-                        </li>
-
-                      )
-                    )
-                  }
-
-
-                </ul>
+                <BreakdownList items={result.by_status} />
 
 
               </article>
