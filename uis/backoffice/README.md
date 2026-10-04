@@ -1,26 +1,5 @@
-# Backoffice - Suppliers Directory
+# Brasaland Backoffice
 
-Static frontend for suppliers management.
+Panel interno realizado con Next.js, React y TypeScript.
 
-## Open UI
-
-Open file in browser:
-
-- `uis/backoffice/index.html`
-
-## Features
-
-- List suppliers
-- Filter by country and category
-- Create supplier
-- Update supplier rate
-- Toggle supplier status
-- Visual badge for active vs suspended
-
-## API target
-
-Default API base URL is:
-
-- `http://127.0.0.1:8000`
-
-You can change it in `uis/backoffice/suppliers.js`.
+Permite cargar el CSV de incidencias de Brasaland, visualizar métricas y descargar los resultados.
