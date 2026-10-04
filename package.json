@@ -2,8 +2,9 @@
   "name": "healthcore-public-site",
   "private": true,
   "scripts": {
-    "build": "npm run build:css",
-    "build:css": "tailwindcss --input ./styles.css --output ./styles.min.css --minify"
+    "build": "npm run build:css && npm run stage:site",
+    "build:css": "tailwindcss --input ./styles.css --output ./styles.min.css --minify",
+    "stage:site": "mkdir -p dist && cp index.html application.html validation.js styles.min.css robots.txt sitemap.xml dist/"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.0",
