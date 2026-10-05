@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brasaland | Incidencias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#"><span class="brand-mark">B</span><span>BRASALAND <small>OPERATIONS</small></span></a><span class="live"><i></i> Centro de incidencias</span></header>
+  <main class="shell">
+    <section class="intro"><div><p class="eyebrow">Control operativo</p><h1>Incidencias, de principio a fin.</h1><p class="lead">Un solo lugar para registrar, priorizar y cerrar lo que necesita atención.</p></div><button class="primary" id="newIncident">+ Nueva incidencia</button></section>
+    <section class="metric-strip" id="summary"><div class="metric loading"><span>Total</span><strong>--</strong></div><div class="metric"><span>Abiertas</span><strong id="openCount">--</strong></div><div class="metric"><span>En progreso</span><strong id="progressCount">--</strong></div><div class="metric"><span>Resueltas</span><strong id="resolvedCount">--</strong></div></section>
+    <section class="workspace">
+      <div class="section-heading"><div><p class="eyebrow">Seguimiento</p><h2>Registro de incidencias</h2></div><button class="icon-button" id="refresh" title="Actualizar lista">↻</button></div>
+      <div class="filters"><label>Estado<select id="statusFilter"><option value="">Todos los estados</option><option value="open">Abierta</option><option value="in_progress">En progreso</option><option value="resolved">Resuelta</option><option value="discarded">Descartada</option></select></label><label>Origen<select id="originFilter"><option value="">Todos los orígenes</option><option value="customer">Cliente</option><option value="branch">Sede</option><option value="internal">Interno</option></select></label><label>Sede<select id="branchFilter"><option value="">Todas las sedes</option></select></label></div>
+      <div id="listState" class="state hidden"></div><div id="incidentList" class="incident-list"></div>
+    </section>
+    <section class="summary-section"><div class="section-heading"><div><p class="eyebrow">Panorama</p><h2>Resumen de operación</h2></div></div><div id="summaryDetails" class="summary-grid"></div></section>
+  </main>
+  <div class="modal hidden" id="modal"><div class="modal-card"><button class="close" id="closeModal" title="Cerrar">×</button><p class="eyebrow">Nueva incidencia</p><h2>Registrar un caso</h2><form id="incidentForm"><label>Título<input name="title" required maxlength="120" placeholder="Ej. Pago rechazado en caja 2"><span class="field-error"></span></label><label>Descripción<textarea name="description" required rows="4" placeholder="Describe qué ocurrió y cuándo..."></textarea><span class="field-error"></span></label><div class="form-row"><label>Categoría<select name="category" required><option value="">Selecciona</option><option value="service">Servicio</option><option value="product_quality">Calidad de producto</option><option value="payment">Pago</option><option value="technology">Tecnología</option><option value="inventory">Inventario</option><option value="operations">Operaciones</option><option value="other">Otro</option></select><span class="field-error"></span></label><label>Origen<select name="origin" id="origin" required><option value="">Selecciona</option><option value="customer">Cliente</option><option value="branch">Sede</option><option value="internal">Interno</option></select><span class="field-error"></span></label></div><label id="branchField">Sede<select name="branch" id="branch" required><option value="">Selecciona una sede</option></select><span class="field-error"></span></label><div class="form-message" id="formMessage"></div><button class="primary submit" id="submit" type="submit">Registrar incidencia</button></form></div></div>
+  <script src="app.js"></script>
+</body>
+</html>
