@@ -1,0 +1,16 @@
+{
+  "name": "trackflow-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "uis/*"
+  ],
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "typescript": "^6.0.3"
+  }
+}
+

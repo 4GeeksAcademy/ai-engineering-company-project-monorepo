@@ -1,4 +1,4 @@
-# Carpeta `workflows`
+ # Carpeta `workflows`
 
 Esta carpeta contiene **workflows y automatizaciones** del monorepo (por ejemplo con n8n u otras herramientas): integraciones, tareas programadas, orquestación de procesos, notificaciones, sincronizaciones y flujos que conectan sistemas.
 
