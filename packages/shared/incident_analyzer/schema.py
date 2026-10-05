@@ -114,7 +114,6 @@ INCIDENT_ID_PATTERN = re.compile(r"^HC-\d{6}$")
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 PHI_VALUE_PATTERN = re.compile(r"PAT-\d{6}", re.IGNORECASE)
 
-# Locked against scripts/incidents-healthcore.csv (100 rows).
 EXPECTED_SAMPLE_METRICS = {
     "total_rows": 100,
     "valid_count": 94,
