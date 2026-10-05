@@ -209,7 +209,27 @@ def analyze_csv_path(path: str | Path) -> AnalysisResult:
         except csv.Error:
             dialect = csv.excel
         reader = csv.DictReader(handle, dialect=dialect)
-        return _analyze_reader(reader, source_name=os.path.basename(csv_path))
+        valid_rows, invalid_records, total_rows = _collect_rows(reader)
+        return _summarize(os.path.basename(csv_path), total_rows, valid_rows, invalid_records)
+
+
+def load_validated_csv(path: str | Path) -> tuple[list[dict[str, str]], list[InvalidRecord]]:
+    analyze_csv_path(path)
+    csv_path = os.fspath(path)
+    with open(csv_path, encoding="utf-8-sig", newline="") as handle:
+        sample = handle.read(4096)
+        handle.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;")
+        except csv.Error:
+            dialect = csv.excel
+        reader = csv.DictReader(handle, dialect=dialect)
+        valid_rows, invalid_records, _total_rows = _collect_rows(reader)
+    safe_rows = [
+        {key: value for key, value in row.items() if key != "patient_id"}
+        for row in valid_rows
+    ]
+    return safe_rows, invalid_records
 
 
 def analyze_csv_bytes(raw: bytes, source_name: str = "upload.csv") -> AnalysisResult:
@@ -292,6 +312,11 @@ def redact_phi(text: str) -> str:
 
 
 def _analyze_reader(reader: csv.DictReader, source_name: str) -> AnalysisResult:
+    valid_rows, invalid_records, data_row_count = _collect_rows(reader)
+    return _summarize(source_name, data_row_count, valid_rows, invalid_records)
+
+
+def _collect_rows(reader: csv.DictReader) -> tuple[list[dict[str, str]], list[InvalidRecord], int]:
     if reader.fieldnames is None:
         raise AnalysisError(
             "The CSV has no header row. The first line must contain the field names.",
@@ -356,7 +381,7 @@ def _analyze_reader(reader: csv.DictReader, source_name: str) -> AnalysisResult:
             http_status=400,
         )
 
-    return _summarize(source_name, data_row_count, valid_rows, invalid_records)
+    return valid_rows, invalid_records, data_row_count
 
 
 def _metric_rows(result: AnalysisResult) -> list[dict[str, Any]]:

@@ -1,0 +1,4 @@
+__pycache__/
+*.py[cod]
+data/*.sqlite
+data/*.sqlite-journal

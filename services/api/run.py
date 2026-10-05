@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SHARED = ROOT / "shared"
+SHARED = ROOT / "packages" / "shared"
 API_DIR = Path(__file__).resolve().parent
 for path in (str(SHARED), str(API_DIR)):
     if path not in sys.path:

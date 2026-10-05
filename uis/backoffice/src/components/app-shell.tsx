@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileBarChart, HeartPulse, LayoutDashboard } from "lucide-react";
+import { FileBarChart, HeartPulse, LayoutDashboard, List, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Operations overview", icon: LayoutDashboard },
+  { href: "/incidents/register", label: "Register incident", icon: Plus },
+  { href: "/incidents/board", label: "Incident list", icon: List },
   { href: "/incidents", label: "Incident analyzer", icon: FileBarChart },
 ];
+
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  const matched = pathname === href || pathname.startsWith(`${href}/`);
+  if (!matched) return false;
+  return !NAV.some((other) => {
+    if (other.href.length <= href.length) return false;
+    return pathname === other.href || pathname.startsWith(`${other.href}/`);
+  });
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,15 +35,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <p className="text-sm font-semibold tracking-tight">HealthCore</p>
-              <p className="text-xs text-muted-foreground">Patient Experience backoffice</p>
+              <p className="text-xs text-muted-foreground">Incident manager</p>
             </div>
           </div>
           <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:pb-6">
             {NAV.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+              const active = isActive(pathname, item.href);
               const Icon = item.icon;
               return (
                 <Link
@@ -58,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 HealthCore
               </p>
               <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
-                Incident analyzer
+                Incident manager
               </h1>
             </div>
           </header>

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "shared"))
+ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(ROOT / "packages" / "shared"))
 
 from incident_analyzer import (  # noqa: E402
     EXPECTED_SAMPLE_METRICS,

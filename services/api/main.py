@@ -1,13 +1,22 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
+
+_ROOT = Path(__file__).resolve().parents[2]
+_SHARED = _ROOT / "packages" / "shared"
+_API = Path(__file__).resolve().parent
+for _path in (str(_SHARED), str(_API)):
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from incident_analyzer import AnalysisError, AnalysisResult, analyze_csv_bytes, metrics_to_csv
+from incident_routes import router as incident_router
 
 app = FastAPI(title="HealthCore Incident Analyzer API", version="1.0.0")
 
@@ -110,6 +119,21 @@ def root() -> dict[str, str]:
     }
 
 
+app.include_router(incident_router)
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_request, exc: HTTPException) -> JSONResponse:
+    if isinstance(exc.detail, dict):
+        return JSONResponse(status_code=exc.status_code, content=exc.detail)
     return JSONResponse(status_code=exc.status_code, content={"error": exc.detail, "status": exc.status_code})
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception(_request, exc: Exception) -> JSONResponse:
+    if isinstance(exc, HTTPException):
+        return await http_exception_handler(_request, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"message": "The server could not complete the request."},
+    )
