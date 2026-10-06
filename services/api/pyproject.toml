@@ -23,6 +23,7 @@ dependencies = [
 dev = [
     "pytest>=8",
     "httpx>=0.27",
+    "pytest-cov>=7.1.0",
 ]
 
 [project.scripts]
@@ -41,3 +42,15 @@ include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "ai_suggested: edge case proposed by the AI assistant (see TESTING.md, section 8); run them with `-m ai_suggested`",
+]
+
+# `uv run pytest --cov` measures the authentication domain and fails below 70 % (ticket AUTH-088's minimum).
+[tool.coverage.run]
+source = ["auth", "users", "profiles", "core"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true

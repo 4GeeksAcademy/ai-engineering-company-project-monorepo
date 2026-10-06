@@ -10,6 +10,11 @@ build/
 next-env.d.ts
 *.tsbuildinfo
 
+# Test coverage reports
+coverage/
+htmlcov/
+.coverage
+
 # Python
 __pycache__/
 *.py[cod]

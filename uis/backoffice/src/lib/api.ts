@@ -76,6 +76,10 @@ export async function login(email: string, password: string): Promise<void> {
     throw await toApiError(response);
   }
   const { access_token } = await response.json();
+  if (typeof access_token !== "string" || !access_token) {
+    // Storing `undefined` would save the text "undefined" and send it as the bearer token on every call.
+    throw new ApiError("Unexpected response from the server", 502);
+  }
   setToken(access_token);
 }
 

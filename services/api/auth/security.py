@@ -41,8 +41,8 @@ def create_access_token(user_uuid: UUID | str) -> str:
 
 def decode_access_token(token: str) -> UUID | None:
     """The ``user_id`` in a valid, unexpired, correctly signed token, or ``None``
-    for anything else (bad signature, expired, wrong algorithm, no ``exp``,
-    ``user_id`` missing or not a uuid)."""
+    for anything else (bad signature, expired, wrong algorithm, no ``exp`` or an
+    ``exp`` that is not a number, ``user_id`` missing or not a uuid)."""
     try:
         claims = jwt.decode(
             token,
@@ -52,5 +52,5 @@ def decode_access_token(token: str) -> UUID | None:
         )
         raw = claims["user_id"]
         return UUID(raw) if isinstance(raw, str) else None
-    except (JWTError, KeyError, ValueError):
+    except (JWTError, KeyError, ValueError, TypeError):  # TypeError: python-jose on an ``exp`` of null or a list
         return None

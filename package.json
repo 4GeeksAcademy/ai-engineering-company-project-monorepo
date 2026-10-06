@@ -10,7 +10,8 @@
     "dev:backoffice": "npm --workspace uis/backoffice run dev",
     "build:backoffice": "npm --workspace uis/backoffice run build",
     "typecheck:backoffice": "npm --workspace uis/backoffice run typecheck",
-    "test:shared": "npm --workspace packages/shared run test"
+    "test:shared": "npm --workspace packages/shared run test",
+    "test:backoffice": "npm --workspace uis/backoffice run test"
   },
   "workspaces": [
     "packages/shared",

@@ -29,6 +29,9 @@ def _normalize_email(value):
 def _check_password_bytes(value: str | None) -> str | None:
     if value is not None and len(value.encode("utf-8")) > MAX_PASSWORD_BYTES:
         raise ValueError(f"password must be at most {MAX_PASSWORD_BYTES} bytes long")
+    # bcrypt raises on a NUL byte: refuse it here (422) instead of crashing in hash_password (500).
+    if value is not None and "\x00" in value:
+        raise ValueError("password must not contain NUL characters")
     return value
 
 
