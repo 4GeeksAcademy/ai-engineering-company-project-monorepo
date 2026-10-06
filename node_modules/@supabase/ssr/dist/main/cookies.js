@@ -1,0 +1,431 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createStorageFromOptions = createStorageFromOptions;
+exports.applyServerStorage = applyServerStorage;
+const cookie_1 = require("cookie");
+const utils_1 = require("./utils");
+const BASE64_PREFIX = "base64-";
+/**
+ * Decodes a chunked cookie value that may carry the `base64-` prefix written
+ * by this module. When the prefix is present, the underlying payload is always
+ * JSON encoded by auth-js (`setItemAsync` runs `JSON.stringify` on every
+ * write). If the decoded value cannot be parsed as JSON, the chunks are
+ * mismatched (e.g. a partial cookie write left the browser holding a mix of
+ * old and new generations) and we treat the entry as absent so the SDK does
+ * not propagate or re-save the corrupted payload.
+ */
+function decodeChunkedCookieValue(value) {
+    if (!value.startsWith(BASE64_PREFIX)) {
+        return value;
+    }
+    let decoded;
+    try {
+        decoded = (0, utils_1.stringFromBase64URL)(value.substring(BASE64_PREFIX.length));
+    }
+    catch (error) {
+        console.warn("@supabase/ssr: could not base64url-decode chunked cookie value, treating as absent. Cookie chunks may have been written partially across responses.", error);
+        return null;
+    }
+    try {
+        JSON.parse(decoded);
+    }
+    catch {
+        console.warn("@supabase/ssr: chunked cookie decoded to invalid JSON, treating as absent. This usually indicates that cookie chunks from different writes were combined (e.g. response committed before all Set-Cookie headers were sent).");
+        return null;
+    }
+    return decoded;
+}
+/**
+ * Creates a storage client that handles cookies correctly for browser and
+ * server clients with or without properly provided cookie methods.
+ *
+ * @param options The options passed to createBrowserClient or createServer client.
+ *
+ * @param isServerClient Whether it's called from createServerClient.
+ */
+function createStorageFromOptions(options, isServerClient) {
+    const cookies = options.cookies ?? null;
+    const cookieEncoding = options.cookieEncoding;
+    const setItems = {};
+    const removedItems = {};
+    let getAll;
+    let setAll;
+    const documentCookieGetAll = () => {
+        const parsed = (0, cookie_1.parse)(document.cookie);
+        return Object.keys(parsed).map((name) => ({
+            name,
+            value: parsed[name] ?? "",
+        }));
+    };
+    const documentCookieSetAll = (setCookies) => {
+        setCookies.forEach(({ name, value, options }) => {
+            document.cookie = (0, cookie_1.serialize)(name, value, options);
+        });
+    };
+    if (cookies) {
+        if ("get" in cookies) {
+            // Just get is not enough, because the client needs to see what cookies
+            // are already set and unset them if necessary. To attempt to fix this
+            // behavior for most use cases, we pass "hints" which is the keys of the
+            // storage items. They are then converted to their corresponding cookie
+            // chunk names and are fetched with get. Only 5 chunks are fetched, which
+            // should be enough for the majority of use cases, but does not solve
+            // those with very large sessions.
+            const getWithHints = async (keyHints) => {
+                // optimistically find the first 5 potential chunks for the specified key
+                const chunkNames = keyHints.flatMap((keyHint) => [
+                    keyHint,
+                    ...Array.from({ length: 5 }).map((_, i) => `${keyHint}.${i}`),
+                ]);
+                const chunks = [];
+                for (let i = 0; i < chunkNames.length; i += 1) {
+                    const value = await cookies.get(chunkNames[i]);
+                    if (!value && typeof value !== "string") {
+                        continue;
+                    }
+                    chunks.push({ name: chunkNames[i], value });
+                }
+                // TODO: detect and log stale chunks error
+                return chunks;
+            };
+            getAll = async (keyHints) => await getWithHints(keyHints);
+            if ("set" in cookies && "remove" in cookies) {
+                setAll = async (setCookies) => {
+                    for (let i = 0; i < setCookies.length; i += 1) {
+                        const { name, value, options } = setCookies[i];
+                        if (value) {
+                            await cookies.set(name, value, options);
+                        }
+                        else {
+                            await cookies.remove(name, options);
+                        }
+                    }
+                };
+            }
+            else if (isServerClient) {
+                setAll = async () => {
+                    console.warn("@supabase/ssr: createServerClient was configured without set and remove cookie methods, but the client needs to set cookies. This can lead to issues such as random logouts, early session termination or increased token refresh requests. If in NextJS, check your middleware.ts file, route handlers and server actions for correctness. Consider switching to the getAll and setAll cookie methods instead of get, set and remove which are deprecated and can be difficult to use correctly.");
+                };
+            }
+            else {
+                throw new Error("@supabase/ssr: createBrowserClient requires configuring a getAll and setAll cookie method (deprecated: alternatively both get, set and remove can be used)");
+            }
+        }
+        else if ("getAll" in cookies) {
+            getAll = async () => await cookies.getAll();
+            if ("setAll" in cookies) {
+                setAll = cookies.setAll;
+            }
+            else if (isServerClient) {
+                setAll = async () => {
+                    console.warn("@supabase/ssr: createServerClient was configured without the setAll cookie method, but the client needs to set cookies. This can lead to issues such as random logouts, early session termination or increased token refresh requests. If in NextJS, check your middleware.ts file, route handlers and server actions for correctness.");
+                };
+            }
+            else {
+                throw new Error("@supabase/ssr: createBrowserClient requires configuring both getAll and setAll cookie methods (deprecated: alternatively both get, set and remove can be used)");
+            }
+        }
+        else if (!isServerClient && (0, utils_1.isBrowser)()) {
+            // cookies object provided (e.g. just to set `encode`) but no accessors.
+            // Fall through to document.cookie defaults, same as when cookies isn't
+            // provided at all.
+            getAll = () => documentCookieGetAll();
+            setAll = documentCookieSetAll;
+        }
+        else {
+            // neither get nor getAll is present on cookies, only will occur if pure JavaScript is used, but cookies is an object
+            throw new Error(`@supabase/ssr: ${isServerClient ? "createServerClient" : "createBrowserClient"} requires configuring getAll and setAll cookie methods (deprecated: alternatively use get, set and remove).${(0, utils_1.isBrowser)() ? " As this is called in a browser runtime, consider removing the cookies option object to use the document.cookie API automatically." : ""}`);
+        }
+    }
+    else if (!isServerClient && (0, utils_1.isBrowser)()) {
+        // The environment is browser, so use the document.cookie API to implement getAll and setAll.
+        getAll = () => documentCookieGetAll();
+        setAll = documentCookieSetAll;
+    }
+    else if (isServerClient) {
+        throw new Error("@supabase/ssr: createServerClient must be initialized with cookie options that specify getAll and setAll functions (deprecated, not recommended: alternatively use get, set and remove)");
+    }
+    else {
+        // getting cookies when there's no window but we're in browser mode can be OK, because the developer probably is not using auth functions
+        getAll = () => {
+            return [];
+        };
+        // this is NOT OK because the developer is using auth functions that require setting some state, so that must error out
+        setAll = () => {
+            throw new Error("@supabase/ssr: createBrowserClient in non-browser runtimes (including Next.js pre-rendering mode) was not initialized cookie options that specify getAll and setAll functions (deprecated: alternatively use get, set and remove), but they were needed");
+        };
+    }
+    if (!isServerClient) {
+        // This is the storage client to be used in browsers. It only
+        // works on the cookies abstraction, unlike the server client
+        // which only uses cookies to read the initial state. When an
+        // item is set, cookies are both cleared and set to values so
+        // that stale chunks are not left remaining.
+        return {
+            getAll, // for type consistency
+            setAll, // for type consistency
+            setItems, // for type consistency
+            removedItems, // for type consistency
+            storage: {
+                isServer: false,
+                getItem: async (key) => {
+                    const allCookies = await getAll([key]);
+                    const chunkedCookie = await (0, utils_1.combineChunks)(key, async (chunkName) => {
+                        const cookie = allCookies?.find(({ name }) => name === chunkName) || null;
+                        if (!cookie) {
+                            return null;
+                        }
+                        return cookie.value;
+                    });
+                    if (!chunkedCookie) {
+                        return null;
+                    }
+                    return decodeChunkedCookieValue(chunkedCookie);
+                },
+                setItem: async (key, value) => {
+                    const allCookies = await getAll([key]);
+                    const cookieNames = allCookies?.map(({ name }) => name) || [];
+                    const removeCookies = new Set(cookieNames.filter((name) => (0, utils_1.isChunkLike)(name, key)));
+                    let encoded = value;
+                    if (cookieEncoding === "base64url") {
+                        encoded = BASE64_PREFIX + (0, utils_1.stringToBase64URL)(value);
+                    }
+                    const setCookies = (0, utils_1.createChunks)(key, encoded);
+                    setCookies.forEach(({ name }) => {
+                        removeCookies.delete(name);
+                    });
+                    const removeCookieOptions = {
+                        ...utils_1.DEFAULT_COOKIE_OPTIONS,
+                        ...options?.cookieOptions,
+                        maxAge: 0,
+                    };
+                    const setCookieOptions = {
+                        ...utils_1.DEFAULT_COOKIE_OPTIONS,
+                        ...options?.cookieOptions,
+                        maxAge: utils_1.DEFAULT_COOKIE_OPTIONS.maxAge,
+                    };
+                    // the NextJS cookieStore API can get confused if the `name` from
+                    // options.cookieOptions leaks
+                    delete removeCookieOptions.name;
+                    delete setCookieOptions.name;
+                    // See removeItem below for the host-only also-clear rationale.
+                    // Same logic applies here: when overwriting an existing session,
+                    // stale chunks at a previous scope must be cleared at that scope.
+                    const hostOnlyRemoveOptions = removeCookieOptions.domain
+                        ? (() => {
+                            const { domain: _domain, ...rest } = removeCookieOptions;
+                            return rest;
+                        })()
+                        : null;
+                    const allToSet = [
+                        ...[...removeCookies].map((name) => ({
+                            name,
+                            value: "",
+                            options: removeCookieOptions,
+                        })),
+                        ...(hostOnlyRemoveOptions
+                            ? [...removeCookies].map((name) => ({
+                                name,
+                                value: "",
+                                options: hostOnlyRemoveOptions,
+                            }))
+                            : []),
+                        ...setCookies.map(({ name, value }) => ({
+                            name,
+                            value,
+                            options: setCookieOptions,
+                        })),
+                    ];
+                    if (allToSet.length > 0) {
+                        await setAll(allToSet, {});
+                    }
+                },
+                removeItem: async (key) => {
+                    const allCookies = await getAll([key]);
+                    const cookieNames = allCookies?.map(({ name }) => name) || [];
+                    const removeCookies = cookieNames.filter((name) => (0, utils_1.isChunkLike)(name, key));
+                    if (removeCookies.length === 0) {
+                        return;
+                    }
+                    const removeCookieOptions = {
+                        ...utils_1.DEFAULT_COOKIE_OPTIONS,
+                        ...options?.cookieOptions,
+                        maxAge: 0,
+                    };
+                    // the NextJS cookieStore API can get confused if the `name` from
+                    // options.cookieOptions leaks
+                    delete removeCookieOptions.name;
+                    const toSet = removeCookies.map((name) => ({
+                        name,
+                        value: "",
+                        options: removeCookieOptions,
+                    }));
+                    // When a parent Domain is configured, also clear the host-only
+                    // counterpart. Migrating host-only -> `.parent.tld` leaves the old
+                    // host-only cookies behind; the browser returns both in the Cookie
+                    // header and parsers may pick the stale one, resurrecting the
+                    // session after signOut. A Set-Cookie clear for a scope the host
+                    // doesn't own is silently ignored, so this is a no-op when there's
+                    // nothing stale to clear.
+                    if (removeCookieOptions.domain) {
+                        const { domain: _domain, ...hostOnlyOptions } = removeCookieOptions;
+                        toSet.push(...removeCookies.map((name) => ({
+                            name,
+                            value: "",
+                            options: hostOnlyOptions,
+                        })));
+                    }
+                    await setAll(toSet, {});
+                },
+            },
+        };
+    }
+    // This is the server client. It only uses getAll to read the initial
+    // state. Any subsequent changes to the items is persisted in the
+    // setItems and removedItems objects. createServerClient *must* use
+    // getAll, setAll and the values in setItems and removedItems to
+    // persist the changes *at once* when appropriate (usually only when
+    // the TOKEN_REFRESHED, USER_UPDATED or SIGNED_OUT events are fired by
+    // the Supabase Auth client).
+    return {
+        getAll,
+        setAll,
+        setItems,
+        removedItems,
+        storage: {
+            // to signal to the libraries that these cookies are
+            // coming from a server environment and their value
+            // should not be trusted
+            isServer: true,
+            getItem: async (key) => {
+                if (typeof setItems[key] === "string") {
+                    return setItems[key];
+                }
+                if (removedItems[key]) {
+                    return null;
+                }
+                const allCookies = await getAll([key]);
+                const chunkedCookie = await (0, utils_1.combineChunks)(key, async (chunkName) => {
+                    const cookie = allCookies?.find(({ name }) => name === chunkName) || null;
+                    if (!cookie) {
+                        return null;
+                    }
+                    return cookie.value;
+                });
+                if (!chunkedCookie) {
+                    return null;
+                }
+                if (typeof chunkedCookie !== "string") {
+                    return chunkedCookie;
+                }
+                return decodeChunkedCookieValue(chunkedCookie);
+            },
+            setItem: async (key, value) => {
+                // We don't have an `onAuthStateChange` event that can let us know that
+                // the PKCE code verifier is being set. Therefore, if we see it being
+                // set, we need to apply the storage (call `setAll` so the cookie is
+                // set properly).
+                if (key.endsWith("-code-verifier")) {
+                    await applyServerStorage({
+                        getAll,
+                        setAll,
+                        // pretend only that the code verifier was set
+                        setItems: { [key]: value },
+                        // pretend that nothing was removed
+                        removedItems: {},
+                    }, {
+                        cookieOptions: options?.cookieOptions ?? null,
+                        cookieEncoding,
+                    });
+                }
+                setItems[key] = value;
+                delete removedItems[key];
+            },
+            removeItem: async (key) => {
+                // Intentionally not applying the storage when the key is the PKCE code
+                // verifier, as usually right after it's removed other items are set,
+                // so application of the storage will be handled by the
+                // `onAuthStateChange` callback that follows removal -- usually as part
+                // of the `exchangeCodeForSession` call.
+                delete setItems[key];
+                removedItems[key] = true;
+            },
+        },
+    };
+}
+/**
+ * When createServerClient needs to apply the created storage to cookies, it
+ * should call this function which handles correcly setting cookies for stored
+ * and removed items in the storage.
+ */
+async function applyServerStorage({ getAll, setAll, setItems, removedItems, }, options) {
+    const cookieEncoding = options.cookieEncoding;
+    const cookieOptions = options.cookieOptions ?? null;
+    const allCookies = await getAll([
+        ...(setItems ? Object.keys(setItems) : []),
+        ...(removedItems ? Object.keys(removedItems) : []),
+    ]);
+    const cookieNames = allCookies?.map(({ name }) => name) || [];
+    const removeCookies = Object.keys(removedItems).flatMap((itemName) => {
+        return cookieNames.filter((name) => (0, utils_1.isChunkLike)(name, itemName));
+    });
+    const setCookies = Object.keys(setItems).flatMap((itemName) => {
+        const removeExistingCookiesForItem = new Set(cookieNames.filter((name) => (0, utils_1.isChunkLike)(name, itemName)));
+        let encoded = setItems[itemName];
+        if (cookieEncoding === "base64url") {
+            encoded = BASE64_PREFIX + (0, utils_1.stringToBase64URL)(encoded);
+        }
+        const chunks = (0, utils_1.createChunks)(itemName, encoded);
+        chunks.forEach((chunk) => {
+            removeExistingCookiesForItem.delete(chunk.name);
+        });
+        removeCookies.push(...removeExistingCookiesForItem);
+        return chunks;
+    });
+    const removeCookieOptions = {
+        ...utils_1.DEFAULT_COOKIE_OPTIONS,
+        ...cookieOptions,
+        maxAge: 0,
+    };
+    const setCookieOptions = {
+        ...utils_1.DEFAULT_COOKIE_OPTIONS,
+        ...cookieOptions,
+        maxAge: utils_1.DEFAULT_COOKIE_OPTIONS.maxAge,
+    };
+    // the NextJS cookieStore API can get confused if the `name` from
+    // options.cookieOptions leaks
+    delete removeCookieOptions.name;
+    delete setCookieOptions.name;
+    // See removeItem in createStorageFromOptions for the host-only also-clear
+    // rationale. Same logic on the server-side response path.
+    const hostOnlyRemoveOptions = removeCookieOptions.domain && removeCookies.length > 0
+        ? (() => {
+            const { domain: _domain, ...rest } = removeCookieOptions;
+            return rest;
+        })()
+        : null;
+    await setAll([
+        ...removeCookies.map((name) => ({
+            name,
+            value: "",
+            options: removeCookieOptions,
+        })),
+        ...(hostOnlyRemoveOptions
+            ? removeCookies.map((name) => ({
+                name,
+                value: "",
+                options: hostOnlyRemoveOptions,
+            }))
+            : []),
+        ...setCookies.map(({ name, value }) => ({
+            name,
+            value,
+            options: setCookieOptions,
+        })),
+    ], {
+        "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
+        Expires: "0",
+        Pragma: "no-cache",
+    });
+}
+//# sourceMappingURL=cookies.js.map

@@ -1,0 +1,233 @@
+.accessible {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.accessible__welcome {
+  padding: 1.25rem 1.35rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--bo-accent) 18%, var(--bo-panel)),
+    var(--bo-panel)
+  );
+  border: 1px solid var(--bo-panel-2);
+  border-radius: var(--radius);
+}
+
+.accessible__kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bo-accent);
+  margin-bottom: 0.4rem;
+}
+
+.accessible__welcome h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.65rem;
+}
+
+.accessible__lead {
+  max-width: 46rem;
+  color: var(--bo-muted);
+}
+
+.accessible__lead code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--bo-accent);
+}
+
+.accessible__dashboard {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+.accessible__panel {
+  background: var(--bo-panel);
+  border: 1px solid var(--bo-panel-2);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  min-height: 10rem;
+}
+
+.accessible__panel h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.85rem;
+  color: var(--bo-text);
+}
+
+.accessible__panel--placeholder {
+  border-style: dashed;
+  color: var(--bo-muted);
+}
+
+.accessible__panel--placeholder p {
+  font-size: 0.92rem;
+}
+
+.accessible__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.accessible__stats dt {
+  font-size: 0.75rem;
+  color: var(--bo-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.accessible__stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.accessible__currencies {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 1rem !important;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge--cop {
+  background: color-mix(in srgb, var(--bo-cop) 22%, transparent);
+  color: var(--bo-cop);
+}
+
+.badge--usd {
+  background: color-mix(in srgb, var(--bo-usd) 22%, transparent);
+  color: var(--bo-usd);
+}
+
+.accessible__source {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--bo-muted);
+}
+
+.accessible__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.accessible__list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.65rem;
+  background: color-mix(in srgb, #000 25%, var(--bo-panel));
+  border-radius: 0.35rem;
+}
+
+.accessible__loc-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.accessible__loc-meta {
+  font-size: 0.8rem;
+  color: var(--bo-muted);
+}
+
+.accessible__status {
+  color: var(--bo-muted);
+}
+
+.accessible__error {
+  color: #fca5a5;
+  font-size: 0.92rem;
+}
+
+.accessible__error code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.accessible__table-wrap {
+  overflow: auto;
+  max-height: 22rem;
+}
+
+.accessible__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.accessible__table th,
+.accessible__table td {
+  text-align: left;
+  padding: 0.45rem 0.35rem;
+  border-bottom: 1px solid var(--bo-panel-2);
+}
+
+.accessible__table th {
+  color: var(--bo-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.accessible__stock {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.accessible__stock h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.accessible__stock-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.accessible__stock-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--bo-muted);
+}
+
+.accessible__stock-form input,
+.accessible__stock-form select {
+  min-width: 8rem;
+}
+
+@media (min-width: 960px) {
+  .accessible__dashboard {
+    grid-template-columns: 1.2fr 1fr;
+  }
+
+  .accessible__panel--span {
+    grid-column: 1 / -1;
+  }
+
+  .accessible__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,94 @@
+.hero {
+  position: relative;
+  min-height: calc(100svh - var(--header-h));
+  display: grid;
+  align-items: end;
+  color: #fff;
+  overflow: hidden;
+  background: var(--brasa-charcoal);
+}
+
+.hero__atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero__glow {
+  position: absolute;
+  inset: auto -10% -35% -10%;
+  height: 70%;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--brasa-ember) 55%, transparent), transparent 60%),
+    radial-gradient(ellipse at 20% 40%, color-mix(in srgb, #ffb703 25%, transparent), transparent 50%),
+    radial-gradient(ellipse at 80% 30%, color-mix(in srgb, var(--brasa-teal) 20%, transparent), transparent 45%);
+  animation: ember-pulse 8s ease-in-out infinite alternate;
+}
+
+.hero__grill {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 18px,
+      color-mix(in srgb, #000 55%, transparent) 18px,
+      color-mix(in srgb, #000 55%, transparent) 20px
+    ),
+    linear-gradient(180deg, transparent 35%, color-mix(in srgb, #000 70%, transparent) 100%);
+  background-size: 100% 100%;
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-6) var(--space-5);
+  max-width: 44rem;
+}
+
+.hero__kicker {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #fff 75%, var(--brasa-ember));
+  margin-bottom: var(--space-2);
+}
+
+.hero__brand {
+  font-size: clamp(3.2rem, 12vw, 6.5rem);
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  margin-bottom: var(--space-3);
+}
+
+.hero__tagline {
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  max-width: 28rem;
+  color: color-mix(in srgb, #fff 88%, transparent);
+  margin-bottom: var(--space-4);
+}
+
+.hero__actions {
+  margin-top: var(--space-1);
+}
+
+@keyframes ember-pulse {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(-1.5%) scale(1.04);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__glow {
+    animation: none;
+  }
+}

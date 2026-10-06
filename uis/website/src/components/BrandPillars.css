@@ -1,0 +1,33 @@
+.pillars {
+  background: var(--brasa-paper);
+}
+
+.pillars__grid {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.pillars__card {
+  padding: var(--space-3);
+  border-top: 3px solid var(--brasa-ember);
+  background: #fff;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--brasa-charcoal) 8%, transparent);
+}
+
+.pillars__card h3 {
+  font-size: 1.25rem;
+  margin-bottom: var(--space-1);
+}
+
+.pillars__card p {
+  color: var(--brasa-muted);
+}
+
+@media (min-width: 800px) {
+  .pillars__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

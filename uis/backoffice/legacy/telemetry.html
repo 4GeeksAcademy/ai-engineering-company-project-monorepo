@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health - Telemetry Report</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background-color: #f9fafb; color: #111827; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+        .period-box { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-weight: 500; }
+        .metric-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f3f4f6; }
+        .error { color: #dc2626; font-weight: bold; }
+        .status { display: flex; align-items: center; gap: 8px; }
+        .spinner { width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid #d1d5db; border-top-color: #2563eb; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .retry { margin-left: 8px; padding: 6px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Engineering Telemetry Dashboard</h1>
+        
+        <div class="period-box" id="period-display">
+            Loading time window...
+        </div>
+
+        <div class="metric-section">
+            <h3>Traffic Volume (Events Per Day)</h3>
+            <table id="volume-table">
+                <thead><tr><th>Date</th><th>Total Events</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="metric-section">
+            <h3>System Errors by Type</h3>
+            <table id="errors-table">
+                <thead><tr><th>Error Type</th><th>Occurrences</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="metric-section">
+            <h3>Authentication Failure Rate</h3>
+            <table id="auth-table">
+                <thead><tr><th>Date</th><th>Successes</th><th>Failures</th><th>Failure Rate</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Adjust this URL if your FastAPI backend runs on a different port/host
+        const API_URL = 'http://localhost:8000/telemetry/report';
+
+        async function loadTelemetry() {
+            const period = document.getElementById('period-display');
+            const volumeBody = document.querySelector('#volume-table tbody');
+            const errorsBody = document.querySelector('#errors-table tbody');
+            const authBody = document.querySelector('#auth-table tbody');
+            period.classList.add('is-loading');
+            period.innerHTML = '<span class="status"><span class="spinner" aria-hidden="true"></span>Loading time window...</span>';
+            volumeBody.innerHTML = '';
+            errorsBody.innerHTML = '';
+            authBody.innerHTML = '';
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('unavailable');
+                }
+                const data = await response.json();
+                const periodFrom = data?.period?.from;
+                const periodTo = data?.period?.to;
+                const events = data?.metrics?.events_per_day ?? [];
+                const errorRates = data?.metrics?.error_rate_by_type ?? [];
+                const authRates = data?.metrics?.auth_failure_rate ?? [];
+
+                period.innerHTML =
+                    `📅 <strong>Period:</strong> ${periodFrom ? new Date(periodFrom).toLocaleString() : '—'} &mdash; ${periodTo ? new Date(periodTo).toLocaleString() : '—'}`;
+
+                events.forEach(row => {
+                    volumeBody.innerHTML += `<tr><td>${row?.date ?? '—'}</td><td>${row?.event_count ?? '—'}</td></tr>`;
+                });
+
+                if (errorRates.length === 0) {
+                    errorsBody.innerHTML = `<tr><td colspan="2">No technical errors detected in this period! 🎉</td></tr>`;
+                } else {
+                    errorRates.forEach(row => {
+                        errorsBody.innerHTML += `<tr><td class="error">${row?.event_type ?? '—'}</td><td>${row?.error_count ?? '—'}</td></tr>`;
+                    });
+                }
+
+                if (authRates.length === 0) {
+                    authBody.innerHTML = `<tr><td colspan="4">No authentication events in this period.</td></tr>`;
+                } else {
+                    authRates.forEach(row => {
+                        const ratePercent = ((row?.failure_rate ?? 0) * 100).toFixed(1) + '%';
+                        authBody.innerHTML += `<tr>
+                            <td>${row?.date ?? '—'}</td>
+                            <td>${row?.user_login_succeeded ?? '—'}</td>
+                            <td class="error">${row?.user_login_failed ?? '—'}</td>
+                            <td>${ratePercent}</td>
+                        </tr>`;
+                    });
+                }
+            } catch {
+                period.innerHTML = `<span class="error">Telemetry could not be loaded. <button type="button" class="retry" id="retry-telemetry">Try again</button> If this continues, contact Brasaland Digital at Medellín headquarters.</span>`;
+                const retry = document.getElementById('retry-telemetry');
+                if (retry) {
+                    retry.addEventListener('click', loadTelemetry);
+                }
+            } finally {
+                period.classList.remove('is-loading');
+            }
+        }
+
+        // Load the data immediately when the page opens
+        loadTelemetry();
+    </script>
+</body>
+</html>

@@ -2,10 +2,12 @@
 
 Esta carpeta contiene **todos los proyectos con interfaz de usuario** para el proyecto transversal de AI Engineering de la compañía — por ejemplo: un sitio web público, un frontend de panel de administración, una interfaz de ecommerce, portales para clientes, aplicaciones Streamlit/Gradio u otras herramientas sólo-frontend.
 
-Los dos proyectos principales que se almacenan aquí son:
+Los proyectos principales que se almacenan aquí son:
 
-- **`website`** — la presencia web pública de la compañía.
-- **`backoffice`** — la aplicación interna de administración. Es el lugar ideal para desarrollar múltiples soluciones dentro de un mismo proyecto: autenticación, gestión de personas, gestión de operaciones, comunicación interna y otras capacidades de back-office.
+- **`website`** — sitio corporativo público de Brasaland (Vite + React).
+- **`backoffice`** — consola interna de Brasaland Digital (Vite + React, JWT).
+- **`portal`** — portal Next.js (App Router): Brasa Points para invitados (`/points`) y ventas por sede en COP y USD (`/ops/sales`). Ver [`portal/README.md`](./portal/README.md).
+- **`web/`** — herramienta HTML de análisis de incidentes (no es el sitio de marketing).
 
 Organiza `uis/` por **distintas áreas de la compañía** — cada subcarpeta agrupa un ámbito diferente (por ejemplo, web pública frente a operaciones internas) e incluye su propia documentación técnica y funcional.
 

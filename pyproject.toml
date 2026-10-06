@@ -1,0 +1,24 @@
+[project]
+name = "ai-engineering-company-project-monorepo"
+version = "0.1.0"
+description = "Brasaland AI Engineering company monorepo"
+requires-python = ">=3.9"
+dependencies = [
+    "celery>=5.6.3",
+    "fastapi>=0.128.8",
+    "flower>=2.0.1",
+    "httpx>=0.28.1",
+    "python-jose[cryptography]>=3.5.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.0.0,<5.0.0",
+    "redis>=7.0.1",
+    "prefect>=3",
+    "pandas>=2.3.3",
+    "python-dotenv>=1.2.1",
+    "supabase>=2.31.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]

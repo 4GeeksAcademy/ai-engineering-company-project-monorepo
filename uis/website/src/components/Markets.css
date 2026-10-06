@@ -1,0 +1,41 @@
+.markets {
+  background: var(--brasa-stone);
+}
+
+.markets__grid {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.markets__panel {
+  padding: var(--space-3);
+  background: var(--brasa-paper);
+  border-left: 4px solid var(--brasa-charcoal);
+}
+
+.markets__panel--leaf {
+  border-left-color: var(--brasa-leaf);
+}
+
+.markets__panel--teal {
+  border-left-color: var(--brasa-teal);
+}
+
+.markets__panel h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.markets__hub {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--brasa-muted);
+  margin-bottom: var(--space-2);
+}
+
+@media (min-width: 800px) {
+  .markets__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

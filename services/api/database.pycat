@@ -1,0 +1,1 @@
+    SQLModel.metadata.create_all(engine) services/api/database.py

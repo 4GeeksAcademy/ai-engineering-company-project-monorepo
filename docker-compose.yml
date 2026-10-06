@@ -1,0 +1,51 @@
+# Local stack for Message Queues and Async Tasks.
+# Redis is the shared broker/result backend for API + workers (REDIS_URL).
+
+x-redis-url: &redis_url redis://redis:6379/0
+
+services:
+  redis:
+    image: redis:7
+    container_name: brasaland-redis
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  flower:
+    image: mher/flower:2.0
+    container_name: brasaland-flower
+    command: ["celery", "--broker=redis://redis:6379/0", "flower", "--port=5555"]
+    ports:
+      - "5555:5555"
+    environment:
+      REDIS_URL: *redis_url
+      # Allow local demo access to /api/tasks without basic auth.
+      FLOWER_UNAUTHENTICATED_API: "true"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brasaland-celery-worker
+    command: ["celery", "-A", "services.celery_app", "worker", "--loglevel=info", "-E"]
+    environment:
+      REDIS_URL: *redis_url
+      CELERY_BROKER_URL: *redis_url
+      CELERY_RESULT_BACKEND: *redis_url
+    volumes:
+      - ./:/app
+    working_dir: /app
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
