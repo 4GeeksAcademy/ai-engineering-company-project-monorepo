@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import api from "@/lib/axios";
+import axios from "axios";
 
 interface SupplierFormProps {
   onSuccess: () => void;
@@ -29,10 +30,16 @@ export default function SupplierForm({ onSuccess, onCancel }: SupplierFormProps)
     };
 
     try {
-      const res = await api.post("/suppliers", payload);
+      await api.post("/suppliers", payload);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || "Network error");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || err.message || "Network error");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Network error");
+      }
     }
   };
 

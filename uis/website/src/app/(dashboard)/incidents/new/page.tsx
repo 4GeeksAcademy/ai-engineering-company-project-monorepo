@@ -53,7 +53,7 @@ export default function NewIncidentPage() {
         origin: 'customer',
         branch: 'central'
       });
-    } catch (err) {
+    } catch {
       setErrorMsg('No se pudo conectar con el servidor.');
     } finally {
       setLoading(false);

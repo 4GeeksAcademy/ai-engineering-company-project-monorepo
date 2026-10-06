@@ -1,7 +1,7 @@
 'use client'
 
-import React,{createContext, useContext, useState, useEffect, useCallback} from 'react'
-import { useRouter, usePathname } from 'next/navigation';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation';
 
 export interface User {
   id?: string;
@@ -22,7 +22,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+    return null;
+  });
   const router = useRouter();
 
   const logout = useCallback(() => {
@@ -49,12 +54,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [logout]);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-      fetchUser(savedToken);
+    if (token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchUser(token);
     }
-  }, [fetchUser]);
+  }, [token, fetchUser]);
 
 
 // 2. Función para iniciar sesión (guarda el token y actualiza el estado) 

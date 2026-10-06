@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { Candidate, CandidateStatus, CandidateStage } from '@/types/candidate';
 import { getCandidateById } from '@/services/trackerApi';
@@ -22,7 +22,7 @@ export default function CandidateDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCandidate = async () => {
+  const fetchCandidate = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -34,11 +34,12 @@ export default function CandidateDetailPage({ params }: PageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [candidateId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCandidate();
-  }, [candidateId]);
+  }, [fetchCandidate]);
 
   const handleStatusStageUpdate = (newStatus: CandidateStatus, newStage: CandidateStage) => {
     setCandidate((prev) => (prev ? { ...prev, status: newStatus, stage: newStage } : prev));

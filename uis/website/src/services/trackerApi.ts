@@ -9,6 +9,11 @@ import {
 
 const API_BASE_URL = '/api';
 
+interface ValidationErrorDetail {
+  loc: (string | number)[];
+  msg: string;
+}
+
 function getAuthHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -21,7 +26,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
       const errorData = await response.json();
       if (errorData && typeof errorData === 'object') {
         if (Array.isArray(errorData.detail)) {
-          errorMessage = errorData.detail.map((e: any) => `Campo ${e.loc[e.loc.length - 1]}: ${e.msg}`).join(', ');
+          errorMessage = errorData.detail.map((e: ValidationErrorDetail) => `Campo ${e.loc[e.loc.length - 1]}: ${e.msg}`).join(', ');
         } else {
           errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
         }
@@ -63,7 +68,7 @@ export async function getCandidates(filters?: CandidateFilters): Promise<Candida
       },
       cache: 'no-store',
     });
-  } catch (error) {
+  } catch {
     throw new Error("No se pudo conectar con el servidor. Verifica tu conexión a internet.");
   }
 
@@ -97,7 +102,7 @@ export async function getCandidateById(id: number | string): Promise<Candidate> 
       },
       cache: 'no-store',
     });
-  } catch (error) {
+  } catch {
     throw new Error("No se pudo conectar con el servidor al obtener el candidato.");
   }
 
@@ -118,7 +123,7 @@ export async function createCandidate(data: CreateCandidateInput): Promise<Candi
       },
       body: JSON.stringify(data),
     });
-  } catch (error) {
+  } catch {
     throw new Error("Error de red al intentar crear el candidato.");
   }
 
@@ -142,7 +147,7 @@ export async function updateCandidate(
       },
       body: JSON.stringify(data),
     });
-  } catch (error) {
+  } catch {
     throw new Error("Error de red al intentar actualizar el candidato.");
   }
 
@@ -166,7 +171,7 @@ export async function patchCandidateStatusStage(
       },
       body: JSON.stringify(updates),
     });
-  } catch (error) {
+  } catch {
     throw new Error("Error de red al intentar actualizar el estado.");
   }
 
@@ -186,7 +191,7 @@ export async function getCandidateNotes(id: number | string): Promise<CandidateN
       },
       cache: 'no-store',
     });
-  } catch (error) {
+  } catch {
     throw new Error("No se pudo conectar con el servidor para obtener las notas.");
   }
 
@@ -211,7 +216,7 @@ export async function addCandidateNote(
       },
       body: JSON.stringify({ content }),
     });
-  } catch (error) {
+  } catch {
     throw new Error("Error de red al intentar agregar la nota.");
   }
 
@@ -234,7 +239,7 @@ export async function deleteCandidateNote(
         ...getAuthHeaders(),
       },
     });
-  } catch (error) {
+  } catch {
     throw new Error("Error de red al intentar eliminar la nota.");
   }
 

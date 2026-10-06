@@ -63,6 +63,7 @@ export default function TicketsAdminPage() {
         const existing = localStorage.getItem(TICKETS_STORAGE_KEY);
         if (!existing) {
             localStorage.setItem(TICKETS_STORAGE_KEY, JSON.stringify(seedTickets));
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTickets(seedTickets);
         } else {
             setTickets(JSON.parse(existing));

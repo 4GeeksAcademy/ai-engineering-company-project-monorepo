@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { CandidateNote } from '@/types/candidate';
 import { getCandidateNotes, addCandidateNote, deleteCandidateNote } from '@/services/trackerApi';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -17,7 +17,7 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | string | null>(null);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -29,11 +29,12 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
     } finally {
       setLoading(false);
     }
-  };
+  }, [candidateId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotes();
-  }, [candidateId]);
+  }, [fetchNotes]);
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
