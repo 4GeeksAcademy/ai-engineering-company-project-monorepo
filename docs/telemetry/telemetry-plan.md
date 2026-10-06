@@ -583,7 +583,7 @@ Who fills the nullable keys:
 
 ## Storage row
 
-`POST /telemetry/events` writes Supabase `public.telemetry_events` (migration `supabase/migrations/20261006000000_telemetry_events.sql`). The table is append-only: row level security is enabled, `anon` and `authenticated` cannot update, delete, or truncate, and a `BEFORE UPDATE OR DELETE` trigger raises `telemetry_events is append-only`. Indexes: `timestamp`, `event_type`, and a GIN index on `tags`.
+`POST /telemetry/events` writes Supabase `public.telemetry_events` (migration `supabase/migrations/20261006000000_telemetry_events.sql`). The table is append-only: row level security is enabled, `anon` and `authenticated` cannot update, delete, or truncate, and a `BEFORE UPDATE OR DELETE` trigger raises `telemetry_events is append-only`. The trigger function sets `search_path` to empty. Indexes: `timestamp`, `event_type`, and a GIN index on `tags`.
 
 `id` is `gen_random_uuid()` in the database. The envelope `eventID` is stored in `tags`, not as the primary key.
 

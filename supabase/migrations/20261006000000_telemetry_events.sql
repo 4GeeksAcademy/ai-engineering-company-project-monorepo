@@ -13,7 +13,7 @@ create index if not exists telemetry_events_event_type_idx on public.telemetry_e
 create index if not exists telemetry_events_tags_gin_idx on public.telemetry_events using gin (tags);
 alter table public.telemetry_events enable row level security;
 revoke update, delete, truncate on public.telemetry_events from anon, authenticated;
-create or replace function public.telemetry_events_immutable() returns trigger language plpgsql as $$
+create or replace function public.telemetry_events_immutable() returns trigger language plpgsql set search_path = '' as $$
 begin
   raise exception 'telemetry_events is append-only';
 end;

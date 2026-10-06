@@ -212,6 +212,12 @@ def test_technical_error_level_and_blank_source_defaults_service():
     assert telemetry_store.event_to_row(failed_latency)["level"] == "warn"
 
 
+def test_immutable_function_pins_an_empty_search_path():
+    sql = Path("supabase/migrations/20261006000000_telemetry_events.sql").read_text(encoding="utf-8")
+    assert "set search_path = ''" in sql
+    assert "telemetry_events is append-only" in sql
+
+
 def test_handler_does_not_type_the_batch_as_telemetry_event_list():
     import inspect
 
