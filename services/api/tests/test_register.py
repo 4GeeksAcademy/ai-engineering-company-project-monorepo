@@ -64,6 +64,13 @@ async def test_the_optional_profile_data_goes_to_the_profile_and_not_to_the_user
 # --- EDGE CASES --------------------------------------------------------------------------------------
 
 
+async def test_the_optional_profile_data_is_stored_trimmed(async_client, profiles_db):
+    await register(async_client, name="  Nuria Nuevo ", phone=" +34 600 111 222 ", address=" C/ Sol 3, Sevilla ")
+
+    profile = next(p for p in profiles_db.all() if p["user_id"] == users_service.get_doc_by_email(NEW["email"])["id"])
+    assert (profile["name"], profile["phone"], profile["address"]) == ("Nuria Nuevo", "+34 600 111 222", "C/ Sol 3, Sevilla")
+
+
 async def test_the_email_is_stored_trimmed_and_lower_cased(async_client):
     await register(async_client, email="  Nuevo@Example.COM ")
 
@@ -209,6 +216,26 @@ async def test_sign_up_cannot_set_privileged_or_internal_state(async_client, use
 
     assert not response.is_success
     assert len(users_db) == 3  # not even a harmless "user" account was created from a tampered request
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [{"name": ""}, {"name": "   "}, {"name": "n" * 81}, {"phone": "call me"}, {"phone": "12345"}, {"address": "x" * 201}],
+    ids=["empty-name", "blank-name", "long-name", "text-phone", "short-phone", "long-address"],
+)
+async def test_invalid_optional_profile_data_refuses_the_whole_sign_up(async_client, users_db, profiles_db, bad):
+    response = await register(async_client, **bad)
+
+    assert not response.is_success
+    assert (len(users_db), len(profiles_db)) == (3, 3)  # neither the account nor a half-made profile
+
+
+async def test_the_password_never_reaches_the_users_file_in_plain_text(async_client, tmp_path):
+    secret = "very-secret-pass-77"
+
+    await register(async_client, password=secret)
+
+    assert secret not in (tmp_path / "users-db.json").read_text()  # the file on disk, not just the document in memory
 
 
 async def test_a_refused_sign_up_never_echoes_the_password_back(async_client):

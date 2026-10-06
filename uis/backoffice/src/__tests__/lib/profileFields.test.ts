@@ -6,7 +6,16 @@
  * Subject: the profile-field validator shared by the sign-up form and the profile page. Its limits mirror the
  * API (services/api/profiles/fields.py), so a value rejected here is a value the API would reject too.
  */
-import { ADDRESS_MAX, NAME_MAX, PHONE_PATTERN, validateProfileFields, type ProfileFieldValues } from "@/lib/profileFields";
+import {
+  ADDRESS_MAX,
+  NAME_MAX,
+  PHONE_PATTERN,
+  profileChanges,
+  toProfileForm,
+  validateProfileFields,
+  type ProfileFieldValues,
+} from "@/lib/profileFields";
+import type { Me } from "@/types/auth";
 
 const valid: ProfileFieldValues = { name: "Ana García", phone: "+34 600 000 000", address: "Calle Mayor 1, Madrid" };
 const withValues = (overrides: Partial<ProfileFieldValues>): ProfileFieldValues => ({ ...valid, ...overrides });
@@ -116,6 +125,92 @@ describe("validateProfileFields", () => {
       const values = withValues({ name: "  Ana  " });
       validateProfileFields(values, { nameRequired: true });
       expect(values.name).toBe("  Ana  ");
+    });
+  });
+});
+
+const me = (profile: Partial<Me["profile"]>): Me => ({
+  id: "u1",
+  email: "ana@example.com",
+  role: "user",
+  is_active: true,
+  created_at: "2026-01-01T00:00:00Z",
+  profile: { id: "p1", user_id: "u1", name: "Ana", contact_email: null, phone: null, address: null, ...profile },
+});
+
+describe("toProfileForm", () => {
+  describe("happy path", () => {
+    it("fills the profile form from the session's user", () => {
+      expect(toProfileForm(me({ name: "Ana García", phone: "+34 600 000 000", address: "Calle Mayor 1" }))).toEqual({
+        name: "Ana García",
+        phone: "+34 600 000 000",
+        address: "Calle Mayor 1",
+      });
+    });
+  });
+
+  describe("edge cases", () => {
+    it("an optional field the user has not set is an empty input, not the word null", () => {
+      expect(toProfileForm(me({ phone: null, address: null }))).toEqual({ name: "Ana", phone: "", address: "" });
+    });
+
+    it("takes nothing from the account itself: no email, no id", () => {
+      expect(Object.keys(toProfileForm(me({})))).toEqual(["name", "phone", "address"]);
+    });
+  });
+
+  describe("failure modes", () => {
+    it("a user without a profile is a programming error that fails loudly instead of showing an empty form", () => {
+      expect(() => toProfileForm({ ...me({}), profile: undefined } as unknown as Me)).toThrow(TypeError);
+    });
+  });
+});
+
+describe("profileChanges", () => {
+  const saved: ProfileFieldValues = { name: "Ana", phone: "600000000", address: "Calle 1" };
+
+  describe("happy path", () => {
+    it("sends only the fields that changed", () => {
+      expect(profileChanges(saved, { ...saved, name: "Ana María" })).toEqual({ name: "Ana María" });
+      expect(profileChanges(saved, { name: "Ana", phone: "611111111", address: "Calle 2" })).toEqual({
+        phone: "611111111",
+        address: "Calle 2",
+      });
+    });
+  });
+
+  describe("edge cases", () => {
+    it("nothing changed means nothing to send", () => {
+      expect(profileChanges(saved, saved)).toEqual({});
+    });
+
+    it("spaces around a value are not a change, and a changed value is sent trimmed", () => {
+      expect(profileChanges(saved, { name: "  Ana  ", phone: " 600000000 ", address: "Calle 1  " })).toEqual({});
+      expect(profileChanges(saved, { ...saved, address: "  Calle 2  " })).toEqual({ address: "Calle 2" });
+    });
+
+    it("an emptied optional field is sent as null, which the API reads as 'clear it'", () => {
+      expect(profileChanges(saved, { ...saved, phone: "", address: "   " })).toEqual({ phone: null, address: null });
+    });
+
+    it("an optional field that was empty and still is does not count as a change", () => {
+      const bare: ProfileFieldValues = { name: "Ana", phone: "", address: "" };
+
+      expect(profileChanges(bare, { name: "Ana", phone: "  ", address: "" })).toEqual({});
+    });
+  });
+
+  describe("failure modes", () => {
+    it("an emptied name is sent as an empty string: the form's validation has to stop it before this point", () => {
+      expect(profileChanges(saved, { ...saved, name: "   " })).toEqual({ name: "" });
+    });
+
+    it("does not change the values it is given", () => {
+      const form = { name: "  Ana María ", phone: "", address: "Calle 1" };
+
+      profileChanges(saved, form);
+
+      expect(form).toEqual({ name: "  Ana María ", phone: "", address: "Calle 1" });
     });
   });
 });

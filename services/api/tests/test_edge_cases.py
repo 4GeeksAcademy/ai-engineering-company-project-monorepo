@@ -1,4 +1,4 @@
-"""Edge cases proposed by the AI assistant after probing the running system with hostile inputs (TESTING.md, section 8).
+"""Edge cases proposed by the AI assistant after probing the running system with hostile inputs (docs/testing-plan.md, section 8).
 
 Every test here carries the ``ai_suggested`` marker: ``uv run pytest -m ai_suggested`` runs only these.
 
@@ -9,7 +9,7 @@ module the sections mean:
 * EDGE CASES: boundaries whose current behaviour is now written down so nobody changes it by accident;
 * FAILURE MODES: weaknesses the probes exposed. They fail today and each is ``xfail(strict=True)`` with the decision
   it waits for. ``strict`` makes the suite fail the day the code starts passing it: that is the moment to delete the
-  marker. None of them changes production code; the numbers refer to the table in TESTING.md, section 8.
+  marker. None of them changes production code; the numbers refer to the table in docs/testing-plan.md, section 8.
 """
 
 from __future__ import annotations

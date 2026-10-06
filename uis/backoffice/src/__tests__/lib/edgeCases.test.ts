@@ -1,13 +1,13 @@
 /**
  * @jest-environment node
  */
-// Edge cases proposed by the AI assistant after probing the frontend against the backend (TESTING.md, section 8).
+// Edge cases proposed by the AI assistant after probing the frontend against the backend (docs/testing-plan.md, section 8).
 // Run only these with `npx jest -t "AI-suggested"`.
 //
 // Layout shared by every frontend test file: HAPPY PATH, EDGE CASES, FAILURE MODES. In this file the failure modes are
 // weaknesses the probes exposed: each is `it.failing`, so it passes while the weakness exists and FAILS the day it is
 // fixed, which is the moment to drop the `.failing`. None of them changes production code; the numbers refer to the
-// table in TESTING.md, section 8.
+// table in docs/testing-plan.md, section 8.
 import { validateProfileFields } from "@/lib/profileFields";
 import { validateSignUp, type Form } from "@/lib/signUpForm";
 
