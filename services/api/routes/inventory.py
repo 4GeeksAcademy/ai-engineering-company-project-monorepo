@@ -30,7 +30,7 @@ def calculate_stock(session: Session, asset_id: int) -> int:
 # ENDPOINTS PARA ACTIVOS (PRODUCTOS)
 # -----------------------------------
 @router.get("/products", response_model=List[AssetRead])
-def get_assets(db: Session = Depends(get_db)):
+def get_assets(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     assets = db.exec(select(Asset)).all()
     return [
         AssetRead(
@@ -55,7 +55,7 @@ def create_asset(asset_in: AssetCreate, current_user: dict = Depends(get_current
     )
 
 @router.get("/products/{id}", response_model=AssetRead)
-def get_asset(id: int, db: Session = Depends(get_db)):
+def get_asset(id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     asset = db.get(Asset, id)
     if not asset:
         raise HTTPException(status_code=404, detail="Activo no encontrado")
@@ -100,7 +100,7 @@ def create_outbound_order(order_in: AssetAssignmentCreate, current_user: dict = 
     return db_order
 
 @router.get("/orders")
-def get_all_orders(db: Session = Depends(get_db)):
+def get_all_orders(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna todas las órdenes para auditoría general"""
     return {
         "inbound": db.exec(select(AssetAcquisition)).all(),

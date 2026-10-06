@@ -112,14 +112,14 @@ Este proyecto no utiliza una nueva plantilla de inicio. Trabajas dentro de tu mo
 - [x] Ejecuta el agente sobre ambos frontends y registra las correcciones que identifica.
 
 ### Correcciones
-- [ ] Prioriza los KPI principales (TTFB, LCP, CLS, INP, puntuación de Performance) antes que auditorías secundarias de Lighthouse; usa el agente para interpretar un indicador cada vez.
-- [ ] Aplica correcciones de forma incremental — **un problema por commit**, y vuelve a ejecutar Lighthouse en la misma URL tras cada cambio para confirmar el impacto.
-- [ ] Aplica las correcciones que las skills de agente clasifiquen como correcciones requeridas (no sugerencias).
-- [ ] Aplica las refactorizaciones identificadas durante el análisis del código — extrae al menos un componente reutilizable o Custom Hook.
+- [x] Prioriza los KPI principales (TTFB, LCP, CLS, INP, puntuación de Performance) antes que auditorías secundarias de Lighthouse; usa el agente para interpretar un indicador cada vez.
+- [x] Aplica correcciones de forma incremental — **un problema por commit**, y vuelve a ejecutar Lighthouse en la misma URL tras cada cambio para confirmar el impacto.
+- [x] Aplica las correcciones que las skills de agente clasifiquen como correcciones requeridas (no sugerencias).
+- [x] Aplica las refactorizaciones identificadas durante el análisis del código — extrae al menos un componente reutilizable o Custom Hook.
 
 ### Medición final
-- [ ] Vuelve a ejecutar Lighthouse en ambos frontends tras las correcciones.
-- [ ] Toma nuevas capturas de pantalla y realiza un commit en `/audit/after/`.
+- [x] Vuelve a ejecutar Lighthouse en ambos frontends tras las correcciones.
+- [x] Toma nuevas capturas de pantalla y realiza un commit en `/audit/after/`.
 
 ### Entregables
 - [ ] Escribe `AUDIT.md` con: puntuaciones iniciales de Lighthouse, problemas identificados con explicación de causa raíz para cada uno, y el análisis de refactorización.

@@ -77,8 +77,13 @@ def ensure_admin_user():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 Iniciando aplicación: Creando tablas en Supabase...")
-    SQLModel.metadata.create_all(engine)
+    print("🚀 Iniciando aplicación: Verificando tablas de base de datos...")
+    try:
+        SQLModel.metadata.create_all(engine)
+        from services.api.seed_inventory import run_seed_inventory
+        run_seed_inventory()
+    except Exception as err:
+        print(f"⚠️ Advertencia DB: {err}. Continuando ejecución...")
     ensure_admin_user()
     yield
     print("🛑 Cerrando aplicación...")

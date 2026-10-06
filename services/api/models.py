@@ -86,39 +86,34 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 import datetime
 
+class AssetAcquisition(SQLModel, table=True):
+    __tablename__='asset_acquisitions'
+    __table_args__ = {'extend_existing': True}
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    asset_id: int= Field(foreign_key='assets.id')
+    quantity: int= Field(gt=0)
+    created_at: datetime.datetime= Field(default_factory=datetime.datetime.utcnow)
+    user_uuid: str= Field(index=True)
+
+class AssetAssignment(SQLModel, table=True):
+    __tablename__='asset_assignments'
+    __table_args__ = {'extend_existing': True}
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    asset_id: int= Field(foreign_key='assets.id')
+    quantity: int= Field(gt=0)
+    created_at: datetime.datetime= Field(default_factory=datetime.datetime.utcnow)
+    user_uuid: str= Field(index=True)
+
 class Asset(SQLModel, table=True):
     __tablename__='assets'
+    __table_args__ = {'extend_existing': True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     sku: str = Field(unique=True, index=True)
     department: str = Field(index=True)
-
-    # Relaciones para navegar fácilmente entre tablas
-    acquisitions: List['AssetAcquisition']= Relationship(back_populates='asset')
-    assignments: List['AssetAssignment']= Relationship(back_populates='asset')
-
-class AssetAcquisition(SQLModel, table=True):
-    __tablename__='asset_acquisitions'
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    asset_id: int= Field(foreign_key='assets.id')
-    quantity: int= Field(gt=0)
-    created_at: datetime.datetime= Field(default_factory=datetime.datetime.utcnow)
-
-    user_uuid: str= Field(index=True)
-    asset:Optional[Asset]= Relationship(back_populates='acquisitions')
-
-class AssetAssignment(SQLModel, table=True):
-    __tablename__='asset_assignments'
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    asset_id: int= Field(foreign_key='assets.id')
-    quantity: int= Field(gt=0)
-    created_at: datetime.datetime= Field(default_factory=datetime.datetime.utcnow)
-
-    user_uuid: str= Field(index=True)
-    asset:Optional[Asset]= Relationship(back_populates='assignments')
 
 
 # --- Modelos de Candidatos (Scoring / Tracker) ---
