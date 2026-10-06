@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       // Siempre devuelve 200 según STRATEGY.md
       await api.post("/auth/forgot-password", { email });
       setSubmitted(true);
-    } catch (err: any) {
+    } catch {
       // Incluso en error mostramos éxito para no enumerar emails, o simplemente
       // ignoramos el error de UI porque el backend siempre manda 200.
       setSubmitted(true);

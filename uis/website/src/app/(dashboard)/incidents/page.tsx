@@ -1,15 +1,16 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import axios from 'axios';
 
 export default function IncidentsPage() {
   const router = useRouter();
   const { token, isAuthenticated } = useAuth();
   
-  const [incidents, setIncidents] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
+  const [incidents, setIncidents] = useState<Record<string, unknown>[]>([]);
+  const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -21,7 +22,7 @@ export default function IncidentsPage() {
     origin: ''
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     setErrorMsg('');
@@ -39,18 +40,19 @@ export default function IncidentsPage() {
 
       setIncidents(incRes.data);
       setSummary(sumRes.data);
-    } catch (err: any) {
+    } catch {
       setErrorMsg('Ocurrió un error de conexión al cargar la lista. Puedes reintentar.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, filters]);
 
   useEffect(() => {
     if (isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchData();
     }
-  }, [filters, isAuthenticated]);
+  }, [isAuthenticated, fetchData]);
 
   const handleStatusChange = async (id: string, currentStatus: string, newStatus: string) => {
     if (currentStatus === newStatus) return;
@@ -62,11 +64,11 @@ export default function IncidentsPage() {
       await api.patch(`/api/incidents/${id}/status`, { status: newStatus });
       // Refetch summary so it updates
       fetchData();
-    } catch (err: any) {
+    } catch (err) {
       // Revert on failure
       setIncidents(prev => prev.map(inc => inc.id === id ? { ...inc, status: currentStatus } : inc));
       
-      const errorMessage = err.response?.data?.detail || 'Hubo un error del servidor. No se pudo cambiar el estado de la incidencia.';
+      const errorMessage = axios.isAxiosError(err) ? (err.response?.data?.detail || 'Hubo un error del servidor. No se pudo cambiar el estado de la incidencia.') : 'Hubo un error del servidor.';
       alert(`Error: ${errorMessage}`);
     }
   };

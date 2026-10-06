@@ -50,11 +50,11 @@ export default function ProductsPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Activo</th>
-              <th>SKU</th>
-              <th>Departamento</th>
-              <th>Stock Actual</th>
-              <th>Acciones</th>
+              <th scope="col">Activo</th>
+              <th scope="col">SKU</th>
+              <th scope="col">Departamento</th>
+              <th scope="col">Stock Actual</th>
+              <th scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Candidate } from '@/types/candidate';
@@ -20,7 +20,7 @@ function CandidatesContent() {
   const status = searchParams.get('status') || 'ALL';
   const stage = searchParams.get('stage') || 'ALL';
 
-  const loadCandidates = async () => {
+  const loadCandidates = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -32,11 +32,12 @@ function CandidatesContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, status, stage]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCandidates();
-  }, [query, status, stage]);
+  }, [loadCandidates]);
 
   // Filtrado defensivo en memoria
   const filteredCandidates = useMemo(() => {

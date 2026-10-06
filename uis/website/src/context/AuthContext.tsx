@@ -1,46 +1,65 @@
 'use client'
 
-import React,{createContext, useContext, useState, useEffect} from 'react'
-import { useRouter, usePathname } from 'next/navigation';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation';
+
+export interface User {
+  id?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
 
 interface AuthContextType {
   token: string | null;
   login: (newToken: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
-  user?: any;
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const router = useRouter();
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-      fetchUser(savedToken);
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
     }
-  }, []);
+    return null;
+  });
+  const router = useRouter();
 
-  const fetchUser = async (currentToken: string) => {
-    try {
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    router.push('/login');
+  }, [router]);
+
+  const fetchUser = useCallback(async (currentToken: string) => {
+    try{
       const res = await fetch('/auth/me', {
-        headers: { Authorization: `Bearer ${currentToken}` }
+        headers: {Authorization: `Bearer ${currentToken}`}
       });
-      if (res.ok) {
+      if (res.ok){
         const data = await res.json();
         setUser(data);
-      } else {
+      }else {
         logout();
       }
-    } catch (err) {
-      // Evitamos exponer detalles en la consola y cerramos sesión preventivamente si falla la auth
-      logout();
+    } catch {
+      logout()
     }
-  };
+  }, [logout]);
+
+  useEffect(() => {
+    if (token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchUser(token);
+    }
+  }, [token, fetchUser]);
+
 
 // 2. Función para iniciar sesión (guarda el token y actualiza el estado) 
   const login = (newToken: string) => {
@@ -49,18 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fetchUser(newToken);
   };
 
-// 3. Función para cerrar sesión (borra el token y redirige)
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    router.push('/login'); 
-  };
-
-// 4. Estado derivado para saber si está autenticado
   const isAuthenticated = !!token;
 
- // 5. Retornamos el proveedor con los valores para los componentes hijos
+
   return (
     <AuthContext.Provider value={{ token, login, logout, isAuthenticated, user }}>
       {children}
@@ -68,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// 6. Hook personalizado para consumir el contexto fácilmente
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

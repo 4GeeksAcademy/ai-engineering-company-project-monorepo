@@ -1,15 +1,14 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+'use client';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
+import axios from 'axios';
 
 export default function ProfilePage() {
-  const { isAuthenticated, logout, token } = useAuth();
-  const router = useRouter();
+  const { logout } = useAuth();
 
   // 1. Estados de la vista
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,34 +19,32 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   
-  // 3. Efecto para Cargar Datos (Se ejecuta al entrar a la página)
-  useEffect(() => {
-
-    const fetchProfile = async () => {
-      try {
-        // Hacemos un GET a la ruta protegida de nuestro backend
-        // Nuestro interceptor de Axios añadirá silenciosamente: Authorization: Bearer <token>
-        const response = await api.get('/auth/me'); 
-        const data = response.data;
-        
-        // Guardamos los datos recibidos
-        setProfile(data);
-        setName(data.full_name || '');
-        setPhone(data.phone || '');
-        setAddress(data.address || '');
-        
-      } catch (err: any) {
-        setError("Ocurrió un error al cargar la información del perfil.");
-        // Si el backend nos responde 401 (token expirado o inválido), cerramos sesión forzosamente
-        if (err.response?.status === 401) {
-          logout();
-        }
-      } finally {
-        setLoading(false);
+  // 3. Efecto para Cargar Datos
+  const fetchProfile = useCallback(async () => {
+    try {
+      const response = await api.get('/auth/me'); 
+      const data = response.data;
+      
+      setProfile(data);
+      setName(data.full_name || '');
+      setPhone(data.phone || '');
+      setAddress(data.address || '');
+      
+    } catch (err) {
+      setError("Ocurrió un error al cargar la información del perfil.");
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        logout();
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProfile();
-  }, [isAuthenticated, token, router, logout]);
+  }, [fetchProfile]);
+
   // 4. Función para guardar los cambios
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,15 +52,14 @@ export default function ProfilePage() {
     setError(null);
     setSuccess(null);
     try {
-      // Hacemos un PUT a la ruta protegida para actualizar el perfil
       const response = await api.put('/profiles/me', {
         full_name: name,
         phone: phone,
         address: address
       });
-      setProfile(response.data); // Actualizamos la variable con lo que el backend confirmó
+      setProfile(response.data);
       setSuccess("¡Perfil actualizado con éxito!");
-    } catch (err) {
+    } catch {
       setError("No se pudieron guardar los cambios.");
     } finally {
       setSaving(false);

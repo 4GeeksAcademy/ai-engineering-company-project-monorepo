@@ -1,151 +1,132 @@
-# Implementation Plan: Contenedorización del Monorepo (Ticket #infra-40)
+# Implementation Plan: Auditoría y Optimización de Rendimiento Frontend
 
 ## Objetivo
-Implementar un entorno de desarrollo reproducible y versionado como código utilizando **Docker** y **Docker Compose**. La solución orquestará un contenedor unificado de interfaces (`/uis`) para el sitio público y el backoffice en paralelo con recarga en caliente, y un contenedor independiente para el backend en FastAPI (`/services`) gestionado con `uv`, intercomunicados mediante una red privada de Docker sin uso de `localhost` y con aislamiento estricto de credenciales en `.env`.
+Ejecutar un ciclo profesional y riguroso de auditoría, optimización y refactorización de rendimiento frontend (**Medir → Analizar → Corregir → Volver a medir**) sobre el sitio corporativo (`/uis/website`) y el panel interno (`/uis/backoffice`). El plan resolverá cuellos de botella de **Core Web Vitals** (LCP, CLS, INP, TTFB), extraerá componentes duplicados en abstracciones reutilizables (o Custom Hooks) y generará la documentación técnica y evidencia de impacto en `AUDIT.md`, `REPORT.md` y la carpeta `/audit/`.
 
 ---
 
-## 🧠 Reflexión y Análisis de Arquitectura (Pre-Planning)
+## 🧠 Reflexión y Análisis de Arquitectura (Pre-Planning / PACK 1 & 2)
 
-Siguiendo el protocolo de la **Code Refinement Suite** para proyectos de **Nivel 3 (Arquitectura Crítica)**, se realizaron sesiones de análisis conceptual mediante *Tree of Thoughts (ToT)* y la deliberación de los 3 Expertos:
+Siguiendo el marco de trabajo de la **Code Refinement Suite** para proyectos de **Nivel 2/3 (Complejidad Media-Alta)**, se establecieron las directrices técnicas mediante el análisis de los 3 Expertos y exploración de soluciones:
 
 ### 1. Veredicto de los 3 Expertos
-- **DevOps / Lead Developer:**
-  - *Desafío multi-app en un solo contenedor:* Ejecutar dos apps Next.js en un solo contenedor Node Alpine requiere gestionar dos procesos en primer plano o en background coordinados por un script `start.sh` con manejo de señales POSIX (`SIGTERM`, `SIGINT`), asegurando que la caída de una app no deje huérfano el contenedor y que los logs de ambas se transmitan a `stdout`.
-  - *Bind Mounts y Node Modules:* Los volúmenes montados desde el host pueden sobreescribir los `node_modules` del contenedor. Se deben configurar volúmenes anónimos (`/app/website/node_modules`, `/app/backoffice/node_modules`) en `docker-compose.yml` para proteger las dependencias compiladas en Linux Alpine.
-- **Security Specialist:**
-  - *Prevención de fuga de credenciales:* Ninguna variable sensible debe existir en `Dockerfile` o `docker-compose.yml`. Todo debe ser inyectado vía `.env` local en la raíz.
-  - *Higiene de contexto (.dockerignore):* Es crítico excluir `.env*`, `.git`, `.next`, `node_modules`, `__pycache__` y carpetas de test en ambos contextos de build para evitar subir secretos o inflar la imagen.
-- **Developer Experience (DX) / UX:**
-  - *Hot-Reloading transparente:* El desarrollador debe modificar código en TypeScript o Python en su editor y ver la actualización inmediata en el navegador sin reconstruir (`docker compose build`).
-  - *Mapeo de puertos predecible:* `3000` para el website público, `3001` para el backoffice operativo, `8000` para la documentación interactiva OpenAPI/Swagger de FastAPI.
+- **Performance & UX Specialist:**
+  - *Métricas Críticas:* Prioridad absoluta en Core Web Vitals móviles: LCP (< 2.5s) optimizando Largest Contentful Element (imágenes hero con prioridad y formatos modernos WebP/AVIF), CLS (< 0.1) asignando dimensiones explícitas (`aspect-ratio` o `width`/`height`), y TTFB optimizando renders y caché.
+  - *Prevención de regresiones:* La optimización de rendimiento no debe degradar la accesibilidad (WCAG) ni sacrificar la interactividad de la UI.
+- **Frontend Lead Developer:**
+  - *Refactorización Limpia:* Identificar duplicación entre `website` y `backoffice` (o dentro de cada app) y extraer componentes compartidos o Custom Hooks reutilizables sin alterar el comportamiento de negocio.
+  - *Estrategia Next.js:* Aplicar `next/image`, `next/font` con `display: swap`, y `next/dynamic` (Lazy Loading) en componentes pesados fuera del viewport inicial para aligerar el First Load JS Bundle.
+- **Security & Reliability Specialist:**
+  - *Higiene y Control:* Ninguna optimización debe alterar la seguridad de autenticación JWT ni exponer endpoints de la API sin protección.
+  - *Entrega Determinista:* Mantener la regla de un problema por commit para que cada mejora tenga trazabilidad y medición aislada.
 
-### 2. Hallazgo y Adaptación del Monorepo (Step-Back Analysis)
-- **Estructura de UIs:** `STRATEGY.md` menciona `/uis/website` y `/uis/backoffice`. En el monorepo actual existen `/uis/application`, `/uis/backoffice` y `/uis/talent-pipeline-tracker`. Se definirá `/uis/website` como symlink o carpeta canónica apuntando a la aplicación pública para mantener 100% de conformidad con las especificaciones del ticket sin romper el código existente.
-- **Dependencias Backend:** Actualmente el proyecto gestiona dependencias en `pyproject.toml` con `uv`. Se generará `services/requirements.txt` congelado o compatible para satisfacer el requerimiento estricto de `uv pip install -r requirements.txt`.
+### 2. Exploración Tree of Thoughts (ToT)
+- **Rama A (Reescritura de vistas / arquitectura):** ❌ Descartada. Viola el brief técnico explícito ("No reestructures la arquitectura de ninguno de los frontends... El objetivo es la mejora, no una reescritura").
+- **Rama B (Cambios superficiales en métricas):** ❌ Descartada. Inflar scores mediante hacks no resuelve las causas reales ni pasa la auditoría de calidad.
+- **Rama C (Optimización dirigida basada en evidencia + Refactorización de hooks/componentes):** ✅ **Seleccionada.** Medición base rigurosa con Lighthouse → Análisis de causa raíz en `AUDIT.md` → Correcciones atómicas incrementales con tests → Validación final y balance en `REPORT.md`.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-Estado global: **[En Planificación / Pendiente de Aprobación]**
+Estado global: **[En Planificación / Listo para Ejecución]**
 
 ```mermaid
 flowchart LR
-    F0[Fase 0: Preparación y Entorno] --> F1[Fase 1: Backend Dockerfile]
-    F1 --> F2[Fase 2: Interfaces Multi-App]
-    F2 --> F3[Fase 3: Orquestación Compose]
-    F3 --> F4[Fase 4: Auditoría y Verificación]
+    F0[Fase 0: Preparación de Entorno] --> F1[Fase 1: Medición Baseline Before]
+    F1 --> F2[Fase 2: Análisis y AUDIT.md]
+    F2 --> F3[Fase 3: Optimización y Refactorización]
+    F3 --> F4[Fase 4: Medición After y REPORT.md]
 ```
 
 ---
 
-### 📦 Fase 0: Preparación de Entorno y Variables de Configuración
+### 🛠️ Fase 0: Preparación de Entorno y Estructura de Auditoría
 > **Estado:** `[Completado]`
 
-- [x] **Paso 0.1:** Verificar la existencia de `.env` en la raíz del monorepo y auditar que esté presente en [.gitignore](file:///workspaces/ai-engineering-company-project-monorepo-matiasidiartviera/.gitignore).
-- [x] **Paso 0.2:** Centralizar en la raíz las variables necesarias para los servicios:
-  - Backend: `JWT_SECRET`, `SUPABASE_DATABASE_URL`, `RESEND_API_KEY`, etc.
-  - Frontends: `NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8000` (para el navegador del cliente host) y URLs de servicio interno si aplican.
-- [x] **Paso 0.3:** Alinear la carpeta del frontend público (`/uis/website`) asegurando compatibilidad con las aplicaciones existentes (`application`).
-- [x] **Paso 0.4:** Generar `services/requirements.txt` a partir de `pyproject.toml` usando `uv` para permitir la instalación en el contenedor Python.
+- [x] **Paso 0.1:** Verificar que el entorno esté activo con ambos frontends accesibles:
+  - Sitio Corporativo en `http://localhost:3000` (HTTP 200 OK)
+  - Backoffice en `http://localhost:3001` (HTTP 200 OK)
+  - Backend API operativo
+- [x] **Paso 0.2:** Crear la estructura de directorios para almacenar las capturas de evidencia:
+  - `mkdir -p audit/before audit/after`
 
 ---
 
-### 🐍 Fase 1: Dockerización del Servicio Backend (`/services`)
+### 📊 Fase 1: Medición Inicial (Baseline Before) con Lighthouse
 > **Estado:** `[Completado]`
 
-- [x] **Paso 1.1:** Crear `/services/.dockerignore` excluyendo:
-  - `__pycache__`, `*.pyc`, `*.pyo`, `*.pyd`
-  - `.env*`
-  - `tests/`
-  - `*.log`
-  - `.pytest_cache/`, `.venv/`
-- [x] **Paso 1.2:** Crear `/services/Dockerfile` basado en `python:3.12-slim`:
-  - Instalar `uv` copiando el binario oficial (`COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv`).
-  - Establecer directorio de trabajo en `/app`.
-  - Copiar `requirements.txt` e instalar dependencias con `uv pip install --system -r requirements.txt`.
-  - Copiar el código fuente de los servicios.
-  - Definir comando de arranque por defecto: `uvicorn services.api.main:app --host 0.0.0.0 --port 8000 --reload`.
+- [x] **Paso 1.1:** Ejecutar auditoría Lighthouse en **Sitio Corporativo** (`website`):
+  - Modo Móvil: Performance 78, Accesibilidad 100, Best Practices 100, SEO 100.
+  - Modo Escritorio: Performance 99, Accesibilidad 100, Best Practices 100, SEO 100.
+- [x] **Paso 1.2:** Ejecutar auditoría Lighthouse en **Backoffice** (`/inventory/products`):
+  - Modo Móvil: Performance 75, Accesibilidad 93, Best Practices 100, SEO 100.
+  - Modo Escritorio: Performance 91, Accesibilidad 93, Best Practices 100, SEO 100.
+- [x] **Paso 1.3:** Guardar las 4 capturas de pantalla en `audit/before/`:
+  - `website-mobile-before.png`, `website-desktop-before.png`, `backoffice-mobile-before.png`, `backoffice-desktop-before.png`.
+- [x] **Paso 1.4:** Realizar commit con las capturas iniciales en `audit/before`.
 
 ---
 
-### 💻 Fase 2: Dockerización del Contenedor de Interfaces (`/uis`)
+### 🔍 Fase 2: Análisis del Codebase y Redacción de `AUDIT.md`
 > **Estado:** `[Completado]`
 
-- [x] **Paso 2.1:** Crear `/uis/.dockerignore` excluyendo:
-  - `node_modules`
-  - `.next`
-  - `.env*`
-  - `*.log`
-  - `.git`
-- [x] **Paso 2.2:** Crear `/uis/start.sh` ejecutable:
-  - Iniciar Next.js website en puerto `3000` (`PORT=3000 npm run dev` o `npx next dev -p 3000`).
-  - Iniciar Next.js backoffice en puerto `3001` (`PORT=3001 npm run dev` o `npx next dev -p 3001`).
-  - Implementar trampa de señales (`trap 'kill %1 %2' SIGINT SIGTERM`) y comando `wait` para mantener el proceso vivo en primer plano.
-- [x] **Paso 2.3:** Crear `/uis/Dockerfile` basado en `node:20-alpine`:
-  - Configurar `WORKDIR /app`.
-  - Copiar manifests de dependencias (`package.json`, `package-lock.json`) de `website` y `backoffice` por separado.
-  - Ejecutar `npm install` en cada subdirectorio para optimizar la caché de capas Docker.
-  - Copiar el código fuente y el script `start.sh` otorgándole permisos de ejecución (`chmod +x start.sh`).
-  - Configurar `CMD ["./start.sh"]`.
+- [x] **Paso 2.1:** Analizar el código de `uis/website` y `uis/backoffice` para identificar causas raíz de degradación de rendimiento:
+  - Imagen Hero en `website` con `<img>` y `loading="lazy"` afectando LCP y CLS.
+  - Ausencia de skeleton loader y accesibilidad de tablas en `backoffice`.
+- [x] **Paso 2.2:** Identificar al menos **dos casos** de lógica o componentes duplicados candidatos a abstracción:
+  - Caso 1: Custom Hook `useAsyncData` para peticiones con estados `loading`/`error`.
+  - Caso 2: Componente modular `StockBadge`.
+- [x] **Paso 2.3:** Redactar y crear el archivo `AUDIT.md` en la raíz con la matriz completa y diagnóstico.
 
 ---
 
-### 🐳 Fase 3: Orquestación con Docker Compose (`docker-compose.yml`)
+### ⚡ Fase 3: Optimización Dirigida y Refactorización Incremental
 > **Estado:** `[Pendiente]`
 
-- [x] **Paso 3.1:** Crear `docker-compose.yml` en la raíz del proyecto definiendo:
-  - Red dedicada con nombre explícito (ej. `nexova-network`).
-- [x] **Paso 3.2:** Configurar servicio `backend`:
-  - Contexto de compilación: `./services`.
-  - Bind mounts: `./services:/app/services` para recarga en caliente del código.
-  - Puertos expuestos: `8000:8000`.
-  - Inyección de variables de entorno vía `env_file: .env`.
-  - Conexión a la red interna.
-- [x] **Paso 3.3:** Configurar servicio `interfaces`:
-  - Contexto de compilación: `./uis`.
-  - Bind mounts del código fuente de `website` y `backoffice`.
-  - Volúmenes anónimos para `/app/website/node_modules`, `/app/website/.next`, `/app/backoffice/node_modules` y `/app/backoffice/.next`.
-  - Puertos expuestos: `3000:3000` y `3001:3001`.
-  - Inyección de variables de entorno vía `env_file: .env`.
-  - Dependencia de servicio (`depends_on: [backend]`).
-  - Conexión a la red interna.
-- [x] **Paso 3.4:** Validar que los servicios se reconozcan por nombre DNS interno (`http://backend:8000`).
+- [ ] **Paso 3.1:** Activar y seguir las directrices de las skills de optimización (`core-web-vitals`, `performance`, `web-perf`).
+- [ ] **Paso 3.2:** Aplicar correcciones de **LCP y carga de recursos**:
+  - Implementar `next/image` con tamaños responsivos (`sizes`), formatos modernos y `priority` sólo en imágenes hero.
+  - Optimizar fuentes web (`font-display: swap`).
+  - *Commit dedicado:* `git commit -m "perf: optimizacion de imagenes y carga de fuentes para LCP"`.
+- [ ] **Paso 3.3:** Aplicar correcciones de **CLS (Cumulative Layout Shift)**:
+  - Reservar espacio para elementos dinámicos e imágenes con aspect-ratio y dimensiones explícitas.
+  - *Commit dedicado:* `git commit -m "perf: eliminacion de layout shifts mediante dimensiones explicitas"`.
+- [ ] **Paso 3.4:** Aplicar correcciones de **JavaScript y Reducción de Bundle**:
+  - Implementar imports dinámicos (`next/dynamic`) en componentes pesados fuera del viewport o modales diferidos.
+  - *Commit dedicado:* `git commit -m "perf: code splitting y carga diferida de componentes pesados"`.
+- [ ] **Paso 3.5:** Implementar la refactorización de código duplicado:
+  - Extraer al menos un componente reutilizable o Custom Hook compartido.
+  - Integrar la abstracción en ambos lugares correspondientes y verificar que la funcionalidad se mantenga al 100% intacta.
+  - *Commit dedicado:* `git commit -m "refactor: extraccion e integracion de custom hook/componente reutilizable"`.
 
 ---
 
-### 🛡️ Fase 4: Auditoría, Verificación y Pre-Entrega (`PACK_AUDITOR`)
-> **Estado:** `[En Verificación]`
+### 📈 Fase 4: Medición Final (After), `REPORT.md` y Validación Pre-Push
+> **Estado:** `[Pendiente]`
 
-- [x] **Paso 4.1:** Probar arranque en frío completo desde la raíz:
-  ```bash
-  docker compose up --build
-  ```
-- [x] **Paso 4.2:** Verificar respuesta de endpoints y frontends en el host:
-  - `http://localhost:3000` (Website público) - HTTP 200 OK
-  - `http://localhost:3001` (Backoffice panel interno) - HTTP 200 / 307 redirect a `/login`
-  - `http://localhost:8080/docs` (FastAPI Swagger) - HTTP 200 OK
-- [x] **Paso 4.3:** Validar recarga en caliente (Hot-Reloading):
-  - Modificar un archivo en `services/` y verificar logs de uvicorn recargando automáticamente.
-  - Modificar un archivo en `uis/` y verificar recarga reactiva de Next.js en el navegador.
-- [x] **Paso 4.4:** Auditoría de seguridad y Git:
-  - Confirmar que ningún secreto está presente en el historial de commits o archivos Docker.
-  - Validar estado de `.env` en `.gitignore`.
-  - Tomar captura o registrar salida de `docker compose ps` para el Pull Request.
-- [ ] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y pedir confirmación explícita al usuario antes de cualquier `git push`.
+- [ ] **Paso 4.1:** Ejecutar nuevamente Lighthouse bajo las mismas condiciones (mismas URLs, dispositivos Móvil y Escritorio).
+- [ ] **Paso 4.2:** Guardar las nuevas capturas de pantalla con los resultados optimizados en `audit/after/`.
+- [ ] **Paso 4.3:** Redactar el archivo `REPORT.md` en la raíz conteniendo:
+  - Tabla comparativa de métricas Antes vs. Después (Performance, LCP, CLS, FID/INP, TTFB).
+  - Resumen de cada optimización aplicada y análisis fáctico de cuál tuvo mayor impacto positivo.
+  - Conclusiones y recomendaciones para mantener el rendimiento a futuro.
+- [ ] **Paso 4.4:** Auditoría de calidad de código y ausencia de regresiones:
+  - Ejecutar verificación de tipos (`npx tsc --noEmit`) y linting en ambos frontends.
+  - Comprobar que no existan errores en la consola del navegador ni funcionalidades rotas.
+- [ ] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y solicitar confirmación explícita al usuario antes de cualquier `git push`.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
 
-Para este desafío clasificado como **Nivel 3 (Arquitectura / Módulo Crítico)**, se aplicaron los siguientes métodos:
+Para este desafío se han integrado rigurosamente las técnicas de la **Code Refinement Suite**:
 
 1. **PACK 1 (ARCHITECT) - Tree of Thoughts & 3 Expertos:**
-   - Se evaluó si convenía separar las interfaces en 2 contenedores distintos o unificarlas en 1 como exigía el brief. Se diseñó la solución unificada con `start.sh` y volúmenes anónimos para aislar `node_modules` de la máquina host.
+   - Se descartó la reescritura arquitectónica en favor de una estrategia focalizada en Web Vitals (LCP, CLS, TTFB) y refactorización desacoplada, preservando la seguridad y la experiencia de usuario.
 2. **PACK 2 (PLANNER) - Step-Back Prompting & Roadmap Interactivo:**
-   - Se abstrajo la discrepancia de nombres de carpetas (`website` vs `application`) y la gestión de dependencias con `uv` para que el plan no falle durante la ejecución. Se añadieron checkboxes y estados para guiar el aprendizaje paso a paso.
-3. **PACK 3 (CODER) - Chain of Verification (CoVe):**
-   - Durante la implementación se validará cada capa de Dockerfile contrastando las versiones exactas de Python y Node del monorepo, verificando la salud de los procesos en sus puertos asignados.
-4. **PACK 4 (AUDITOR) - Red Teaming & Protocolo Git:**
-   - Simulación de filtración de credenciales para comprobar que los `.dockerignore` y `.gitignore` sellan cualquier exposición de `.env` o llaves de API antes de preparar el Pull Request.
+   - Se estructuró el flujo en 5 fases secuenciales con verificación paso a paso, checkboxes y trazabilidad commit-por-commit.
+3. **PACK 3 (CODER) - Chain of Verification (CoVe) & Atomic Commits:**
+   - Cada intervención de código atacará un problema específico con una medición inmediata en Lighthouse antes de pasar a la siguiente optimización.
+4. **PACK 4 (AUDITOR) - WPO Checklist & Protocolo Git:**
+   - Validación integral de entregables (`AUDIT.md`, `REPORT.md`, `/audit/before/`, `/audit/after/`) y parada obligatoria antes del `git push` final.

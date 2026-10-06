@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
+import axios from "axios";
 
 export default function ChangePassword() {
-  const router = useRouter();
-  
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,8 +45,12 @@ export default function ChangePassword() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Error al cambiar la contraseña.");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || "Error al cambiar la contraseña.");
+      } else {
+        setError("Error al cambiar la contraseña.");
+      }
     } finally {
       setIsSubmitting(false);
     }

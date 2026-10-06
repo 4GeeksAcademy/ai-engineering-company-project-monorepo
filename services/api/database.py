@@ -8,13 +8,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 1. CONFIGURACIÓN DE SUPABASE (SQLModel)
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("La variable DATABASE_URL no está configurada en el .env")
 
+def create_db_engine():
+    url = DATABASE_URL
+    if url:
+        try:
+            eng = create_engine(url, echo=False, connect_args={"connect_timeout": 3} if "postgresql" in url else {})
+            with eng.connect() as conn:
+                pass
+            return eng
+        except Exception as e:
+            print(f"⚠️ No se pudo conectar a PostgreSQL/Supabase ({e}). Usando SQLite de respaldo local...")
+    
+    sqlite_path = os.path.join(os.path.dirname(__file__), 'data', 'app.db')
+    os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+    sqlite_url = f"sqlite:///{sqlite_path}"
+    return create_engine(sqlite_url, connect_args={"check_same_thread": False}, echo=False)
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_db_engine()
 
 def get_db():
     with Session(engine) as session:

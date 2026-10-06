@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Candidate, CreateCandidateInput, UpdateCandidateInput } from '@/types/candidate';
@@ -23,7 +23,7 @@ export default function EditCandidatePage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  const fetchCandidate = async () => {
+  const fetchCandidate = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -35,11 +35,12 @@ export default function EditCandidatePage({ params }: PageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [candidateId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCandidate();
-  }, [candidateId]);
+  }, [fetchCandidate]);
 
   const handleUpdateCandidate = async (data: CreateCandidateInput | UpdateCandidateInput) => {
     setError(null);

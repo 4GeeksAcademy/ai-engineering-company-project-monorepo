@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import api from '../../lib/axios'; // Importamos nuestro interceptor de Axios
 import { useAuth } from '../../context/AuthContext'; // Importamos el contexto de autenticación
 
@@ -40,9 +41,9 @@ export default function LoginPage() {
             // 5. Redirigimos al usuario a una zona privada (ej. su perfil)
             router.push('/account/profile');
 
-        } catch (err: any) {
+        } catch (err) {
             // 6. Manejo de Errores: Qué pasa si las credenciales son incorrectas
-            if (err.response?.status === 401) {
+            if (axios.isAxiosError(err) && err.response?.status === 401) {
                 setError('Correo o contraseña incorrectos.');
             } else {
                 setError('Ocurrió un error al intentar iniciar sesión. Inténtalo más tarde.');

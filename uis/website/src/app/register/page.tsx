@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
 
@@ -60,9 +61,9 @@ export default function RegisterPage() {
             // Redirigimos a la zona privada (ej. su perfil)
             router.push('/account/profile');
 
-        } catch (err: any) {
+        } catch (err) {
             // Manejo de errores (ej: el correo ya estaba registrado)
-            if (err.response?.status === 400 || err.response?.status === 409) {
+            if (axios.isAxiosError(err) && (err.response?.status === 400 || err.response?.status === 409)) {
                 setError('El correo ingresado ya está registrado o los datos son inválidos.');
             } else {
                 setError('Ocurrió un error al intentar registrarte. Inténtalo más tarde.');

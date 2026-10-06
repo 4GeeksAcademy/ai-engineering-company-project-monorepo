@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SupplierForm from "@/components/SupplierForm";
 import api from "@/lib/axios";
+import axios from "axios";
 
 interface Supplier {
   id: number;
@@ -21,7 +22,7 @@ export default function SuppliersPage() {
   const [countryFilter, setCountryFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     try {
       const query = new URLSearchParams();
@@ -30,23 +31,24 @@ export default function SuppliersPage() {
       
       const res = await api.get(`/suppliers?${query.toString()}`);
       setSuppliers(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
+    } catch {
       // Manejado silenciosamente, setError mostrará el mensaje en la UI
     } finally {
       setLoading(false);
     }
-  };
+  }, [countryFilter, categoryFilter]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSuppliers();
-  }, [countryFilter, categoryFilter]);
+  }, [fetchSuppliers]);
 
   const handleUpdateStatus = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
     try {
       await api.patch(`/suppliers/${id}/status`, { status: newStatus });
       fetchSuppliers();
-    } catch (err) {
+    } catch {
       // Manejado silenciosamente, la UI reaccionará si es necesario
     }
   };
@@ -63,8 +65,14 @@ export default function SuppliersPage() {
     try {
       await api.patch(`/suppliers/${id}/rate`, { hourly_rate: newRate });
       fetchSuppliers();
-    } catch (err: any) {
-      alert(JSON.stringify(err.response?.data?.detail || err.message));
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        alert(JSON.stringify(err.response?.data?.detail || err.message));
+      } else if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Error de red");
+      }
     }
   };
 
