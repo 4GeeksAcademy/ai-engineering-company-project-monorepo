@@ -67,7 +67,7 @@ async def update_supplier(supplier_id: int, payload: SupplierUpdate) -> Supplier
     except service.SupplierNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except service.InvalidSupplierUpdateError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors) from exc
+        raise HTTPException(422, detail=exc.errors) from exc
 
 
 @router.patch("/{supplier_id}/rate", response_model=SupplierOut)

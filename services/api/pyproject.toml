@@ -43,7 +43,7 @@ include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
 testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
-    "ai_suggested: edge case proposed by the AI assistant (see TESTING.md, section 8); run them with `-m ai_suggested`",
+    "ai_suggested: edge case proposed by the AI assistant (see docs/testing-plan.md, section 8); run them with `-m ai_suggested`",
 ]
 
 # `uv run pytest --cov` measures the authentication domain and fails below 70 % (ticket AUTH-088's minimum).

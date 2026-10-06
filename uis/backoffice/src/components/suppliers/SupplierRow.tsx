@@ -1,20 +1,12 @@
 import { FormEvent, useState } from "react";
 import { Check, Pencil, Power, X } from "lucide-react";
+import { daysUntil, formatDateTime, formatMoney, renewalState } from "../../lib/format";
 import { CATEGORY_LABELS, type Supplier } from "../../types/suppliers";
 
 interface Props {
   supplier: Supplier;
   onRateChange: (id: number, rate: number) => Promise<void>;
   onToggleStatus: (supplier: Supplier) => Promise<void>;
-}
-
-const RENEWAL_WARNING_DAYS = 60;
-
-function daysUntil(dateStr: string): number {
-  const target = new Date(`${dateStr}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
 
 export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: Props) {
@@ -24,10 +16,8 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
 
   const suspended = supplier.status === "suspended";
   const days = supplier.contract_renewal_date ? daysUntil(supplier.contract_renewal_date) : null;
-  const renewalSoon = days !== null && days >= 0 && days <= RENEWAL_WARNING_DAYS;
-  const renewalOverdue = days !== null && days < 0;
-
-  const money = new Intl.NumberFormat("es-ES", { style: "currency", currency: supplier.currency });
+  const renewalSoon = renewalState(days) === "soon";
+  const renewalOverdue = renewalState(days) === "overdue";
 
   const submitRate = async (event: FormEvent) => {
     event.preventDefault();
@@ -92,7 +82,7 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
           </form>
         ) : (
           <div className="flex items-center gap-2">
-            {money.format(supplier.monthly_rate)}
+            {formatMoney(supplier.monthly_rate, supplier.currency)}
             <button
               onClick={() => {
                 setDraft(String(supplier.monthly_rate));
@@ -106,7 +96,7 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
           </div>
         )}
         <p className="mt-0.5 text-xs text-slate-500">
-          Actualizada {new Date(supplier.updated_at).toLocaleString("es-ES")}
+          Actualizada {formatDateTime(supplier.updated_at)}
         </p>
       </td>
       <td className="px-4 py-3 text-sm">

@@ -179,7 +179,7 @@ export const setSupplierStatus = (id: number, status: SupplierStatus) =>
 export type SortField = "created_at" | "id" | "updated_at";
 export type SortOrder = "asc" | "desc";
 
-function filtersQuery(filters: IncidentFilters): URLSearchParams {
+export function filtersQuery(filters: IncidentFilters): URLSearchParams {
   const params = new URLSearchParams();
   filters.status.forEach((v) => params.append("status", v));
   filters.category.forEach((v) => params.append("category", v));

@@ -4,29 +4,13 @@ import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../lib/api";
-import { validateProfileFields, type ProfileFieldValues } from "../lib/profileFields";
-import type { Me, ProfileUpdate } from "../types/auth";
+import { profileChanges, toProfileForm, validateProfileFields, type ProfileFieldValues } from "../lib/profileFields";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none aria-[invalid=true]:border-rose-500";
 
 type Field = keyof ProfileFieldValues;
 type FieldErrors = Partial<Record<Field, string>>;
-
-const toForm = (me: Me): ProfileFieldValues => ({
-  name: me.profile.name,
-  phone: me.profile.phone ?? "",
-  address: me.profile.address ?? "",
-});
-
-/** Only what changed; an emptied optional field is sent as null, which the API reads as "clear it". */
-function diff(saved: ProfileFieldValues, form: ProfileFieldValues): ProfileUpdate {
-  const update: ProfileUpdate = {};
-  if (form.name.trim() !== saved.name) update.name = form.name.trim();
-  if (form.phone.trim() !== saved.phone) update.phone = form.phone.trim() || null;
-  if (form.address.trim() !== saved.address) update.address = form.address.trim() || null;
-  return update;
-}
 
 export default function ProfilePage() {
   const { user, refreshUser, saveProfile } = useAuth();
@@ -50,7 +34,7 @@ export default function ProfilePage() {
   }, [refreshUser]);
 
   useEffect(() => {
-    if (loaded && user) setForm(toForm(user));
+    if (loaded && user) setForm(toProfileForm(user));
   }, [loaded, user]);
 
   if (loadError) {
@@ -62,7 +46,7 @@ export default function ProfilePage() {
   }
   if (!user || !form) return <p className="text-sm text-slate-400">Cargando tu perfil…</p>;
 
-  const update = diff(toForm(user), form);
+  const update = profileChanges(toProfileForm(user), form);
   const dirty = Object.keys(update).length > 0;
 
   const change = (field: Field) => (value: string) => {
@@ -168,7 +152,7 @@ export default function ProfilePage() {
             type="button"
             disabled={saving || !dirty}
             onClick={() => {
-              setForm(toForm(user));
+              setForm(toProfileForm(user));
               setFieldErrors({});
               setError(null);
             }}

@@ -23,17 +23,9 @@ import {
   type SortOrder,
 } from "../lib/api";
 import { describeError } from "../lib/errors";
+import { useDebounced } from "../lib/useDebounced";
 
 const PAGE_SIZE = 15;
-
-function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), ms);
-    return () => clearTimeout(timer);
-  }, [value, ms]);
-  return debounced;
-}
 
 export default function IncidentsPage() {
   const [filters, setFilters] = useState<IncidentFilters>(EMPTY_FILTERS);

@@ -12,6 +12,7 @@ import StatusActions from "../components/incidents/StatusActions";
 import StatusBadge from "../components/incidents/StatusBadge";
 import { getIncident, getIncidentFacets } from "../lib/api";
 import { describeError, isNotFound } from "../lib/errors";
+import { formatDateTime } from "../lib/format";
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -132,8 +133,8 @@ export default function IncidentDetailPage() {
       ) : (
         <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
           <dl className="grid gap-5 sm:grid-cols-2">
-            <Detail label="Creada">{new Date(incident.created_at).toLocaleString("es-ES")}</Detail>
-            <Detail label="Última modificación">{new Date(incident.updated_at).toLocaleString("es-ES")}</Detail>
+            <Detail label="Creada">{formatDateTime(incident.created_at)}</Detail>
+            <Detail label="Última modificación">{formatDateTime(incident.updated_at)}</Detail>
             <Detail label="Categoría">{CATEGORY_LABELS[incident.category]}</Detail>
             <Detail label="Origen">{ORIGIN_LABELS[incident.origin]}</Detail>
             <Detail label="Sucursal">{incident.branch}</Detail>

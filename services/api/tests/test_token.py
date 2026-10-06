@@ -242,6 +242,16 @@ def test_a_non_numeric_exp_is_a_rejected_token_not_a_crash(exp):
     assert decode_access_token(signed_token(valid_claims(exp=exp))) is None
 
 
+def test_the_secret_key_rule_is_32_characters_exactly(monkeypatch):
+    """Written with literal numbers on purpose: the constant itself is the rule, so a test that imports it cannot notice it changing."""
+    monkeypatch.setenv("SECRET_KEY", "k" * 32)
+    assert get_jwt_secret.__wrapped__() == "k" * 32  # 32 is enough
+
+    monkeypatch.setenv("SECRET_KEY", "k" * 31)
+    with pytest.raises(RuntimeError, match="32"):
+        get_jwt_secret.__wrapped__()  # 31 is not
+
+
 @pytest.mark.parametrize("length", [1, 8, MIN_SECRET_KEY_LENGTH - 1])
 def test_a_too_short_secret_key_is_refused_rather_than_accepted(monkeypatch, length):
     monkeypatch.setenv("SECRET_KEY", "k" * length)

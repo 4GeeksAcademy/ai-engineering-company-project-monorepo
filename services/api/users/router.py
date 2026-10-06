@@ -75,7 +75,7 @@ async def update_user(user_id: UUID, payload: UserUpdate, current: CurrentUser) 
     except service.UserNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except service.CurrentPasswordRequiredError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(422, detail=str(exc)) from exc
     except service.WrongPasswordError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except (service.EmailTakenError, service.LastAdminError) as exc:
