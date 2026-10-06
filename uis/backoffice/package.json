@@ -1,0 +1,43 @@
+{
+  "name": "@nexova/backoffice",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 5174",
+    "build": "next build",
+    "start": "next start -p 5174",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "e2e": "node e2e/suppliers.e2e.mjs",
+    "e2e:incidents": "node e2e/incidents.e2e.mjs",
+    "e2e:register": "node e2e/register.e2e.mjs",
+    "e2e:profile": "node e2e/profile.e2e.mjs",
+    "e2e:guard": "node e2e/guard.e2e.mjs",
+    "e2e:token": "node e2e/token.e2e.mjs"
+  },
+  "dependencies": {
+    "@repo/shared-types": "*",
+    "autoprefixer": "^10.6.1",
+    "lucide-react": "^1.47.0",
+    "next": "^16.3.8",
+    "postcss": "^8.5.28",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
+    "playwright": "^1.63.0",
+    "typescript": "^5.9.3"
+  }
+}

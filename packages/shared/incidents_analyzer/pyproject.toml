@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incidents-analyzer"
+version = "0.1.0"
+description = "Shared validation and metrics logic for Nexova support-incident CSV files, used by both the CLI script and the backend API."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["incidents_analyzer*"]
