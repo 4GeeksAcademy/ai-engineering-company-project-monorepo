@@ -568,6 +568,19 @@ POST {} → 422
 
 Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**, and `POST /telemetry/events` stores valid events. The live Supabase project was not queried in this run (service-role credentials were not available). That does not make POS integration or a digital loyalty wallet complete.
 
+## Live Supabase verification of telemetry storage (`787c7cd`, then `search_path`)
+
+Department served: **Technology** (Nicolás Park — the collector rows are in the live `public.telemetry_events` table).
+
+A separate run, with no code changes at `787c7cd`, loaded the real backoffice in headless Chromium and posted `services/api/scripts/send_mixed_batch.sh`. There is no seed login; the run registered a local demo staff user with `POST /auth/register`. The table held 61 rows: 58 from the browser and 3 from the mixed batch. Mixed batch response: `{"received":4,"stored":3,"rejected":1}`. Business rows include `inbound_order_created` ×2, `sale_completed` ×2, `ingredient_price_variance_detected` ×2, and `stock_count_adjusted` ×1 (the −2 kitchen correction). There is no outbound order endpoint or form, so there is no `outbound_order_created` row. Location tags on the Medellín Centro sales and inbound lines are `co-med-centro`, Colombia, COP, `America/Bogota`. PATCH and DELETE through PostgREST both returned HTTP 400 `P0001` `telemetry_events is append-only`. The live function sets `search_path` to empty; the committed migration now does the same. Evidence images are under `docs/screenshots/`. `rows.json` was checked (no keys, no email addresses) and was not committed.
+
+```text
+mixed batch → {"received":4,"stored":3,"rejected":1}
+live rows → 61 (58 browser + 3 script)
+PATCH and DELETE → 400 P0001 telemetry_events is append-only
+git diff --stat cursor/telemetry-event-capture-02f6 -- uis → empty
+```
+
 ## How to update this file
 
 After a verified change, append evidence (command + result) and update the coverage table. Do not log plans that were not run.
