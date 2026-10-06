@@ -1,0 +1,116 @@
+.bo-shell {
+  display: grid;
+  min-height: 100svh;
+  grid-template-columns: var(--sidebar-w) 1fr;
+}
+
+.bo-sidebar {
+  background: #020617;
+  border-right: 1px solid var(--bo-panel-2);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bo-sidebar__brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.bo-sidebar__mark {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.2rem;
+  background: var(--bo-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bo-accent) 25%, transparent);
+}
+
+.bo-sidebar__product {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.bo-sidebar__role {
+  color: var(--bo-muted);
+  font-size: 0.8rem;
+}
+
+.bo-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bo-navlink {
+  text-decoration: none;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius);
+  color: var(--bo-muted);
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.bo-navlink:hover {
+  background: var(--bo-panel);
+  color: var(--bo-text);
+}
+
+.bo-navlink--active {
+  background: var(--bo-panel);
+  color: var(--bo-accent);
+}
+
+.bo-sidebar__note {
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--bo-muted);
+  line-height: 1.4;
+}
+
+.bo-sidebar__note code {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--bo-accent);
+}
+
+.bo-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bo-topbar {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--bo-panel-2);
+  background: color-mix(in srgb, var(--bo-panel) 55%, transparent);
+}
+
+.bo-topbar__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bo-muted);
+  margin-bottom: 0.35rem;
+}
+
+.bo-topbar__title {
+  font-size: 1.35rem;
+}
+
+.bo-content {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+@media (max-width: 800px) {
+  .bo-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .bo-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--bo-panel-2);
+  }
+}

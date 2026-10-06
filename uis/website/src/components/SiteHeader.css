@@ -1,0 +1,66 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--header-h);
+  background: color-mix(in srgb, var(--brasa-paper) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--brasa-charcoal) 10%, transparent);
+}
+
+.site-header__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.site-header__mark {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 35%, #ffb703, var(--brasa-ember) 55%, var(--brasa-charcoal));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brasa-ember) 25%, transparent);
+}
+
+.site-header__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.site-header__nav {
+  display: none;
+  gap: 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.site-header__nav a {
+  text-decoration: none;
+  color: var(--brasa-muted);
+}
+
+.site-header__nav a:hover {
+  color: var(--brasa-charcoal);
+}
+
+.site-header__cta {
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+}
+
+@media (min-width: 760px) {
+  .site-header__nav {
+    display: flex;
+  }
+}

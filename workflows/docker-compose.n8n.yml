@@ -1,0 +1,44 @@
+# Local n8n for the Brasaland Monday leadership report.
+# This file does not replace the repo-root docker-compose.yml (Redis, Flower, Celery).
+#
+# From the monorepo root, after exporting the BRASALAND_* variables in the shell:
+#   mkdir -p workflows/out && chmod a+rwx workflows/out
+#   docker compose -f workflows/docker-compose.n8n.yml up -d
+#
+# Placeholders only. Do not commit real staff passwords, SMTP passwords, or Slack tokens.
+
+name: brasaland-n8n
+
+services:
+  n8n:
+    image: n8nio/n8n:1.123.81
+    container_name: brasaland-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_SECURE_COOKIE: "false"
+      GENERIC_TIMEZONE: America/Bogota
+      TZ: America/Bogota
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      # Expressions read these. Leave email/Slack empty to exercise CSV-only runs.
+      BRASALAND_API_BASE_URL: ${BRASALAND_API_BASE_URL:-http://host.docker.internal:8000}
+      BRASALAND_STAFF_EMAIL: ${BRASALAND_STAFF_EMAIL:-}
+      BRASALAND_STAFF_PASSWORD: ${BRASALAND_STAFF_PASSWORD:-}
+      BRASALAND_REPORT_FROM: ${BRASALAND_REPORT_FROM:-}
+      BRASALAND_REPORT_TO: ${BRASALAND_REPORT_TO:-}
+      BRASALAND_SLACK_CHANNEL: ${BRASALAND_SLACK_CHANNEL:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - brasaland_n8n_data:/home/node/.n8n
+      - ./out:/home/node/brasaland-reports
+      - ./brasaland-monday-leadership-report.n8n.json:/home/node/brasaland-monday-leadership-report.n8n.json:ro
+    restart: unless-stopped
+
+volumes:
+  brasaland_n8n_data:

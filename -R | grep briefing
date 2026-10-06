@@ -1,0 +1,58 @@
+[33mcommit ac43939979bc15d9df30ca3db702a49b07e938db[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Tue Jun 16 16:15:15 2026 +0000
+
+    README: name api/app.py and agent.py entry points for submission
+    
+    Co-authored-by: Rickycastro1940 <Rickycastro1940@users.noreply.github.com>
+
+[33mcommit eeb4a8f545c1f8d3205e9b5953643bd27c390dc3[m[33m ([m[1;31morigin/cursor/api-agent-dual-terminal-6782[m[33m)[m
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Tue Jun 16 16:09:51 2026 +0000
+
+    Add evaluation checklist and restore products.csv seed data
+    
+    - Document all 10 rubric verification steps in services/api/README.md
+    - Link evaluation checklist from root README
+    - Restore products.csv to committed seed values after verification runs
+    
+    Co-authored-by: Rickycastro1940 <Rickycastro1940@users.noreply.github.com>
+
+[33mcommit a6379852a5e8162c49619c5fd80fd784ff23b860[m
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Tue Jun 16 16:03:16 2026 +0000
+
+    Document API-first launch order and plain-Python agent requirements
+    
+    - Expand root README with install, .env, and two-terminal startup steps
+    - Add launch guide to services/api/README.md with required start order
+    - Clarify agent uses manual loop only (no LangChain/LlamaIndex/AutoGen)
+    
+    Co-authored-by: Rickycastro1940 <Rickycastro1940@users.noreply.github.com>
+
+[33mcommit 9d4ef19fd4fd4e5fdb4f2ba4c5e4428e31034c51[m
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Tue Jun 16 15:48:02 2026 +0000
+
+    Align conversation_log.csv schema with assignment spec
+    
+    - Replace append_conversation with log_event using actor, message, tool_call, timestamp
+    - Log user, agent, tool call, tool result, and system events on every turn
+    - Backup legacy log files when header schema mismatches
+    - Add conversation_log.csv to .gitignore and document format in README
+    
+    Co-authored-by: Rickycastro1940 <Rickycastro1940@users.noreply.github.com>
+
+[33mcommit 8f077391fe974c6dfa7d1664308a545332fc6424[m
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Tue Jun 16 15:32:52 2026 +0000
+
+    Implement Groq inventory agent with tool-calling loop and CLI
+    
+    - Define inventory API endpoints as typed LLM tools
+    - Run observe/think/act/update loop until the model returns a final answer
+    - Keep in-memory session history and append turns to conversation_log.csv
+    - Add interactive CLI and document agent setup in services/api/README.md
+    - Pin openai and python-dotenv in requirements.txt
+    
+    Co-authored-by: Rickycastro1940 <Rickycastro1940@users.noreply.github.com>

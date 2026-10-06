@@ -1,0 +1,8 @@
+<html><head><title>Async Tasks Evidence</title><style>body{font-family:sans-serif;margin:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:8px;text-align:left}.ok{color:green}.fail{color:#b00020}</style></head><body>
+<h1>Flower tasks (demo)</h1><table><tr><th>Task ID</th><th>Name</th><th>State</th></tr>
+<tr class='fail'><td>93664fb2-3330-47b5-be1a-6ce1adce0e4b</td><td>services.tasks.run_weekly_pipeline</td><td><b>FAILURE</b></td></tr>
+<tr class='ok'><td>682ae02a-d983-4fa2-88f3-153408db0340</td><td>services.tasks.flower_demo_succeed</td><td><b>SUCCESS</b></td></tr>
+</table>
+<h1>Dead Letter Queue (SQLite)</h1><table><tr><th>task_id</th><th>attempt</th><th>error_message</th><th>recorded_at</th></tr>
+<tr class='fail'><td>93664fb2-3330-47b5-be1a-6ce1adce0e4b</td><td>4</td><td>No module named &#x27;pandas&#x27;</td><td>2026-07-17T17:10:41.110480+00:00</td></tr>
+</table></body></html>
