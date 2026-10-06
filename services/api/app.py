@@ -30,6 +30,7 @@ if str(REPO_ROOT) not in sys.path:
 from services.reporting.routes import router as reporting_router  # noqa: E402
 from no_sales_router import register as register_ops_alerts  # noqa: E402
 from services.knowledge.routes import router as knowledge_router  # noqa: E402
+from routers.telemetry import router as telemetry_router  # noqa: E402
 
 UI_ROOT = REPO_ROOT / "uis" / "web"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
@@ -145,6 +146,7 @@ app.include_router(inventory_router)
 app.include_router(users_router)
 app.include_router(reporting_router)
 app.include_router(knowledge_router)
+app.include_router(telemetry_router)
 register_ops_alerts(app)
 _register_analyze_routes(app, "anylayze")
 _register_analyze_routes(app, "analyze")
