@@ -1,11 +1,19 @@
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { FetchError, Spinner } from "../components/AsyncState";
+import { trackMissingToken } from "../telemetry/events";
 import { useRequireAuth } from "./useRequireAuth";
 
 /** Layout guard around staff views: missing or invalid JWT → `/login`. */
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { shouldRedirectToLogin, isLoading, loginPath, sessionError, retrySession } =
+  const { shouldRedirectToLogin, isLoading, isMissingToken, loginPath, sessionError, retrySession } =
     useRequireAuth();
+
+  useEffect(() => {
+    if (!isLoading && isMissingToken) {
+      trackMissingToken(window.location.pathname);
+    }
+  }, [isLoading, isMissingToken]);
 
   if (isLoading) {
     return (

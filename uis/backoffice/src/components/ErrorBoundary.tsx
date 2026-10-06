@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { trackClientException } from "../telemetry/events";
 import "../pages/AuthPages.css";
 
 type Props = { children: ReactNode };
@@ -12,8 +13,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(): void {
+  componentDidCatch(error: Error): void {
     console.error("Backoffice render error");
+    trackClientException("error_boundary", error);
   }
 
   render(): ReactNode {

@@ -1,3 +1,6 @@
+import { accessTokenLooksExpired } from "../auth/accessToken";
+import { endStaffSession, trackApiLatency, trackSessionExpired } from "../telemetry/events";
+
 export type Location = {
   id: string;
   name: string;
@@ -46,6 +49,23 @@ export type AuthResponse = TokenResponse & {
 
 const TOKEN_KEY = "auth_token";
 const PUBLIC_AUTH_PATHS = new Set(["/auth/login", "/auth/register", "/auth/token"]);
+const LATENCY_TEMPLATES = new Set([
+  "/auth/login",
+  "/auth/token",
+  "/auth/register",
+  "/auth/me",
+  "/users",
+  "/users/{id}",
+  "/profiles/me",
+  "/locations/overview",
+  "/inventory",
+  "/inventory/{product_id}",
+  "/reporting/weekly-location-performance",
+  "/reporting/pipeline-runs/latest",
+  "/realtime/ops-alerts",
+  "/realtime/ops-alerts/simulate",
+]);
+const okSampleCounts = new Map<string, number>();
 
 export class ApiError extends Error {
   details: unknown;
@@ -161,8 +181,51 @@ export function clearToken(): void {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
+export function telemetryRouteTemplate(path: string): string | null {
+  const bare = path.split("?")[0] ?? path;
+  const normalized = bare
+    .replace(/\/users\/\d+$/, "/users/{id}")
+    .replace(/\/inventory\/\d+$/, "/inventory/{product_id}");
+  return LATENCY_TEMPLATES.has(normalized) ? normalized : null;
+}
+
+function recordApiLatency(
+  method: string,
+  path: string,
+  httpStatus: number,
+  durationMs: number,
+  outcome: "ok" | "http_error" | "network" | "parse_error",
+): void {
+  const template = telemetryRouteTemplate(path);
+  if (!template) {
+    return;
+  }
+  if (outcome === "ok") {
+    const key = `${method} ${template}`;
+    const next = (okSampleCounts.get(key) ?? 0) + 1;
+    okSampleCounts.set(key, next);
+    if (next % 5 !== 1) {
+      return;
+    }
+  }
+  trackApiLatency({
+    location_scope: "none",
+    method,
+    route_template: template,
+    http_status: httpStatus,
+    duration_ms: Math.max(0, Math.min(3_600_000, Math.round(durationMs))),
+    outcome,
+  });
+}
+
 /** Drop the JWT. Redirect to `/login` unless already on a public auth page. */
-export function clearSessionAndRedirectToLogin(): void {
+export function clearSessionAndRedirectToLogin(requestPath?: string): void {
+  const token = getStoredToken();
+  const template = requestPath ? telemetryRouteTemplate(requestPath) : null;
+  if (token && template && accessTokenLooksExpired(token)) {
+    trackSessionExpired(template);
+  }
+  endStaffSession("rejected_session");
   clearToken();
   const path = window.location.pathname;
   if (path === "/login" || path === "/register") {
@@ -174,7 +237,9 @@ export function clearSessionAndRedirectToLogin(): void {
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
   const headers = new Headers(options.headers);
-  const requestPath = path.split("?")[0];
+  const requestPath = path.split("?")[0] ?? path;
+  const method = (options.method ?? "GET").toUpperCase();
+  const started = typeof performance !== "undefined" ? performance.now() : Date.now();
 
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -183,9 +248,16 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const method = (options.method ?? "GET").toUpperCase();
   const isPublicAuthCall =
     PUBLIC_AUTH_PATHS.has(requestPath) || (requestPath === "/users" && method === "POST");
+
+  const finish = (
+    outcome: "ok" | "http_error" | "network" | "parse_error",
+    httpStatus: number,
+  ) => {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    recordApiLatency(method, requestPath, httpStatus, now - started, outcome);
+  };
 
   let response: Response;
   try {
@@ -194,11 +266,8 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       headers,
     });
   } catch {
+    finish("network", 0);
     throw new ApiError(messageForHttpStatus(null), null, null);
-  }
-
-  if (response.status === 401 && token && !isPublicAuthCall) {
-    clearSessionAndRedirectToLogin();
   }
 
   if (!response.ok) {
@@ -219,15 +288,23 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
         /* body is unreadable; ignore raw text */
       }
     }
+    finish("http_error", response.status);
+    if (response.status === 401 && token && !isPublicAuthCall) {
+      clearSessionAndRedirectToLogin(requestPath);
+    }
     throw new ApiError(message, details, response.status);
   }
 
   if (response.status === 204) {
+    finish("ok", response.status);
     return null as T;
   }
   try {
-    return (await response.json()) as T;
+    const payload = (await response.json()) as T;
+    finish("ok", response.status);
+    return payload;
   } catch {
+    finish("parse_error", response.status);
     throw new ApiError(messageForHttpStatus(response.status), null, response.status);
   }
 }

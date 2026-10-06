@@ -14,7 +14,7 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 | `CONTEXT.md` need | Status in monorepo |
 | --- | --- |
 | Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) and `realtime=present` (`GET /realtime/ops-alerts/stream`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
-| Technology: telemetry + pipeline to dashboards | **Partial** — live no-sales SSE on `GET /realtime/ops-alerts/stream` plus Part 2 weekly location cost/waste ETL, Prefect stage subflows, KPI unit tests, CLI, and backoffice Monday weekly report; engineering `GET /telemetry/report` untouched |
+| Technology: telemetry + pipeline to dashboards | **Partial** — `POST /telemetry/events` validates the Phase 1 envelope and returns `{received:N}` without storing rows; the backoffice captures 2 of 18 mandatory events and 16 identified events. Live no-sales SSE, weekly location cost/waste ETL, Prefect subflows, and the Monday report stay. Engineering `GET /telemetry/report` is untouched |
 | Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; `POST /sales` stores a ticket and calls `record_sale` so the live no-sales alert on backoffice `/accessible` sees that location; Next.js `uis/portal` `/ops/sales` shows per-location sales in COP and USD. Smart ordering still open |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; Next.js `uis/portal` `/points` looks up a guest and shows Brasa Points balance, history, and tier rewards (fixtures, or `GET /customers` when `BRASALAND_DATA_SOURCE=live`); `uis/website/` corporate home (`/`) live. `CONTEXT.md` still describes stamp cards as today’s in-restaurant programme |
@@ -524,6 +524,26 @@ POST /sales co-med-centro 48000 COP during an open alert → 201, active alerts 
 POST /sales before evaluate → no alert raised
 POST unknown location → 404; Colombia location with USD → 400; EUR → 422; amount 0 → 400
 ```
+
+## Latest telemetry event capture (`cursor/telemetry-event-capture-02f6`)
+
+Department served: **Technology** (Nicolás Park — real-time telemetry on the central API) + **Restaurant Operations** (Felipe Guerrero — kitchen stock corrections on the existing inventory panel).
+
+`POST /telemetry/events` is mounted from `services/api/routers/telemetry.py` on `uvicorn api.app:app`. It checks the Phase 1 envelope (`eventID`, `Event_type`, `SchemaVersion` 1, `source`, `tags`) and logs the count plus each `Event_type`. It does not persist. The backoffice `TelemetryService` is the only telemetry sender: queue of 20 or 10 seconds, three retries, `sendBeacon` on hide. Staff session id is minted at login. Two mandatory events have a real backoffice moment (`product_created`, `stock_count_adjusted`). The other 16 mandatory events stay with their plan producers.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+curl -sS -o /dev/null -w docs http://127.0.0.1:8000/docs → 200
+openapi path_count=44 locations=present menus=present sales=present customers=present suppliers=present inventory=present telemetry=present (POST /telemetry/events)
+NO_SALES_MONITOR=0 python -m pytest -q → 134 passed
+NO_SALES_MONITOR=0 python -m pytest tests/test_telemetry_stub.py -q → 3 passed
+cd uis/backoffice && node --experimental-strip-types --test --test-concurrency=1 tests/telemetry.test.ts tests/noSalesAlerts.test.ts → 15 passed
+cd uis/backoffice && npm run build → tsc -b && vite build green
+Chrome DevTools POST http://127.0.0.1:8000/telemetry/events → 200 {"received":17}
+API log 17:06:19 Telemetry stub received 17 event(s) (flow_step_recorded, section_viewed, api_latency_recorded)
+```
+
+Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers are **present**, and `POST /telemetry/events` is present. The stub does not store events. That does not make POS integration or a digital loyalty wallet complete.
 
 ## How to update this file
 

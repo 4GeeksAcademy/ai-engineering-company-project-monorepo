@@ -1,13 +1,25 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { FetchError, Spinner } from "../components/AsyncState";
 import { useAuth } from "../auth/AuthProvider";
 import {
+  ApiError,
   SUPPORT_PROMPT,
   fetchCurrentUser,
   toUserFacingMessage,
   updateMyProfile,
 } from "../lib/api";
+import {
+  flowAbandon,
+  flowAdvance,
+  flowComplete,
+  flowStart,
+  trackAccountUpdated,
+  trackAuthFormRejected,
+  trackSection,
+  trackUiLatency,
+  validationFields,
+} from "../telemetry/events";
 import "./AuthPages.css";
 
 export function ProfilePage() {
@@ -21,6 +33,9 @@ export function ProfilePage() {
   const [loadError, setLoadError] = useState("");
   const [loadNonce, setLoadNonce] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const dirty = useRef(false);
+  const loadStarted = useRef(0);
+  const loadSettled = useRef(false);
 
   const retryLoad = useCallback(() => {
     setLoadNonce((value) => value + 1);
@@ -29,6 +44,9 @@ export function ProfilePage() {
   useEffect(() => {
     let cancelled = false;
     let outcome: "success" | "error" = "error";
+    loadStarted.current = performance.now();
+    loadSettled.current = false;
+    trackSection("account_profile");
 
     async function load() {
       setLoadStatus("loading");
@@ -43,14 +61,19 @@ export function ProfilePage() {
         setName(profile?.name ?? "");
         setPhone(profile?.phone ?? "");
         setAddress(profile?.address ?? "");
+        dirty.current = false;
         outcome = "success";
+        flowStart("profile_edit", "shown");
+        trackUiLatency("panel", "profile", "success", performance.now() - loadStarted.current);
       } catch (requestError) {
         if (!cancelled) {
           setLoadError(
             toUserFacingMessage(requestError, "Your profile could not be loaded right now."),
           );
+          trackUiLatency("panel", "profile", "error", performance.now() - loadStarted.current);
         }
       } finally {
+        loadSettled.current = true;
         if (!cancelled) {
           setLoadStatus(outcome);
         }
@@ -59,9 +82,21 @@ export function ProfilePage() {
 
     void load();
     return () => {
+      const duration = performance.now() - loadStarted.current;
       cancelled = true;
+      if (!loadSettled.current) {
+        trackUiLatency("panel", "profile", "cancelled", duration);
+      }
+      flowAbandon("profile_edit", "left");
     };
   }, [setUser, loadNonce]);
+
+  function markDirty(): void {
+    if (!dirty.current) {
+      dirty.current = true;
+      flowAdvance("profile_edit", "field_changed");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,9 +113,28 @@ export function ProfilePage() {
       setName(updatedUser?.name ?? "");
       setPhone(updatedUser?.phone ?? "");
       setAddress(updatedUser?.address ?? "");
+      dirty.current = false;
       setMessage("Profile updated.");
+      trackAccountUpdated("profile_save", "completed", "none");
+      flowComplete("profile_edit", "saved");
     } catch (requestError) {
       setError(toUserFacingMessage(requestError, "Your profile could not be saved."));
+      if (requestError instanceof ApiError && requestError.status === 422) {
+        const loc = validationFields(requestError.details)[0]?.loc ?? "";
+        const field = loc.endsWith("name")
+          ? "name"
+          : loc.endsWith("phone")
+            ? "phone"
+            : loc.endsWith("address")
+              ? "address"
+              : "form";
+        trackAuthFormRejected("profile", "validation", field);
+        trackAccountUpdated("profile_save", "rejected", "validation");
+      } else if (requestError instanceof ApiError && requestError.status === 401) {
+        trackAccountUpdated("profile_save", "rejected", "unauthorized");
+      } else {
+        trackAccountUpdated("profile_save", "rejected", "api_error");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -125,13 +179,23 @@ export function ProfilePage() {
       <form className="auth-form" onSubmit={handleSubmit} aria-busy={isSaving}>
         <label>
           Name
-          <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
+          <input
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              markDirty();
+            }}
+            autoComplete="name"
+          />
         </label>
         <label>
           Phone
           <input
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              markDirty();
+            }}
             autoComplete="tel"
             inputMode="tel"
           />
@@ -140,7 +204,10 @@ export function ProfilePage() {
           Address
           <textarea
             value={address}
-            onChange={(event) => setAddress(event.target.value)}
+            onChange={(event) => {
+              setAddress(event.target.value);
+              markDirty();
+            }}
             autoComplete="street-address"
             rows={3}
           />

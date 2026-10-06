@@ -188,6 +188,36 @@
   letter-spacing: 0.04em;
 }
 
+.accessible__stock {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.accessible__stock h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.accessible__stock-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.accessible__stock-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--bo-muted);
+}
+
+.accessible__stock-form input,
+.accessible__stock-form select {
+  min-width: 8rem;
+}
+
 @media (min-width: 960px) {
   .accessible__dashboard {
     grid-template-columns: 1.2fr 1fr;

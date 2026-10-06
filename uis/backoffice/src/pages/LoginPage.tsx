@@ -1,8 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { FetchError, Spinner } from "../components/AsyncState";
-import { ApiError, SUPPORT_PROMPT, loginUser, sanitizeFieldMessage, storeToken, toUserFacingMessage } from "../lib/api";
+import { ApiError, SUPPORT_PROMPT, sanitizeFieldMessage, toUserFacingMessage } from "../lib/api";
+import {
+  flowAbandon,
+  flowAdvance,
+  flowComplete,
+  flowStart,
+  trackAuthFormRejected,
+  trackSection,
+  trackUiLatency,
+  validationFields,
+} from "../telemetry/events";
 import "./AuthPages.css";
 
 type FieldErrors = {
@@ -35,7 +45,15 @@ function mapApiValidationErrors(details: unknown): FieldErrors {
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, isAuthenticated, isLoading, sessionError, retrySession } = useAuth();
+  const { submitLogin, isAuthenticated, isLoading, sessionError, retrySession } = useAuth();
+
+  useEffect(() => {
+    trackSection("login");
+    flowStart("staff_sign_in", "shown");
+    return () => {
+      flowAbandon("staff_sign_in", "left");
+    };
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -77,36 +95,45 @@ export function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const started = performance.now();
     setError("");
     setFieldErrors({});
+    flowAdvance("staff_sign_in", "submit");
+    if (!email.trim() || !email.includes("@")) {
+      setFieldErrors({ email: "A valid email is required." });
+      trackAuthFormRejected("login", "validation", "email");
+      trackUiLatency("form", "login_form", "error", performance.now() - started);
+      return;
+    }
+    if (password.length < 8) {
+      setFieldErrors({ password: "Password must be at least 8 characters." });
+      trackAuthFormRejected("login", "validation", "password");
+      trackUiLatency("form", "login_form", "error", performance.now() - started);
+      return;
+    }
     setIsSubmitting(true);
     try {
-      let authResponse;
       try {
-        authResponse = await loginUser(email, password);
+        await submitLogin(email, password);
       } catch (requestError) {
         setError(toUserFacingMessage(requestError, "We could not sign you in. Check your email and password."));
-        if (requestError instanceof ApiError) {
+        if (requestError instanceof ApiError && requestError.status === 422) {
+          const fields = validationFields(requestError.details);
+          const field = fields[0]?.loc.endsWith("email")
+            ? "email"
+            : fields[0]?.loc.endsWith("password")
+              ? "password"
+              : "form";
+          trackAuthFormRejected("login", "validation", field);
+          setFieldErrors(mapApiValidationErrors(requestError.details));
+        } else if (requestError instanceof ApiError) {
           setFieldErrors(mapApiValidationErrors(requestError.details));
         }
+        trackUiLatency("form", "login_form", "error", performance.now() - started);
         return;
       }
-      if (!authResponse?.access_token) {
-        setError("Sign-in did not return a session. Try again.");
-        return;
-      }
-      storeToken(authResponse.access_token);
-      try {
-        await signIn(authResponse);
-      } catch (requestError) {
-        setError(
-          toUserFacingMessage(
-            requestError,
-            "Signed in, but the session could not be loaded. Try again.",
-          ),
-        );
-        return;
-      }
+      flowComplete("staff_sign_in", "token_stored");
+      trackUiLatency("form", "login_form", "success", performance.now() - started);
       navigate(nextPath, { replace: true });
     } finally {
       setIsSubmitting(false);

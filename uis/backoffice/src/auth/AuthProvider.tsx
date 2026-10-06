@@ -9,16 +9,28 @@ import {
 } from "react";
 import {
   ApiError,
-  clearSessionAndRedirectToLogin,
   clearToken,
   fetchCurrentUser,
   getStoredToken,
+  loginUser,
   storeToken,
   toUserFacingMessage,
   type AuthResponse,
   type PublicUser,
   type TokenResponse,
 } from "../lib/api";
+import {
+  bindStaffSession,
+  endStaffSession,
+  flowAbandon,
+  flowComplete,
+  flowDrop,
+  flowStart,
+  trackAuthFormRejected,
+  trackLoginFailed,
+  trackLoginSucceeded,
+  trackUiLatency,
+} from "../telemetry/events";
 
 type AuthContextValue = {
   token: string | null;
@@ -28,6 +40,7 @@ type AuthContextValue = {
   sessionError: string | null;
   retrySession: () => void;
   signIn: (authResponse: TokenResponse | AuthResponse) => Promise<void>;
+  submitLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   setUser: (user: PublicUser | null) => void;
 };
@@ -51,24 +64,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const started = performance.now();
     let cancelled = false;
+    flowStart("session_restore", "auth_me");
     setIsLoading(true);
     setSessionError(null);
 
     fetchCurrentUser()
       .then((profile) => {
+        const duration = performance.now() - started;
         if (cancelled) {
+          trackUiLatency("session_check", "auth_me", "cancelled", duration);
           return;
         }
         setUser(profile);
         setSessionError(null);
+        if (profile?.id != null) {
+          bindStaffSession(String(profile.id));
+        }
+        flowComplete("session_restore", "restored");
+        trackUiLatency("session_check", "auth_me", "success", duration);
       })
       .catch((error: unknown) => {
+        const duration = performance.now() - started;
         if (cancelled) {
+          trackUiLatency("session_check", "auth_me", "cancelled", duration);
           return;
         }
+        flowAbandon("session_restore", "auth_me");
         if (error instanceof ApiError && error.status === 401) {
-          clearSessionAndRedirectToLogin();
           setToken(null);
           setUser(null);
           setSessionError(null);
@@ -78,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionError(
           toUserFacingMessage(error, "We could not check your session. Confirm the API is running."),
         );
+        trackUiLatency("session_check", "auth_me", "error", duration);
       })
       .finally(() => {
         if (!cancelled) {
@@ -87,6 +112,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      const duration = performance.now() - started;
+      if (duration < 30) {
+        flowDrop("session_restore");
+        return;
+      }
+      flowAbandon("session_restore", "left");
     };
   }, [sessionNonce]);
 
@@ -104,20 +135,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionError(null);
     if ("user" in authResponse && authResponse?.user) {
       setUser(authResponse.user);
+      if (authResponse.user.id != null) {
+        bindStaffSession(String(authResponse.user.id));
+      }
       return;
     }
     try {
       const profile = await fetchCurrentUser();
       setUser(profile);
+      if (profile?.id != null) {
+        bindStaffSession(String(profile.id));
+      }
     } catch (error) {
-      clearSessionAndRedirectToLogin();
+      endStaffSession("rejected_session");
+      clearToken();
       setToken(null);
       setUser(null);
       throw error;
     }
   }, []);
 
+  const submitLogin = useCallback(
+    async (email: string, password: string) => {
+      let authResponse: AuthResponse;
+      try {
+        authResponse = await loginUser(email, password);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          trackLoginFailed();
+        }
+        throw error;
+      }
+      if (!authResponse?.access_token || authResponse.user?.id == null) {
+        trackAuthFormRejected("login", "validation", "form");
+        throw new ApiError(toUserFacingMessage(null, "Sign-in did not return a session. Try again."));
+      }
+      await signIn(authResponse);
+      trackLoginSucceeded();
+    },
+    [signIn],
+  );
+
   const logout = useCallback(() => {
+    endStaffSession("logout");
     clearToken();
     window.location.replace("/login");
   }, []);
@@ -131,10 +191,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionError,
       retrySession,
       signIn,
+      submitLogin,
       logout,
       setUser,
     }),
-    [token, user, isLoading, sessionError, retrySession, signIn, logout],
+    [token, user, isLoading, sessionError, retrySession, signIn, submitLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

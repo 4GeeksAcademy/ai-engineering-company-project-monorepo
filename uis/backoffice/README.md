@@ -48,7 +48,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5174/login`. Vite proxies `/auth`, `/users`, `/profiles`, `/locations`, `/inventory`, `/reporting/weekly-location-performance`, `/reporting/pipeline-runs`, `/tasks`, `/realtime`, and `/api` to `http://127.0.0.1:8000` (not the SPA route `/reporting/weekly-performance`).
+Open `http://localhost:5174/login`. Vite proxies `/auth`, `/users`, `/profiles`, `/locations`, `/inventory`, `/reporting/weekly-location-performance`, `/reporting/pipeline-runs`, `/tasks`, `/realtime`, `/telemetry`, and `/api` to `http://127.0.0.1:8000` (not the SPA route `/reporting/weekly-performance`).
+
+Copy `uis/backoffice/.env.example` to `uis/backoffice/.env.local` so `NEXT_PUBLIC_TELEMETRY_ENDPOINT` points at `POST /telemetry/events`. The capture service reads that variable; it is not hardcoded. Vite `envPrefix` includes `NEXT_PUBLIC_`.
 
 `/accessible` subscribes to `GET /realtime/ops-alerts/stream` (SSE, Bearer JWT) and shows a banner, toast, and list when an open location has no sales. Use **Simulate no sales** / **Record a sale** on that page, or `python scripts/simulate_no_sales.py`. See [`docs/realtime-no-sales.md`](../../docs/realtime-no-sales.md).
 
