@@ -76,3 +76,16 @@ Siguiendo el requerimiento del CTO y el estándar de calidad, se identificaron l
 2. **Commit 2 (Backoffice A11y & Skeleton):** Añadir accesibilidad semántica a la tabla y crear Skeleton Loader para mitigar layout shifts.
 3. **Commit 3 (Refactorización):** Extraer e integrar el Custom Hook reutilizable y el componente de badge compartido.
 4. **Commit 4 (Medición Final):** Re-ejecutar Lighthouse, capturar resultados en `/audit/after/` y redactar `REPORT.md`.
+
+---
+
+## 5. Correcciones identificadas por Skills de Agente
+
+Tras ejecutar el análisis estático basado en las skills `core-web-vitals`, `performance` y `web-perf`, se registraron de forma oficial las siguientes correcciones adicionales/confirmadas:
+
+- **Sitio Corporativo (`uis/website/src/app/page.tsx`):**
+  - [x] (Requerido por `core-web-vitals`) Reemplazar etiqueta HTML `<img>` sin dimensiones por `<Image>` de Next.js, configurado con `priority=true` y `width/height` para solucionar penalización en **LCP** y evitar **CLS**.
+
+- **Backoffice (`uis/backoffice/src/app/inventory/products/page.tsx`):**
+  - [x] (Requerido por `web-perf`) Añadir semántica `scope="col"` en las cabeceras `<th>` de la tabla para subsanar deficiencia de accesibilidad en el score.
+  - [x] (Requerido por `performance`) Reemplazar el texto "Cargando inventario..." por un **Skeleton Loader** que reserve el área (`contain-intrinsic-size` o simulación) para mitigar saltos visuales severos (CLS) antes de que renderice la tabla.

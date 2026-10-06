@@ -1,4 +1,5 @@
 'use client'
+import Image from "next/image";
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -73,11 +74,13 @@ export default function HomePage() {
               </section>
             </header>
             <figure className="rounded-xl border border-blue-300 bg-blue-100 p-4 shadow-2xl shadow-blue-200/50">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
                 alt="Equipo directivo revisando indicadores"
                 className="h-64 w-full rounded-lg object-cover sm:h-72 lg:h-80"
-                loading="lazy"
+                width={1200}
+                height={800}
+                priority
               />
               <figcaption className="mt-3 text-xs text-blue-800">Visibilidad ejecutiva para decisiones semanales sin retraso.</figcaption>
             </figure>
