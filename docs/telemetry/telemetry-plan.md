@@ -583,18 +583,37 @@ Who fills the nullable keys:
 
 ## Storage row
 
-Writers insert one row into Supabase table `telemetry_events`. The table columns stay the names the current readers already select. The envelope is mapped on the way in:
+`POST /telemetry/events` writes Supabase `public.telemetry_events` (migration `supabase/migrations/20261006000000_telemetry_events.sql`). The table is append-only: row level security is enabled, `anon` and `authenticated` cannot update, delete, or truncate, and a `BEFORE UPDATE OR DELETE` trigger raises `telemetry_events is append-only`. Indexes: `timestamp`, `event_type`, and a GIN index on `tags`.
 
-| Column | Value | Reader |
-| --- | --- | --- |
-| `id` | `eventID` | Engineering select in `skills/data-analysis/scripts/services/telemetry/main.py` |
-| `event_type` | `Event_type` | Both |
-| `timestamp` | Envelope `timestamp` | Engineering select |
-| `created_at` | The same envelope `timestamp` | Pipeline `gte` / `lt` filter |
-| `event_payload` | `properties` | Pipeline `location_id` and `cost` |
-| `tags` | JSON `tags` | Engineering select |
+`id` is `gen_random_uuid()` in the database. The envelope `eventID` is stored in `tags`, not as the primary key.
 
-`tags` is a copy, built only by this function, so the engineering reader and `properties` cannot drift:
+| DB column | Source |
+| --- | --- |
+| `timestamp` | Envelope `timestamp` (ISO 8601 UTC `…Z`) |
+| `service` | Envelope `source` when it is non-empty, otherwise `backoffice` |
+| `event_type` | Envelope `Event_type` |
+| `level` | `error` for `api_error_raised` and `client_exception_caught`. `warn` for `user_login_failed`, `session_expired`, `session_rejected`, `auth_form_rejected`, `inventory_validation_failed`, `direct_stock_edit_rejected`, for `api_latency_recorded` when `outcome` is `http_error`, `network`, or `parse_error`, for `ui_latency_recorded` when `outcome` is `error`, and for `account_updated` when `outcome` is `rejected`. Every other catalog event is `info`. |
+| `value` | One numeric property when the plan names a measure for that event (table below). Otherwise null. Booleans are not numbers. |
+| `message` | Optional short summary: public `message` on `api_error_raised`, `error_name` and `path` on `client_exception_caught`, failure reason on `user_login_failed`, method/route/outcome on latency events, or `event_type` plus `location_id` on sale, order, waste, and silence events. |
+| `tags` | `properties` filtered to the keys in `docs/telemetry/property-allowlists.json` for that `Event_type`. CONTEXT dimensions `location_scope`, `location_id`, `country`, `currency`, and `timezone` stay in `tags` (from properties when allowlisted, otherwise from the envelope `tags` object). Envelope ids `eventID`, `sessionID`, `UserID`, `requestID`, and `SchemaVersion` are copied into `tags` so analytics keep them. `source` is included. Keys outside the allowlist, including email or other PII, are dropped. |
+
+`value` property by event:
+
+| `Event_type` | Property copied to `value` |
+| --- | --- |
+| `api_latency_recorded`, `ui_latency_recorded` | `duration_ms` |
+| `inbound_order_created`, `outbound_order_created`, `stock_waste_registered` | `cost` |
+| `sale_completed` | `amount` |
+| `loyalty_points_redeemed` | `points` |
+| `ingredient_price_variance_detected` | `variance_pct` |
+| `vacancy_filled` | `days_to_fill` |
+| `location_sales_silence_detected` | `threshold_minutes` |
+
+Valid events in one request are inserted with a single PostgREST `POST` whose body is a JSON array. A batch with no valid events does not call the database.
+
+The Monday pipeline reader in `data/pipelines/pipeline.py` still selects `id, event_type, created_at, event_payload`. Those columns are not on this collector table. `properties.cost` for purchase and waste remains the pipeline measure; this collector also copies that number into `value` and keeps `location_id`, `country`, and `currency` inside `tags`.
+
+The emitter still builds the small envelope `tags` object before the request:
 
 ```python
 def build_tags(source: str, properties: dict) -> dict:
@@ -605,7 +624,7 @@ def build_tags(source: str, properties: dict) -> dict:
     return tags
 ```
 
-`properties.cost`, when present, is a JSON number in the location currency. The pipeline does `float(properties.get("cost", 0) or 0)` on the stored `event_payload`. Purchase and waste events always send `cost`. Price-alert and stockout events omit `cost`; the pipeline treats that as zero and only counts the rows.
+`properties.cost`, when present, is a JSON number in the location currency. Purchase and waste events always send `cost`. Price-alert and stockout events omit `cost`; a consumer that only counts those rows treats a missing cost as zero.
 
 ### Emit algorithm
 
