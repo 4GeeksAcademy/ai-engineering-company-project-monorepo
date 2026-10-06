@@ -122,9 +122,9 @@ Este proyecto no utiliza una nueva plantilla de inicio. Trabajas dentro de tu mo
 - [x] Toma nuevas capturas de pantalla y realiza un commit en `/audit/after/`.
 
 ### Entregables
-- [ ] Escribe `AUDIT.md` con: puntuaciones iniciales de Lighthouse, problemas identificados con explicación de causa raíz para cada uno, y el análisis de refactorización.
-- [ ] Escribe `REPORT.md` con: descripción de cada corrección aplicada, comparativa de puntuaciones antes/después, y tu valoración de qué tuvo mayor impacto.
-- [ ] Realiza un commit de ambos archivos markdown y todas las capturas de pantalla en el repositorio.
+- [x] Escribe `AUDIT.md` con: puntuaciones iniciales de Lighthouse, problemas identificados con explicación de causa raíz para cada uno, y el análisis de refactorización.
+- [x] Escribe `REPORT.md` con: descripción de cada corrección aplicada, comparativa de puntuaciones antes/después, y tu valoración de qué tuvo mayor impacto.
+- [x] Realiza un commit de ambos archivos markdown y todas las capturas de pantalla en el repositorio.
 
 > [!IMPORTANT]
 > ⚠️ **IMPORTANTE:** No reestructures la arquitectura de ninguno de los frontends para pasar esta auditoría. Aplica correcciones dirigidas. El objetivo es la mejora, no una reescritura.
@@ -133,13 +133,13 @@ Este proyecto no utiliza una nueva plantilla de inicio. Trabajas dentro de tu mo
 
 ## ✅ Qué vamos a evaluar
 
-- [ ] Lighthouse se ejecutó en ambos frontends antes y después, con capturas de pantalla con commit en el repositorio.
-- [ ] `AUDIT.md` identifica problemas concretos con razonamiento sobre causa raíz — no solo una lista de lo que Lighthouse marcó.
-- [ ] Al menos un componente reutilizable o Custom Hook fue extraído e integrado en el codebase.
-- [ ] `REPORT.md` muestra una mejora medible en al menos una puntuación de Lighthouse por frontend.
-- [ ] Si se instalaron skills de agente, hay evidencia de su uso en el proceso de corrección.
-- [ ] Las correcciones aplicadas atacan causas reales (optimización de imágenes, layout shift, problemas de hidratación) y no cambios superficiales que inflan las puntuaciones sin resolver el problema subyacente.
-- [ ] La calidad del código se mantiene tras la refactorización — sin funcionalidades rotas ni regresiones.
+- [x] Lighthouse se ejecutó en ambos frontends antes y después, con capturas de pantalla con commit en el repositorio.
+- [x] `AUDIT.md` identifica problemas concretos con razonamiento sobre causa raíz — no solo una lista de lo que Lighthouse marcó.
+- [x] Al menos un componente reutilizable o Custom Hook fue extraído e integrado en el codebase.
+- [x] `REPORT.md` muestra una mejora medible en al menos una puntuación de Lighthouse por frontend.
+- [x] Si se instalaron skills de agente, hay evidencia de su uso en el proceso de corrección.
+- [x] Las correcciones aplicadas atacan causas reales (optimización de imágenes, layout shift, problemas de hidratación) y no cambios superficiales que inflan las puntuaciones sin resolver el problema subyacente.
+- [x] La calidad del código se mantiene tras la refactorización — sin funcionalidades rotas ni regresiones.
 
 > [!NOTE]
 > **Nota:** Obtener una puntuación de 100 no es un criterio de evaluación. La mejora basada en evidencia y la calidad del análisis sí lo son.
