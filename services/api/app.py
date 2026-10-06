@@ -31,6 +31,10 @@ from services.reporting.routes import router as reporting_router  # noqa: E402
 from no_sales_router import register as register_ops_alerts  # noqa: E402
 from services.knowledge.routes import router as knowledge_router  # noqa: E402
 from routers.telemetry import router as telemetry_router  # noqa: E402
+from orders import router as orders_router  # noqa: E402
+from people import router as people_router  # noqa: E402
+from recommendations import router as recommendations_router  # noqa: E402
+from training import router as training_router  # noqa: E402
 
 UI_ROOT = REPO_ROOT / "uis" / "web"
 UPLOAD_DIR = REPO_ROOT / "data" / "uploads"
@@ -147,6 +151,10 @@ app.include_router(users_router)
 app.include_router(reporting_router)
 app.include_router(knowledge_router)
 app.include_router(telemetry_router)
+app.include_router(orders_router)
+app.include_router(people_router)
+app.include_router(recommendations_router)
+app.include_router(training_router)
 register_ops_alerts(app)
 _register_analyze_routes(app, "anylayze")
 _register_analyze_routes(app, "analyze")

@@ -7,14 +7,18 @@ week of 2026-09-14 (America/Bogota).
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
-from typing import Literal
+from math import floor
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from users import get_current_user
 
+from domain_facts import business_date, fx_recorded, timezone_for
 from locations import all_locations, get_location
+from menus import get_menu_item
 from sales_events import parse_amount, record_sale
 
 router = APIRouter(
@@ -24,7 +28,10 @@ router = APIRouter(
 )
 
 Currency = Literal["COP", "USD"]
-Channel = Literal["dine_in", "takeaway"]
+Channel = Literal["dine_in", "takeaway", "in_store", "delivery", "digital_app"]
+PlanChannel = Literal["in_store", "delivery", "digital_app"]
+_LOYALTY_ID = re.compile(r"^loy_[A-Za-z0-9]{8,}$")
+_CUSTOMER_ID = re.compile(r"^cus_[A-Za-z0-9]{8,}$")
 
 # Illustrative reporting FX only — not a live feed (CONTEXT.md: no POS integration).
 ILLUSTRATIVE_USD_COP = 4000
@@ -62,13 +69,31 @@ _WEEKLY_LOCAL: tuple[tuple[str, int, float], ...] = (
 )
 
 
+class SaleLineIn(BaseModel):
+    menu_item_id: str | None = None
+    menu_item_name: str = Field(min_length=1, max_length=80)
+    quantity: int = Field(ge=1)
+    line_amount: float = Field(ge=0)
+
+
 class SaleCreate(BaseModel):
-    """One new ticket. Currency must be the location's own COP or USD."""
+    """One new ticket. Currency must be the location's own COP or USD.
+
+    `channel` omitted keeps the stored channel `dine_in` (existing callers).
+    A plan channel (`in_store`, `delivery`, `digital_app`) is stored as sent.
+    `dine_in` maps to `in_store` on the sale_completed capture.
+    """
 
     location_id: str = Field(min_length=1, max_length=64)
     amount: str | float | int
     currency: Currency
     occurred_at: datetime | None = None
+    channel: PlanChannel | None = None
+    covers: int | None = Field(default=None, ge=0)
+    lines: list[SaleLineIn] | None = None
+    loyalty_attached: bool = False
+    loyalty_account_id: str | None = None
+    customer_id: str | None = None
 
 
 class Sale(BaseModel):
@@ -85,6 +110,12 @@ class Sale(BaseModel):
     occurred_at: str = Field(description="ISO-8601 timestamp with local offset")
     channel: Channel
     menu_item_id: str
+
+
+class SaleRecorded(Sale):
+    """POST /sales body. `capture` is the sale_completed property bag."""
+
+    capture: dict[str, Any] | None = None
 
 
 class LocationSales(BaseModel):
@@ -290,8 +321,51 @@ def list_sales(
     return _filtered(location_id, currency)
 
 
-@router.post("", response_model=Sale, status_code=201)
-def create_sale(payload: SaleCreate) -> Sale:
+def _plan_channel(stored: str) -> str | None:
+    if stored in ("in_store", "delivery", "digital_app"):
+        return stored
+    if stored == "dine_in":
+        return "in_store"
+    return None
+
+
+def _points_earned(amount: float, currency: str) -> int:
+    if currency == "COP":
+        return floor(amount / 10_000)
+    return floor(amount / 10)
+
+
+def _capture_lines(payload: SaleCreate, amount: float) -> tuple[list[dict[str, Any]], str]:
+    if payload.lines:
+        built: list[dict[str, Any]] = []
+        for line in payload.lines:
+            if line.menu_item_id:
+                get_menu_item(line.menu_item_id)
+            item: dict[str, Any] = {
+                "menu_item_name": line.menu_item_name.strip(),
+                "quantity": line.quantity,
+                "line_amount": line.line_amount,
+            }
+            if line.menu_item_id:
+                item["menu_item_id"] = line.menu_item_id
+            built.append(item)
+        return built, payload.lines[0].menu_item_id or "grilled-sirloin"
+    menu = get_menu_item("grilled-sirloin")
+    return (
+        [
+            {
+                "menu_item_id": menu.id,
+                "menu_item_name": menu.name,
+                "quantity": 1,
+                "line_amount": amount,
+            }
+        ],
+        menu.id,
+    )
+
+
+@router.post("", response_model=SaleRecorded, status_code=201)
+def create_sale(payload: SaleCreate) -> SaleRecorded:
     """Store a ticket on the same list GET /sales reads, then notify the no-sales monitor."""
     location = get_location(payload.location_id.strip())
     if location is None:
@@ -305,9 +379,20 @@ def create_sale(payload: SaleCreate) -> Sale:
         amount = parse_amount(str(payload.amount))
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+    if payload.loyalty_attached:
+        if not payload.loyalty_account_id or not _LOYALTY_ID.fullmatch(payload.loyalty_account_id):
+            raise HTTPException(status_code=422, detail="Loyalty account id is not valid.")
+    elif payload.loyalty_account_id:
+        raise HTTPException(status_code=422, detail="Loyalty account id requires loyalty_attached.")
+    if payload.customer_id and not _CUSTOMER_ID.fullmatch(payload.customer_id):
+        raise HTTPException(status_code=422, detail="Customer id is not valid for a ticket.")
     moment = _aware_moment(payload.occurred_at or datetime.now(timezone.utc))
     local_amount = float(amount)
-    sale = Sale(
+    covers = 1 if payload.covers is None else payload.covers
+    covers_source = "defaulted_to_one" if payload.covers is None else "pos"
+    lines, menu_item_id = _capture_lines(payload, local_amount)
+    stored_channel: Channel = payload.channel or "dine_in"
+    sale = SaleRecorded(
         id=_next_sale_id(location.id),
         location_id=location.id,
         location_name=location.name,
@@ -317,11 +402,35 @@ def create_sale(payload: SaleCreate) -> Sale:
         amount=local_amount,
         amount_cop=_to_cop(local_amount, location.currency),
         amount_usd=_to_usd(local_amount, location.currency),
-        covers=1,
+        covers=covers,
         occurred_at=moment.isoformat(),
-        channel="dine_in",
-        menu_item_id="grilled-sirloin",
+        channel=stored_channel,
+        menu_item_id=menu_item_id,
     )
+    plan_channel = _plan_channel(stored_channel)
+    if plan_channel is not None:
+        capture: dict[str, Any] = {
+            "location_scope": "location",
+            "location_id": location.id,
+            "country": location.country,
+            "currency": location.currency,
+            "timezone": timezone_for(location.country),
+            "ticket_id": sale.id,
+            "business_date": business_date(moment, location.country),
+            "channel": plan_channel,
+            "covers": covers,
+            "covers_source": covers_source,
+            "amount": local_amount,
+            **fx_recorded(local_amount, location.currency),
+            "lines": lines,
+            "loyalty_attached": payload.loyalty_attached,
+            "points_earned": _points_earned(local_amount, location.currency),
+        }
+        if payload.loyalty_attached and payload.loyalty_account_id:
+            capture["loyalty_account_id"] = payload.loyalty_account_id
+        if payload.customer_id:
+            capture["customer_id"] = payload.customer_id
+        sale.capture = capture
     _SALES.append(sale)
     try:
         record_sale(

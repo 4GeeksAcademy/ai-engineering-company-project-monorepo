@@ -6,6 +6,8 @@ carries a stamp-card balance. A digital wallet is not live.
 """
 from __future__ import annotations
 
+import hashlib
+import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -291,9 +293,83 @@ def customers_overview() -> CustomersOverview:
     return _overview()
 
 
-@router.get("/{customer_id}", response_model=Customer)
-def get_customer(customer_id: str) -> Customer:
+PreferenceCode = Literal["diet", "favorite_menu_item", "preferred_channel", "preferred_language"]
+_DIET = {"gluten_free", "dairy_free", "nut_free", "no_restriction"}
+_CHANNEL = {"in_store", "delivery", "digital_app"}
+_LANGUAGE = {"es", "en"}
+
+
+def telemetry_customer_id(customer_id: str) -> str:
+    """Opaque token for events. Seed ids such as cus-001 are not valid event ids."""
+    digest = hashlib.sha256(customer_id.encode("utf-8")).hexdigest()[:8]
+    return f"cus_{digest}"
+
+
+def find_customer(customer_id: str) -> Customer | None:
     for row in _CUSTOMERS:
         if row.id == customer_id:
             return row
-    raise HTTPException(status_code=404, detail="Customer was not found.")
+    return None
+
+
+class PreferenceCreate(BaseModel):
+    preference_code: PreferenceCode
+    preference_value: str = Field(min_length=1, max_length=80)
+
+
+class PreferenceResult(BaseModel):
+    customer_id: str
+    capture: dict
+
+
+_PREFERENCES: list[dict[str, str]] = []
+
+
+def _check_preference(payload: PreferenceCreate) -> None:
+    value = payload.preference_value.strip()
+    if payload.preference_code == "preferred_language" and value not in _LANGUAGE:
+        raise HTTPException(status_code=422, detail="Language must be es or en.")
+    if payload.preference_code == "preferred_channel" and value not in _CHANNEL:
+        raise HTTPException(status_code=422, detail="Channel must be in_store, delivery, or digital_app.")
+    if payload.preference_code == "diet" and value not in _DIET:
+        raise HTTPException(status_code=422, detail="Diet must be a listed restriction.")
+    if payload.preference_code == "favorite_menu_item":
+        from menus import list_menu_items
+
+        names = {item.name for item in list_menu_items()}
+        if value not in names:
+            raise HTTPException(status_code=422, detail="Pick a menu item from the catalogue.")
+
+
+@router.post("/{customer_id}/preferences", response_model=PreferenceResult, status_code=201)
+def record_preference(customer_id: str, payload: PreferenceCreate) -> PreferenceResult:
+    customer = find_customer(customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer was not found.")
+    _check_preference(payload)
+    value = payload.preference_value.strip()
+    if not re.fullmatch(r"^cus_[A-Za-z0-9]{8,}$", telemetry_customer_id(customer.id)):
+        raise HTTPException(status_code=500, detail="Customer token could not be built.")
+    stored = {
+        "customer_id": customer.id,
+        "preference_code": payload.preference_code,
+        "preference_value": value,
+    }
+    _PREFERENCES.append(stored)
+    return PreferenceResult(
+        customer_id=customer.id,
+        capture={
+            "location_scope": "none",
+            "customer_id": telemetry_customer_id(customer.id),
+            "preference_code": payload.preference_code,
+            "preference_value": value,
+        },
+    )
+
+
+@router.get("/{customer_id}", response_model=Customer)
+def get_customer(customer_id: str) -> Customer:
+    row = find_customer(customer_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Customer was not found.")
+    return row

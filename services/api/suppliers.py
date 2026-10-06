@@ -170,9 +170,16 @@ def suppliers_overview() -> SuppliersOverview:
     )
 
 
-@router.get("/{supplier_id}", response_model=Supplier)
-def get_supplier(supplier_id: str) -> Supplier:
+def get_supplier_row(supplier_id: str) -> Supplier | None:
     for row in _SUPPLIERS:
         if row.id == supplier_id:
             return row
-    raise HTTPException(status_code=404, detail="Supplier was not found.")
+    return None
+
+
+@router.get("/{supplier_id}", response_model=Supplier)
+def get_supplier(supplier_id: str) -> Supplier:
+    row = get_supplier_row(supplier_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Supplier was not found.")
+    return row
