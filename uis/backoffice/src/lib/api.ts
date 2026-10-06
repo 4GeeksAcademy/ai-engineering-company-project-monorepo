@@ -64,6 +64,24 @@ const LATENCY_TEMPLATES = new Set([
   "/reporting/pipeline-runs/latest",
   "/realtime/ops-alerts",
   "/realtime/ops-alerts/simulate",
+  "/sales",
+  "/menus",
+  "/customers",
+  "/customers/{customer_id}/preferences",
+  "/suppliers",
+  "/orders/inbound",
+  "/people/employees",
+  "/people/hires",
+  "/people/separations",
+  "/people/absences",
+  "/people/roster-days",
+  "/people/vacancies",
+  "/people/vacancies/{vacancy_id}/fill",
+  "/training/recipes",
+  "/training/recipes/{recipe_id}/publish",
+  "/training/recipes/{recipe_id}/acknowledgements",
+  "/recommendations",
+  "/recommendations/{recommendation_id}/accept",
 ]);
 const okSampleCounts = new Map<string, number>();
 
@@ -185,7 +203,15 @@ export function telemetryRouteTemplate(path: string): string | null {
   const bare = path.split("?")[0] ?? path;
   const normalized = bare
     .replace(/\/users\/\d+$/, "/users/{id}")
-    .replace(/\/inventory\/\d+$/, "/inventory/{product_id}");
+    .replace(/\/inventory\/\d+$/, "/inventory/{product_id}")
+    .replace(/\/customers\/[^/]+\/preferences$/, "/customers/{customer_id}/preferences")
+    .replace(/\/people\/vacancies\/[^/]+\/fill$/, "/people/vacancies/{vacancy_id}/fill")
+    .replace(
+      /\/training\/recipes\/[^/]+\/acknowledgements$/,
+      "/training/recipes/{recipe_id}/acknowledgements",
+    )
+    .replace(/\/training\/recipes\/[^/]+\/publish$/, "/training/recipes/{recipe_id}/publish")
+    .replace(/\/recommendations\/[^/]+\/accept$/, "/recommendations/{recommendation_id}/accept");
   return LATENCY_TEMPLATES.has(normalized) ? normalized : null;
 }
 
@@ -413,4 +439,113 @@ export async function fetchWeeklyLocationPerformance(
 
 export async function fetchLatestPipelineRun(): Promise<PipelineRunLatest> {
   return apiRequest<PipelineRunLatest>("/reporting/pipeline-runs/latest");
+}
+
+export type MenuItemOption = {
+  id: string;
+  name: string;
+  name_es: string;
+  price_cop: number;
+  price_usd: number;
+};
+
+export type CustomerOption = { id: string; name: string; market: string };
+export type SupplierOption = {
+  id: string;
+  name: string;
+  currency: "COP" | "USD";
+  latest_unit_price: number;
+};
+export type EmployeeOption = {
+  employee_id: string;
+  country: string;
+  employment_basis: string;
+  separated: boolean;
+};
+export type VacancyOption = {
+  vacancy_id: string;
+  country: string;
+  opened_on: string;
+  employment_basis: string;
+  filled_on: string | null;
+};
+export type RecipeOption = {
+  recipe_id: string;
+  version: number;
+  title_es: string;
+  title_en: string;
+};
+export type CaptureResult = { capture: Record<string, unknown> };
+
+export function fetchMenuItems(): Promise<MenuItemOption[]> {
+  return apiRequest<MenuItemOption[]>("/menus");
+}
+
+export function fetchCustomers(): Promise<CustomerOption[]> {
+  return apiRequest<CustomerOption[]>("/customers");
+}
+
+export function fetchSuppliers(): Promise<SupplierOption[]> {
+  return apiRequest<SupplierOption[]>("/suppliers");
+}
+
+export function fetchEmployees(): Promise<EmployeeOption[]> {
+  return apiRequest<EmployeeOption[]>("/people/employees");
+}
+
+export function fetchVacancies(): Promise<VacancyOption[]> {
+  return apiRequest<VacancyOption[]>("/people/vacancies");
+}
+
+export function fetchRecipes(): Promise<RecipeOption[]> {
+  return apiRequest<RecipeOption[]>("/training/recipes");
+}
+
+export function postSale(body: Record<string, unknown>): Promise<{ capture: Record<string, unknown> | null }> {
+  return apiRequest("/sales", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function postInbound(body: Record<string, unknown>): Promise<{
+  inbound: Record<string, unknown>;
+  price_variance: Record<string, unknown> | null;
+}> {
+  return apiRequest("/orders/inbound", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function postPreference(customerId: string, body: Record<string, unknown>): Promise<CaptureResult> {
+  return apiRequest(`/customers/${encodeURIComponent(customerId)}/preferences`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function postRecommendation(body: Record<string, unknown>): Promise<{
+  recommendation_id: string;
+  capture: Record<string, unknown>;
+}> {
+  return apiRequest("/recommendations", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function postRecommendationAccept(recommendationId: string): Promise<CaptureResult> {
+  return apiRequest(`/recommendations/${encodeURIComponent(recommendationId)}/accept`, {
+    method: "POST",
+  });
+}
+
+export function postPeople(path: string, body: Record<string, unknown>): Promise<CaptureResult> {
+  return apiRequest(path, { method: "POST", body: JSON.stringify(body) });
+}
+
+export function postRecipePublish(recipeId: string, locale: string): Promise<CaptureResult> {
+  return apiRequest(`/training/recipes/${encodeURIComponent(recipeId)}/publish`, {
+    method: "POST",
+    body: JSON.stringify({ locale }),
+  });
+}
+
+export function postRecipeAck(recipeId: string, locationId: string, version: number): Promise<CaptureResult> {
+  return apiRequest(`/training/recipes/${encodeURIComponent(recipeId)}/acknowledgements`, {
+    method: "POST",
+    body: JSON.stringify({ location_id: locationId, version }),
+  });
 }

@@ -256,6 +256,20 @@ export function trackApiLatency(properties: TelemetryProperties): void {
   track("api_latency_recorded", properties);
 }
 
+/** Copy a server capture bag into track(), dropping nulls. Unknown keys are stripped by the catalog. */
+export function trackCapture(eventType: string, capture: Record<string, unknown> | null | undefined): void {
+  if (!capture) {
+    return;
+  }
+  const properties: TelemetryProperties = {};
+  for (const [key, value] of Object.entries(capture)) {
+    if (value !== null && value !== undefined) {
+      properties[key] = value;
+    }
+  }
+  track(eventType, properties);
+}
+
 type ValidationField = { loc: string; error_type: string };
 
 export function validationFields(details: unknown): ValidationField[] {

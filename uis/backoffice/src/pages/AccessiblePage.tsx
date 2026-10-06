@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AsyncPanel } from "../components/AsyncState";
 import { KitchenStockForms } from "../components/KitchenStockForms";
+import { StaffActions } from "../components/StaffActions";
 import { NoSalesLive } from "../components/NoSalesLive";
 import {
   fetchInventory,
@@ -310,6 +311,11 @@ export function AccessiblePage() {
             products={stock}
             disabled={inventoryStatus !== "success"}
             onChanged={retryInventory}
+          />
+          <StaffActions
+            locations={overview?.locations ?? []}
+            products={stock}
+            disabled={locationStatus !== "success" || inventoryStatus !== "success"}
           />
         </div>
 

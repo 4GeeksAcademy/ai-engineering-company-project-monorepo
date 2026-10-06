@@ -22,6 +22,38 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
       },
+      "/menus": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/sales": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/customers": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/suppliers": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/orders": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/people": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/training": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      "/recommendations": {
+        target: apiTarget,
+        changeOrigin: true,
+      },
       "/auth": {
         target: apiTarget,
         changeOrigin: true,

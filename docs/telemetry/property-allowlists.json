@@ -1949,7 +1949,7 @@
         },
         {
           "name": "route_template",
-          "type": "enum: \"/auth/login\", \"/auth/token\", \"/auth/register\", \"/auth/me\", \"/users\", \"/users/{id}\", \"/profiles/me\", \"/locations/overview\", \"/inventory\", \"/inventory/{product_id}\", \"/reporting/weekly-location-performance\", \"/reporting/pipeline-runs/latest\", \"/realtime/ops-alerts\", \"/realtime/ops-alerts/simulate\"",
+          "type": "enum: \"/auth/login\", \"/auth/token\", \"/auth/register\", \"/auth/me\", \"/users\", \"/users/{id}\", \"/profiles/me\", \"/locations/overview\", \"/inventory\", \"/inventory/{product_id}\", \"/reporting/weekly-location-performance\", \"/reporting/pipeline-runs/latest\", \"/realtime/ops-alerts\", \"/realtime/ops-alerts/simulate\", \"/sales\", \"/menus\", \"/customers\", \"/customers/{customer_id}/preferences\", \"/suppliers\", \"/orders/inbound\", \"/people/employees\", \"/people/hires\", \"/people/separations\", \"/people/absences\", \"/people/roster-days\", \"/people/vacancies\", \"/people/vacancies/{vacancy_id}/fill\", \"/training/recipes\", \"/training/recipes/{recipe_id}/publish\", \"/training/recipes/{recipe_id}/acknowledgements\", \"/recommendations\", \"/recommendations/{recommendation_id}/accept\"",
           "required": true,
           "description": "Matched API route template.",
           "sensitive_or_pii": "Sanitized",

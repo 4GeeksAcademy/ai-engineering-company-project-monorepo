@@ -3916,7 +3916,25 @@
                     "/reporting/weekly-location-performance",
                     "/reporting/pipeline-runs/latest",
                     "/realtime/ops-alerts",
-                    "/realtime/ops-alerts/simulate"
+                    "/realtime/ops-alerts/simulate",
+                    "/sales",
+                    "/menus",
+                    "/customers",
+                    "/customers/{customer_id}/preferences",
+                    "/suppliers",
+                    "/orders/inbound",
+                    "/people/employees",
+                    "/people/hires",
+                    "/people/separations",
+                    "/people/absences",
+                    "/people/roster-days",
+                    "/people/vacancies",
+                    "/people/vacancies/{vacancy_id}/fill",
+                    "/training/recipes",
+                    "/training/recipes/{recipe_id}/publish",
+                    "/training/recipes/{recipe_id}/acknowledgements",
+                    "/recommendations",
+                    "/recommendations/{recommendation_id}/accept"
                   ]
                 },
                 "http_status": {
