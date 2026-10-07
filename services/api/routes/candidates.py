@@ -14,6 +14,7 @@ from services.api.routes.auth import get_current_user
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
 @router.get("", response_model=List[CandidateResponse])
+
 @router.get("/", response_model=List[CandidateResponse], include_in_schema=False)
 def get_candidates(
     status: Optional[str] = FastAPIQuery(None),

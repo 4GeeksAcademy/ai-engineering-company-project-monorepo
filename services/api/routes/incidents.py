@@ -7,6 +7,7 @@ from packages.shared.validation import (
 from services.api.database import get_tinydb as get_db
 from services.api.routes.auth import get_current_user
 from tinydb import Query
+from services.api.models import IncidentSummaryResponse
 
 router = APIRouter(prefix="/api/incidents", tags=["Incidents"])
 
@@ -23,6 +24,8 @@ def create_incident(incident: IncidentCreate, current_user: dict = Depends(get_c
     # La inserción se asume segura o será capturada globalmente por FastAPI como 500
     incidents_table.insert(db_record.model_dump())
     return db_record
+
+
 @router.get("", response_model=List[IncidentResponse])
 def get_incidents(
     status: Optional[IncidentStatus] = None,
@@ -45,7 +48,9 @@ def get_incidents(
         records = [r for r in records if r.get('category') == category]
         
     return records
-@router.get("/summary")
+
+
+@router.get("/summary", response_model=IncidentSummaryResponse)
 def get_summary(current_user: dict = Depends(get_current_user)):
     db = get_db()
     incidents_table = db.table('incidents')
@@ -70,6 +75,8 @@ def get_summary(current_user: dict = Depends(get_current_user)):
         if br: summary["branch"][br] = summary["branch"].get(br, 0) + 1
         
     return summary
+
+
 @router.get("/{id}", response_model=IncidentResponse)
 def get_incident(id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
@@ -81,6 +88,8 @@ def get_incident(id: str, current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Incidencia no encontrada")
         
     return result[0]
+
+    
 @router.patch("/{id}/status", response_model=IncidentResponse)
 def update_status(id: str, update: IncidentUpdateStatus, current_user: dict = Depends(get_current_user)):
     db = get_db()

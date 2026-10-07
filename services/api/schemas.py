@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional,List
 from datetime import datetime
 
 # SCHEMAS PARA ACTIVOS (ASSETS)
@@ -38,4 +38,9 @@ class AssetAssignmentRead(BaseModel):
     quantity: int
     created_at: datetime
     user_uuid: str
+
+class OrdersAuditResponse(BaseModel):
+    inbound: List[AssetAcquisitionRead]
+    outbound: List[AssetAssignmentRead]
+
 
