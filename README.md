@@ -314,7 +314,16 @@ _This template is maintained by 4Geeks Academy for the AI Engineering track. For
 To run and view the website locally, use `http-server`:
 
 1. Open terminal at the project root directory.
-2. Launch static server:
+2. Install Node.js and npm if they are not already installed (`npx` is included with npm).
+3. Launch the static server:
 	```bash
 	npx http-server .
 	```
+
+If Node.js and npm are unavailable, Python can serve the site instead:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/` in a browser.
