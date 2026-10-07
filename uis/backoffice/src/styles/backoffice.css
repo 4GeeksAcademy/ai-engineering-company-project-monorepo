@@ -1,0 +1,157 @@
+:root {
+  /* Internal backoffice identity — slate ops console (distinct from public ember/grill site) */
+  --bo-bg: #0f172a;
+  --bo-panel: #1e293b;
+  --bo-panel-2: #334155;
+  --bo-border: #475569;
+  --bo-text: #e2e8f0;
+  --bo-muted: #94a3b8;
+  --bo-accent: #38bdf8;
+  --bo-ok: #4ade80;
+  --bo-warn: #fbbf24;
+  --bo-cop: #34d399;
+  --bo-usd: #60a5fa;
+
+  --font-ui: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --sidebar-w: 15rem;
+  --radius: 0.5rem;
+
+  color-scheme: dark;
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  color: var(--bo-text);
+  background: var(--bo-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+}
+
+.async-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--bo-muted);
+  font-size: 0.92rem;
+  margin-bottom: 0.75rem;
+}
+
+.async-state--error {
+  color: #fca5a5;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.async-state__spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--bo-accent) 30%, transparent);
+  border-top-color: var(--bo-accent);
+  animation: async-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.async-state__retry {
+  border: 1px solid var(--bo-border);
+  background: transparent;
+  color: var(--bo-text);
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+.async-state__retry:hover {
+  background: var(--bo-panel-2);
+}
+
+.async-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.async-state__home {
+  color: var(--bo-accent);
+  text-decoration: underline;
+}
+
+.async-state__support {
+  font-size: 0.82rem;
+  color: var(--bo-muted);
+}
+
+.async-skeleton {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.async-skeleton__line {
+  height: 0.85rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(
+    90deg,
+    var(--bo-panel-2) 0%,
+    color-mix(in srgb, var(--bo-muted) 35%, var(--bo-panel-2)) 50%,
+    var(--bo-panel-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: async-shimmer 1.2s ease-in-out infinite;
+}
+
+.async-skeleton__line:nth-child(2) {
+  width: 85%;
+}
+
+.async-skeleton__line:nth-child(3) {
+  width: 70%;
+}
+
+@keyframes async-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes async-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

@@ -1,0 +1,38 @@
+.site-footer {
+  padding-block: var(--space-4);
+  background: #11100e;
+  color: color-mix(in srgb, #fff 72%, transparent);
+  font-size: 0.95rem;
+}
+
+.site-footer__inner {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.site-footer__brand {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #fff;
+  text-decoration: none;
+  margin-bottom: var(--space-1);
+}
+
+.site-footer__meta {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 720px) {
+  .site-footer__inner {
+    grid-template-columns: 1.4fr 1fr;
+    align-items: end;
+  }
+
+  .site-footer__meta {
+    text-align: right;
+  }
+}

@@ -1,0 +1,162 @@
+:root {
+  /* Brasaland visual identity — charcoal grill, ember, Colombia green, Florida teal */
+  --brasa-charcoal: #1c1917;
+  --brasa-ember: #e85d04;
+  --brasa-ember-deep: #bc4500;
+  --brasa-leaf: #2d6a4f;
+  --brasa-teal: #0e7c7b;
+  --brasa-stone: #e8e6e1;
+  --brasa-paper: #faf9f7;
+  --brasa-ink: #292524;
+  --brasa-muted: #57534e;
+
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 6rem;
+
+  --radius: 0.35rem;
+  --max: 68rem;
+  --header-h: 4.25rem;
+
+  color-scheme: light;
+  font-family: var(--font-body);
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--brasa-ink);
+  background: var(--brasa-paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  font-weight: 700;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+.container {
+  width: min(100% - 2rem, var(--max));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--space-5);
+}
+
+.section__eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brasa-teal);
+  margin-bottom: var(--space-2);
+}
+
+.section__title {
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  margin-bottom: var(--space-2);
+}
+
+.section__lead {
+  max-width: 38rem;
+  color: var(--brasa-muted);
+  font-size: 1.1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border-radius: var(--radius);
+  padding: 0.85rem 1.35rem;
+  border: 2px solid transparent;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--brasa-ember);
+  outline-offset: 3px;
+}
+
+.btn--primary {
+  background: var(--brasa-ember);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--brasa-ember-deep);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .btn,
+  .site-header,
+  .hero__glow {
+    transition: none !important;
+    animation: none !important;
+  }
+}

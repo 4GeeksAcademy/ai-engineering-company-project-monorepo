@@ -1,0 +1,843 @@
+{
+  "name": "Brasaland Monday leadership report",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1000001-0000-4000-8000-000000000001",
+      "name": "Manual test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "a1000001-0000-4000-8000-000000000002",
+      "name": "Monday 07:00 America/Bogota",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "api-base-url",
+              "name": "api_base_url",
+              "value": "={{ $env.BRASALAND_API_BASE_URL || 'http://host.docker.internal:8000' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000003",
+      "name": "API base URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        280,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Closed chain week, same rule as data/pipelines/pipeline.py previous_chain_week_bounds.\n// America/Bogota is UTC-5 all year (no daylight saving). Headquarters is Medellín.\n// America/New_York is not used: US daylight saving would shift Monday 07:00\n// relative to the Bogotá chain-week boundary for part of the year.\n\n// BRASALAND_FN chainWeekBounds\nfunction chainWeekBounds(now) {\n  const date = now instanceof Date ? new Date(now.getTime()) : new Date(now);\n  if (Number.isNaN(date.getTime())) {\n    throw new Error('chainWeekBounds requires a valid date');\n  }\n  const BOGOTA_OFFSET_MS = 5 * 60 * 60 * 1000;\n  const bogota = new Date(date.getTime() - BOGOTA_OFFSET_MS);\n  const weekday = bogota.getUTCDay();\n  const daysSinceMonday = (weekday + 6) % 7;\n  const todayUtc = Date.UTC(\n    bogota.getUTCFullYear(),\n    bogota.getUTCMonth(),\n    bogota.getUTCDate(),\n  );\n  const thisMonday = todayUtc - daysSinceMonday * 86400000;\n  const isoDate = (utcMs) => {\n    const d = new Date(utcMs);\n    const y = d.getUTCFullYear();\n    const m = String(d.getUTCMonth() + 1).padStart(2, '0');\n    const day = String(d.getUTCDate()).padStart(2, '0');\n    return y + '-' + m + '-' + day;\n  };\n  return {\n    week_start: isoDate(thisMonday - 7 * 86400000),\n    week_end: isoDate(thisMonday),\n    timezone: 'America/Bogota',\n  };\n}\n// BRASALAND_FN_END chainWeekBounds\n\nconst input = $input.first().json || {};\nconst base = String(input.api_base_url || 'http://host.docker.internal:8000').replace(/\\/$/, '');\nconst bounds = chainWeekBounds(new Date());\nreturn [\n  {\n    json: {\n      api_base_url: base,\n      week_start: bounds.week_start,\n      week_end: bounds.week_end,\n      timezone: bounds.timezone,\n    },\n  },\n];"
+      },
+      "id": "a1000001-0000-4000-8000-000000000004",
+      "name": "Resolve last chain week",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.api_base_url }}/auth/login",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $env.BRASALAND_STAFF_EMAIL, password: $env.BRASALAND_STAFF_PASSWORD }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1000001-0000-4000-8000-000000000005",
+      "name": "Login to central API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        340
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1000001-0000-4000-8000-000000000006-0",
+              "leftValue": "={{ $json.access_token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000006",
+      "name": "Access token present",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "missing-token",
+              "name": "error.message",
+              "value": "Central API login did not return an access_token. Check BRASALAND_STAFF_EMAIL and BRASALAND_STAFF_PASSWORD.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000007",
+      "name": "Missing access token",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Resolve last chain week').item.json.api_base_url }}/reporting/weekly-location-performance",
+        "authentication": "none",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "week_start",
+              "value": "={{ $('Resolve last chain week').item.json.week_start }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $json.access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1000001-0000-4000-8000-000000000008",
+      "name": "Pull weekly location performance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        260
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// BRASALAND_FN formatLeadershipReport\nconst LOCATION_NAMES = {\n  'co-med-centro': 'Medellín Centro',\n  'co-med-elpoblado': 'Medellín El Poblado',\n  'co-bog-chapinero': 'Bogotá Chapinero',\n  'co-bog-norte': 'Bogotá Norte',\n  'co-cali-norte': 'Cali Norte',\n  'co-barranquilla': 'Barranquilla',\n  'co-cartagena': 'Cartagena',\n  'co-pereira': 'Pereira',\n  'us-mia-brickell': 'Miami Brickell',\n  'us-mia-downtown': 'Miami Downtown',\n  'us-orlando': 'Orlando',\n  'us-tampa': 'Tampa',\n  'us-ftlauderdale': 'Fort Lauderdale',\n  'us-jacksonville': 'Jacksonville',\n};\n\nfunction formatMoney(amount, currency) {\n  const n = Number(amount);\n  const code = currency || '';\n  if (!Number.isFinite(n)) return (code ? code + ' ' : '') + '—';\n  const sign = n < 0 ? '-' : '';\n  const fixed = Math.abs(n).toFixed(2);\n  const parts = fixed.split('.');\n  const whole = parts[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return (code ? code + ' ' : '') + sign + whole + '.' + parts[1];\n}\n\nfunction formatRatio(value) {\n  const ratio = Number(value);\n  if (!Number.isFinite(ratio)) return '—';\n  return (ratio * 100).toFixed(2) + '%';\n}\n\nfunction sumField(rows, key) {\n  return rows.reduce((acc, row) => acc + (Number(row[key]) || 0), 0);\n}\n\nfunction csvEscape(value) {\n  const text = value == null ? '' : String(value);\n  if (/[\",\\n]/.test(text)) return '\"' + text.replace(/\"/g, '\"\"') + '\"';\n  return text;\n}\n\nfunction locationName(locationId) {\n  return LOCATION_NAMES[locationId] || locationId || 'Unknown location';\n}\n\nfunction marketSection(title, rows, currency) {\n  const lines = [];\n  lines.push(title + ' — ' + rows.length + ' location' + (rows.length === 1 ? '' : 's'));\n  if (!rows.length) {\n    lines.push('No location rows for this currency.');\n    return lines.join('\\n');\n  }\n  if (currency) {\n    lines.push('Purchase cost: ' + formatMoney(sumField(rows, 'total_purchase_cost'), currency));\n    lines.push('Waste cost: ' + formatMoney(sumField(rows, 'total_waste_cost'), currency));\n    lines.push('Stockout frequency: ' + sumField(rows, 'stockout_events_count'));\n    lines.push('Price alert frequency: ' + sumField(rows, 'price_alert_events_count'));\n  }\n  const sorted = rows.slice().sort((a, b) => locationName(a.location_id).localeCompare(locationName(b.location_id)));\n  sorted.forEach((row) => {\n    const rowCurrency = currency || row.currency || '';\n    lines.push('');\n    lines.push(locationName(row.location_id) + ' (' + (row.country || 'Unknown country') + ')');\n    lines.push('Purchase cost: ' + formatMoney(row.total_purchase_cost, rowCurrency));\n    lines.push('Waste cost: ' + formatMoney(row.total_waste_cost, rowCurrency));\n    lines.push('Waste ratio: ' + formatRatio(row.waste_ratio));\n    lines.push('Stockout frequency: ' + (row.stockout_events_count == null ? 0 : row.stockout_events_count));\n    lines.push('Price alert frequency: ' + (row.price_alert_events_count == null ? 0 : row.price_alert_events_count));\n  });\n  return lines.join('\\n');\n}\n\nfunction formatLeadershipReport(payload, weekEnd) {\n  const body = payload && typeof payload === 'object' ? payload : {};\n  const locations = Array.isArray(body.locations) ? body.locations : [];\n  const weekStart = body.week_start || 'unknown';\n  const end = weekEnd || 'unknown';\n  const cop = locations.filter((row) => row && row.currency === 'COP');\n  const usd = locations.filter((row) => row && row.currency === 'USD');\n  const other = locations.filter((row) => row && row.currency !== 'COP' && row.currency !== 'USD');\n  const header = [\n    'Brasaland Monday leadership report',\n    'Audience: Mariana Restrepo (Executive), Felipe Guerrero (Restaurant Operations), Lucía Fernández (Procurement)',\n    'Chain week: ' + weekStart + ' through ' + end + ' (end exclusive)',\n    'Timezone: America/Bogota',\n    'COP and USD are reported separately. This report does not convert between currencies.',\n    'Locations in this report: ' + locations.length,\n  ];\n  if (!locations.length) {\n    header.push('No per-location rows were returned for this chain week.');\n  }\n  const sections = [\n    header.join('\\n'),\n    '',\n    marketSection('Colombia (COP)', cop, 'COP'),\n    '',\n    marketSection('Florida (USD)', usd, 'USD'),\n  ];\n  if (other.length) {\n    sections.push('');\n    sections.push(marketSection('Other currencies', other, null));\n  }\n  const reportText = sections.join('\\n');\n  const csvHeader = [\n    'week_start',\n    'week_end_exclusive',\n    'location_id',\n    'location_name',\n    'country',\n    'currency',\n    'purchase_cost',\n    'waste_cost',\n    'waste_ratio',\n    'stockout_frequency',\n    'price_alert_frequency',\n  ];\n  const csvRows = locations.map((row) => [\n    weekStart,\n    end,\n    row.location_id,\n    locationName(row.location_id),\n    row.country,\n    row.currency,\n    row.total_purchase_cost,\n    row.total_waste_cost,\n    row.waste_ratio,\n    row.stockout_events_count,\n    row.price_alert_events_count,\n  ].map(csvEscape).join(','));\n  const csv = [csvHeader.join(',')].concat(csvRows).join('\\n') + '\\n';\n  let slackText = reportText;\n  if (slackText.length > 3500) {\n    slackText = slackText.slice(0, 3500) + '\\n… truncated. Full report is in the email and CSV.';\n  }\n  return {\n    week_start: weekStart,\n    week_end: end,\n    subject: 'Brasaland weekly location performance ' + weekStart + ' (COP and USD)',\n    report_text: reportText,\n    slack_text: slackText,\n    csv_filename: 'brasaland-weekly-' + weekStart + '.csv',\n    csv: csv,\n    location_count: locations.length,\n    cop_location_count: cop.length,\n    usd_location_count: usd.length,\n    cop_purchase_cost: sumField(cop, 'total_purchase_cost'),\n    usd_purchase_cost: sumField(usd, 'total_purchase_cost'),\n  };\n}\n// BRASALAND_FN_END formatLeadershipReport\n\nfunction utf8Base64(text) {\n  if (typeof Buffer !== 'undefined') {\n    return Buffer.from(text, 'utf8').toString('base64');\n  }\n  const bytes = new TextEncoder().encode(text);\n  let binary = '';\n  bytes.forEach((b) => {\n    binary += String.fromCharCode(b);\n  });\n  return btoa(binary);\n}\n\nconst payload = $input.first().json;\nlet weekEnd = '';\ntry {\n  weekEnd = $('Resolve last chain week').first().json.week_end || '';\n} catch (error) {\n  weekEnd = '';\n}\nconst report = formatLeadershipReport(payload, weekEnd);\nreturn [\n  {\n    json: {\n      week_start: report.week_start,\n      week_end: report.week_end,\n      subject: report.subject,\n      report_text: report.report_text,\n      slack_text: report.slack_text,\n      csv_filename: report.csv_filename,\n      location_count: report.location_count,\n      cop_location_count: report.cop_location_count,\n      usd_location_count: report.usd_location_count,\n      cop_purchase_cost: report.cop_purchase_cost,\n      usd_purchase_cost: report.usd_purchase_cost,\n    },\n    binary: {\n      data: {\n        data: utf8Base64(report.csv),\n        mimeType: 'text/csv',\n        fileName: report.csv_filename,\n        fileExtension: 'csv',\n      },\n    },\n  },\n];"
+      },
+      "id": "a1000001-0000-4000-8000-000000000009",
+      "name": "Format leadership report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        260
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ '/home/node/brasaland-reports/' + $json.csv_filename }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-00000000000a",
+      "name": "Write weekly CSV",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        80
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1000001-0000-4000-8000-00000000000b-0",
+              "leftValue": "={{ $env.BRASALAND_REPORT_FROM }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a1000001-0000-4000-8000-00000000000b-1",
+              "leftValue": "={{ $env.BRASALAND_REPORT_TO }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-00000000000b",
+      "name": "Email delivery configured",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $env.BRASALAND_REPORT_FROM }}",
+        "toEmail": "={{ $env.BRASALAND_REPORT_TO }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.report_text }}",
+        "options": {
+          "appendAttribution": false,
+          "fileAttachments": "data"
+        }
+      },
+      "id": "a1000001-0000-4000-8000-00000000000c",
+      "name": "Send leadership email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2260,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "brasaland-smtp-placeholder",
+          "name": "Brasaland leadership SMTP"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1000001-0000-4000-8000-00000000000d-0",
+              "leftValue": "={{ $env.BRASALAND_SLACK_CHANNEL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-00000000000d",
+      "name": "Slack delivery configured",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.BRASALAND_SLACK_CHANNEL }}"
+        },
+        "messageType": "text",
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "a1000001-0000-4000-8000-00000000000e",
+      "name": "Post leadership Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        2260,
+        460
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "brasaland-slack-placeholder",
+          "name": "Brasaland Slack"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "function utf8Base64(text) {\n  if (typeof Buffer !== 'undefined') {\n    return Buffer.from(text, 'utf8').toString('base64');\n  }\n  const bytes = new TextEncoder().encode(text);\n  let binary = '';\n  bytes.forEach((b) => {\n    binary += String.fromCharCode(b);\n  });\n  return btoa(binary);\n}\n\nconst item = $input.first().json || {};\nlet message = '';\nif (item.error && typeof item.error === 'object') {\n  message = item.error.message || item.error.description || '';\n  if (!message) message = JSON.stringify(item.error);\n} else if (typeof item.error === 'string') {\n  message = item.error;\n} else if (typeof item['error.message'] === 'string') {\n  message = item['error.message'];\n} else if (typeof item.message === 'string' && item.message) {\n  message = item.message;\n} else {\n  message = 'Weekly leadership report failed before a delivery step.';\n}\nmessage = String(message).replace(/password[=:][^\\s,}]+/gi, 'password=[redacted]');\nlet weekStart = 'unknown';\ntry {\n  weekStart = $('Resolve last chain week').first().json.week_start || 'unknown';\n} catch (error) {\n  weekStart = 'unknown';\n}\nconst text = [\n  'Brasaland Monday leadership report FAILED',\n  'Audience: Mariana Restrepo (Executive), Felipe Guerrero (Restaurant Operations), Lucía Fernández (Procurement)',\n  'Chain week start: ' + weekStart,\n  'Timezone: America/Bogota',\n  'Failure: ' + message,\n].join('\\n');\nconst outputFilename = 'brasaland-weekly-failure.txt';\nreturn [\n  {\n    json: {\n      subject: 'FAILED: Brasaland weekly location performance ' + weekStart,\n      report_text: text,\n      slack_text: text,\n      output_filename: outputFilename,\n      week_start: weekStart,\n    },\n    binary: {\n      data: {\n        data: utf8Base64(text + '\\n'),\n        mimeType: 'text/plain',\n        fileName: outputFilename,\n        fileExtension: 'txt',\n      },\n    },\n  },\n];"
+      },
+      "id": "a1000001-0000-4000-8000-00000000000f",
+      "name": "Describe failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ '/home/node/brasaland-reports/' + $json.output_filename }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000010",
+      "name": "Write failure note",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        760
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1000001-0000-4000-8000-000000000011-0",
+              "leftValue": "={{ $env.BRASALAND_REPORT_FROM }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a1000001-0000-4000-8000-000000000011-1",
+              "leftValue": "={{ $env.BRASALAND_REPORT_TO }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000011",
+      "name": "Failure email configured",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $env.BRASALAND_REPORT_FROM }}",
+        "toEmail": "={{ $env.BRASALAND_REPORT_TO }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.report_text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a1000001-0000-4000-8000-000000000012",
+      "name": "Email failure notice",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2260,
+        900
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "brasaland-smtp-placeholder",
+          "name": "Brasaland leadership SMTP"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1000001-0000-4000-8000-000000000013-0",
+              "leftValue": "={{ $env.BRASALAND_SLACK_CHANNEL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000001-0000-4000-8000-000000000013",
+      "name": "Failure Slack configured",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.BRASALAND_SLACK_CHANNEL }}"
+        },
+        "messageType": "text",
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "a1000001-0000-4000-8000-000000000014",
+      "name": "Slack failure notice",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        2260,
+        1120
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "brasaland-slack-placeholder",
+          "name": "Brasaland Slack"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Monday 07:00 America/Bogota\n\nCron `0 7 * * 1` (Monday = 1).\n\nTimezone is **America/Bogota**, not America/New_York.\nMedellín HQ and the reporting chain week (`previous_chain_week_bounds` in `data/pipelines/pipeline.py`) use Bogotá time. Bogotá does not observe daylight saving. New York does, so 07:00 America/New_York would drift an hour from the chain-week boundary for part of the year.\n\nUse **Manual test** to run this workflow without waiting for Monday.",
+        "height": 280,
+        "width": 420,
+        "color": 4
+      },
+      "id": "a1000001-0000-4000-8000-000000000015",
+      "name": "Note: schedule",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Credentials\n\nNo secrets belong in this JSON.\n\n- Staff login: env `BRASALAND_STAFF_EMAIL` and `BRASALAND_STAFF_PASSWORD` (`POST /auth/login`)\n- API base: env `BRASALAND_API_BASE_URL` (default `http://host.docker.internal:8000`)\n- Email: n8n SMTP credential **Brasaland leadership SMTP** plus `BRASALAND_REPORT_FROM` / `BRASALAND_REPORT_TO`\n- Slack: n8n Slack API credential **Brasaland Slack** (bot token) plus `BRASALAND_SLACK_CHANNEL` (channel ID)\n\nEmail and Slack run only when those env vars are set. The CSV is always written.",
+        "height": 280,
+        "width": 460,
+        "color": 5
+      },
+      "id": "a1000001-0000-4000-8000-000000000016",
+      "name": "Note: credentials",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Error branch\n\nLogin, missing token, KPI query, formatting, CSV write, email, and Slack failures land on **Describe failure**.\n\nThat branch writes `brasaland-weekly-failure.txt` under `/home/node/brasaland-reports` and, when delivery env vars are set, emails and Slacks the failure. Failure notices do not loop back into this branch.",
+        "height": 220,
+        "width": 420,
+        "color": 3
+      },
+      "id": "a1000001-0000-4000-8000-000000000017",
+      "name": "Note: error branch",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1080
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual test": {
+      "main": [
+        [
+          {
+            "node": "API base URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday 07:00 America/Bogota": {
+      "main": [
+        [
+          {
+            "node": "API base URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API base URL": {
+      "main": [
+        [
+          {
+            "node": "Resolve last chain week",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve last chain week": {
+      "main": [
+        [
+          {
+            "node": "Login to central API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login to central API": {
+      "main": [
+        [
+          {
+            "node": "Access token present",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access token present": {
+      "main": [
+        [
+          {
+            "node": "Pull weekly location performance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing access token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing access token": {
+      "main": [
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pull weekly location performance": {
+      "main": [
+        [
+          {
+            "node": "Format leadership report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format leadership report": {
+      "main": [
+        [
+          {
+            "node": "Write weekly CSV",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email delivery configured",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack delivery configured",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write weekly CSV": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email delivery configured": {
+      "main": [
+        [
+          {
+            "node": "Send leadership email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send leadership email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack delivery configured": {
+      "main": [
+        [
+          {
+            "node": "Post leadership Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post leadership Slack": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Describe failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe failure": {
+      "main": [
+        [
+          {
+            "node": "Write failure note",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Failure email configured",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Failure Slack configured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure email configured": {
+      "main": [
+        [
+          {
+            "node": "Email failure notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure Slack configured": {
+      "main": [
+        [
+          {
+            "node": "Slack failure notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "b7c1a2e0-4f14-4a10-8cb7-000000000009",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

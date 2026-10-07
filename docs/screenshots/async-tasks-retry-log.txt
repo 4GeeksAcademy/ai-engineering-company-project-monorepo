@@ -1,0 +1,5 @@
+28:[2026-07-17 13:10:34,089: INFO/ForkPoolWorker-1] Task services.tasks.flower_demo_succeed[682ae02a-d983-4fa2-88f3-153408db0340] succeeded in 0.005267125000000483s: {'status': 'success', 'task_id': '682ae02a-d983-4fa2-88f3-153408db0340'}
+31:[2026-07-17 13:10:34,097: WARNING/ForkPoolWorker-1] task_id=93664fb2-3330-47b5-be1a-6ce1adce0e4b attempt=1 status=retry countdown=1s
+35:[2026-07-17 13:10:35,100: WARNING/ForkPoolWorker-1] task_id=93664fb2-3330-47b5-be1a-6ce1adce0e4b attempt=2 status=retry countdown=2s
+39:[2026-07-17 13:10:37,104: WARNING/ForkPoolWorker-1] task_id=93664fb2-3330-47b5-be1a-6ce1adce0e4b attempt=3 status=retry countdown=4s
+43:[2026-07-17 13:10:41,111: ERROR/ForkPoolWorker-1] task_id=93664fb2-3330-47b5-be1a-6ce1adce0e4b attempt=4 status=failure_exhausted duration_ms=0.36 error=No module named 'pandas'

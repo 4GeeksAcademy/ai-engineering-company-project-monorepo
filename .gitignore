@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.env
+.env.local
+.venv/
+results.csv
+scripts/results.csv
+conversation_log.csv
+conversation_log.csv.bak
+data/uploads/
+data/celery_dead_letters.sqlite3
+data/company_api.db
+**/__pycache__/
+.DS_Store
+**/node_modules/
+scripts/results-100.csv

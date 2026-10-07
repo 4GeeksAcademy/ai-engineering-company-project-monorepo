@@ -1,0 +1,50 @@
+.loyalty {
+  background: var(--brasa-charcoal);
+  color: #fff;
+}
+
+.loyalty .section__eyebrow {
+  color: color-mix(in srgb, var(--brasa-ember) 80%, #fff);
+}
+
+.loyalty .section__lead {
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
+
+.loyalty__inner {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.loyalty__note {
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, #fff 18%, transparent);
+  background: color-mix(in srgb, #fff 4%, transparent);
+}
+
+.loyalty__label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #fff 60%, transparent);
+  margin-bottom: 0.35rem;
+}
+
+.loyalty__name {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.loyalty__note p:last-child {
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
+
+@media (min-width: 860px) {
+  .loyalty__inner {
+    grid-template-columns: 1.3fr 0.9fr;
+  }
+}

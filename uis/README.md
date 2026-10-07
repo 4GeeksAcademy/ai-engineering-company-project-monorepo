@@ -4,8 +4,13 @@ This folder contains **all projects with a user interface** for the cross-functi
 
 The two main projects stored here are:
 
-- **`website`** — the company's public-facing web presence.
-- **`backoffice`** — the internal admin application. This is the ideal place to develop multiple solutions within a single project: authentication, people management, operations management, internal communication, and other back-office capabilities.
+- **`website`** — Brasaland’s public-facing corporate site (Vite + React). Home route `/`. See [`website/README.md`](./website/README.md).
+- **`backoffice`** — internal Brasaland Digital console (Vite + React). Public `/login` and `/register`; staff views (`/`, `/accessible`, `/account/profile`, `/account/change-password`) use a client layout guard (`ProtectedRoute` + `useRequireAuth`) that checks `localStorage` and `GET /auth/me`. `/accessible` shows live no-sales alerts for Felipe Guerrero. See [`backoffice/README.md`](./backoffice/README.md). Legacy static KPI HTML lives in `backoffice/legacy/`.
+
+Also present:
+
+- **`portal/`** — Next.js App Router portal. Guest Brasa Points (`/points`) and staff sales by location in COP and USD (`/ops/sales`). See [`portal/README.md`](./portal/README.md).
+- **`web/`** — incident-analysis HTML tool (not the public marketing site).
 
 Organize `uis/` by **different concerns** — each subfolder covers a distinct area of the company (for example, public web vs internal operations) and includes its own technical and functional documentation.
 

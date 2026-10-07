@@ -28,6 +28,101 @@ This repository is the **starter template** for transversal projects. You will w
 5. **Start implementing** in the right folder — do not dump everything in the root.
 6. **Document** what you add: each new app, service, agent, or pipeline gets a subfolder + README.
 
+### Run locally (API + Agent)
+
+**Entry points:** [`api/app.py`](api/app.py) (FastAPI inventory API) and [`agent.py`](agent.py) (Groq CLI agent).
+
+**The API must be running before you start the agent.** Start Terminal 1 first, wait until the server is up, then start Terminal 2.
+
+#### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. Configure environment
+
+Create a `.env` file at the repository root (never commit it):
+
+```env
+GROQ_API_KEY=your_key_here
+```
+
+#### 3. Launch both processes (two terminals)
+
+```bash
+# Terminal 1 — start the API first
+uvicorn api.app:app --reload
+
+# Terminal 2 — start the agent after the API is running
+python agent.py
+```
+
+The agent checks that `http://127.0.0.1:8000` is reachable on startup. If the API is not running, it exits with an error instead of continuing.
+
+Full details (inventory endpoints, conversation log, curl examples): [`services/api/README.md`](./services/api/README.md).
+
+**Agent implementation:** [`agent.py`](./agent.py) uses a **manual agent loop in plain Python** (observe → think → act → update). It does **not** use LangChain, LlamaIndex, AutoGen, or any other agent framework — only the OpenAI-compatible Groq client for LLM calls.
+
+**Evaluation:** See the [evaluation checklist](./services/api/README.md#evaluation-checklist) in `services/api/README.md` for how to verify all rubric criteria.
+
+### Central API nouns (locations, menus, sales, customers, suppliers)
+
+The same process (`uvicorn api.app:app`) serves Brasaland’s central API. Menus are public. Sales, customers, suppliers, and locations expect a Bearer JWT from `POST /auth/register` or `POST /auth/login`.
+
+| Noun | Example |
+| --- | --- |
+| Menus | `GET /menus` — COP and USD list prices, same dishes in both markets |
+| Sales | `GET /sales` — each ticket has `location_id`, `currency` (`COP` or `USD`), `amount`, `occurred_at`; `GET /sales/overview` is the chain total |
+| Customers | `GET /customers` — CRM rows with `brasa_points_balance` (physical stamp card) |
+| Suppliers | `GET /suppliers` — about 20 suppliers, Colombia and Florida, price history |
+
+Open `http://127.0.0.1:8000/docs` after the server starts. How to call them and how to test: [`docs/central-api.md`](./docs/central-api.md). The same app also mounts `POST /knowledge/query` ([`docs/knowledge-rag.md`](./docs/knowledge-rag.md)) and `GET /realtime/ops-alerts/stream` ([`docs/realtime-no-sales.md`](./docs/realtime-no-sales.md)).
+
+```bash
+python -m pytest tests/test_central_api_domains.py -q
+```
+
+### Celery worker (Message Queues and Async Tasks)
+
+The Celery **worker is an independent process** — it does **not** run inside the FastAPI app. FastAPI only enqueues tasks (`POST /reporting/pipeline-runs` → `202` + `task_id`); the worker consumes them from Redis.
+
+Config: [`services/celery_app.py`](./services/celery_app.py) · Task: [`services/tasks.py`](./services/tasks.py) · More detail: [`services/README.md`](./services/README.md).
+
+#### Start the worker
+
+```bash
+# 1) Broker (Redis) — required
+docker compose up -d redis
+
+# 2) Worker as its own process (separate terminal from uvicorn)
+export REDIS_URL=redis://localhost:6379/0
+uv run celery -A services.celery_app worker --loglevel=info -E
+```
+
+Or run Redis + Flower + worker together:
+
+```bash
+docker compose up -d redis flower worker
+```
+
+Flower UI (optional): http://localhost:5555 — shows **queued**, **in-progress**, and **completed** tasks (worker runs with `-E` / task events enabled).
+
+Each task attempt logs `task_id`, `attempt`, `status`, and `duration_ms`; failures also log the full `error` message.
+
+#### Stop the worker
+
+```bash
+# If started with uv/celery in a terminal: Ctrl+C
+
+# If started with Docker Compose:
+docker compose stop worker
+# or tear down the stack:
+docker compose down
+```
+
+Poll task status from the API (separate from the worker process): `GET /tasks/{task_id}`.
+
 ---
 
 ## How to think about this monorepo

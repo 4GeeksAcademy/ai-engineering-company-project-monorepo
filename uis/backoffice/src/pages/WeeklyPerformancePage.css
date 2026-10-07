@@ -1,0 +1,129 @@
+.wlp {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wlp__welcome {
+  max-width: 44rem;
+}
+
+.wlp__kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bo-muted, #6b7280);
+}
+
+.wlp__welcome h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.55rem;
+  line-height: 1.25;
+}
+
+.wlp__lead {
+  margin: 0;
+  color: var(--bo-muted, #4b5563);
+  line-height: 1.5;
+}
+
+.wlp__dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.wlp__panel {
+  background: var(--bo-panel, #fff);
+  border: 1px solid var(--bo-border, #e5e7eb);
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.wlp__panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.wlp__panel--span {
+  grid-column: 1 / -1;
+}
+
+.wlp__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.wlp__stats dt {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--bo-muted, #6b7280);
+}
+
+.wlp__stats dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.wlp__stats-span {
+  grid-column: 1 / -1;
+}
+
+.wlp__period {
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  word-break: break-word;
+}
+
+.wlp__run {
+  margin: 0.9rem 0 0;
+  font-size: 0.9rem;
+  color: var(--bo-muted, #4b5563);
+}
+
+.wlp__empty {
+  margin: 0;
+  color: var(--bo-muted, #4b5563);
+  line-height: 1.45;
+}
+
+.wlp__table-wrap {
+  overflow-x: auto;
+}
+
+.wlp__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.wlp__table th,
+.wlp__table td {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--bo-border, #e5e7eb);
+  vertical-align: top;
+}
+
+.wlp__table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bo-muted, #6b7280);
+  white-space: nowrap;
+}
+
+.wlp__loc-name {
+  display: block;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .wlp__dashboard {
+    grid-template-columns: 1fr;
+  }
+}
