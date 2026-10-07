@@ -12,12 +12,19 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ValidationError
 
 from config import TELEMETRY_ENDPOINT
 import telemetry_store
 from telemetry_schemas import TelemetryEvent
+from users import get_current_user
+from services.telemetry.analysis import (
+    TelemetryNotConfigured,
+    TelemetryUnavailable,
+    supabase_configured,
+)
+from services.telemetry.report import InvalidPeriod, get_cached_report, resolve_period
 
 logger = logging.getLogger("brasaland.telemetry")
 logger.setLevel(logging.INFO)
@@ -76,3 +83,30 @@ async def ingest_telemetry_events(request: Request) -> TelemetryIngestResponse:
     for event in valid:
         logger.info("telemetry event_type=%s", event.Event_type)
     return TelemetryIngestResponse(received=received, stored=stored, rejected=rejected)
+
+
+@router.get("/telemetry/report")
+def read_telemetry_report(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    _user: dict = Depends(get_current_user),
+) -> dict:
+    """Serve the cached technical report for one UTC window.
+
+    ``start_date`` and ``end_date`` are optional ISO 8601 instants. When both
+    are omitted, the window is the last 7 days (UTC), resolved once and passed
+    to every metric. The same pair is served from memory for 60 seconds.
+    Staff Bearer JWT required, same as the other internal routes.
+    """
+    try:
+        start, end = resolve_period(start_date, end_date)
+    except InvalidPeriod as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    if not supabase_configured():
+        raise HTTPException(status_code=503, detail="Telemetry storage is not configured")
+    try:
+        return get_cached_report(start, end)
+    except TelemetryNotConfigured as error:
+        raise HTTPException(status_code=503, detail="Telemetry storage is not configured") from error
+    except TelemetryUnavailable as error:
+        raise HTTPException(status_code=503, detail="Telemetry storage is unavailable") from error

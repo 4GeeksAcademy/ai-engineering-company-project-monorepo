@@ -14,7 +14,7 @@ Verified **2026-09-16** on clone `Rickycastro1940/ai-engineering-company-project
 | `CONTEXT.md` need | Status in monorepo |
 | --- | --- |
 | Technology: central API (locations, menus, sales, customers, suppliers) | **Present (seeded)** — `locations`/`menus`/`sales`/`customers`/`suppliers`/`inventory=present` plus `knowledge=present` (`POST /knowledge/query`) and `realtime=present` (`GET /realtime/ops-alerts/stream`) on `uvicorn api.app:app` (`:8000`). Not a live POS or invoice feed |
-| Technology: telemetry + pipeline to dashboards | **Partial** — `POST /telemetry/events` validates each Phase 1 envelope and bulk-inserts valid rows into Supabase `public.telemetry_events`, returning `{received, stored, rejected}`. The backoffice capture client is unchanged. Live no-sales SSE, weekly location cost/waste ETL, Prefect subflows, and the Monday report stay. Engineering `GET /telemetry/report` is untouched. The Monday extractor still selects `event_payload`, which this collector table does not have |
+| Technology: telemetry + pipeline to dashboards | **Partial** — `POST /telemetry/events` bulk-inserts into Supabase `public.telemetry_events`. `GET /telemetry/report` serves a cached engineering report (`events_per_day`, `error_rate_by_type`, `latency_by_day`, `auth_failure_rate`) and the backoffice `/telemetry` page charts it. Live no-sales SSE, weekly location cost/waste ETL, Prefect subflows, and the Monday report stay. The Monday extractor still selects `event_payload`, which this collector table does not have |
 | Operations: sales per location COP/USD; no-sales alerts; smart ordering | **Partial** — seeded `GET /sales` tickets and `/sales/overview` (COP and USD, 14 locations) plus `/sales/alerts`; `POST /sales` stores a ticket and calls `record_sale` so the live no-sales alert on backoffice `/accessible` sees that location; Next.js `uis/portal` `/ops/sales` shows per-location sales in COP and USD. Smart ordering still open |
 | Procurement: supplier price history, consolidated spend | **Partial** — seeded `GET /suppliers` (20 suppliers, Colombia and Florida, price history and alerts); Monday weekly purchase cost / price-alert frequency still separate; invoices are not live |
 | Marketing: digital Brasa Points, CRM, personalisation | **Partial** — `GET /customers` CRM seed with `brasa_points_balance` on physical stamp cards; Next.js `uis/portal` `/points` looks up a guest and shows Brasa Points balance, history, and tier rewards (fixtures, or `GET /customers` when `BRASALAND_DATA_SOURCE=live`); `uis/website/` corporate home (`/`) live. `CONTEXT.md` still describes stamp cards as today’s in-restaurant programme |
@@ -580,6 +580,26 @@ live rows → 61 (58 browser + 3 script)
 PATCH and DELETE → 400 P0001 telemetry_events is append-only
 git diff --stat cursor/telemetry-event-capture-02f6 -- uis → empty
 ```
+
+## Latest technical telemetry report (`cursor/telemetry-report-endpoint-2491`)
+
+Department served: **Technology** (Nicolás Park — engineering health of the central API). The report does not answer Operations or Executive sales questions.
+
+`services/telemetry/analysis.py` loads each metric with PostgREST filters (`event_type=in.(...)`, `timestamp=gte.`, `timestamp=lt.`). Those parameters are a SQL `WHERE` on the server (inclusive start, exclusive end, UTC). Pandas then extracts tag fields, drops null dimensions, converts `timestamp` with `pd.to_datetime(..., utc=True)`, groups, and aggregates. `GET /telemetry/report` resolves one window (default last 7 UTC days, remembered for 60 seconds) and caches the JSON for 60 seconds. Staff Bearer JWT matches the other internal routes. The backoffice page is `/telemetry`.
+
+```text
+head -n 5 CONTEXT.md → # Welcome to Brasaland
+python3 -m pytest -q → 157 passed
+python3 -m pytest tests/test_telemetry_report.py tests/test_telemetry_storage.py tests/test_telemetry_stub.py -q → 20 passed
+cd uis/backoffice && npm run build → tsc -b && vite build green
+cd uis/backoffice && node --experimental-strip-types --test --test-concurrency=1 tests/telemetry.test.ts tests/noSalesAlerts.test.ts → 15 passed
+GET /telemetry/report without token → 401
+bad dates → 422; missing SUPABASE_URL → 503
+second identical report request inside 60s → no extra PostgREST GET
+Browser /telemetry → period from/to, four metrics, empty window 2026-10-01..2026-10-06, Last 7 days restores bars, auth table 2026-10-06 50.0% (1/2), /accessible still loads
+```
+
+Skill **passed** (criteria 1–4 and 6). Criterion 5: locations, menus, sales, customers, and suppliers stay **present**. This run did not query the live Supabase project (no service-role key). A local PostgREST stand-in served the exported 61 rows so the dashboard could render. That does not make POS integration or a digital loyalty wallet complete.
 
 ## How to update this file
 

@@ -543,6 +543,58 @@ export function postRecipePublish(recipeId: string, locale: string): Promise<Cap
   });
 }
 
+export type EventsPerDayRow = {
+  date: string;
+  event_type: string;
+  events: number;
+};
+
+export type ErrorRateRow = {
+  date: string;
+  event_type: string;
+  events: number;
+  failures: number;
+  error_rate: number;
+};
+
+export type LatencyByDayRow = {
+  date: string;
+  endpoint: string;
+  mean_ms: number;
+  p95_ms: number;
+};
+
+export type AuthFailureRow = {
+  date: string;
+  failed: number;
+  succeeded: number;
+  attempts: number;
+  auth_failure_rate: number;
+};
+
+export type TelemetryReport = {
+  period: { from: string; to: string };
+  metrics: {
+    events_per_day: EventsPerDayRow[];
+    error_rate_by_type: ErrorRateRow[];
+    latency_by_day: LatencyByDayRow[];
+    auth_failure_rate: AuthFailureRow[];
+  };
+};
+
+/** Engineering report. Omit both dates to use the server's last-7-days window. */
+export function fetchTelemetryReport(startDate?: string, endDate?: string): Promise<TelemetryReport> {
+  const params = new URLSearchParams();
+  if (startDate) {
+    params.set("start_date", startDate);
+  }
+  if (endDate) {
+    params.set("end_date", endDate);
+  }
+  const query = params.toString();
+  return apiRequest<TelemetryReport>(`/telemetry/report${query ? `?${query}` : ""}`);
+}
+
 export function postRecipeAck(recipeId: string, locationId: string, version: number): Promise<CaptureResult> {
   return apiRequest(`/training/recipes/${encodeURIComponent(recipeId)}/acknowledgements`, {
     method: "POST",

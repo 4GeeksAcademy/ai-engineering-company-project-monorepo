@@ -6,6 +6,7 @@ import "../pages/AuthPages.css";
 const nav = [
   { to: "/accessible", label: "Accessible entry", end: true },
   { to: "/reporting/weekly-performance", label: "Monday weekly report", end: true },
+  { to: "/telemetry", label: "Technical telemetry", end: true },
   { to: "/account/profile", label: "Profile", end: true },
   { to: "/account/change-password", label: "Change password", end: true },
 ];

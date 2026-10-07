@@ -7,6 +7,7 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { TelemetryReportPage } from "./pages/TelemetryReportPage";
 import { WeeklyPerformancePage } from "./pages/WeeklyPerformancePage";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
             {/* Staff views: session required (token in localStorage, validated with GET /auth/me). */}
             <Route path="/accessible" element={<AccessiblePage />} />
             <Route path="/reporting/weekly-performance" element={<WeeklyPerformancePage />} />
+            <Route path="/telemetry" element={<TelemetryReportPage />} />
             <Route path="/account/profile" element={<ProfilePage />} />
             <Route path="/account/change-password" element={<ChangePasswordPage />} />
             <Route path="/" element={<Navigate to="/accessible" replace />} />
