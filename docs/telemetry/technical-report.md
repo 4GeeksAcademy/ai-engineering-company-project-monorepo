@@ -46,16 +46,228 @@ The staff page is `uis/backoffice` route `/telemetry`. It shows `period.from` an
 }
 ```
 
-Placeholder for a live Supabase sample (no service-role key in this run):
+Live sample from project `tlfllnfwynaykxglsqhc`, table `public.telemetry_events` (explicit window `2026-09-22T00:00:00Z` → `2026-10-07T00:00:00Z`, exclusive end). This window includes the Sept 22 mixed-batch rows and the Oct 6 browser session.
 
 ```json
 {
-  "period": { "from": "PENDING_LIVE_SAMPLE", "to": "PENDING_LIVE_SAMPLE" },
+  "period": {
+    "from": "2026-09-22T00:00:00Z",
+    "to": "2026-10-07T00:00:00Z"
+  },
   "metrics": {
-    "events_per_day": [],
-    "error_rate_by_type": [],
-    "latency_by_day": [],
-    "auth_failure_rate": []
+    "events_per_day": [
+      {
+        "date": "2026-09-22",
+        "event_type": "api_latency_recorded",
+        "events": 1
+      },
+      {
+        "date": "2026-09-22",
+        "event_type": "client_exception_caught",
+        "events": 1
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "api_latency_recorded",
+        "events": 19
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "direct_stock_edit_rejected",
+        "events": 1
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "flow_step_recorded",
+        "events": 23
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "section_viewed",
+        "events": 7
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "user_login_failed",
+        "events": 1
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "user_login_succeeded",
+        "events": 1
+      }
+    ],
+    "error_rate_by_type": [
+      {
+        "date": "2026-09-22",
+        "event_type": "api_latency_recorded",
+        "events": 1,
+        "failures": 0,
+        "error_rate": 0.0
+      },
+      {
+        "date": "2026-09-22",
+        "event_type": "client_exception_caught",
+        "events": 1,
+        "failures": 1,
+        "error_rate": 1.0
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "api_latency_recorded",
+        "events": 19,
+        "failures": 3,
+        "error_rate": 0.157895
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "direct_stock_edit_rejected",
+        "events": 1,
+        "failures": 1,
+        "error_rate": 1.0
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "flow_step_recorded",
+        "events": 23,
+        "failures": 0,
+        "error_rate": 0.0
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "section_viewed",
+        "events": 7,
+        "failures": 0,
+        "error_rate": 0.0
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "user_login_failed",
+        "events": 1,
+        "failures": 1,
+        "error_rate": 1.0
+      },
+      {
+        "date": "2026-10-06",
+        "event_type": "user_login_succeeded",
+        "events": 1,
+        "failures": 0,
+        "error_rate": 0.0
+      }
+    ],
+    "latency_by_day": [
+      {
+        "date": "2026-09-22",
+        "endpoint": "/inventory",
+        "mean_ms": 180.0,
+        "p95_ms": 180.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/auth/login",
+        "mean_ms": 292.0,
+        "p95_ms": 300.1
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/auth/me",
+        "mean_ms": 41.0,
+        "p95_ms": 41.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/customers",
+        "mean_ms": 397.0,
+        "p95_ms": 397.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/inventory",
+        "mean_ms": 34.0,
+        "p95_ms": 34.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/inventory/{product_id}",
+        "mean_ms": 12.5,
+        "p95_ms": 12.95
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/locations/overview",
+        "mean_ms": 37.0,
+        "p95_ms": 37.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/menus",
+        "mean_ms": 397.0,
+        "p95_ms": 397.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/orders/inbound",
+        "mean_ms": 13.5,
+        "p95_ms": 13.95
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/people/employees",
+        "mean_ms": 399.0,
+        "p95_ms": 399.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/people/vacancies",
+        "mean_ms": 398.0,
+        "p95_ms": 398.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/realtime/ops-alerts",
+        "mean_ms": 38.0,
+        "p95_ms": 38.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/reporting/pipeline-runs/latest",
+        "mean_ms": 13.0,
+        "p95_ms": 13.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/reporting/weekly-location-performance",
+        "mean_ms": 13.0,
+        "p95_ms": 13.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/sales",
+        "mean_ms": 13.0,
+        "p95_ms": 13.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/suppliers",
+        "mean_ms": 397.0,
+        "p95_ms": 397.0
+      },
+      {
+        "date": "2026-10-06",
+        "endpoint": "/training/recipes",
+        "mean_ms": 399.0,
+        "p95_ms": 399.0
+      }
+    ],
+    "auth_failure_rate": [
+      {
+        "date": "2026-10-06",
+        "failed": 1,
+        "succeeded": 1,
+        "attempts": 2,
+        "auth_failure_rate": 0.5
+      }
+    ]
   }
 }
 ```
