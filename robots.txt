@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://la2ryx.github.io/ai-engineering-company-project-monorepo/sitemap.xml

@@ -306,3 +306,24 @@ This template was built as part of the 4Geeks Academy AI Engineering Career Prog
 You can find other templates and resources like this at the [4Geeks Academy GitHub page](https://github.com/4geeksacademy).
 
 _This template is maintained by 4Geeks Academy for the AI Engineering track. For exclusive use in the programme._
+
+## HealthCore - Milestone 1 Patient Enquiry Site
+
+### Local Development & Preview Instructions
+
+To run and view the website locally, use `http-server`:
+
+1. Open terminal at the project root directory.
+2. Install Node.js and npm if they are not already installed (`npx` is included with npm).
+3. Launch the static server:
+	```bash
+	npx http-server .
+	```
+
+If Node.js and npm are unavailable, Python can serve the site instead:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/` in a browser.
