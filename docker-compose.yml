@@ -1,0 +1,177 @@
+# ============================================
+# docker-compose.yml - TrackFlow Monorepo
+# ============================================
+# Orquestación completa del stack TrackFlow para desarrollo local.
+#
+# Servicios:
+#   postgres        - Base de datos PostgreSQL 16 para inventory
+#   api-backend     - FastAPI Auth + Incidents (servicios/api)
+#   inventory-api   - FastAPI Inventory (servicios/inventory)
+#   website         - Next.js Sitio Web Público
+#   backoffice      - Next.js Panel de Administración
+#
+# Uso:
+#   docker compose up -d            → Iniciar todos los servicios
+#   docker compose up -d <service>  → Iniciar un servicio específico
+#   docker compose down             → Detener todos los servicios
+#   docker compose logs -f          → Ver logs en tiempo real
+#
+# Nota: Los .env locales NO se usan en Docker.
+# Las variables se pasan directamente aquí o via .env.docker.
+# ============================================
+
+name: trackflow
+
+# ============================================
+# Red compartida para comunicación entre servicios
+# ============================================
+# Todos los servicios pueden verse entre sí por nombre.
+# Ejemplo: backoffice → http://api-backend:8000
+networks:
+  trackflow-net:
+    driver: bridge
+
+# ============================================
+# Volúmenes persistentes
+# ============================================
+volumes:
+  postgres-data:        # Datos persistentes de PostgreSQL
+  api-tinydb-data:      # Datos persistentes de TinyDB (db.json)
+
+# ============================================
+# Servicios
+# ============================================
+services:
+
+  # ============================================
+  # 1. PostgreSQL (Base de datos de inventario)
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: trackflow-postgres
+    restart: unless-stopped
+    networks:
+      - trackflow-net
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # 2. API Backend (Auth + Incidents)
+  #    FastAPI con TinyDB
+  #    Expone: /auth, /users, /profiles, /suppliers, /api/incidents
+  # ============================================
+  api-backend:
+    build:
+      context: services/api
+      dockerfile: Dockerfile
+    container_name: trackflow-api-backend
+    restart: unless-stopped
+    networks:
+      - trackflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - APP_NAME=TrackFlow API
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:3002
+      - DATABASE_URL=postgresql://app:${DB_PASSWORD:-devpassword}@postgres:5432/inventory
+      - DB_SSL_MODE=disable
+    ports:
+      - "8001:8000"
+    volumes:
+      - api-tinydb-data:/app/tinydb
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # 3. Inventory API (Inventario + Movimientos)
+  #    FastAPI con SQLAlchemy + PostgreSQL
+  #    Expone: /api/v1/items, /api/v1/movements, /backoffice/*
+  # ============================================
+  inventory-api:
+    build:
+      context: services/inventory
+      dockerfile: Dockerfile
+    container_name: trackflow-inventory-api
+    restart: unless-stopped
+    networks:
+      - trackflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - APP_NAME=TrackFlow Inventory API
+      - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD:-devpassword}@postgres:5432/inventory
+      - DB_SSL_MODE=disable
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:3002
+    ports:
+      - "8003:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # 4. Website (Sitio Web Público)
+  #    Next.js 16 con Tailwind CSS
+  #    Muestra: catálogo de productos, KPIs
+  # ============================================
+  website:
+    build:
+      context: .
+      dockerfile: uis/website/Dockerfile
+    container_name: trackflow-website
+    restart: unless-stopped
+    networks:
+      - trackflow-net
+    depends_on:
+      inventory-api:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8003
+    ports:
+      - "3000:3000"
+
+  # ============================================
+  # 5. Backoffice (Panel de Administración)
+  #    Next.js 16 con Tailwind CSS
+  #    Gestiona: inventario, envíos, incidencias
+  # ============================================
+  backoffice:
+    build:
+      context: .
+      dockerfile: uis/backoffice/Dockerfile
+    container_name: trackflow-backoffice
+    restart: unless-stopped
+    networks:
+      - trackflow-net
+    depends_on:
+      api-backend:
+        condition: service_healthy
+      inventory-api:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXT_PUBLIC_INVENTORY_API_URL=http://localhost:8003
+      - NEXT_PUBLIC_TELEMETRY_ENDPOINT=http://localhost:8001/telemetry/events
+      - INCIDENTS_API_INTERNAL_URL=http://api-backend:8000
+    ports:
+      - "3002:3002"
