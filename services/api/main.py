@@ -2,11 +2,25 @@
 
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(
     title="Brasaland Incident API",
     description="API para analizar incidentes de Brasaland",
     version="1.0.0",
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -16,6 +30,7 @@ VALID_LOCATIONS = {
     "FLA-01", "FLA-02", "FLA-03", "FLA-04",
 }
 
+
 VALID_CATEGORIES = {
     "CUSTOMER_COMPLAINT",
     "EQUIPMENT",
@@ -23,6 +38,7 @@ VALID_CATEGORIES = {
     "FOOD_QUALITY",
     "STAFF",
 }
+
 
 VALID_STATUSES = {
     "OPEN",
@@ -162,11 +178,17 @@ async def analyze_incidents(file: UploadFile = File(...)):
         ),
     }
 
+
 from services.api.auth.routes import router as auth_router
+
 app.include_router(auth_router)
 
+
 from services.api.auth.users_routes import router as users_router
+
 app.include_router(users_router)
 
+
 from services.api.auth.profiles_routes import router as profiles_router
+
 app.include_router(profiles_router)

@@ -1,8 +1,10 @@
-﻿from fastapi import APIRouter, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 
+from .dependencies import get_current_user
 from .models import UserCreate, UserPublic
 from .security import create_access_token, verify_password
 from .users import create_user, get_user_by_email
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -10,6 +12,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserPublic, status_code=201)
 def register(user: UserCreate):
     existing = get_user_by_email(user.email)
+
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -49,3 +52,8 @@ def login(user: UserCreate):
         "access_token": token,
         "token_type": "bearer",
     }
+
+
+@router.get("/me", response_model=UserPublic)
+def get_me(current_user=Depends(get_current_user)):
+    return current_user
