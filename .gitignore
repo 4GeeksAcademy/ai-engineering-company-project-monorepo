@@ -8,3 +8,4 @@ results.csv
 uis/backoffice/.next/
 uis/backoffice/node_modules/
 .pytest_cache/
+services/api/data/
