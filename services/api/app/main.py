@@ -1,7 +1,8 @@
-"""Nexova incident analysis API.
+"""Nexova centralized API: incident analysis and supplier directory.
 
-Validation and metrics come from scripts/incident_analysis.py, the same module
-the CLI (scripts/analyze.py) uses, so both always produce identical results.
+Incident validation and metrics come from scripts/incident_analysis.py, the same
+module the CLI (scripts/analyze.py) uses, so both always produce identical results.
+The supplier directory lives in app/suppliers (TinyDB storage).
 """
 
 from __future__ import annotations
@@ -9,6 +10,8 @@ from __future__ import annotations
 import io
 import os
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -31,6 +34,10 @@ from incident_analysis import (  # noqa: E402
     write_results_csv,
 )
 
+from app.seed import seed  # noqa: E402
+from app.suppliers.repository import SupplierRepository, db_path_from_env  # noqa: E402
+from app.suppliers.router import router as suppliers_router  # noqa: E402
+
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 CSV_CONTENT_TYPES = {"text/csv", "application/csv", "application/vnd.ms-excel", "text/plain", "application/octet-stream"}
 ALLOWED_ORIGINS = [
@@ -39,11 +46,24 @@ ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
-app = FastAPI(title="Nexova Incident Analyzer")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    repository = SupplierRepository(db_path_from_env())
+    if repository.count() == 0:
+        seed(repository)
+    app.state.supplier_repository = repository
+    try:
+        yield
+    finally:
+        repository.close()
+
+
+app = FastAPI(title="Nexova API", lifespan=lifespan)
+app.include_router(suppliers_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
 )
