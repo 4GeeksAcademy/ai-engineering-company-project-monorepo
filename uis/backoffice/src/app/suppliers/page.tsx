@@ -31,6 +31,8 @@ export default function SuppliersPage() {
     try {
       setSuppliers(await listSuppliers({ country, category }));
     } catch (reason) {
+      // Never show the previous list under filters it doesn't match.
+      setSuppliers([]);
       setError(reason instanceof ApiError ? reason.messages.join(" ") : "Error inesperado");
     } finally {
       setLoading(false);

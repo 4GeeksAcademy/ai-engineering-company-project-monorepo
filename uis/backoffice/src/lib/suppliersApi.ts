@@ -95,7 +95,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (response.ok) return (response.status === 204 ? undefined : await response.json()) as T;
 
-  let messages = [`La API respondió con un error (HTTP ${response.status})`];
+  // 502/503/504 come from the Next.js proxy when the FastAPI service is down.
+  let messages = [
+    response.status >= 502 && response.status <= 504
+      ? "No se pudo conectar con la API de proveedores. ¿Está arrancada en el puerto 8000?"
+      : `La API respondió con un error (HTTP ${response.status})`,
+  ];
   try {
     const { detail } = await response.json();
     if (typeof detail === "string") messages = [detail];
