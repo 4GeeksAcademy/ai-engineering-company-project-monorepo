@@ -38,17 +38,28 @@ export function SupplierForm({ onCreated, onCancel }: Props) {
     );
   }
 
+  // Quick client-side check of required fields; the API remains the source of truth (422/409).
+  function validate(): string[] {
+    const problems: string[] = [];
+    if (!name.trim()) problems.push("Nombre: es obligatorio.");
+    if (categories.length === 0) problems.push("Categorías: selecciona al menos una.");
+    if (monthlyRate === "") problems.push("Tarifa mensual: es obligatoria.");
+    else if (!(Number(monthlyRate) > 0)) problems.push("Tarifa mensual: debe ser mayor que 0.");
+    return problems;
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setErrors([]);
+    const problems = validate();
+    setErrors(problems);
+    if (problems.length > 0) return;
     setSaving(true);
     try {
-      // Validation is the API's job: send what was typed and show its 422 messages.
       const supplier = await createSupplier({
-        name,
+        name: name.trim(),
         country,
         categories,
-        monthly_rate: monthlyRate === "" ? Number.NaN : Number(monthlyRate),
+        monthly_rate: Number(monthlyRate),
         currency,
         status,
         contract_renewal_date: renewalDate || null,
@@ -69,7 +80,7 @@ export function SupplierForm({ onCreated, onCancel }: Props) {
       <div className="form-grid">
         <label>
           Nombre *
-          <input value={name} onChange={(event) => setName(event.target.value)} />
+          <input value={name} required aria-required="true" onChange={(event) => setName(event.target.value)} />
         </label>
         <label>
           País *
@@ -79,7 +90,7 @@ export function SupplierForm({ onCreated, onCancel }: Props) {
         </label>
         <label>
           Tarifa mensual *
-          <input type="number" min="0" step="0.01" inputMode="decimal" value={monthlyRate} onChange={(event) => setMonthlyRate(event.target.value)} />
+          <input type="number" min="0.01" step="0.01" inputMode="decimal" required aria-required="true" value={monthlyRate} onChange={(event) => setMonthlyRate(event.target.value)} />
         </label>
         <label>
           Moneda
