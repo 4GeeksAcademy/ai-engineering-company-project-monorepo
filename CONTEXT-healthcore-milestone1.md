@@ -6,7 +6,9 @@ This file records the approved facts used by the public website and its patient 
 
 ## Company and website
 
-For this milestone, HealthCore's public website presents six US outpatient clinics across Texas, Florida, and Georgia. HealthCore was founded in 2011 in Austin, Texas, employs approximately 200 people, and generates around $28 million in annual revenue. Its stated strengths are same-day appointments, extended hours, and bilingual staff at US locations.
+HealthCore is an outpatient healthcare services company founded in 2011 in Austin, Texas. It operates 12 outpatient clinics: nine in the United States (Texas, Florida, and Georgia) and three in the United Kingdom (London and Manchester). It offers primary care, specialist consultations, chronic disease management, and preventive health programmes; employs approximately 200 people; and generates around $28 million in annual revenue. Its competitive strengths are same-day appointments, extended hours, and bilingual staff at US locations.
+
+For this milestone, the public website presents the six US outpatient clinics in the approved directory below. This public-site scope does not change the broader company profile above.
 
 The site is for patients seeking care. It must be available in English and Spanish. The landing page presents HealthCore, services, US clinic locations, and contact details. The patient enquiry form collects structured details for a front-desk follow-up; it is not an appointment booking system. Do not invent clinic names, contact channels, or services.
 
