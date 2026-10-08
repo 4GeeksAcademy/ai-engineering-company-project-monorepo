@@ -1,0 +1,11 @@
+Metrica,Valor
+Total Procesados,100
+Total Válidos,90
+Total Inválidos,10
+Satisfacción Media,45.42
+Categoria: fallo_operativo,26
+Categoria: queja,28
+Categoria: solicitud,36
+Estado: abierto,30
+Estado: cerrado,31
+Estado: descartado,29
