@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import SupplierForm from "@/components/SupplierForm";
+import { useState, useEffect, useCallback,useMemo } from "react";
+import dynamic from "next/dynamic";
 import api from "@/lib/axios";
 import axios from "axios";
+
+const SupplierForm = dynamic(() => import("@/components/SupplierForm"),{
+  loading: () => (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg text-gray-700">Cargando formulario...</div>
+    </div>
+  ),
+  ssr: false,
+});
+
 
 interface Supplier {
   id: number;
@@ -21,6 +31,23 @@ export default function SuppliersPage() {
   const [showForm, setShowForm] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+
+  const supplierStats = useMemo(() =>{
+    if (!suppliers || suppliers.length == 0){
+      return {total: 0, activeCount: 0, avgRate: "0.00", uniqueCategories: 0};
+    }
+
+    const activeSuppliers = suppliers.filter((s) => s.status === "active");
+    const totalRate = activeSuppliers.reduce((sum, s) => sum + (s.hourly_rate || 0), 0);
+    const uniqueCategoriesSet = new Set(suppliers.flatMap((s) => s.categories || []));
+
+    return {
+      total: suppliers.length,
+      activeCount: activeSuppliers.length,
+      avgRate: activeSuppliers.length > 0 ? (totalRate / activeSuppliers.length).toFixed(2) : "0.00",
+      uniqueCategories: uniqueCategoriesSet.size,
+    };
+  },[suppliers]); 
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
@@ -86,6 +113,25 @@ export default function SuppliersPage() {
         >
           + Nuevo Proveedor
         </button>
+      </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-xs text-gray-500 font-medium uppercase">Total Proveedores</p>
+          <p className="text-2xl font-bold text-gray-900">{supplierStats.total}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-xs text-gray-500 font-medium uppercase">Activos</p>
+          <p className="text-2xl font-bold text-green-600">{supplierStats.activeCount}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-xs text-gray-500 font-medium uppercase">Tarifa Media (Activos)</p>
+          <p className="text-2xl font-bold text-blue-600">${supplierStats.avgRate}/h</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-xs text-gray-500 font-medium uppercase">Categorías Únicas</p>
+          <p className="text-2xl font-bold text-purple-600">{supplierStats.uniqueCategories}</p>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
