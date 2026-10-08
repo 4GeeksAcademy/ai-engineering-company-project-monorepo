@@ -6,8 +6,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from .models import Category, Country, RateUpdate, StatusUpdate, Supplier, SupplierCreate
-from .repository import SupplierRepository
+from models import Category, Country, RateUpdate, StatusUpdate, Supplier, SupplierCreate
+from database import SupplierRepository
 
 router = APIRouter(prefix="/suppliers", tags=["suppliers"])
 

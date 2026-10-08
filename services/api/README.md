@@ -21,14 +21,14 @@ uv run seed
 # Seed completed on .../data/suppliers.json: 15 inserted, 0 skipped (already present).
 ```
 
-El seeder carga los 15 proveedores de `SUPPLIERS_SEED` (copiados en `app/suppliers/seed_data.py`). Es idempotente: comprueba cada proveedor por `name` y omite los que ya existen, así que puede ejecutarse varias veces. Cada registro se valida con `SupplierCreate` antes de insertarse.
+El seeder carga los 15 proveedores de `SUPPLIERS_SEED` (copiados en `seed_data.py`). Es idempotente: comprueba cada proveedor por `name` y omite los que ya existen, así que puede ejecutarse varias veces. Cada registro se valida con `SupplierCreate` antes de insertarse.
 
 No es obligatorio ejecutarlo: al arrancar, la API siembra la base automáticamente si está vacía.
 
 ## Arrancar la API
 
 ```bash
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn main:app --reload --port 8000
 ```
 
 - Documentación interactiva: <http://localhost:8000/docs>
@@ -52,14 +52,16 @@ Los tests de proveedores usan una base TinyDB temporal (`tmp_path`) vía `SUPPLI
 ## Estructura
 
 ```
-app/
-├── main.py               # App FastAPI, CORS, lifespan (abre TinyDB y siembra si está vacía), endpoints de incidencias
-├── seed.py               # `uv run seed`
-└── suppliers/
-    ├── models.py         # Pydantic: enums, SupplierCreate, Supplier, RateUpdate, StatusUpdate
-    ├── repository.py     # Acceso a TinyDB (único módulo que toca la base; facilita migrar a Postgres)
-    ├── router.py         # Rutas /suppliers
-    └── seed_data.py      # SUPPLIERS_SEED literal del CONTEXT
+services/api/
+├── main.py              # Aplicación FastAPI: CORS, routers y lifespan (abre TinyDB y siembra si está vacía)
+├── models.py            # Modelos Pydantic: enums, SupplierCreate, Supplier, RateUpdate, StatusUpdate
+├── database.py          # Inicialización y acceso a TinyDB (único módulo que toca la base; facilita migrar a Postgres)
+├── routes/
+│   ├── suppliers.py     # Endpoints del directorio de proveedores (/suppliers)
+│   └── incidents.py     # Endpoints de análisis de incidencias (/api/incidents)
+├── seed.py              # Carga de datos iniciales (`uv run seed`)
+├── seed_data.py         # SUPPLIERS_SEED copiado literalmente del CONTEXT
+└── tests/
 ```
 
 ## Modelo de proveedor

@@ -1,4 +1,4 @@
-"""Initial supplier directory, copied verbatim from 09-lightweight-storage/CONTEXT-nexova.md."""
+"""Initial supplier directory (SUPPLIERS_SEED), copied verbatim from 09-lightweight-storage/CONTEXT-nexova.md."""
 
 SUPPLIERS_SEED = [
     {

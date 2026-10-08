@@ -15,9 +15,9 @@ from pathlib import Path
 from tinydb import Query, TinyDB
 from tinydb.table import Document
 
-from .models import Category, Country, Supplier, SupplierCreate, SupplierStatus
+from models import Category, Country, Supplier, SupplierCreate, SupplierStatus
 
-API_ROOT = Path(__file__).resolve().parents[2]
+API_ROOT = Path(__file__).resolve().parent
 DEFAULT_DB_PATH = API_ROOT / "data" / "suppliers.json"
 DB_PATH_ENV = "SUPPLIERS_DB_PATH"
 

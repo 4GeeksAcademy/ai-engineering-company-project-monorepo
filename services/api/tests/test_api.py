@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from app import main
+import main
+from routes import incidents
 from incident_analysis import analyze_csv_text
 
 CSV_PATH = Path(__file__).resolve().parents[3] / "scripts" / "incidents-nexova.csv"
@@ -17,7 +18,7 @@ CSV_PATH = Path(__file__).resolve().parents[3] / "scripts" / "incidents-nexova.c
 
 @pytest.fixture()
 def client():
-    main._last_result = None
+    incidents._last_result = None
     return TestClient(main.app)
 
 

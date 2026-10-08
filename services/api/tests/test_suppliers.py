@@ -7,9 +7,9 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from app import main
-from app.seed import seed
-from app.suppliers.repository import DB_PATH_ENV, SupplierRepository
+import main
+from seed import seed
+from database import DB_PATH_ENV, SupplierRepository
 
 VALID_SUPPLIER = {
     "name": "Personio",

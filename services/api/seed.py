@@ -6,9 +6,9 @@ exists are skipped, so the directory is never duplicated.
 
 from __future__ import annotations
 
-from app.suppliers.models import SupplierCreate
-from app.suppliers.repository import SupplierRepository, db_path_from_env
-from app.suppliers.seed_data import SUPPLIERS_SEED
+from models import SupplierCreate
+from database import SupplierRepository, db_path_from_env
+from seed_data import SUPPLIERS_SEED
 
 
 def seed(repository: SupplierRepository) -> tuple[int, int]:
