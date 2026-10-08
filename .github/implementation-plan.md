@@ -1,132 +1,84 @@
-# Implementation Plan: Auditoría y Optimización de Rendimiento Frontend
+# 🎓 Plan de Implementación: Auditoría y Serialización de API (Módulo de Aprendizaje)
 
-## Objetivo
-Ejecutar un ciclo profesional y riguroso de auditoría, optimización y refactorización de rendimiento frontend (**Medir → Analizar → Corregir → Volver a medir**) sobre el sitio corporativo (`/uis/website`) y el panel interno (`/uis/backoffice`). El plan resolverá cuellos de botella de **Core Web Vitals** (LCP, CLS, INP, TTFB), extraerá componentes duplicados en abstracciones reutilizables (o Custom Hooks) y generará la documentación técnica y evidencia de impacto en `AUDIT.md`, `REPORT.md` y la carpeta `/audit/`.
+> **Ruta:** `.github/implementation-plan.md`  
+> **Nivel de Complejidad (Code Refinement Suite):** Nivel 3 — Arquitectura / Módulo Crítico  
+> **Modalidad:** Mentoría Interactiva Paso a Paso (El estudiante escribe el código guiado por el mentor).
 
 ---
 
-## 🧠 Reflexión y Análisis de Arquitectura (Pre-Planning / PACK 1 & 2)
+## 🎯 Objetivo Pedagógico y Técnico
 
-Siguiendo el marco de trabajo de la **Code Refinement Suite** para proyectos de **Nivel 2/3 (Complejidad Media-Alta)**, se establecieron las directrices técnicas mediante el análisis de los 3 Expertos y exploración de soluciones:
+El propósito de este plan es doble:
+1. **Técnico:** Eliminar el retorno de objetos ORM / diccionarios en crudo en toda la API de FastAPI, estableciendo contratos Pydantic estrictos (`response_model`), previniendo fugas de credenciales (passwords hasheados, emails innecesarios) y optimizando los payloads de red.
+2. **Pedagógico:** Que aprendas a auditar superficies de API en producción, diseñar esquemas Pydantic desacoplados (Base, Create, Read, ListItem, Public), configurar `from_attributes=True` y aplicar principios de seguridad defensiva por defecto en backend.
 
-### 1. Veredicto de los 3 Expertos
-- **Performance & UX Specialist:**
-  - *Métricas Críticas:* Prioridad absoluta en Core Web Vitals móviles: LCP (< 2.5s) optimizando Largest Contentful Element (imágenes hero con prioridad y formatos modernos WebP/AVIF), CLS (< 0.1) asignando dimensiones explícitas (`aspect-ratio` o `width`/`height`), y TTFB optimizando renders y caché.
-  - *Prevención de regresiones:* La optimización de rendimiento no debe degradar la accesibilidad (WCAG) ni sacrificar la interactividad de la UI.
-- **Frontend Lead Developer:**
-  - *Refactorización Limpia:* Identificar duplicación entre `website` y `backoffice` (o dentro de cada app) y extraer componentes compartidos o Custom Hooks reutilizables sin alterar el comportamiento de negocio.
-  - *Estrategia Next.js:* Aplicar `next/image`, `next/font` con `display: swap`, y `next/dynamic` (Lazy Loading) en componentes pesados fuera del viewport inicial para aligerar el First Load JS Bundle.
-- **Security & Reliability Specialist:**
-  - *Higiene y Control:* Ninguna optimización debe alterar la seguridad de autenticación JWT ni exponer endpoints de la API sin protección.
-  - *Entrega Determinista:* Mantener la regla de un problema por commit para que cada mejora tenga trazabilidad y medición aislada.
+---
 
-### 2. Exploración Tree of Thoughts (ToT)
-- **Rama A (Reescritura de vistas / arquitectura):** ❌ Descartada. Viola el brief técnico explícito ("No reestructures la arquitectura de ninguno de los frontends... El objetivo es la mejora, no una reescritura").
-- **Rama B (Cambios superficiales en métricas):** ❌ Descartada. Inflar scores mediante hacks no resuelve las causas reales ni pasa la auditoría de calidad.
-- **Rama C (Optimización dirigida basada en evidencia + Refactorización de hooks/componentes):** ✅ **Seleccionada.** Medición base rigurosa con Lighthouse → Análisis de causa raíz en `AUDIT.md` → Correcciones atómicas incrementales con tests → Validación final y balance en `REPORT.md`.
+## 📐 PACK 1: ARCHITECT (Evaluación ToT y 3 Expertos)
+
+Antes de escribir esquemas, evaluamos 3 posibles enfoques de serialización mediante **Tree of Thoughts (ToT)**:
+
+### Rama 1: Serialización implícita reutilizando modelos de base de datos (SQLModel / TinyDB)
+- **Veredicto UX:** Malo; expone IDs internas y campos redundantes que confunden al frontend.
+- **Veredicto Dev:** Rápido al inicio, pero acopla fuertemente el esquema de DB al contrato de la API. Cambiar una columna en DB rompe el frontend.
+- **Veredicto Seguridad:** ❌ Crítico; riesgo inminente de exponer `hashed_password`, tokens de recuperación y flags internos.
+
+### Rama 2: Un único esquema `UserResponse` compartido para todas las operaciones (Create, List, Detail)
+- **Veredicto UX:** Regular; en listas grandes se descargan datos anidados que la tabla no muestra (over-fetching).
+- **Veredicto Dev:** Aceptable para proyectos pequeños, pero genera schemas con campos opcionales ambiguos (`Optional[...]`) que debilitan el tipado.
+- **Veredicto Seguridad:** ⚠️ Riesgo moderado; las operaciones de auth pueden terminar devolviendo campos que no deberían reenviarse.
+
+### Rama 3: Arquitectura de Esquemas Específicos por Caso de Uso (Elegida ✅)
+- **Veredicto UX:** Excelente; payloads ligeros, rápidos y adaptados a la vista exacta (listados planos, detalles enriquecidos).
+- **Veredicto Dev:** Excelente; desacoplamiento total entre base de datos (`models.py`) y contrato de API (`schemas.py`), código autodocumentado en `/docs`.
+- **Veredicto Seguridad:** ✅ Máxima protección; principio de menor privilegio sobre los datos expuestos (Zero Leakage).
+
+---
+
+## 📝 PACK 2: PLANNER (Diseño Desacoplado y Estrategia Didáctica)
+
+Diseñamos la estructura organizativa y las reglas de diseño:
+1. **Regla de oro de Schemas:** Todo endpoint que devuelva datos debe contar con `response_model=...`.
+2. **Separación de roles:** 
+   - Esquemas de Entrada (`*Create`, `*Update`): Validan lo que el cliente envía.
+   - Esquemas de Salida (`*Read`, `*Public`, `*ListItem`): Modelan exactamente lo que el cliente recibe.
+3. **Flujos de Auth:** Registro y login devuelven tokens/mensajes genéricos; nunca reenvían contraseñas ni emails (excepto `GET /auth/me` para perfil propio).
+4. **Archivo de Auditoría:** `docs/serialization-audit.md` como fuente de verdad que registra el antes y el después de cada endpoint.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-Estado global: **[En Planificación / Listo para Ejecución]**
+### Fase 1: Auditoría y Diagnóstico (`docs/serialization-audit.md`)
+- [x] **Paso 1.1:** Crear el archivo `docs/serialization-audit.md` con la plantilla de auditoría.
+- [x] **Paso 1.2:** Auditar e inventariar rutas de Autenticación (`services/api/routes/auth.py`).
+- [x] **Paso 1.3:** Auditar e inventariar rutas de Usuarios y Perfiles (`users.py` y `profiles.py`).
+- [x] **Paso 1.4:** Auditar e inventariar rutas de Proveedores e Incidencias (`suppliers.py` y `incidents.py`).
+- [x] **Paso 1.5:** Auditar e inventariar rutas de Inventario y Candidatos (`inventory.py` y `candidates.py`).
+- [x] **Paso 1.6:** Clasificar cada endpoint en el informe: ✅ Ya serializado, ⚠️ Parcialmente serializado, o ❌ Sin serializar.
 
-```mermaid
-flowchart LR
-    F0[Fase 0: Preparación de Entorno] --> F1[Fase 1: Medición Baseline Before]
-    F1 --> F2[Fase 2: Análisis y AUDIT.md]
-    F2 --> F3[Fase 3: Optimización y Refactorización]
-    F3 --> F4[Fase 4: Medición After y REPORT.md]
-```
+### Fase 2: Implementación de Esquemas y Serializers (Tutoría Paso a Paso)
+- [x] **Paso 2.1:** Diseñar y agregar en `schemas.py` los esquemas seguros para Auth y Usuarios (`UserPublic`, `UserListItem`, `UserAuthResponse`).
+- [x] **Paso 2.2:** Aplicar `response_model` y filtros en `services/api/routes/auth.py` (proteger login, registro, reset password).
+- [x] **Paso 2.3:** Aplicar `response_model` y serializers en `services/api/routes/users.py` (evitar fugas en `get_all_users` y `get_user`).
+- [ ] **Paso 2.4:** Auditar y blindar `services/api/routes/profiles.py` asegurando que no exponga campos innecesarios.
+- [ ] **Paso 2.5:** Corregir endpoint sin serializer en `services/api/routes/incidents.py` (`/summary` y creación).
+- [ ] **Paso 2.6:** Refinar esquemas en `services/api/routes/suppliers.py` (listados vs creación/edición).
+- [ ] **Paso 2.7:** Validar coherencia en `services/api/routes/inventory.py` y `candidates.py`.
 
----
-
-### 🛠️ Fase 0: Preparación de Entorno y Estructura de Auditoría
-> **Estado:** `[Completado]`
-
-- [x] **Paso 0.1:** Verificar que el entorno esté activo con ambos frontends accesibles:
-  - Sitio Corporativo en `http://localhost:3000` (HTTP 200 OK)
-  - Backoffice en `http://localhost:3001` (HTTP 200 OK)
-  - Backend API operativo
-- [x] **Paso 0.2:** Crear la estructura de directorios para almacenar las capturas de evidencia:
-  - `mkdir -p audit/before audit/after`
-
----
-
-### 📊 Fase 1: Medición Inicial (Baseline Before) con Lighthouse
-> **Estado:** `[Completado]`
-
-- [x] **Paso 1.1:** Ejecutar auditoría Lighthouse en **Sitio Corporativo** (`website`):
-  - Modo Móvil: Performance 78, Accesibilidad 100, Best Practices 100, SEO 100.
-  - Modo Escritorio: Performance 99, Accesibilidad 100, Best Practices 100, SEO 100.
-- [x] **Paso 1.2:** Ejecutar auditoría Lighthouse en **Backoffice** (`/inventory/products`):
-  - Modo Móvil: Performance 75, Accesibilidad 93, Best Practices 100, SEO 100.
-  - Modo Escritorio: Performance 91, Accesibilidad 93, Best Practices 100, SEO 100.
-- [x] **Paso 1.3:** Guardar las 4 capturas de pantalla en `audit/before/`:
-  - `website-mobile-before.png`, `website-desktop-before.png`, `backoffice-mobile-before.png`, `backoffice-desktop-before.png`.
-- [x] **Paso 1.4:** Realizar commit con las capturas iniciales en `audit/before`.
-
----
-
-### 🔍 Fase 2: Análisis del Codebase y Redacción de `AUDIT.md`
-> **Estado:** `[Completado]`
-
-- [x] **Paso 2.1:** Analizar el código de `uis/website` y `uis/backoffice` para identificar causas raíz de degradación de rendimiento:
-  - Imagen Hero en `website` con `<img>` y `loading="lazy"` afectando LCP y CLS.
-  - Ausencia de skeleton loader y accesibilidad de tablas en `backoffice`.
-- [x] **Paso 2.2:** Identificar al menos **dos casos** de lógica o componentes duplicados candidatos a abstracción:
-  - Caso 1: Custom Hook `useAsyncData` para peticiones con estados `loading`/`error`.
-  - Caso 2: Componente modular `StockBadge`.
-- [x] **Paso 2.3:** Redactar y crear el archivo `AUDIT.md` en la raíz con la matriz completa y diagnóstico.
-
----
-
-### ⚡ Fase 3: Optimización Dirigida y Refactorización Incremental
-> **Estado:** `[Pendiente]`
-
-- [ ] **Paso 3.1:** Activar y seguir las directrices de las skills de optimización (`core-web-vitals`, `performance`, `web-perf`).
-- [ ] **Paso 3.2:** Aplicar correcciones de **LCP y carga de recursos**:
-  - Implementar `next/image` con tamaños responsivos (`sizes`), formatos modernos y `priority` sólo en imágenes hero.
-  - Optimizar fuentes web (`font-display: swap`).
-  - *Commit dedicado:* `git commit -m "perf: optimizacion de imagenes y carga de fuentes para LCP"`.
-- [ ] **Paso 3.3:** Aplicar correcciones de **CLS (Cumulative Layout Shift)**:
-  - Reservar espacio para elementos dinámicos e imágenes con aspect-ratio y dimensiones explícitas.
-  - *Commit dedicado:* `git commit -m "perf: eliminacion de layout shifts mediante dimensiones explicitas"`.
-- [ ] **Paso 3.4:** Aplicar correcciones de **JavaScript y Reducción de Bundle**:
-  - Implementar imports dinámicos (`next/dynamic`) en componentes pesados fuera del viewport o modales diferidos.
-  - *Commit dedicado:* `git commit -m "perf: code splitting y carga diferida de componentes pesados"`.
-- [ ] **Paso 3.5:** Implementar la refactorización de código duplicado:
-  - Extraer al menos un componente reutilizable o Custom Hook compartido.
-  - Integrar la abstracción en ambos lugares correspondientes y verificar que la funcionalidad se mantenga al 100% intacta.
-  - *Commit dedicado:* `git commit -m "refactor: extraccion e integracion de custom hook/componente reutilizable"`.
-
----
-
-### 📈 Fase 4: Medición Final (After), `REPORT.md` y Validación Pre-Push
-> **Estado:** `[Pendiente]`
-
-- [ ] **Paso 4.1:** Ejecutar nuevamente Lighthouse bajo las mismas condiciones (mismas URLs, dispositivos Móvil y Escritorio).
-- [ ] **Paso 4.2:** Guardar las nuevas capturas de pantalla con los resultados optimizados en `audit/after/`.
-- [ ] **Paso 4.3:** Redactar el archivo `REPORT.md` en la raíz conteniendo:
-  - Tabla comparativa de métricas Antes vs. Después (Performance, LCP, CLS, FID/INP, TTFB).
-  - Resumen de cada optimización aplicada y análisis fáctico de cuál tuvo mayor impacto positivo.
-  - Conclusiones y recomendaciones para mantener el rendimiento a futuro.
-- [ ] **Paso 4.4:** Auditoría de calidad de código y ausencia de regresiones:
-  - Ejecutar verificación de tipos (`npx tsc --noEmit`) y linting en ambos frontends.
-  - Comprobar que no existan errores en la consola del navegador ni funcionalidades rotas.
-- [ ] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y solicitar confirmación explícita al usuario antes de cualquier `git push`.
+### Fase 3: Verificación, CoVe y Auditoría Red Teaming
+- [ ] **Paso 3.1:** Ejecutar suite de pruebas (`pytest` o scripts de prueba del monorepo con `uv run`).
+- [ ] **Paso 3.2:** Inspección interactiva en Swagger UI (`/docs`) validando el contrato de al menos 3 endpoints clave.
+- [ ] **Paso 3.3:** Verificación Red Teaming (simulación de petición maliciosa para detectar si se puede extraer `hashed_password`).
+- [ ] **Paso 3.4:** Actualizar `docs/serialization-audit.md` marcando todos los endpoints como ✅.
+- [ ] **Paso 3.5:** Solicitud de confirmación final antes de cualquier commit/push.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
 
-Para este desafío se han integrado rigurosamente las técnicas de la **Code Refinement Suite**:
-
-1. **PACK 1 (ARCHITECT) - Tree of Thoughts & 3 Expertos:**
-   - Se descartó la reescritura arquitectónica en favor de una estrategia focalizada en Web Vitals (LCP, CLS, TTFB) y refactorización desacoplada, preservando la seguridad y la experiencia de usuario.
-2. **PACK 2 (PLANNER) - Step-Back Prompting & Roadmap Interactivo:**
-   - Se estructuró el flujo en 5 fases secuenciales con verificación paso a paso, checkboxes y trazabilidad commit-por-commit.
-3. **PACK 3 (CODER) - Chain of Verification (CoVe) & Atomic Commits:**
-   - Cada intervención de código atacará un problema específico con una medición inmediata en Lighthouse antes de pasar a la siguiente optimización.
-4. **PACK 4 (AUDITOR) - WPO Checklist & Protocolo Git:**
-   - Validación integral de entregables (`AUDIT.md`, `REPORT.md`, `/audit/before/`, `/audit/after/`) y parada obligatoria antes del `git push` final.
+1. **Tree of Thoughts (ToT - PACK 1):** Exploración de 3 arquitecturas de esquemas evaluando trade-offs entre simplicidad, mantenibilidad y riesgo de fuga de datos.
+2. **Step-Back Prompting & Self-Refinement (PACK 2):** Abstracción conceptual del contrato de API desacoplado del almacenamiento físico (DB) y estructuración en fases didácticas.
+3. **Chain of Verification (CoVe - PACK 3):** Comprobación fáctica de cada atributo en los modelos contra el código real de las rutas antes de que el usuario lo escriba.
+4. **Red Teaming (PACK 4):** Inspección de seguridad enfocada en autenticación, asegurando que ningún payload filtre credenciales o hashes.
+5. **Modo Mentor (AGENTS.md):** Ningún archivo de código es modificado automáticamente por la IA; el usuario escribe, prueba y aprende en cada iteración.

@@ -1,151 +1,99 @@
-# Auditoría de Rendimiento Frontend
+# Auditoría de Serialización del Backend
 
-> *By @marcogonzalo and other contributors at 4Geeks Academy*  
-> *Built by developers 4Geeks Academy*  
-> *These instructions are available in English.*
+El backend que lleva semanas construyéndose está a punto de recibir usuarios reales. Antes de eso, tu CTO ha identificado un problema crítico: varios endpoints de la API devuelven objetos de base de datos sin ningún control de forma, sin filtrado de campos y sin protección frente a la exposición de campos internos del modelo. En un entorno de demo con poco tráfico, esto es invisible. A escala, genera cuellos de botella de rendimiento, riesgos de seguridad y contratos frágiles con el cliente.
 
----
+Tu tarea es liderar una auditoría de serialización del backend. El objetivo no es reescribir nada desde cero, sino inspeccionar cada endpoint existente con criterio técnico y llevar la API a estándares de producción.
 
-> [!NOTE]
-> **Antes de comenzar:** 📗 Lee las instrucciones sobre cómo iniciar un proyecto de código.
+## Qué necesitamos
+- Una auditoría escrita que identifique cada endpoint y su estado de serialización actual.
+- Una clasificación de cada endpoint: cuáles exponen campos innecesarios, cuáles carecen de un esquema de respuesta definido y cuáles ya están bien definidos.
+- Para cada endpoint que requiera trabajo, una nota sobre qué tipo de mejora es necesaria -- no solo "necesita serializer", sino por qué y cómo debería ser el payload de salida.
 
----
+## Entregable mínimo
+Cada endpoint de la API debe tener un serializer de respuesta explícito definido antes de que esta tarea se considere completada. Ningún endpoint debe devolver un objeto ORM en crudo.
 
-## 🎯 Tu reto
+Más allá del mínimo, espero optimización del payload donde importa: relaciones anidadas aplanadas cuando el cliente no necesita el objeto completo, endpoints de listado que devuelven solo los campos que los consumidores realmente usan, y endpoints de escritura que aceptan únicamente los campos que deben aceptar.
 
-> [!IMPORTANT]
-> 📌 **Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
+Este es el tipo de revisión que diferencia una API que funciona de una API en la que se puede confiar. Asume la responsabilidad de toda la superficie de tu backend y llévala al nivel que merecen tu frontend — y tus usuarios.
 
-El sitio corporativo y el backoffice de tu empresa están en producción. El equipo está satisfecho con las funcionalidades, pero el CTO acaba de dejar un mensaje en el canal de desarrollo: el equipo debería buscar mejoras de rendimiento — tanto para apoyar un mejor SEO en el sitio corporativo como para asegurar que el backoffice funcione bien para las personas que lo usan a diario. Antes del siguiente hito, necesitas auditar ambos frontends, identificar qué está arrastrando el rendimiento, aplicar las correcciones necesarias y documentar todo con el rigor que se espera en un codebase profesional.
+# ¿Qué son los serializers y por qué importan aquí?
+Los serializers definen el contrato entre tu backend y todo lo que lo consume. En FastAPI, los modelos Pydantic cumplen este rol: validan la entrada, dan forma a la salida y hacen que el comportamiento de la API sea explícito y testeable. Sin ellos, tu API devuelve implícitamente lo que produce el ORM, lo que puede incluir IDs internas, contraseñas hasheadas, ruido relacional y nombres de campos inestables. Con alto tráfico, esto también significa serializar más datos de los que el cliente jamás solicitó.
 
-Esto no se trata de hacer las cosas más bonitas. Se trata de hacerlas **rápidas, medibles y mantenibles**.
+Una capa de serializers bien diseñada implica:
 
-Una buena auditoría de rendimiento sigue un ciclo claro: **medir → analizar → corregir → volver a medir**. Ejecutarás Lighthouse antes de tocar una sola línea de código, luego revisarás el codebase para identificar qué puede mejorarse — incluyendo componentes o lógica que aparecen más de una vez y deberían extraerse en unidades reutilizables. Instalarás un conjunto de skills de agente diseñadas específicamente para guiar la corrección de problemas de web vitals, aplicarás las correcciones que recomienden, y cerrarás el ciclo con una segunda ejecución de Lighthouse para validar el trabajo realizado.
+- Los clientes reciben solo lo que necesitan — payloads más pequeños, respuestas más rápidas.
+- Los cambios internos del modelo no rompen el contrato de la API — el serializer absorbe la diferencia.
+- Los campos sensibles nunca se exponen accidentalmente — el esquema es la fuente de verdad.
 
----
+Al auditar, piensa en tres niveles: qué recibe este endpoint, qué debería devolver y qué está devolviendo realmente hoy.
 
-## 📋 Brief técnico — Auditoría de rendimiento
+## Decidir qué debe exponer cada endpoint
+Antes de elegir un esquema, aclara qué necesita realmente el consumidor de esa ruta — no qué tiene el modelo en base de datos.
 
-Tu CTO ha dejado la siguiente nota en el gestor de tareas del equipo:
+Pregunta por cada endpoint:
 
-### Auditoría de rendimiento — ambos frontends
-1. **Ejecuta Lighthouse** en el sitio corporativo y en el backoffice. Registra las puntuaciones iniciales (*Performance, Accessibility, Best Practices, SEO*).
-2. **Revisa el codebase.** Identifica componentes o bloques de lógica que estén duplicados entre archivos y puedan refactorizarse en un componente compartido o un *Custom Hook*.
-3. En caso de necesitarlo, puedes instalar alguna de las siguientes skills de agente para guiar el proceso de corrección:
-   - `core-web-vitals`
-   - `performance`
-   - `web-perf` (Cloudflare)
-4. **Aplica las correcciones** que las skills identifiquen como necesarias.
+- ¿Quién lo llama? ¿Un listado, una vista de detalle, otro servicio o una confirmación tras un write?
+- ¿Qué usa la UI o el cliente? Sigue el frontend (o consumidor de la API) y anota los campos que lee — ignora columnas del modelo que la pantalla nunca muestra.
+- ¿Qué debe quedarse interno? Credenciales, tokens, claves foráneas solo server-side, timestamps de auditoría, flags de borrado lógico, etc.
 
-### 📦 Entregables:
-- [ ] Un archivo `AUDIT.md` con el análisis: puntuaciones iniciales, problemas identificados y causa raíz de cada uno.
-- [ ] Un archivo `REPORT.md` con las mejoras aplicadas y su impacto medido sobre las puntuaciones originales.
-- [ ] Capturas de pantalla de Lighthouse antes y después de los cambios, con commit en el repositorio.
 
-> [!TIP]
-> El objetivo no es un 100 perfecto. El objetivo es un **ciclo de mejora documentado y basado en evidencia** — el mismo que repetirás a lo largo de toda tu carrera cada vez que pongas en producción un frontend.
+Luego elige cómo serializar:
 
----
+| Situación | Enfoque habitual |
+| :--- | :--- |
+| La vista de detalle necesita la mayoría de campos seguros de un recurso | Esquema con **atributos explícitos** (p. ej. `UserPublic`: `id`, `display_name`, `created_at`) |
+| El listado necesita un subconjunto o forma distinta al detalle | **Esquema aparte y más ligero** (p. ej. `UserListItem` sin relaciones anidadas) — no reutilices el de detalle por defecto |
+| Varios endpoints comparten exactamente la misma proyección segura | Un esquema compartido vale — solo si la **lista de campos encaja** con todos los consumidores |
+| Devolver el ORM entero “porque funciona” | ❌ Sin serializar — aunque FastAPI vuelque todas las columnas, el contrato queda indefinido |
 
-## 🔍 ¿Qué hace útil una auditoría de Lighthouse?
 
-Lighthouse analiza una página a la vez — no recorre toda la aplicación. Una sola ejecución en la página de inicio no dice nada sobre el rendimiento de una vista de dashboard con carga intensiva de datos. Al auditar una aplicación con múltiples vistas, ejecuta Lighthouse en las páginas que más importan: aquellas con mayor complejidad visual, más componentes renderizados a la vez, o mayor tráfico de usuarios. En el sitio corporativo suelen ser la home y cualquier página con mucho contenido; en el backoffice, normalmente el dashboard principal o cualquier vista con tablas, gráficos o datos en tiempo real.
+**General vs explícito**: mapear un modelo con `from_attributes=True` es cómodo cuando cada campo listado es intencional. Ante la duda — listados, flujos de auth o consumidores distintos — conviene **nombrar cada atributo** en el esquema para que la auditoría diga exactamente qué sale de la API. Registra esa lista objetivo en `docs/serialization-audit.md` en cada endpoint que modifiques.
 
-Lighthouse te entrega cuatro puntuaciones: **Performance**, **Accessibility**, **Best Practices** y **SEO**. Para un frontend en producción, los benchmarks que más importan son:
 
-| Métrica | Benchmark | Descripción |
-| :--- | :--- | :--- |
-| **Performance** | `≥ 90` | Por debajo de 50 se considera deficiente y afecta a usuarios reales en redes móviles. |
-| **LCP** (*Largest Contentful Paint*) | `< 2.5s` | Tiempo hasta que el contenido principal es visible. |
-| **CLS** (*Cumulative Layout Shift*) | `< 0.1` | Movimiento inesperado del layout durante la carga. |
-| **FID / INP** (*Interaction to Next Paint*) | `< 200ms` | Capacidad de respuesta a la interacción del usuario. |
-| **TTFB** (*Time to First Byte*) | — | Tiempo hasta que el servidor empieza a enviar la respuesta HTML. |
+# Qué debes hacer
+## Fase 1 — Auditoría
 
----
+**Consejo**: Un buen punto de partida es la autenticación — rutas como registro, login y restauración/restablecimiento de contraseña suelen ser las de mayor riesgo: un objeto ORM de usuario en crudo puede filtrar `hashed_password`, y los handlers de auth a menudo devuelven más de lo que el cliente necesita.
 
-## 🧭 Metodología recomendada
+Al revisar respuestas de auth, estas comprobaciones suelen detectar problemas rápido:
 
-Un informe completo de Lighthouse puede resultar abrumador las primeras veces — decenas de auditorías, oportunidades y diagnósticos en una sola pantalla. No intentes corregir todo de golpe. Una forma práctica de recorrerlo:
+- Evita devolver contraseñas — en texto plano o hasheadas — en el cuerpo de cualquier respuesta.
+- Valora limitar el email en respuestas de auth — registro, login y restauración de contraseña suelen funcionar mejor cuando devuelven solo lo que el cliente necesita a continuación (por ejemplo, un token, un mensaje genérico de confirmación o una proyección segura del usuario sin campos de credenciales). El email suele ir en el cuerpo de la petición; reenviarlo en la respuesta merece cuestionarse salvo que tu auditoría documente el motivo.
 
-1. **Empieza por los indicadores principales:** Las cuatro puntuaciones Core Web Vitals más las señales de servidor como TTFB, LCP, CLS e INP. Te dicen dónde duele (red, render, layout, interactividad) antes de entrar en cada sub-auditoría.
-2. **Apóyate en el agente de IA como tutor:** Pega o describe una métrica cada vez y pregunta qué mide, qué se considera “bueno” y qué correcciones suelen moverla. Paso a paso: entiende el indicador y luego las acciones recomendadas para tu stack (*Next.js, imágenes, fuentes, hidratación, etc.*).
-3. **Resuelve un caso por commit:** Elige el KPI de mayor impacto, aplica un cambio dirigido, haz commit con un mensaje claro, vuelve a ejecutar Lighthouse en la misma URL y anota la diferencia. Repite hasta que los KPI principales estén en rango saludable.
-4. **Después aborda lo complementario:** Avisos de accesibilidad, best practices, oportunidades de SEO y auditorías de menor prioridad importan, pero después de las métricas que afectan de verdad a usuarios en dispositivos lentos.
+Puedes anotar las rutas de auth al inicio de `docs/serialization-audit.md` antes de seguir con el resto de la API.
 
-> [!WARNING]
-> **Causas habituales que se pasan por alto:**
-> - Imágenes sin optimizar.
-> - Recursos que bloquean el render.
-> - Layout shifts por atributos `width`/`height` ausentes en imágenes.
-> - Fuentes cargadas sin `font-display: swap`.
-> - Problemas de hidratación en Next.js.
+- [ ] Lista todos los endpoints de tu aplicación FastAPI (ruta, método y propósito).
+- [ ] Para cada endpoint, documenta su comportamiento de respuesta actual: ¿usa `response_model`? ¿Devuelve un objeto ORM en crudo, un dict o un esquema tipado?
+- [ ] Clasifica cada endpoint en uno de estos tres estados:
+  - ✅ **Ya serializado** — tiene un `response_model` explícito y el esquema es adecuado.
+  - ⚠️ **Parcialmente serializado** — tiene un response model pero está incompleto, expone campos innecesarios o no coincide con lo que necesita el cliente.
+  - ❌ **Sin serializar** — devuelve un objeto ORM en crudo o un dict sin tipado.
+- [ ] Registra los resultados de la auditoría en un archivo Markdown en `docs/serialization-audit.md`.
 
----
+## Fase 2 — Implementación
 
-## 🌱 Cómo iniciar el proyecto
+- [✅] Crea o actualiza los esquemas Pydantic para cada endpoint clasificado como ❌ o ⚠️.
+- [ ] Asegúrate de que cada endpoint tiene un `response_model` explícito declarado en su decorador de ruta.
+- [ ] Para endpoints de listado: define un esquema que devuelva solo los campos que los consumidores necesitan. Evita devolver objetos anidados completos cuando una representación plana es suficiente.
+- [ ] Para endpoints de escritura (POST, PUT, PATCH): define un esquema de entrada separado que acepte únicamente los campos que deben poder escribirse. No reutilices el esquema de respuesta como esquema de entrada.
+- [ ] Asegúrate de que ningún endpoint exponga campos sensibles (por ejemplo, contraseñas hasheadas, tokens internos, claves foráneas en bruto cuando hay un objeto anidado disponible). Las rutas de auth (registro, login, forgot/reset password) nunca deben devolver contraseñas ni email en el cuerpo de la respuesta. `GET /auth/me` sí puede devolver el `email` del propio llamante — la vista de perfil depende de ello.
+- [ ] Cuando una relación sea necesaria en la respuesta, decide explícitamente: devolver el objeto anidado completo, devolver solo el ID relacionado o devolver una proyección plana — y documenta esa decisión en tu archivo de auditoría.
 
-Este proyecto no utiliza una nueva plantilla de inicio. Trabajas dentro de tu monorepo de empresa existente.
+## Fase 3 — Verificación
 
-1. Abre tu monorepo en Codespaces o clónalo localmente.
-2. Asegúrate de que tanto el sitio corporativo como el backoffice estén ejecutándose (`npm run dev` o el comando equivalente en cada aplicación).
-3. Abre Chrome o Brave — Lighthouse está disponible de forma nativa en las DevTools (pestaña **Lighthouse**).
-4. **Toma tus primeras capturas de pantalla antes de modificar nada.**
+- [ ] Confirma que todos los endpoints siguen pasando los tests existentes tras los cambios de esquema.
+- [ ] Prueba manualmente al menos tres endpoints usando la documentación interactiva de FastAPI (`/docs`) y verifica que el shape de la respuesta coincide con el esquema definido.
+- [ ] Actualiza el documento de auditoría para marcar todos los endpoints como ✅ una vez completada la implementación.
 
 ---
 
-## 💻 Qué debes hacer
+### ✅ Qué vamos a evaluar
 
-### Medición inicial
-- [x] Ejecuta Lighthouse en el sitio corporativo en modo **escritorio y móvil** — como mínimo en la página de inicio, más cualquier otra vista que consideres suficientemente compleja para auditar. Registra las cuatro puntuaciones por página y por modo.
-- [x] Ejecuta Lighthouse en el backoffice — como mínimo en el dashboard principal o la vista con más elementos. Registra las cuatro puntuaciones por página.
-- [x] Toma capturas de pantalla de ambos informes y realiza un commit en la carpeta `/audit/before/` del repositorio.
+- [ ] Cada endpoint de la aplicación tiene un `response_model` explícito declarado.
+- [ ] Los esquemas Pydantic están definidos tanto para entrada como para salida donde corresponde — los esquemas de entrada y salida no se confunden entre sí.
+- [ ] Los esquemas de endpoints de listado devuelven solo los campos necesarios para el consumidor — sin anidado innecesario ni over-fetching.
+- [ ] Ningún endpoint expone contraseñas hasheadas ni tokens internos en su esquema de respuesta. Los flujos de auth no autenticados (registro, login, forgot/reset) no reenvían el email. `GET /auth/me` puede devolver el email del usuario autenticado.
+- [ ] El documento de auditoría de serialización (`docs/serialization-audit.md`) existe, lista todos los endpoints, su estado original y los cambios aplicados.
+- [ ] La aplicación sigue funcionando correctamente después de todos los cambios de esquema — sin regresiones.
 
-### Análisis del código
-- [x] Revisa ambos frontends e identifica al menos dos casos en los que un componente o bloque de lógica se repita y pueda extraerse en un componente compartido o un Custom Hook.
-- [x] Documenta cada caso en `AUDIT.md`: dónde aparece, por qué es candidato a refactorización y cómo quedaría la abstracción compartida.
-
-### Instalación de skills de agente
-- [x] En caso de necesitarlo, instala una o más de las skills de agente indicadas por el CTO:
-  - `https://www.skills.sh/addyosmani/web-quality-skills/core-web-vitals`
-  - `https://www.skills.sh/addyosmani/web-quality-skills/performance`
-  - `https://www.skills.sh/cloudflare/skills/web-perf`
-- [x] Ejecuta el agente sobre ambos frontends y registra las correcciones que identifica.
-
-### Correcciones
-- [x] Prioriza los KPI principales (TTFB, LCP, CLS, INP, puntuación de Performance) antes que auditorías secundarias de Lighthouse; usa el agente para interpretar un indicador cada vez.
-- [x] Aplica correcciones de forma incremental — **un problema por commit**, y vuelve a ejecutar Lighthouse en la misma URL tras cada cambio para confirmar el impacto.
-- [x] Aplica las correcciones que las skills de agente clasifiquen como correcciones requeridas (no sugerencias).
-- [x] Aplica las refactorizaciones identificadas durante el análisis del código — extrae al menos un componente reutilizable o Custom Hook.
-
-### Medición final
-- [x] Vuelve a ejecutar Lighthouse en ambos frontends tras las correcciones.
-- [x] Toma nuevas capturas de pantalla y realiza un commit en `/audit/after/`.
-
-### Entregables
-- [x] Escribe `AUDIT.md` con: puntuaciones iniciales de Lighthouse, problemas identificados con explicación de causa raíz para cada uno, y el análisis de refactorización.
-- [x] Escribe `REPORT.md` con: descripción de cada corrección aplicada, comparativa de puntuaciones antes/después, y tu valoración de qué tuvo mayor impacto.
-- [x] Realiza un commit de ambos archivos markdown y todas las capturas de pantalla en el repositorio.
-
-> [!IMPORTANT]
-> ⚠️ **IMPORTANTE:** No reestructures la arquitectura de ninguno de los frontends para pasar esta auditoría. Aplica correcciones dirigidas. El objetivo es la mejora, no una reescritura.
-
----
-
-## ✅ Qué vamos a evaluar
-
-- [x] Lighthouse se ejecutó en ambos frontends antes y después, con capturas de pantalla con commit en el repositorio.
-- [x] `AUDIT.md` identifica problemas concretos con razonamiento sobre causa raíz — no solo una lista de lo que Lighthouse marcó.
-- [x] Al menos un componente reutilizable o Custom Hook fue extraído e integrado en el codebase.
-- [x] `REPORT.md` muestra una mejora medible en al menos una puntuación de Lighthouse por frontend.
-- [x] Si se instalaron skills de agente, hay evidencia de su uso en el proceso de corrección.
-- [x] Las correcciones aplicadas atacan causas reales (optimización de imágenes, layout shift, problemas de hidratación) y no cambios superficiales que inflan las puntuaciones sin resolver el problema subyacente.
-- [x] La calidad del código se mantiene tras la refactorización — sin funcionalidades rotas ni regresiones.
-
-> [!NOTE]
-> **Nota:** Obtener una puntuación de 100 no es un criterio de evaluación. La mejora basada en evidencia y la calidad del análisis sí lo son.
-
----
-
-## 📦 Cómo entregar
-
-Sube tus cambios a tu monorepo de empresa en GitHub y comparte la URL del repositorio según las instrucciones de tu instructor. Asegúrate de que `AUDIT.md`, `REPORT.md` y la carpeta `/audit/` con todas las capturas de pantalla estén incluidos en el commit final.
+> **Nota**: La calidad del documento de auditoría se evalúa como un entregable en sí mismo. Una implementación completa sin registro de auditoría no es suficiente.

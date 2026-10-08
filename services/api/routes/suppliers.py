@@ -24,6 +24,8 @@ def create_supplier(supplier: SupplierCreate, current_user: dict = Depends(get_c
     response_data = {**supplier_dict, "id": doc_id}
     return SupplierResponse(**response_data)
 
+
+
 @router.get("", response_model=List[SupplierResponse])
 def get_suppliers(
     country: Optional[str] = None,
@@ -50,6 +52,8 @@ def get_suppliers(
         
     return response
 
+
+
 @router.get("/{id}", response_model=SupplierResponse)
 def get_supplier(id: int, current_user: dict = Depends(get_current_user)):
     db = get_tinydb()
@@ -59,6 +63,8 @@ def get_supplier(id: int, current_user: dict = Depends(get_current_user)):
     data = dict(record)
     data["id"] = record.doc_id
     return SupplierResponse(**data)
+
+
 
 @router.patch("/{id}/rate", response_model=SupplierResponse)
 def update_supplier_rate(id: int, rate_update: SupplierUpdateRate, current_user: dict = Depends(get_current_user)):

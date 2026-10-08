@@ -8,11 +8,8 @@ from services.api.routes.auth import get_current_user
 
 # Importamos Modelos (Tablas) y Schemas (Validadores)
 from services.api.models import Asset, AssetAcquisition, AssetAssignment
-from services.api.schemas import (
-    AssetCreate, AssetRead,
-    AssetAcquisitionCreate, AssetAcquisitionRead,
-    AssetAssignmentCreate, AssetAssignmentRead
-)
+from services.api.schemas import (AssetCreate, AssetRead,AssetAcquisitionCreate, AssetAcquisitionRead,
+    AssetAssignmentCreate, AssetAssignmentRead,OrdersAuditResponse)
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
@@ -39,6 +36,7 @@ def get_assets(current_user: dict = Depends(get_current_user), db: Session = Dep
         ) for a in assets
     ]
 
+
 @router.post("/products", response_model=AssetRead, status_code=201)
 def create_asset(asset_in: AssetCreate, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     if db.exec(select(Asset).where(Asset.sku == asset_in.sku)).first():
@@ -53,6 +51,7 @@ def create_asset(asset_in: AssetCreate, current_user: dict = Depends(get_current
         id=db_asset.id, name=db_asset.name, sku=db_asset.sku, department=db_asset.department, 
         current_stock=0
     )
+
 
 @router.get("/products/{id}", response_model=AssetRead)
 def get_asset(id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -80,6 +79,7 @@ def create_inbound_order(order_in: AssetAcquisitionCreate, current_user: dict = 
     db.refresh(db_order)
     return db_order
 
+
 @router.post("/orders/outbound", response_model=AssetAssignmentRead, status_code=201)
 def create_outbound_order(order_in: AssetAssignmentCreate, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     asset = db.get(Asset, order_in.asset_id)
@@ -99,7 +99,8 @@ def create_outbound_order(order_in: AssetAssignmentCreate, current_user: dict = 
     db.refresh(db_order)
     return db_order
 
-@router.get("/orders")
+
+@router.get("/orders", response_model=OrdersAuditResponse)
 def get_all_orders(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna todas las órdenes para auditoría general"""
     return {

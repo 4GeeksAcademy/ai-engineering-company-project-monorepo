@@ -22,7 +22,7 @@ from datetime import datetime
 from tinydb import Query
 from services.api.database import get_tinydb
 from services.api.security import get_password_hash
-
+from services.api.models import IncidentAnalysisResponse
 from analyzer_core import process_incidents, calculate_metrics
 
 def ensure_admin_user():
@@ -109,7 +109,7 @@ app.include_router(candidates.router)
 latest_metrics = None
 
 
-@app.post("/api/incidents/analyze")
+@app.post("/api/incidents/analyze", response_model=IncidentAnalysisResponse)
 async def analyze_csv(file: UploadFile = File(...)):
     """
     Recibe un archivo CSV, lo analiza y devuelve las métricas.
