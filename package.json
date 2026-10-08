@@ -4,7 +4,7 @@
   "scripts": {
     "build": "npm run build:css && npm run stage:site",
     "build:css": "tailwindcss --input ./styles.css --output ./styles.min.css --minify",
-    "stage:site": "mkdir -p dist/js && cp index.html application.html validation.js styles.min.css robots.txt sitemap.xml dist/ && cp js/*.js js/*.json dist/js/"
+    "stage:site": "mkdir -p dist/js && cp index.html application.html styles.min.css robots.txt sitemap.xml dist/ && cp js/*.js js/*.json dist/js/"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.0",
