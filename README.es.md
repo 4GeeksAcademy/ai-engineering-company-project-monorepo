@@ -27,6 +27,7 @@ El proyecto esta configurado para TrackFlow, empresa de logistica de ultima mill
 - `AGENTS.md` y `memory-bank/` definen el contexto operativo para agentes.
 - `uis/website` contiene el sitio publico y su formulario de onboarding.
 - `uis/backoffice` contiene la vista interna de solicitudes, KPIs y segmentacion.
+- `scripts/analyze.py`, `services/api` y la vista de incidencias del backoffice implementan el flujo de analisis de TrackFlow.
 - Las aplicaciones son independientes y se validan con `npm run lint` y `npm run build` dentro de cada carpeta.
 
 ---
@@ -64,6 +65,33 @@ npm run dev
 ```
 
 Usa `uis/website` para la experiencia pública y `uis/backoffice` para la operación interna.
+
+## Analisis de incidencias
+
+El archivo `scripts/incidents-trackflow.csv` es un fixture sintetico de 100 filas con correos `example.com`. Sus resultados agregados coinciden con los valores de aceptacion publicados para TrackFlow, sin incluir los correos de clientes de la fuente original.
+
+Ejecuta el script desde la raiz del repositorio:
+
+```bash
+python scripts/analyze.py scripts/incidents-trackflow.csv
+```
+
+Para usar la interfaz, instala e inicia la API desde la raiz:
+
+```bash
+python -m pip install -r services/api/requirements.txt
+python -m uvicorn services.api.main:app --host 0.0.0.0 --port 8000
+```
+
+En una segunda terminal, inicia el backoffice:
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev -- --hostname 0.0.0.0
+```
+
+Abre `/incidents-analysis`, carga el fixture y pulsa **Analizar archivo**. Las capturas de entrega son el [informe de consola](docs/screenshots/console-output.png) y el [analisis web](docs/screenshots/incidents-analysis.png).
 
 ---
 

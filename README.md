@@ -27,6 +27,7 @@ The project is configured for TrackFlow, a last-mile logistics and warehouse ope
 - `AGENTS.md` and `memory-bank/` define the operating context for coding agents.
 - `uis/website` contains the public site and canonical onboarding form.
 - `uis/backoffice` contains the internal request queue, KPIs, and volume segmentation.
+- `scripts/analyze.py`, `services/api`, and the backoffice incidents page provide the TrackFlow incident-analysis workflow.
 - Each application is validated with `npm run lint` and `npm run build` from its own directory.
 
 ---
@@ -64,6 +65,33 @@ npm run dev
 ```
 
 Use `uis/website` for the public experience and `uis/backoffice` for internal operations.
+
+## Incident analysis
+
+The included `scripts/incidents-trackflow.csv` is a synthetic 100-row fixture using `example.com` email addresses. Its aggregate results match the published TrackFlow acceptance values without including source customer emails.
+
+Run the CLI from the repository root:
+
+```bash
+python scripts/analyze.py scripts/incidents-trackflow.csv
+```
+
+For the web workflow, install and run the API from the repository root:
+
+```bash
+python -m pip install -r services/api/requirements.txt
+python -m uvicorn services.api.main:app --host 0.0.0.0 --port 8000
+```
+
+In a second terminal, run the backoffice:
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev -- --hostname 0.0.0.0
+```
+
+Open `/incidents-analysis`, upload the fixture, and select **Analizar archivo**. Delivery screenshots are [the CLI report](docs/screenshots/console-output.png) and [the web analysis](docs/screenshots/incidents-analysis.png).
 
 ---
 
