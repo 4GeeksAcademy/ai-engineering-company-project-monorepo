@@ -8,7 +8,18 @@ import Badge from '@/components/ui/Badge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import StatusStageControls from '@/components/candidates/StatusStageControls';
-import CandidateNotesSection from '@/components/candidates/CandidateNotesSection';
+import dynamic from 'next/dynamic';
+
+const CandidateNotesSection = dynamic(
+  () => import ('@/components/candidates/CandidateNotesSection'),
+  {
+    loading: () => (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
+        Cargando notas e historial...
+      </div>
+    ),
+  }
+)
 
 interface PageProps {
   params: Promise<{ id: string }>;
