@@ -1,16 +1,27 @@
-# HealthCore Web Fundamentals Context - Milestone 1
+# HealthCore Web Fundamentals Context — Milestone 1
 
-## Core Target
-Bilingual (EN/ES) Patient Enquiry Web Application.
+Use the [canonical HealthCore Web Fundamentals context](https://github.com/4GeeksAcademy/ai-engineering-syllabus/blob/main/content/contexts/01-web-fundamentals/CONTEXT-healthcore.en.md) as the authority for this milestone. A local summary is maintained in [`CONTEXT-healthcore-milestone1.md`](../CONTEXT-healthcore-milestone1.md).
 
-## Key Deliverables
-1. **Bilingual Support:** Language switcher (EN/ES) with full UI translation via data-i18n attributes and JSON dictionary.
-2. **Landing Sections:** Home, Services, About, and Contact sections tailored for patients.
-3. **Clinic Locations Table:** Responsive HTML table detailing US clinic locations, addresses, and telephone numbers.
-4. **Patient Enquiry Form:**
-   - Fields: Full Name, Email, Phone, Preferred Clinic Location, Enquiry Type, Message.
-   - Syllabus-compliant client-side error validation on blur/submit.
-   - Clear success banner on valid submission.
-   - Explicit "Clear/Reset" button clearing all inputs and error states.
-5. **Structured Data:** Valid JSON-LD schema (`MedicalClinic` / `Organization`) in document `<head>`.
-6. **Documentation:** `README.md` updated with local preview setup using `http-server`.
+## Core target
+
+Bilingual (English/Spanish) patient-facing public website with a landing page and a structured patient enquiry form. The form collects information for front-desk follow-up; it is not an appointment booking system and must not transmit or store submitted data in this demo.
+
+## Content constraints
+
+- Use only the approved company, services, US clinic directory, contact details, and clinic hours from the canonical brief.
+- Do not invent clinic names, addresses, phone numbers, service offerings, or contact channels.
+- Show the six specified US clinics publicly, across Texas, Florida, and Georgia.
+- Keep all user-facing landing page and form content bilingual, including errors, option labels, placeholders, and success messages.
+- Include the provider partnership contact note, distinct from the patient enquiry flow.
+
+## Patient form requirements
+
+Use the exact field `name` attributes and validation requirements from the canonical brief: names, date of birth, email, international phone, preferred language and clinic, preferred date and time, service, new-patient and insurance choices, conditional insurance details, optional patient ID for returning patients, health concern with character counter, and contact consent. Validate dates, pediatric eligibility, clinic-hour warnings, conditional fields, and consent. Display the specified success message after local validation.
+
+## Deliverables
+
+1. English/Spanish language switch.
+2. Landing sections for Home, Services, Why HealthCore, Locations, and Contact.
+3. Approved US clinic directory and Schema.org `MedicalOrganization` plus `MedicalClinic` records.
+4. Patient enquiry form with client-side validation and clear/reset control.
+5. Local preview instructions in the project README.

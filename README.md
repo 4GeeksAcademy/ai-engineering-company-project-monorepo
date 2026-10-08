@@ -11,7 +11,21 @@ _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 
 ## Purpose
 
-This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
+### HealthCore website preview
+
+This repository includes the HealthCore Milestone 1 public website in `index.html` and the bilingual patient enquiry form in `application.html`.
+
+```bash
+npm install
+npm run build
+npx http-server dist -p 8080
+```
+
+Open `http://localhost:8080`. The enquiry form is a local demo and does not transmit or store submissions.
+
+### Monorepo template
+
+This repository is based on the **starter template** for transversal projects. This workspace contains the HealthCore Milestone 1 public website and patient enquiry form, alongside the reusable monorepo structure for future course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
 
 - Create a template from this repository.
 - Replace the placeholder `CONTEXT.md` with your assigned company context.
@@ -49,13 +63,14 @@ You are building **one company** across many milestones and projects. Each top-l
 
 ---
 
-## Current status of the template
+## Current status
 
-> 💡 This repository currently provides a **base folder structure and documentation skeleton** only. It does not include runnable apps or global scripts yet.
+> The HealthCore public website is runnable as a static site. Build it with `npm run build` and preview the generated `dist/` folder with `npx http-server dist -p 8080`.
 >
-> - `CONTEXT.md` is a placeholder and must be replaced with your assigned company context.
+> - `CONTEXT.md` contains the HealthCore Milestone 1 specification.
+> - The enquiry form is a local demo: it validates input but does not transmit or store patient information.
 > - There is no root `AGENTS.md` yet.
-> - Shared package metadata exists in `packages/shared/package.json` (`@repo/shared-types`), but no workspace runner is configured at root.
+> - Shared package metadata exists in `packages/shared/package.json` (`@repo/shared-types`); no workspace runner is configured for the monorepo.
 
 ---
 
@@ -316,9 +331,9 @@ To run and view the website locally, use `http-server`:
 1. Open terminal at the project root directory.
 2. Install Node.js and npm if they are not already installed (`npx` is included with npm).
 3. Launch the static server:
-	```bash
-	npx http-server .
-	```
+   ```bash
+   npx http-server .
+   ```
 
 If Node.js and npm are unavailable, Python can serve the site instead:
 
