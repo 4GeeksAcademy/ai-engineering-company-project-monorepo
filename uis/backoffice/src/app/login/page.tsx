@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {telemetry} from "../../services/telemetry";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -9,6 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const loginAttempts= useRef(0);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,11 +36,27 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-
       localStorage.setItem("access_token", data.access_token);
+
+      telemetry.track("auth_login_succeeded",{
+        user_id_hash: data.user_id_hash || "unknown",
+
+        auth_method: "password",
+        user_role: data.role || "operator",
+        client_ip_hash: "N/A"
+      });
+
       router.push("/inventory/products");
     } catch (err: any) {
+      loginAttempts.current += 1;
       setError(err.message);
+
+      telemetry.track("auth_login_failed",{
+        failure_reason: err.message,
+        attempt_number: loginAttempts.current,
+        client_ip_hash:  "N/A",
+        user_agent_category: navigator.userAgent
+      });
     } finally {
       setIsLoading(false);
     }

@@ -5,6 +5,8 @@ import { inventoryService, Asset } from "@/lib/inventory";
 import { ArrowUpFromLine, ArrowLeft, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import styles from "../orders.module.css";
+import { telemetry } from "../../../../services/telemetry";
+
 
 export default function OutboundPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -52,12 +54,41 @@ export default function OutboundPage() {
     // La UI previene el envío, pero lo validamos igual por si acaso
     if (exceedsStock) {
       setErrorMsg("No puedes retirar más activos de los que hay disponibles.");
+      
+      telemetry.track("order_validation_failed", {
+        order_id: crypto.randomUUID(),
+        order_type: "outbound",
+        sku: selectedAsset?.sku || 'unknown',
+        requested_quantity: numQuantity,
+        available_quantity: currentStock,
+        error_code: "INSUFICIENT_STOCK"
+      })
       return;
     }
 
     setIsSubmitting(true);
     try {
       await inventoryService.createOutboundOrder(Number(selectedAssetId), numQuantity);
+      
+      const remainingStock = currentStock - numQuantity;
+      telemetry.track("outbound_order_completed",{
+        order_id: crypto.randomUUID(),
+        destination_department: "general",
+        item_count: 1,
+        total_units_dispatched: numQuantity,
+        fulfillment_duration_seconds: 0
+      });
+
+      if (remainingStock <= 5){
+        telemetry.track("stock_treshold_triggered",{
+          sku: selectedAsset?.sku || "unknown",
+          current_stock: remainingStock,
+          minimum_treshold: 5,
+          replenishment_recommended: true,
+          warehouse_id: "WH-Main"
+        });
+      }
+      
       setSuccessMsg(`¡Éxito! Se asignaron ${quantity} unidades de ${selectedAsset?.name}.`);
       
       // Actualizamos el stock localmente para reflejar la reducción sin volver a hacer fetch completo
