@@ -2,7 +2,7 @@ import os
 import uuid
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 
 from fastapi import APIRouter,Depends
@@ -13,6 +13,9 @@ from sqlalchemy import Column, JSON, insert
 
 from services.api.schemas import TelemetryEvent
 from services.api.database import get_db
+from services.api.cache import cache
+from services.api.routes.auth import get_current_user
+from services.telemetry.analysis import generate_telemetry_report
 
 
 router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
@@ -87,3 +90,34 @@ def receive_telemetry(batch: RawTelemetryBatch, db: Session = Depends(get_db)):
         "rejected": rejected
     }
     
+@router.get("/report")
+def get_telemetry_report(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict= Depends (get_current_user),
+):
+    if not start_date and not end_date:
+        cache_key = "telemetry:report:default_7d"
+    else:
+        cache_key = f"telemetry:report:{start_date}:{end_date}"
+
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        logger.info(f"⚡ [CACHE HIT] Retornando reporte de telemetría ({cache_key})")
+        return cached_data
+
+    now = datetime.now(timezone.utc)
+    if end_date:
+        parsed_end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+    else:
+        parsed_end = now
+    if start_date:
+        parsed_start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+    else:
+        parsed_start = parsed_end - timedelta(days=7)
+
+    logger.info(f"🔄 [CACHE MISS] Calculando reporte de telemetría de {parsed_start} a {parsed_end}")
+    report = generate_telemetry_report(parsed_start, parsed_end)
+
+    cache.set(cache_key, report, ttl_seconds=60, tag="telemetry")
+    return report
