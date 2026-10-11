@@ -29,9 +29,9 @@ services/
 
 ### Hito 2
 
-The repository root contains the TypeScript/Vite data-lab project.
+The TypeScript/Vite Data Lab is located at `uis/backoffice/data-lab/`.
 
-Current root package configuration:
+Its package configuration is isolated within that directory:
 
 ```json
 {
@@ -90,7 +90,7 @@ The exact framework/template conventions for the new Hito 4 applications should 
 - Do not create a second repository.
 - Do not unnecessarily duplicate existing Hito 2 or Hito 3 functionality.
 - Keep the Hito 3 Talent Pipeline Tracker under `uis/backoffice`.
-- Keep Hito 2 root configuration intact unless a documented Hito 4 requirement requires a change.
+- Keep the Hito 2 Data Lab under `uis/backoffice/data-lab` unless a documented requirement requires a change.
 - The website and backoffice must be separate applications with their own appropriate structure.
 - The backoffice must have its own layout and landing view.
 - Company-relevant data or logic must be visible in the backoffice UI, not only logged to the console.

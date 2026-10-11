@@ -35,7 +35,7 @@ The project contains the initial public web work, including the existing HTML/CS
 
 ### Hito 2
 
-The TypeScript/Vite data-lab project is working at the repository root.
+The TypeScript/Vite Data Lab is working under `uis/backoffice/data-lab/`.
 
 Validated operations include:
 

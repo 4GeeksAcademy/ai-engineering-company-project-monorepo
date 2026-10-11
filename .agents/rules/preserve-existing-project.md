@@ -24,7 +24,7 @@ Before modifying, moving, renaming, or deleting an existing file or folder, the 
 The following existing areas must be preserved unless the task explicitly requires changes to them:
 
 * Hito 1 files and configuration at the repository root.
-* Hito 2 files and configuration at the repository root.
+* `uis/backoffice/data-lab/` containing the Hito 2 Brasaland Data Lab.
 * `uis/backoffice/` containing the Hito 3 Talent Pipeline Tracker.
 * Existing project documentation and memory-bank files.
 

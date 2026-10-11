@@ -37,9 +37,9 @@ El agente no debe modificar las siguientes zonas sin confirmación explícita de
 
 ### Hito 2
 
-El proyecto de Hito 2 ubicado en la raíz del repositorio, incluyendo su configuración y utilidades TypeScript.
+El proyecto Data Lab de Hito 2 ubicado en `uis/backoffice/data-lab/`, incluyendo su configuración y utilidades TypeScript.
 
-No debe modificar ni reemplazar la configuración raíz existente para introducir una configuración propia de otra aplicación, salvo que la tarea lo requiera explícitamente y el desarrollador lo confirme.
+No debe modificar ni reemplazar esta aplicación para introducir una configuración propia de otra aplicación, salvo que la tarea lo requiera explícitamente y el desarrollador lo confirme.
 
 ### Hito 3
 
@@ -78,6 +78,7 @@ memory-bank/
 uis/
 ├── website/
 └── backoffice/
+	└── data-lab/
 
 services/
 
