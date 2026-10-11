@@ -5,11 +5,12 @@ import { inventoryService, Asset } from "@/lib/inventory";
 import { ArrowDownToLine, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import styles from "../orders.module.css";
+import { telemetry } from "../../../../services/telemetry";
 
 export default function InboundPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estado del formulario
   const [selectedAssetId, setSelectedAssetId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -35,7 +36,7 @@ export default function InboundPage() {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
-    
+
     if (!selectedAssetId || !quantity || Number(quantity) <= 0) {
       setErrorMsg("Por favor selecciona un activo y una cantidad válida mayor a 0.");
       return;
@@ -45,8 +46,17 @@ export default function InboundPage() {
     try {
       await inventoryService.createInboundOrder(Number(selectedAssetId), Number(quantity));
       const assetName = assets.find(a => a.id.toString() === selectedAssetId)?.name;
+      const assetSku = assets.find(a => a.id.toString() === selectedAssetId)?.sku;
+      telemetry.track("inbound_order_created", {
+        order_id: crypto.randomUUID(), // Generamos un ID provisorio
+        supplier_id_hash: "internal_supply", // Placeholder por ahora
+        sku_list_count: 1,
+        total_units: Number(quantity),
+        expected_delivery_date: new Date().toISOString()
+      });
+
       setSuccessMsg(`¡Éxito! Se registraron ${quantity} unidades de ${assetName}.`);
-      
+
       // Limpiar formulario tras el éxito
       setSelectedAssetId("");
       setQuantity("");
@@ -88,7 +98,7 @@ export default function InboundPage() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label className={styles.label}>Activo a ingresar</label>
-            <select 
+            <select
               className={styles.select}
               value={selectedAssetId}
               onChange={(e) => setSelectedAssetId(e.target.value)}
@@ -105,8 +115,8 @@ export default function InboundPage() {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Cantidad recibida</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               className={styles.input}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
@@ -116,8 +126,8 @@ export default function InboundPage() {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={`${styles.btnSubmit} ${styles.btnInbound}`}
             disabled={isSubmitting || !selectedAssetId || !quantity}
           >

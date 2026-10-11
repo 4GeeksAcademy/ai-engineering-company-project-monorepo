@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from services.api.routes import users, profiles, auth, inventory
 import csv
 from services.api.routes import suppliers, incidents, candidates
-
+from services.api.routes import suppliers, incidents, candidates, telemetry
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from services.api.database import engine
@@ -114,6 +114,7 @@ app.include_router(auth.router)
 app.include_router(inventory.router)
 app.include_router(incidents.router)
 app.include_router(candidates.router)
+app.include_router(telemetry.router)
 
 latest_metrics = None
 
