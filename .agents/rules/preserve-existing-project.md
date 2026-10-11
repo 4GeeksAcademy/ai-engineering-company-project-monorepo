@@ -25,7 +25,7 @@ The following existing areas must be preserved unless the task explicitly requir
 
 * Hito 1 files and configuration at the repository root.
 * Hito 2 files and configuration at the repository root.
-* `uis/talent-pipeline-tracker/` from Hito 3.
+* `uis/backoffice/` containing the Hito 3 Talent Pipeline Tracker.
 * Existing project documentation and memory-bank files.
 
 ## Expected behavior

@@ -45,7 +45,7 @@ No debe modificar ni reemplazar la configuración raíz existente para introduci
 
 La aplicación Talent Pipeline Tracker ubicada en:
 
-`uis/talent-pipeline-tracker/`
+`uis/backoffice/`
 
 No debe modificar, mover, eliminar ni reemplazar archivos de Hito 3 salvo que el desarrollador solicite expresamente un cambio en esta aplicación.
 
@@ -77,8 +77,7 @@ memory-bank/
 
 uis/
 ├── website/
-├── backoffice/
-└── talent-pipeline-tracker/
+└── backoffice/
 
 services/
 

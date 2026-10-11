@@ -2,7 +2,9 @@
 
 ## Current status
 
-Hito 4 is being started on top of the existing Brasaland monorepo.
+Hito 4 is being implemented on top of the existing Brasaland monorepo.
+
+The Hito 3 Talent Pipeline Tracker now lives under `uis/backoffice/`, separate from root-level backend services.
 
 The initial directory structure for Hito 4 is being prepared.
 
@@ -20,7 +22,7 @@ services/
 The existing Hito 3 application remains at:
 
 ```text
-uis/talent-pipeline-tracker/
+uis/backoffice/
 ```
 
 and should not be replaced.
@@ -46,7 +48,7 @@ Validated operations include:
 The Talent Pipeline Tracker Next.js application is working under:
 
 ```text
-uis/talent-pipeline-tracker/
+uis/backoffice/
 ```
 
 Validated operations include:
@@ -71,7 +73,7 @@ Validated operations include:
 6. Add at least one scoped rule under `.agents/rules/`.
 7. Add at least one reusable skill under `.agents/skills/` with explicit acceptance criteria.
 8. Initialize and implement `uis/website`.
-9. Initialize and implement `uis/backoffice`.
+9. Continue validating the existing Talent Pipeline Tracker under `uis/backoffice`.
 10. Add backend services under `services` according to the repository/template conventions.
 11. Run the required validation checks.
 12. Review the Git diff and repository status.
