@@ -1,123 +1,131 @@
-# Telemetría de tu compañía – Captura en el frontend
+# Telemetría de tu compañía – Almacenamiento
 
-> **Antes de empezar:** necesitas el `telemetry-plan.md` y `event-schemas.json` de la Fase 1 aprobados — son el contrato que vas a implementar hoy. Si no están aprobados, resuelve eso antes de escribir código.  
-> Ten a mano tu [CONTEXT-empresa.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/06-telemetry-data-pipelines/telemetry): los nombres de `event_type`, los identificadores de entidad en `properties` y los puntos de instrumentación deben usar el vocabulario de dominio de tu compañía (a través del plan aprobado), no etiquetas genéricas de este README.
+> [!IMPORTANT]
+> **Antes de empezar:** Necesitas el `TelemetryService` funcionando en el frontend y enviando lotes al stub del proyecto anterior. Si los eventos no llegan al stub con respuesta `200`, resuelve eso antes de continuar — hoy construyes el destino real de esos eventos.
+
+Tu `CONTEXT-empresa.md` explica qué campos del envelope y qué dimensiones de tags importan para el análisis de tu compañía — confirma que los campos opcionales que guardes en `tags` coinciden con lo documentado en `telemetry-plan.md`.
 
 ---
 
 ## 🎯 Tu reto
 
-📌 **Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.**
+> [!NOTE]
+> 📌 Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-El plan de telemetría está aprobado. Hoy implementas la mitad que el usuario nunca ve pero que hace posible todo lo demás: el sistema de captura en el frontend.
+Los eventos están fluyendo desde el frontend — obligatorios y de tu propio catálogo, técnicos y de negocio. El stub los recibe y los descarta. Hoy construyes lo que el stub prometía: el sistema que realmente los guarda.
 
-Cada evento de tu catálogo — obligatorio o identificado por ti — debe capturarse en el momento exacto en que ocurre en el backoffice, acumularse en una cola local, y enviarse al backend en lotes — nunca de a uno. Para verificar que los eventos llegan correctamente, también vas a crear un endpoint receptor mínimo en FastAPI: todavía no persiste nada, solo valida el formato y responde 200. La persistencia real en base de datos es trabajo de la Fase 3.
+El entregable es un solo cambio en el backend — pero un cambio que transforma todo: el stub se convierte en un endpoint real que valida cada evento contra el contrato de esquema de la Fase 1, persiste los válidos en Supabase en una sola operación, y reporta exactamente qué se guardó y qué se rechazó. El frontend no cambia ni una línea.
 
-### Mensaje del Tech Lead:
+### Mensaje de tu Tech Lead
 
-> "Quiero ver eventos fluyendo antes de construir la capa de almacenamiento. Crea el `TelemetryService` en el backoffice e instrumenta, como mínimo, todas las métricas obligatorias de tu CONTEXT — y tantas del resto de tu catálogo como te alcance el día, priorizando cubrir distintas categorías (técnicas y de negocio) antes que profundizar en una sola.  
->  
-> Para verificar que el payload llega bien, agrega un endpoint stub en el backend — valida el formato y devuelve 200, sin escribir en base de datos todavía.  
->  
-> Una cosa importante: configura la URL del endpoint como variable de entorno desde el inicio. En la siguiente fase vamos a reemplazar el stub por la implementación real y el frontend no debería necesitar ningún cambio.  
->  
-> No quiero tracking disperso en cada componente. Todo pasa por una única función `track()` — nada más."
+> "El stub ya cumplió su función — sé que los eventos llegan con el formato correcto. Ahora necesito que los guardes.
+> 
+> Crea la tabla en Supabase y reemplaza el stub por el endpoint real. El modelo Pydantic que definiste en la fase anterior es el contrato — úsalo para validar. Los eventos que no cumplan el contrato se rechazan individualmente, pero el resto del lote se persiste igual.
+> 
+> El frontend no toca nada. La URL del endpoint es la misma — solo cambia lo que pasa dentro del backend cuando llega el lote. Si el frontend necesita cambiar algo para que esto funcione, el diseño está mal."
 
 ---
 
-## 📚 Conocimiento complementario — Cómo funciona el sistema de captura
+## 📚 Conocimiento complementario
 
-El servicio de captura del frontend no dispara una llamada HTTP por cada evento — eso generaría cientos de requests por minuto en una aplicación activa y saturaría el backend. El patrón correcto tiene tres mecanismos trabajando juntos:
+### 1. Por qué importa el bulk insert
 
-1. **Cola local + batch:** Los eventos se acumulan en memoria como un arreglo. Cada N segundos, o cuando la cola llega a un tamaño máximo, el servicio envía el lote completo en un solo request (`events: []`). El timestamp de cada evento es el momento de captura, no el momento de envío.
-2. **Flush confiable con `sendBeacon`:** Cuando el usuario cierra la pestaña o navega fuera, el navegador cancela los requests HTTP en curso. `navigator.sendBeacon` resuelve esto — envía el lote pendiente de forma asíncrona y confiable incluso cuando la página se está destruyendo.
-3. **Reintentos con backoff:** Si la red falla, el servicio reintenta con espera exponencial. Si sigue fallando después de N intentos, descarta el lote — los datos de telemetría no son críticos y no deben bloquear la aplicación.
-4. **El endpoint como variable de entorno:** En entornos reales, los equipos de frontend y backend trabajan en paralelo. El frontend apunta a `NEXT_PUBLIC_TELEMETRY_ENDPOINT` — hoy esa variable apunta al stub; mañana apuntará al endpoint real con persistencia. El frontend no cambia.
-5. **La separación perfil/uso:** Los datos del usuario (nombre, rol, preferencias) son estado persistente que vive en la base de datos principal. Los datos de uso son eventos append-only que van a telemetría. Nunca mezcles ambos.
+La telemetría no se escribe igual que los datos de negocio. Un formulario de inventario genera un `INSERT` cuando el usuario hace clic en "Guardar". El `TelemetryService` puede enviar 20 eventos de golpe cada 10 segundos desde múltiples usuarios en paralelo.
+
+Si el endpoint hace un `INSERT` por evento, cada lote de 20 abre 20 transacciones separadas en la base de datos. Con 10 usuarios activos son 200 transacciones por ciclo de flush — y eso en un sistema pequeño. En producción, ese patrón colapsa el pool de conexiones.
+
+El **bulk insert** resuelve esto: todos los eventos válidos de un lote se insertan en una sola transacción. La diferencia entre ambos enfoques es invisible cuando la tabla tiene 100 filas; es catastrófica cuando tiene 10 millones.
+
+La tabla de telemetría no es una tabla CRUD. Sus invariantes son distintos:
+- **Solo escritura:** Nunca se actualiza ni se elimina — los eventos son hechos inmutables.
+- **Columnas fijas (`event_type`, `timestamp`, `service`):** Son las que sostienen las consultas analíticas del siguiente proyecto.
+- **Columna `tags` (`JSONB`):** Guarda el objeto `properties` del envelope (solo las claves del allowlist) sin necesidad de alterar el esquema.
+
+---
+
+### 2. Validación parcial (parseo por evento)
+
+El modelo Pydantic `TelemetryEvent` es el contrato — pero cómo lo aplicas en FastAPI importa.
+
+No tipees el body completo del request como `list[TelemetryEvent]`. Si la firma del endpoint es algo como:
+```python
+batch: TelemetryBatch  # donde events: list[TelemetryEvent]
+```
+Pydantic validará cada evento antes de que tu handler corra. Un evento inválido en el lote causará que FastAPI devuelva `422 Unprocessable Entity` para todo el request, haciendo que el frontend reintente o descarte el lote completo. Eso contradice la aceptación parcial.
+
+**Usa parseo por evento en su lugar:**
+
+1. **Acepta el envelope de forma laxa:** `{ "events": [...] }` — cada elemento de la lista es un `dict` crudo, no un `TelemetryEvent` pre-validado.
+2. **Itera dentro del handler:** Llama a `TelemetryEvent.model_validate(raw)` en cada item dentro de un bloque `try/except ValidationError`.
+3. **Clasifica los eventos:** Los eventos válidos van a la lista de bulk-insert; los inválidos incrementan el contador `rejected` — el loop continúa.
+4. **Respuesta HTTP 200:** Devuelve `{ "received", "stored", "rejected" }` mientras el envelope en sí sea parseable (tenga un arreglo `events`).
+
+#### Comparativa de enfoques
+
+| Enfoque | ¿Qué pasa con un lote mixto? |
+| :--- | :--- |
+| **Body tipado** (`events: list[TelemetryEvent]`) | Todo el request falla con `422` — no se guarda nada. |
+| **Parseo por evento** (`model_validate` en un loop) | Los eventos válidos se guardan; los inválidos se cuentan en `rejected`. |
+
+> [!TIP]
+> El modelo se reutiliza sin cambios desde la Fase 2 — lo usas como validador por item, no como el tipo del body completo.
 
 ---
 
 ## 🌱 Cómo Empezar el Proyecto
 
-1. Abre tu copia del monorepo y ubica `uis/backoffice/` (frontend) y `services/` (backend FastAPI).
-2. Recupera tu `docs/telemetry/event-schemas.json` y crúzalo con tu `CONTEXT-empresa.md` — los nombres de entidad y las claves de propiedades deben coincidir con el vocabulario de dominio de tu compañía.
-3. Agrega `NEXT_PUBLIC_TELEMETRY_ENDPOINT` a tu `.env.local` apuntando al endpoint stub que vas a crear: `http://localhost:8000/telemetry/events`.
-4. Sigue el orden de fases: **stub → servicio → instrumentación**. No instrumentes antes de tener el servicio.
+1. Abre tu copia del monorepo y ubica `services/` (backend FastAPI).
+2. Ten a mano tu `docs/telemetry/event-schemas.json` y `telemetry-plan.md` — confirma que el mapeo a `tags` preserva las dimensiones específicas de tu CONTEXT (almacén, oficina, etc.) definidas en tu plan.
+3. El frontend no se toca. Verifica que `NEXT_PUBLIC_TELEMETRY_ENDPOINT` siga apuntando al mismo endpoint — solo cambia lo que pasa dentro del backend.
+4. Sigue el orden: tabla en Supabase → endpoint real → verificación end-to-end.
 
 ---
 
-## 💻 Qué Necesitas Hacer
+## 🧊 Qué Necesitas Hacer
 
-### Fase 1 — Endpoint stub en FastAPI
+### Fase 1 — Tabla de almacenamiento en Supabase
 
-> [!WARNING]
-> **Este endpoint es temporal y solo para verificación.** Su único propósito es dejarte comprobar que el payload llega con el formato correcto. En la Fase 3 (siguiente proyecto) lo reemplazarás por la implementación real con validación completa y persistencia en Supabase.
+- Crea la tabla `telemetry_events` en Supabase con la siguiente estructura:
+- Mapea cada `TelemetryEvent` de la API a una fila de la tabla con este contrato:
+- Crea los tres índices que hacen la tabla consultable a escala: en `timestamp`, en `event_type`, y un índice GIN en `tags` para búsquedas dentro del JSONB.
+- Confirma que la tabla no tiene lógica de UPDATE o DELETE — los eventos de telemetría son inmutables una vez registrados.
 
-- [ ] Crea el endpoint `POST /telemetry/events` en el backend, en su propio router dentro de `services/`. Por ahora debe:
-  - Aceptar un body con la forma `{ "events": [...] }`
-  - Registrar en log la cantidad de eventos recibidos y el `event_type` de cada uno
-  - Responder `200 OK` con `{ "received": N }` donde `N` es la cantidad de eventos del lote
-- [ ] Define el modelo Pydantic `TelemetryEvent` con los campos estándar del envelope de tu plan (`eventId`, `timestamp`, `sessionId`, `userId`, `event_type`, `schemaVersion`, `requestId`, `properties`). Este modelo se reutilizará sin cambios en la Fase 3 — defínelo bien desde ahora.
-- [ ] Lee la URL del endpoint desde la variable de entorno `TELEMETRY_ENDPOINT` en el backend, aunque todavía no la uses para redirigir tráfico. Establece el patrón desde el inicio.
+### Fase 2 — Endpoint real en FastAPI
 
----
+- [ ] Reemplaza el stub `POST /telemetry/events` con la implementación completa. El endpoint real debe:
+  - Aceptar el mismo envelope que el stub: `{ "events": [...] }` — parsea la lista de forma laxa; **no** declares `events: list[TelemetryEvent]` como tipo del body de FastAPI (ver validación parcial más arriba).
+  - Validar cada evento crudo individualmente con `TelemetryEvent.model_validate(...)` — el mismo modelo de la fase anterior, sin modificarlo.
+  - Rechazar individualmente los eventos que no cumplan el contrato, **sin cancelar el lote** — los eventos válidos del mismo lote se persisten igual.
+  - Insertar los eventos válidos en `telemetry_events` en una única operación de bulk insert.
+  - Devolver `{ "received": N, "stored": M, "rejected": R }` donde N es el total recibido, M el persistido, y R el rechazado.
+- [ ] Verifica que la respuesta del endpoint real sea compatible con el frontend existente — el `TelemetryService` solo mira el código de estado HTTP, no el body de la respuesta.
 
-### Fase 2 — TelemetryService en el frontend
+### Fase 3 — Verificación end-to-end
 
-- [ ] Crea `uis/backoffice/src/services/telemetry.ts` (o equivalente) con las siguientes responsabilidades:
-  - **Cola local:** acumular eventos en memoria en un arreglo interno
-  - **Batch + debounce:** enviar la cola a `NEXT_PUBLIC_TELEMETRY_ENDPOINT` cada 10 segundos o cuando llegue a 20 eventos, lo que ocurra primero
-  - **Flush confiable:** usar `navigator.sendBeacon` en el evento `visibilitychange` para garantizar que los eventos pendientes se envíen al cerrar o esconder la pestaña
-  - **Reintentos con backoff:** si el envío falla, reintentar hasta 3 veces con espera exponencial antes de descartar el lote
-- [ ] El servicio debe agregar automáticamente a cada evento: `eventId` (UUID generado al capturar), `sessionId` (generado al login y guardado en memoria de sesión), `userId` (de la sesión autenticada), `timestamp` en ISO 8601 al momento de la captura, `schemaVersion` desde una constante compartida, y `requestId` para correlación. Los componentes que llamen a `track()` no deben pasar estos campos manualmente.
-- [ ] Expón una única función pública `track(eventType: string, properties: Record<string, unknown>): void`. El argumento `eventType` se convierte en el campo `event_type` del envelope. Todo el tracking del backoffice pasa por esta función — nunca por `fetch` o `axios` directos.
-
----
-
-### Fase 3 — Instrumentación amplia: técnica y de negocio
-
-- [ ] Instrumenta, sin excepción, **todas las métricas obligatorias** de tu `CONTEXT-empresa.md` (a través de tu plan aprobado).
-- [ ] Instrumenta un **piso técnico transversal**, que aplica a cualquier parte de la aplicación y no solo al inventario:
-  - Errores de frontend no capturados (`window.onerror`, `unhandledrejection`, o Error Boundaries)
-  - Al menos una métrica de rendimiento (tiempo de carga de página o latencia de una llamada a API relevante)
-  - Vista de página / navegación (page view) en al menos las secciones principales del backoffice
-- [ ] Instrumenta el resto de eventos de negocio de tu plan que priorizaste (inventario u otros flujos de tu compañía), respetando el allowlist de propiedades definido para cada evento en tu `event-schemas.json`. No agregues propiedades extra "por si acaso".
-- [ ] Verifica en las DevTools del navegador (pestaña Network) que los lotes llegan al endpoint stub con el formato correcto y que el backend responde 200.
-
-> [!IMPORTANT]
-> **IMPORTANTE:** los valores de `event_type` y las claves de `properties` deben coincidir con tus esquemas aprobados en la Fase 1, fundamentados en `CONTEXT-empresa.md`. Copiar nombres de eventos genéricos de este README en lugar de tu plan no será aceptado.
-
----
-
-### 🔵 Actividad adicional — Rendimiento y Web Vitals
-
-- [ ] Instrumenta Web Vitals (`reportWebVitals` en Next.js u equivalente) y envíalos como eventos de telemetría, agregando la ruta o página como parte de `properties`.
-- [ ] Si instrumentaste eventos de autenticación en tu plan (login fallido, sesión expirada), captúralos en los hooks o componentes de autenticación — no en cada página individualmente. El evento de login fallido debe incluir en `properties` la razón del fallo (`invalid_credentials`, `session_expired`, `network_error`) pero **nunca** el valor ingresado como contraseña o email.
+- [ ] Con el endpoint real activo, usa el backoffice para generar eventos reales: registra al menos una orden de entrada y una de salida en el módulo de inventario, y genera al menos un evento técnico (un error, un login fallido, etc.).
+- [ ] Consulta directamente la tabla `telemetry_events` en Supabase y confirma que los eventos aparecen con los campos correctos — especialmente `event_type`, `timestamp` y `tags`.
+- [ ] Prueba el comportamiento de rechazo: envía manualmente (con curl o tu cliente HTTP preferido) un lote que mezcle eventos válidos e inválidos y verifica que la respuesta refleje correctamente `stored` y `rejected`.
 
 ---
 
 ## ✅ Qué Vamos a Evaluar
 
-- [ ] El endpoint stub `POST /telemetry/events` existe, acepta arreglos con el modelo `TelemetryEvent`, y devuelve `{ "received": N }`
-- [ ] El modelo Pydantic `TelemetryEvent` refleja el envelope estándar de la Fase 1 con todos sus campos
-- [ ] La URL del endpoint se lee desde `NEXT_PUBLIC_TELEMETRY_ENDPOINT` — no está hardcodeada
-- [ ] El backend declara `TELEMETRY_ENDPOINT` en su configuración de entorno para establecer el patrón desde el inicio
-- [ ] El `TelemetryService` implementa cola local, batch+debounce (10s / 20 eventos), flush con `sendBeacon`, y reintentos con backoff
-- [ ] El servicio genera `eventId`, `sessionId`, `userId`, `timestamp`, `schemaVersion` y `requestId` automáticamente — el componente que llama a `track()` no los pasa manualmente
-- [ ] No hay llamadas directas a `fetch` / `axios` para telemetría fuera del `TelemetryService`
-- [ ] Todas las métricas obligatorias del CONTEXT están instrumentadas
-- [ ] El piso técnico transversal (errores, rendimiento, navegación) está instrumentado, no solo el flujo de inventario
-- [ ] Los eventos instrumentados usan `event_type` y allowlists de propiedades del plan del estudiante, fundamentados en `CONTEXT-empresa.md` — no placeholders genéricos de este README
-- [ ] No hay PII (email, nombre, contraseña) en ningún evento enviado
-- [ ] La pestaña Network de DevTools muestra lotes llegando al endpoint con el formato correcto y respuesta 200
+- [ ] La tabla `telemetry_events` existe en Supabase con las ocho columnas, los tres índices, y sin lógica de UPDATE/DELETE
+- [ ] El endpoint `POST /telemetry/events` hace bulk insert y devuelve `{ "received", "stored", "rejected" }`
+- [ ] Los eventos inválidos se rechazan individualmente sin cancelar el lote — los válidos se persisten (validación por evento con `model_validate`, no un body tipado `list[TelemetryEvent]` que devolvería `422` para todo el lote)
+- [ ] El modelo Pydantic `TelemetryEvent` no fue modificado desde el proyecto anterior — se reutiliza tal cual
+- [ ] El frontend no cambió ni una línea — la sustitución stub → real es completamente transparente
+- [ ] Los eventos aparecen en `telemetry_events` con `event_type`, `timestamp` y `tags` correctamente poblados, tanto para eventos técnicos como de negocio
+- [ ] El `tags` guardado preserva los allowlists de propiedades y las dimensiones específicas del CONTEXT documentadas en `telemetry-plan.md`
+- [ ] El insert es una sola operación por lote, no un INSERT por evento
 
 ---
 
 ## 📦 Cómo Entregar
 
-1. Asegúrate de que los cambios estén en tu copia: endpoint stub en `services/` y `TelemetryService` + instrumentación en `uis/backoffice/`.
-2. Crea un Pull Request contra la rama principal del monorepo con el título: `feat: telemetry event capture`.
+1. Asegúrate de que los cambios estén en tu copia: tabla creada en Supabase y endpoint real en `services/`.
+2. Crea un Pull Request contra la rama principal del monorepo con el título: `feat: telemetry event storage`.
 3. En la descripción del PR, incluye:
-   - La lista de eventos instrumentados, marcando cuáles son obligatorios y cuáles identificados por ti, y qué componente o hook captura cada uno
-   - Una captura de DevTools mostrando un lote de eventos llegando al stub con respuesta 200
-   - Si implementaste la actividad adicional (Web Vitals / autenticación)
+   - Una captura de la tabla `telemetry_events` en Supabase con al menos 5 filas de eventos reales, incluyendo al menos un evento técnico y uno de negocio
+   - El JSON de respuesta de un lote que mezcle eventos válidos e inválidos (mostrando `received`, `stored` y `rejected`)
+   - Confirmación explícita de que el frontend no cambió
