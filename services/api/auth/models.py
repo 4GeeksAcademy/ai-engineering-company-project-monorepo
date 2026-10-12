@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -29,8 +27,23 @@ class ProfilePublic(BaseModel):
     phone: str | None = None
     address: str | None = None
 
+
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=8)
     is_active: bool | None = None
     role: str | None = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
