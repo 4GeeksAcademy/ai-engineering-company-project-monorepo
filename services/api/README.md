@@ -130,7 +130,7 @@ Two stores, each request reaching the right one: **TinyDB** for `users/` and `pr
 | `inventory/models.py` | ORM tables (SQLModel): `assets`, `asset_entries` (inbound), `asset_exits` (outbound). FKs to `assets`, `CHECK`s on quantities and on `assigned_to` vs `exit_type`, `UNIQUE` SKU. |
 | `inventory/schemas.py` | Pydantic request/response shapes. An ORM object is never returned from an endpoint. |
 | `inventory/service.py` | Stock derivation, the insufficient-stock rule, the queries. |
-| `inventory/router.py` | `APIRouter(prefix="/inventory")`, every route behind `get_current_user`. |
+| `routers/inventory.py` | `APIRouter(prefix="/inventory")`, every route behind `get_current_user` (the path the Hito 5 CONTEXT gives it). |
 | `inventory/database.py` | Both connections: the existing TinyDB client and the SQLModel engine. `init_db()` starts them (and creates the tables) on startup; `get_db` is the per-request SQL session dependency. |
 | `inventory/seeding.py` | The CONTEXT's seed data and the `seed-inventory` command. |
 
