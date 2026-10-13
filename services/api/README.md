@@ -9,6 +9,7 @@ Centralized FastAPI backend for Nexova, per [docs/ARCHITECTURE_PROPOSAL.md](../.
 - **`users/`** — Internal accounts (email + password, bcrypt-hashed through `libpass`) with full CRUD, stored in TinyDB.
 - **`profiles/`** — One `Profile` per user (strictly one-to-one through `user_id`, the `User.id`): the **name and the contact data** (`contact_email`, `phone`, `address`) live here, not in `User`. Stored in TinyDB (`profiles/db.json`, gitignored).
 - **`auth/`** — Login (OAuth2 password flow + JWT carrying the user `id`) and the `get_current_user` dependency used to protect every other domain.
+- **`inventory/`** — Equipment and materials inventory (Hito 5, spec: [CONTEXT — Hito 5](../../CONTEXT%20—%20Hito%205:%20Gestión-de-Inventario-Backend)). The second store of the app: assets and their inbound/outbound orders live in **PostgreSQL (Supabase)** through SQLModel, while users and sessions stay in TinyDB (see [Inventory](#inventory)).
 - **`suppliers/`** — Supplier directory ("Directorio de Proveedores", Patricia Solís / Nexova). Replaces the HR spreadsheet with a [TinyDB](https://tinydb.readthedocs.io/)-backed store, seeded on startup with the 15 suppliers from [`suppliers/seed_data.py`](./suppliers/seed_data.py) (spec: [CONTEXT-suppliers.md](./suppliers/CONTEXT-suppliers.md)). Pydantic (`suppliers/schemas.py`) rejects with `422` any missing `country`, a `status` outside `active`/`suspended`, empty `categories`, or a `currency` that doesn't match the country (Spain→EUR, USA→USD). Suspending (not deleting) is the preferred way to retire a supplier.
 
 ## Incident manager
@@ -116,12 +117,40 @@ Protection is applied on the routers themselves (`dependencies=[Depends(get_curr
 | `SECRET_KEY` | JWT signing key, at least 32 characters (`openssl rand -hex 32`). **Required in production.** If unset, a random per-process key is used (sessions die on restart, and it breaks with several workers). |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime in minutes (default `30`). An invalid value (`0`, negative, not an integer) stops the API at startup. |
 | `AUTH_INITIAL_EMAIL` / `AUTH_INITIAL_PASSWORD` | Creates the first user on startup, only if the user store is empty. |
+| `DATABASE_URL` | SQL connection for the inventory: the Supabase *Transaction pooler* URI. If unset, a local SQLite file is used (development only). Users and sessions never use it. |
 
 Without them the API starts with no users; create one with `uv run create-user --email <email>` (prompts for the password).
 
+## Inventory
+
+Two stores, each request reaching the right one: **TinyDB** for `users/` and `profiles/` (authentication, untouched) and **SQL** for `inventory/`.
+
+| File | Role |
+|---|---|
+| `inventory/models.py` | ORM tables (SQLModel): `assets`, `asset_entries` (inbound), `asset_exits` (outbound). FKs to `assets`, `CHECK`s on quantities and on `assigned_to` vs `exit_type`, `UNIQUE` SKU. |
+| `inventory/schemas.py` | Pydantic request/response shapes. An ORM object is never returned from an endpoint. |
+| `inventory/service.py` | Stock derivation, the insufficient-stock rule, the queries. |
+| `inventory/router.py` | `APIRouter(prefix="/inventory")`, every route behind `get_current_user`. |
+| `inventory/database.py` | Both connections: the existing TinyDB client and the SQLModel engine. `init_db()` starts them (and creates the tables) on startup; `get_db` is the per-request SQL session dependency. |
+| `inventory/seeding.py` | The CONTEXT's seed data and the `seed-inventory` command. |
+
+- **Stock is never stored or editable.** `current_stock = SUM(entries) − SUM(exits)`, computed on every read and present only in responses. There is no `PUT`/`PATCH`/`DELETE` on assets or orders; the only way to move stock is to register an order. A new asset starts at 0.
+- **An outbound order above the stock is `400`** (`Insufficient stock for asset '<name>'. Available: <n>, requested: <q>.`) and nothing is written. On PostgreSQL the asset row is locked (`SELECT … FOR UPDATE`) while the check and the insert run, so two simultaneous orders cannot both pass.
+- **`office` is the partition key.** Both offices share the tables, but each asset belongs to one: an order from a different office is refused (`422`) and the stock only sums the orders of the asset's own office. The same product in two offices is two assets (`NXV-IT-001` Valencia, `NXV-IT-002` Miami).
+- **`assigned_to`** is required for `exit_type = "allocation"` and must be null for `"consumption"` (`422`; also a `CHECK` in the database).
+- **Traceability.** Each order stores `user_uuid`, the TinyDB `User.id` of the authenticated user. It is never read from the request body. There is no users table in SQL and no foreign key on `user_uuid`.
+- **No N+1.** The product list is one statement (a correlated aggregate for the stock); the order list is two (one `JOIN assets` per order table), however many rows there are.
+
+Connection: set `DATABASE_URL` in `.env` to the Supabase **Transaction pooler** URI (*Connect → Transaction pooler → URI*). Without it the API uses a local SQLite file (`inventory/db.sqlite`, gitignored) and seeds it on startup if empty. With Supabase, load the seed yourself:
+
+```bash
+uv run seed-inventory            # seed only if the inventory is empty
+uv run seed-inventory --reset    # wipe assets and orders, then reload
+```
+
 ## Endpoints
 
-Routes are served under one prefix per domain: `/auth`, `/users`, `/profiles`, `/suppliers`. Supplier routes are also mounted at `/api/suppliers` (hidden from `/docs`): that is the path the backoffice uses through the Vite proxy, which only forwards `/api`. Incident routes live at `/api/incidents`, fixed by the project brief.
+Routes are served under one prefix per domain: `/auth`, `/users`, `/profiles`, `/suppliers`, `/inventory`. Supplier routes are also mounted at `/api/suppliers` (hidden from `/docs`): that is the path the backoffice uses through the Vite proxy, which only forwards `/api`. Incident routes live at `/api/incidents`, fixed by the project brief.
 
 All endpoints below need a session (see above) except `POST /auth/login`, `POST /users` and `/health`.
 
@@ -151,6 +180,12 @@ All endpoints below need a session (see above) except `POST /auth/login`, `POST 
 | `PATCH` | `/suppliers/{id}/rate` | Update the monthly rate (`{"monthly_rate": 350}`). Always stamps `updated_at` with the time of the change. `422` if the rate is `<= 0`; `404` if the supplier doesn't exist. |
 | `PATCH` | `/suppliers/{id}/status` | Activate/suspend (`{"status": "active" \| "suspended"}`). |
 | `DELETE` | `/suppliers/{id}` | Remove a supplier (`204`). `404` if it doesn't exist. The CONTEXT prefers suspending to keep the relationship history; use this for entries made by mistake. |
+| `GET` | `/inventory/products?office=&category=` | List the assets with their derived `current_stock`; both filters are optional. |
+| `POST` | `/inventory/products` | Register an asset (`name`, `sku`, `category`, `office`); it starts with `current_stock: 0` (`201`). `409` if the SKU exists, `422` on an unknown `category`/`office` or blank text. |
+| `GET` | `/inventory/products/{id}` | One asset with its current stock. `404` if missing. |
+| `POST` | `/inventory/orders/inbound` | Register a delivery (`AssetEntry`: `asset_id`, `quantity` > 0, `supplier`, `office`); adds stock (`201`). `404` unknown asset. |
+| `POST` | `/inventory/orders/outbound` | Register an allocation or consumption (`AssetExit`: `asset_id`, `quantity` > 0, `exit_type`, `assigned_to`, `office`); removes stock (`201`). `400` if it exceeds the stock, `422` if `assigned_to` does not match `exit_type`, `404` unknown asset. |
+| `GET` | `/inventory/orders?office=&type=inbound\|outbound` | Every inbound and outbound order with its asset, newest first. |
 | `GET` | `/health` | Public liveness check. |
 
 Interactive docs (Swagger UI) are available at `/docs` when the server is running; use *Authorize* there with your email (in the *username* box) and password to try the protected routes.

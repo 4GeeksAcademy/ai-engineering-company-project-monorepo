@@ -15,6 +15,9 @@ from core.config import get_allowed_origins, get_jwt_secret
 from core.errors import validation_error_handler
 from incidents.incident_router import router as incident_manager_router
 from incidents.router import router as incidents_router
+from inventory.database import init_db as init_inventory_db
+from inventory.router import router as inventory_router
+from inventory.seeding import seed_local_if_empty
 from profiles import service as profiles_service
 from profiles.router import router as profiles_router
 from suppliers.router import router as suppliers_router
@@ -30,6 +33,8 @@ async def lifespan(_: FastAPI):
     users_service.migrate_legacy_users()
     profiles_service.migrate_legacy_profiles()
     users_service.sync_profiles()
+    init_inventory_db()  # SQL tables (Supabase, or the local SQLite fallback); TinyDB is untouched
+    seed_local_if_empty()
     yield
 
 
@@ -55,6 +60,7 @@ app.include_router(incidents_router)  # CSV analysis; first, so its fixed paths 
 app.include_router(incident_manager_router)
 app.include_router(suppliers_router, prefix="/suppliers")
 app.include_router(suppliers_router, prefix="/api/suppliers", include_in_schema=False)
+app.include_router(inventory_router)  # prefix="/inventory" is set on the router itself
 
 
 @app.get("/health")
