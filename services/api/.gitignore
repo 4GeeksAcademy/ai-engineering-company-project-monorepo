@@ -9,3 +9,6 @@ users/db.json
 
 # User profiles store (display names and contact data, created at runtime)
 profiles/db.json
+
+# Inventory local fallback database (used when DATABASE_URL is not set)
+inventory/db.sqlite

@@ -17,6 +17,8 @@ dependencies = [
     "incidents-analyzer",
     "libpass[bcrypt]>=1.9",
     "python-dotenv>=1.0",
+    "sqlmodel>=0.0.48",
+    "psycopg2-binary>=2.9.13",
 ]
 
 [dependency-groups]
@@ -29,6 +31,7 @@ dev = [
 [project.scripts]
 seed = "seed:main"
 create-user = "auth.cli:main"
+seed-inventory = "inventory.seeding:main"
 
 [tool.uv.sources]
 incidents-analyzer = { path = "../../packages/shared/incidents_analyzer", editable = true }
@@ -37,7 +40,7 @@ incidents-analyzer = { path = "../../packages/shared/incidents_analyzer", editab
 py-modules = ["main", "seed"]
 
 [tool.setuptools.packages.find]
-include = ["auth*", "core*", "incidents*", "profiles*", "suppliers*", "users*"]
+include = ["auth*", "core*", "incidents*", "inventory*", "profiles*", "suppliers*", "users*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -7,6 +7,7 @@ import os
 import secrets
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 from dotenv import load_dotenv
 
@@ -55,6 +56,56 @@ def get_users_db_path() -> Path:
 def get_profiles_db_path() -> Path:
     """TinyDB file for the user profiles (gitignored runtime state)."""
     return Path(__file__).resolve().parent.parent / "profiles" / "db.json"
+
+
+def get_local_inventory_db_path() -> Path:
+    """SQLite file used by the inventory domain when DATABASE_URL is not set (gitignored)."""
+    return Path(__file__).resolve().parent.parent / "inventory" / "db.sqlite"
+
+
+def uses_local_inventory_db() -> bool:
+    """True when the inventory runs on the local SQLite fallback, not on Supabase."""
+    return not os.environ.get("DATABASE_URL")
+
+
+def get_database_url() -> str:
+    """SQL connection string for the inventory domain, from the DATABASE_URL env var.
+
+    In production this is the Supabase *Transaction pooler* URI. Its scheme is normalised to
+    ``postgresql+psycopg2://`` so the driver in ``pyproject.toml`` is the one used. Without
+    DATABASE_URL we fall back to a local SQLite file so development and tests work out
+    of the box, the same way a missing SECRET_KEY does. Users and profiles never go
+    through this connection: they stay in TinyDB.
+    """
+    raw = os.environ.get("DATABASE_URL", "").strip()
+    if not raw:
+        path = get_local_inventory_db_path()
+        logger.warning("DATABASE_URL is not set: inventory uses the local SQLite file %s", path)
+        return f"sqlite:///{path}"
+    # Pin the driver we install (psycopg2): SQLAlchemy 2.1 defaults a bare ``postgresql://``
+    # to psycopg v3, and Supabase/Heroku still hand out the legacy ``postgres://`` scheme.
+    for scheme in ("postgres://", "postgresql://"):
+        if raw.startswith(scheme):
+            return "postgresql+psycopg2://" + _encode_password(raw[len(scheme):])
+    if raw.startswith("postgresql+psycopg2://"):
+        prefix = "postgresql+psycopg2://"
+        return prefix + _encode_password(raw[len(prefix):])
+    return raw
+
+
+def _encode_password(rest: str) -> str:
+    """Percent-encode the password inside ``user:password@host/db``.
+
+    A password with ``@``, ``#``, ``/`` or ``:`` written as it is would be read as part of the
+    host. The host is whatever follows the *last* ``@``, so everything before it is
+    credentials. Already-encoded passwords (``%40``) are decoded first, so the result is the
+    same whether or not the caller encoded it.
+    """
+    credentials, at, host = rest.rpartition("@")
+    if not at or ":" not in credentials:
+        return rest
+    user, _, password = credentials.partition(":")
+    return f"{user}:{quote(unquote(password), safe='')}@{host}"
 
 
 @lru_cache(maxsize=1)
