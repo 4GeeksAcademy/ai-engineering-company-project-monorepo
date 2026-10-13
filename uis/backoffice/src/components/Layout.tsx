@@ -3,7 +3,18 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, FileBarChart, LayoutDashboard, LogOut, Truck, UserCircle } from "lucide-react";
+import {
+  Boxes,
+  ClipboardList,
+  FileBarChart,
+  LayoutDashboard,
+  LogOut,
+  PackageMinus,
+  PackagePlus,
+  ScrollText,
+  Truck,
+  UserCircle,
+} from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 
 const navItems = [
@@ -11,6 +22,10 @@ const navItems = [
   { href: "/incidents", label: "Incidencias", icon: ClipboardList, end: false, exclude: "/incidents/analysis" },
   { href: "/incidents/analysis", label: "Análisis de incidentes", icon: FileBarChart, end: false },
   { href: "/suppliers", label: "Proveedores", icon: Truck, end: false },
+  { href: "/inventory/products", label: "Inventario de activos", icon: Boxes, end: true },
+  { href: "/inventory/orders/inbound", label: "Entrada de activos", icon: PackagePlus, end: true },
+  { href: "/inventory/orders/outbound", label: "Salida de activos", icon: PackageMinus, end: true },
+  { href: "/inventory/orders", label: "Historial de órdenes", icon: ScrollText, end: true },
   { href: "/account/profile", label: "Mi perfil", icon: UserCircle, end: false },
 ];
 

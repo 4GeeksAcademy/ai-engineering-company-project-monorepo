@@ -8,11 +8,12 @@ import type {
 } from "@repo/shared-types";
 import type { AnalyzeResponse } from "../types/incidents";
 import type { Supplier, SupplierCreate, SupplierStatus } from "../types/suppliers";
+import type { DirectoryEntry } from "../types/inventory";
 import type { Me, Profile, ProfileUpdate, SignUpOut, SignUpPayload } from "../types/auth";
 import { clearToken, getToken, setToken } from "./token";
 
 // Vacío = mismo origen: los rewrites de next.config.mjs reenvían las llamadas a la API local.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(
@@ -56,7 +57,8 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    const url = /^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path}`;
+    response = await fetch(url, { ...init, headers });
   } catch {
     // fetch only rejects when the request never got an answer (offline, API down, DNS...).
     throw new ApiError("No response from the server", 0);
@@ -64,6 +66,21 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   // Only if it is still the stored token: a late 401 for an old one must not end a newer session.
   if (response.status === 401 && token && getToken() === token) clearToken();
   return response;
+}
+
+/**
+ * A JSON call to a protected route: carries the bearer token (via apiFetch) and throws an ApiError, with the
+ * message taken from the response body, on any 4xx/5xx. Domain modules (lib/inventory.ts) build on this so no
+ * component ever calls fetch itself.
+ */
+export async function jsonRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const response = await apiFetch(path, { ...init, headers });
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return response.json();
 }
 
 export async function login(email: string, password: string): Promise<void> {
@@ -152,16 +169,7 @@ export async function downloadResultsCsv(): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-async function suppliersRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await apiFetch(`/api/suppliers${path}`, {
-    ...init,
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-  });
-  if (!response.ok) {
-    throw await toApiError(response);
-  }
-  return response.json();
-}
+const suppliersRequest = <T>(path: string, init?: RequestInit) => jsonRequest<T>(`/api/suppliers${path}`, init);
 
 export const listSuppliers = () => suppliersRequest<Supplier[]>("");
 
@@ -190,16 +198,7 @@ export function filtersQuery(filters: IncidentFilters): URLSearchParams {
   return params;
 }
 
-async function incidentsRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await apiFetch(`/api/incidents${path}`, {
-    ...init,
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-  });
-  if (!response.ok) {
-    throw await toApiError(response);
-  }
-  return response.json();
-}
+const incidentsRequest = <T>(path: string, init?: RequestInit) => jsonRequest<T>(`/api/incidents${path}`, init);
 
 export function listIncidents(
   filters: IncidentFilters,
@@ -241,3 +240,8 @@ export const updateIncident = (incidentId: string, changes: Partial<IncidentFiel
 
 export const changeIncidentStatus = (incidentId: string, change: StatusChangeInput) =>
   incidentsRequest<Incident>(`/${encodeURIComponent(incidentId)}/status`, { method: "PATCH", body: JSON.stringify(change) });
+
+/** Names of the active users, to show who registered each inventory order (orders only carry the user's UUID). */
+export async function listUserDirectory(): Promise<DirectoryEntry[]> {
+  return jsonRequest<DirectoryEntry[]>("/users/directory");
+}

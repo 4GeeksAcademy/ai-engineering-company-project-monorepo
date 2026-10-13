@@ -25,6 +25,8 @@ export default createJestConfig({
     "src/lib/format.ts",
     "src/lib/labels.ts",
     "src/lib/useDebounced.ts",
+    "src/lib/inventory.ts",
+    "src/lib/inventoryRules.ts",
     "src/auth/**/*.{ts,tsx}",
   ],
   coverageReporters: ["text", "html"],
@@ -42,6 +44,8 @@ export default createJestConfig({
     "./src/lib/format.ts": { statements: 90, branches: 90, functions: 90, lines: 90 },
     "./src/lib/labels.ts": { statements: 90, branches: 90, functions: 90, lines: 90 },
     "./src/lib/useDebounced.ts": { statements: 90, branches: 90, functions: 90, lines: 90 },
+    "./src/lib/inventory.ts": { statements: 90, branches: 90, functions: 90, lines: 90 },
+    "./src/lib/inventoryRules.ts": { statements: 90, branches: 90, functions: 90, lines: 90 },
     "./src/lib/api.ts": { statements: 45, branches: 65, functions: 30, lines: 50 },
   },
 });
