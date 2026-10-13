@@ -15,6 +15,7 @@ dependencies = [
     "psycopg2-binary>=2.9.13",
     "python-dotenv>=1.2.3",
     "httpx>=0.28.1",
+    "pandas>=3.0.6",
 ]
 
 [project.scripts]

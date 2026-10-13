@@ -1,131 +1,148 @@
-# Telemetría de tu compañía – Almacenamiento
+# Telemetría de tu compañía – Reporte técnico
 
-> [!IMPORTANT]
-> **Antes de empezar:** Necesitas el `TelemetryService` funcionando en el frontend y enviando lotes al stub del proyecto anterior. Si los eventos no llegan al stub con respuesta `200`, resuelve eso antes de continuar — hoy construyes el destino real de esos eventos.
-
-Tu `CONTEXT-empresa.md` explica qué campos del envelope y qué dimensiones de tags importan para el análisis de tu compañía — confirma que los campos opcionales que guardes en `tags` coinciden con lo documentado en `telemetry-plan.md`.
+> **Antes de empezar:** necesitas la tabla `telemetry_events` en Supabase con al menos 20 filas de eventos reales generados desde el backoffice, incluyendo al menos un evento técnico (error, login fallido, etc.) además de los de negocio. Sin datos reales no hay nada que analizar.  
+> Este proyecto produce un reporte técnico, no un reporte de negocio. Las métricas orientadas a decisiones de negocio (ventas, conversión, ingresos) se construyen más adelante, en el Hito de Data Pipelines, con herramientas dedicadas a ese análisis.
 
 ---
 
 ## 🎯 Tu reto
 
-> [!NOTE]
-> 📌 Estás construyendo sobre tu copia del monorepo de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
+📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-Los eventos están fluyendo desde el frontend — obligatorios y de tu propio catálogo, técnicos y de negocio. El stub los recibe y los descarta. Hoy construyes lo que el stub prometía: el sistema que realmente los guarda.
+Los datos ya están ahí. La tabla `telemetry_events` tiene eventos reales con `timestamp`, `event_type` y `tags`. Pero el dato crudo no es la respuesta — es la materia prima. Hoy la transformas, pero no en un reporte de negocio: en un reporte técnico. Un radar operacional para el propio equipo de ingeniería — qué tan sano está el sistema, qué tan rápido responde, dónde fallan las cosas, qué eventos ocurren con más frecuencia y por qué.
 
-El entregable es un solo cambio en el backend — pero un cambio que transforma todo: el stub se convierte en un endpoint real que valida cada evento contra el contrato de esquema de la Fase 1, persiste los válidos en Supabase en una sola operación, y reporta exactamente qué se guardó y qué se rechazó. El frontend no cambia ni una línea.
+El entregable es un pipeline de análisis en Python y un endpoint que sirve el resultado: métricas operacionales calculadas a partir de los eventos almacenados, servidas como JSON, listas para ser consumidas por cualquier dashboard técnico o herramienta de monitoreo interno.
 
-### Mensaje de tu Tech Lead
+### Mensaje del Tech Lead:
 
-> "El stub ya cumplió su función — sé que los eventos llegan con el formato correcto. Ahora necesito que los guardes.
-> 
-> Crea la tabla en Supabase y reemplaza el stub por el endpoint real. El modelo Pydantic que definiste en la fase anterior es el contrato — úsalo para validar. Los eventos que no cumplan el contrato se rechazan individualmente, pero el resto del lote se persiste igual.
-> 
-> El frontend no toca nada. La URL del endpoint es la misma — solo cambia lo que pasa dentro del backend cuando llega el lote. Si el frontend necesita cambiar algo para que esto funcione, el diseño está mal."
-
----
-
-## 📚 Conocimiento complementario
-
-### 1. Por qué importa el bulk insert
-
-La telemetría no se escribe igual que los datos de negocio. Un formulario de inventario genera un `INSERT` cuando el usuario hace clic en "Guardar". El `TelemetryService` puede enviar 20 eventos de golpe cada 10 segundos desde múltiples usuarios en paralelo.
-
-Si el endpoint hace un `INSERT` por evento, cada lote de 20 abre 20 transacciones separadas en la base de datos. Con 10 usuarios activos son 200 transacciones por ciclo de flush — y eso en un sistema pequeño. En producción, ese patrón colapsa el pool de conexiones.
-
-El **bulk insert** resuelve esto: todos los eventos válidos de un lote se insertan en una sola transacción. La diferencia entre ambos enfoques es invisible cuando la tabla tiene 100 filas; es catastrófica cuando tiene 10 millones.
-
-La tabla de telemetría no es una tabla CRUD. Sus invariantes son distintos:
-- **Solo escritura:** Nunca se actualiza ni se elimina — los eventos son hechos inmutables.
-- **Columnas fijas (`event_type`, `timestamp`, `service`):** Son las que sostienen las consultas analíticas del siguiente proyecto.
-- **Columna `tags` (`JSONB`):** Guarda el objeto `properties` del envelope (solo las claves del allowlist) sin necesidad de alterar el esquema.
+> "Tenemos datos. Ahora necesito visibilidad técnica sobre el sistema.
+>
+> Escribe el pipeline de análisis. Para cada dimensión operacional relevante, una función de Python que cargue los eventos correspondientes, los transforme con Pandas, y devuelva un resultado serializable. Luego un endpoint `GET /telemetry/report` que los sirva juntos.
+>
+> Dos reglas no negociables: primero, no calcules nada dentro del endpoint en cada request — el pipeline va aparte y el endpoint lo llama, con cache. Segundo, convierte los timestamps a datetime antes de cualquier agrupación — si no lo haces, vas a obtener grupos incorrectos sin ningún error visible, y vas a perder horas encontrando el bug.
+>
+> Una aclaración importante: esto no es el reporte para el CEO. Nada de tasas de conversión ni ingresos — eso lo vamos a construir con los pipelines de datos más adelante. Hoy quiero saber qué tan sano está el sistema: volumen de eventos, tasa de errores, latencia, qué tipos de evento dominan. Métricas con dimensión temporal real, no un número global sin contexto."
 
 ---
 
-### 2. Validación parcial (parseo por evento)
+## 📚 Conocimiento complementario — La fórmula de cualquier reporte
 
-El modelo Pydantic `TelemetryEvent` es el contrato — pero cómo lo aplicas en FastAPI importa.
+Los datos en `telemetry_events` responden "¿qué pasó?". Las preguntas operacionales son distintas: "¿cuántos eventos de error hubo por día esta semana?" o "¿qué tipo de evento es más frecuente?". Responderlas requiere transformación — siempre en el mismo orden:
 
-No tipees el body completo del request como `list[TelemetryEvent]`. Si la firma del endpoint es algo como:
-```python
-batch: TelemetryBatch  # donde events: list[TelemetryEvent]
-```
-Pydantic validará cada evento antes de que tu handler corra. Un evento inválido en el lote causará que FastAPI devuelva `422 Unprocessable Entity` para todo el request, haciendo que el frontend reintente o descarte el lote completo. Eso contradice la aceptación parcial.
+$$\text{cargar (SQL)} \rightarrow \text{refinar (Pandas)} \rightarrow \text{convertir tipos} \rightarrow \text{agrupar} \rightarrow \text{agregar} \rightarrow \text{servir}$$
 
-**Usa parseo por evento en su lugar:**
+### Dónde va cada filtro
 
-1. **Acepta el envelope de forma laxa:** `{ "events": [...] }` — cada elemento de la lista es un `dict` crudo, no un `TelemetryEvent` pre-validado.
-2. **Itera dentro del handler:** Llama a `TelemetryEvent.model_validate(raw)` en cada item dentro de un bloque `try/except ValidationError`.
-3. **Clasifica los eventos:** Los eventos válidos van a la lista de bulk-insert; los inválidos incrementan el contador `rejected` — el loop continúa.
-4. **Respuesta HTTP 200:** Devuelve `{ "received", "stored", "rejected" }` mientras el envelope en sí sea parseable (tenga un arreglo `events`).
+| Criterio | Capa | Cómo |
+| :--- | :--- | :--- |
+| **Rango de timestamp (`start_date` / `end_date`)** | SQL | `WHERE timestamp >= :start AND timestamp < :end` — límites de inicio inclusivo, fin exclusivo en UTC |
+| **`event_type` (uno o varios)** | SQL | `WHERE event_type = '...'` o `WHERE event_type IN (...)` — las métricas de tasa/ratio necesitan cargar todos los tipos relevantes en una sola consulta |
+| **Dimensiones dentro de `tags` (almacén, endpoint, etc.)** | Pandas | Extraer de `tags`, descartar filas donde la dimensión es nula, luego `groupby` — segmenta todos los valores, no prefiltres a un solo valor |
+| **Flags derivados (`is_error`, tasas)** | Pandas | Construir columnas después de cargar, luego `.agg()` |
+| **Predicados opcionales sobre `tags` (ej. `endpoint = X`)** | Pandas (por defecto) | Filtrar el DataFrame después de extraer el campo; el push-down `tags->>'...'` en SQL es optimización opcional, no obligatoria |
 
-#### Comparativa de enfoques
+---
 
-| Enfoque | ¿Qué pasa con un lote mixto? |
-| :--- | :--- |
-| **Body tipado** (`events: list[TelemetryEvent]`) | Todo el request falla con `422` — no se guarda nada. |
-| **Parseo por evento** (`model_validate` en un loop) | Los eventos válidos se guardan; los inválidos se cuentan en `rejected`. |
+## Reglas del Pipeline y Transformación
 
-> [!TIP]
-> El modelo se reutiliza sin cambios desde la Fase 2 — lo usas como validador por item, no como el tipo del body completo.
+1. **Cargar (SQL):** Trae solo las filas que la métrica necesita. Nunca cargues toda la tabla `telemetry_events` en memoria.
+2. **Refinar (Pandas):** Después de cargar: extrae campos de `tags`, descarta filas con dimensiones nulas, aplica cualquier filtro adicional a nivel de fila que la métrica requiera. Esto no sustituye el filtrado de `event_type` / `timestamp` en SQL.
+3. **Propiedad de la ventana de fechas:** El endpoint calcula el período por defecto (últimos 7 días cuando no se pasan parámetros) y lo pasa a cada función de métrica. Las funciones aplican esa ventana una vez en SQL; no vuelvas a aplicar un filtro "últimos 7 días" en Pandas.
+4. **Convertir tipos:** Los timestamps llegan como strings. Hacer `groupby()` sobre strings que parecen fechas produce grupos incorrectos sin lanzar ningún error. Convierte siempre antes de agrupar:
+   ```python
+   df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
+   df['date'] = df['timestamp'].dt.date
+   ```
+5. **Agrupar:** Con `groupby()` por la dimensión que responde la pregunta: por día, por `event_type`, por el valor de una propiedad dentro de `tags`.
+6. **Agregar:** Con `.count()`, `.sum()`, o `.mean()`. La fórmula mental es siempre:
+   $$\text{MÉTRICA} = \text{AGREGACIÓN}(\text{columna}) \text{ agrupada por } \text{DIMENSIÓN}$$
+7. **Servir:** El resultado como una lista de dicts con `.reset_index().to_dict(orient='records')` — directamente serializable a JSON.
+
+> [!WARNING]
+> **Qué NO hacer:** Calcular el reporte dentro del endpoint en cada request. Si el dato no cambia cada segundo, el cálculo va en una función separada, llamada una vez, con el resultado en cache.
 
 ---
 
 ## 🌱 Cómo Empezar el Proyecto
 
 1. Abre tu copia del monorepo y ubica `services/` (backend FastAPI).
-2. Ten a mano tu `docs/telemetry/event-schemas.json` y `telemetry-plan.md` — confirma que el mapeo a `tags` preserva las dimensiones específicas de tu CONTEXT (almacén, oficina, etc.) definidas en tu plan.
-3. El frontend no se toca. Verifica que `NEXT_PUBLIC_TELEMETRY_ENDPOINT` siga apuntando al mismo endpoint — solo cambia lo que pasa dentro del backend.
-4. Sigue el orden: tabla en Supabase → endpoint real → verificación end-to-end.
+2. Revisa `telemetry_events` en Supabase y confirma que tienes al menos 20 filas con variedad de `event_type` — si no, genera actividad en el backoffice primero (incluyendo al menos un evento técnico).
+3. Revisa tu catálogo de eventos (`telemetry-plan.md`) — hoy trabajas con las dimensiones **técnicas/operacionales** de ese catálogo, no con las de negocio.
+4. Sigue el orden: funciones de análisis $\rightarrow$ endpoint de reporte $\rightarrow$ cache.
 
 ---
 
-## 🧊 Qué Necesitas Hacer
+## 💻 Qué Necesitas Hacer
 
-### Fase 1 — Tabla de almacenamiento en Supabase
+### Fase 1 — Pipeline de análisis con Pandas
 
-- Crea la tabla `telemetry_events` en Supabase con la siguiente estructura:
-- Mapea cada `TelemetryEvent` de la API a una fila de la tabla con este contrato:
-- Crea los tres índices que hacen la tabla consultable a escala: en `timestamp`, en `event_type`, y un índice GIN en `tags` para búsquedas dentro del JSONB.
-- Confirma que la tabla no tiene lógica de UPDATE o DELETE — los eventos de telemetría son inmutables una vez registrados.
+- [ ] Crea `services/telemetry/analysis.py` con al menos **3 funciones de métrica**, cada una encapsulando el cálculo de una dimensión operacional distinta a partir de tu propio catálogo de eventos. Ejemplos válidos (adapta a lo que realmente capturaste):
+- [ ] Cada función debe ser **independiente y libre de efectos secundarios** — llamarla dos veces con los mismos parámetros debe producir el mismo resultado.
+- [ ] No uses loops para calcular métricas — solo operaciones de Pandas (`.groupby()`, `.agg()`, `.count()`, `.sum()`, `.mean()`).
 
-### Fase 2 — Endpoint real en FastAPI
+> [!CAUTION]
+> **IMPORTANTE:** Las métricas que elijas deben responder preguntas **técnicas u operacionales** sobre el comportamiento del sistema — volumen, errores, latencia, disponibilidad — no preguntas de negocio (ventas, conversión, ingresos). Un reporte de negocio disfrazado de reporte técnico no será aceptado; ese análisis se aborda en el Hito de Data Pipelines.
 
-- [ ] Reemplaza el stub `POST /telemetry/events` con la implementación completa. El endpoint real debe:
-  - Aceptar el mismo envelope que el stub: `{ "events": [...] }` — parsea la lista de forma laxa; **no** declares `events: list[TelemetryEvent]` como tipo del body de FastAPI (ver validación parcial más arriba).
-  - Validar cada evento crudo individualmente con `TelemetryEvent.model_validate(...)` — el mismo modelo de la fase anterior, sin modificarlo.
-  - Rechazar individualmente los eventos que no cumplan el contrato, **sin cancelar el lote** — los eventos válidos del mismo lote se persisten igual.
-  - Insertar los eventos válidos en `telemetry_events` en una única operación de bulk insert.
-  - Devolver `{ "received": N, "stored": M, "rejected": R }` donde N es el total recibido, M el persistido, y R el rechazado.
-- [ ] Verifica que la respuesta del endpoint real sea compatible con el frontend existente — el `TelemetryService` solo mira el código de estado HTTP, no el body de la respuesta.
+---
 
-### Fase 3 — Verificación end-to-end
+### Fase 2 — Endpoint de reporte
 
-- [ ] Con el endpoint real activo, usa el backoffice para generar eventos reales: registra al menos una orden de entrada y una de salida en el módulo de inventario, y genera al menos un evento técnico (un error, un login fallido, etc.).
-- [ ] Consulta directamente la tabla `telemetry_events` en Supabase y confirma que los eventos aparecen con los campos correctos — especialmente `event_type`, `timestamp` y `tags`.
-- [ ] Prueba el comportamiento de rechazo: envía manualmente (con curl o tu cliente HTTP preferido) un lote que mezcle eventos válidos e inválidos y verifica que la respuesta refleje correctamente `stored` y `rejected`.
+- [ ] Crea el endpoint `GET /telemetry/report` en FastAPI. Debe:
+  - Aceptar parámetros de query opcionales `start_date` y `end_date` en formato ISO 8601; si no se proveen, usar por defecto los últimos 7 días (`start_date = now - 7d`, `end_date = now`, ambos UTC)
+  - Resolver el período una sola vez y pasar `start_date` / `end_date` a cada función de métrica — las funciones no aplican su propia ventana por defecto
+  - Llamar a las funciones de métrica del pipeline de análisis con esos parámetros
+  - Devolver un JSON con la estructura:
+    ```json
+    {
+      "period": { "from": "...", "to": "..." },
+      "metrics": {
+        "events_per_day": [...],
+        "error_rate_by_type": [...]
+      }
+    }
+    ```
+- [ ] El endpoint **no debe correr el pipeline en cada request** — implementa un cache simple en memoria con TTL de 60 segundos. Si se pide la misma combinación de `start_date` / `end_date` dentro del TTL, devuelve el resultado en cache sin recalcular.
+
+---
+
+## 🔵 Actividades Adicionales
+
+### Actividad adicional — Métrica de autenticación
+
+- [ ] Si instrumentaste el flujo de autenticación en el proyecto anterior, agrega una tercera función de métrica que calcule la tasa diaria de fallos de login: `user_login_failed` dividido entre el total de intentos (`user_login_failed` + `user_login_succeeded`) por día. Carga ambos tipos de evento con `event_type IN (...)` en SQL, y calcula la razón en Pandas. Inclúyela en el endpoint bajo la clave `auth_failure_rate`.
+
+### Actividad adicional — Dashboard visual simple
+
+- [ ] Construye una página mínima en `uis/backoffice/` (ej. `/telemetry`) que consuma `GET /telemetry/report` y lo muestre de forma visual — un gráfico o una tabla por métrica es suficiente (gráfico de barras o líneas para `events_per_day`, `error_rate_by_type`, etc.). Usa cualquier librería de gráficos que ya esté disponible en el frontend, o una tabla HTML simple si prefieres mantenerlo minimalista.
+- [ ] La página debe mostrar el `period` (`from` / `to`) que se está visualizando, para que quede claro qué ventana de tiempo cubren los números.
+- [ ] Este dashboard es una vista **técnica** para el equipo de ingeniería, no un dashboard de negocio — limítate a visualizar las mismas métricas operacionales de tu reporte, nada más.
+- [ ] No necesitas pulirlo: el objetivo es una visualización funcional y legible de datos reales, no un ejercicio de diseño.
 
 ---
 
 ## ✅ Qué Vamos a Evaluar
 
-- [ ] La tabla `telemetry_events` existe en Supabase con las ocho columnas, los tres índices, y sin lógica de UPDATE/DELETE
-- [ ] El endpoint `POST /telemetry/events` hace bulk insert y devuelve `{ "received", "stored", "rejected" }`
-- [ ] Los eventos inválidos se rechazan individualmente sin cancelar el lote — los válidos se persisten (validación por evento con `model_validate`, no un body tipado `list[TelemetryEvent]` que devolvería `422` para todo el lote)
-- [ ] El modelo Pydantic `TelemetryEvent` no fue modificado desde el proyecto anterior — se reutiliza tal cual
-- [ ] El frontend no cambió ni una línea — la sustitución stub → real es completamente transparente
-- [ ] Los eventos aparecen en `telemetry_events` con `event_type`, `timestamp` y `tags` correctamente poblados, tanto para eventos técnicos como de negocio
-- [ ] El `tags` guardado preserva los allowlists de propiedades y las dimensiones específicas del CONTEXT documentadas en `telemetry-plan.md`
-- [ ] El insert es una sola operación por lote, no un INSERT por evento
+- [ ] El archivo `services/telemetry/analysis.py` existe y contiene al menos tres funciones de métrica independientes
+- [ ] Cada función sigue la fórmula `cargar (SQL)` $\rightarrow$ `refinar (Pandas)` $\rightarrow$ `convertir tipos` $\rightarrow$ `agrupar` $\rightarrow$ `agregar` en ese orden
+- [ ] Los timestamps se convierten a `datetime` con `utc=True` antes de cualquier `groupby()` temporal
+- [ ] No se usan loops para calcular métricas — solo operaciones de Pandas
+- [ ] Cada función devuelve una lista de dicts serializable a JSON
+- [ ] El endpoint `GET /telemetry/report` acepta `start_date` y `end_date` opcionales y usa 7 días por defecto
+- [ ] El endpoint devuelve JSON con la estructura `{ "period": {...}, "metrics": {...} }`
+- [ ] El endpoint tiene cache en memoria con TTL de 60 segundos — no recalcula en cada request
+- [ ] Cada métrica responde una pregunta **técnica/operacional** sobre el comportamiento del sistema — no una pregunta de negocio
+- [ ] Las métricas devueltas tienen una dimensión de agrupamiento — no son números globales sin contexto
 
 ---
 
 ## 📦 Cómo Entregar
 
-1. Asegúrate de que los cambios estén en tu copia: tabla creada en Supabase y endpoint real en `services/`.
-2. Crea un Pull Request contra la rama principal del monorepo con el título: `feat: telemetry event storage`.
+1. Asegúrate de que los cambios estén en tu copia: `analysis.py` en `services/telemetry/` y el endpoint `GET /telemetry/report` en `services/`.
+2. Crea un Pull Request contra la rama principal del monorepo con el título: `feat: telemetry report endpoint`.
 3. En la descripción del PR, incluye:
-   - Una captura de la tabla `telemetry_events` en Supabase con al menos 5 filas de eventos reales, incluyendo al menos un evento técnico y uno de negocio
-   - El JSON de respuesta de un lote que mezcle eventos válidos e inválidos (mostrando `received`, `stored` y `rejected`)
-   - Confirmación explícita de que el frontend no cambió
+   - El nombre de las métricas implementadas y qué pregunta operacional responde cada una
+   - Una muestra del JSON devuelto por `GET /telemetry/report` con datos reales
+   - Si implementaste la métrica de autenticación adicional y/o el dashboard visual simple
+
+
+
