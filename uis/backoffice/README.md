@@ -86,6 +86,25 @@ it is never reported as a failed sign-up.
 - `/incidents` — CSV upload (drag & drop or file picker) → metrics (totals, invalid records by rule,
   category/status breakdown with percentages, satisfaction distribution) → CSV download button.
 - `/suppliers` — supplier directory: list, filters, create, edit rate, suspend/activate.
+- `/inventory/products` — stock of every asset (`GET /inventory/products`) with its `current_stock`, colour-coded:
+  red = no stock, amber = low (`LOW_STOCK_THRESHOLD`, 5 units, documented in `src/lib/inventoryRules.ts`), green = fine.
+  Lowest stock first; filters by office, category, level and name/SKU. Each row has an "Entrada" and a "Salida" link
+  that open the forms with that asset preselected (`?asset=<id>`). `/inventory` redirects here.
+- `/inventory/orders/inbound` — entrada de activos (`POST /inventory/orders/inbound`): the asset is picked by name; after
+  a send the form is cleared and a confirmation shown; an API error is shown in the page.
+- `/inventory/orders/outbound` — salida de activos, an allocation to an employee or a consumption
+  (`POST /inventory/orders/outbound`). The `current_stock` of the selected asset is shown (and follows the selection)
+  before a quantity is typed; a quantity above it is warned about while typing; the API's 400 is shown next to the
+  quantity field.
+- `/inventory/orders` — read-only history of entries and exits: asset name, quantity, type, date and the `user_uuid`
+  that created each one (with the user's name, from `GET /users/directory`, when it is known).
+
+The calls to `/inventory/*` are all in `src/lib/inventory.ts` (no component calls `fetch`); the rules and texts
+(thresholds, validation, error messages) are in `src/lib/inventoryRules.ts`. Names follow the Hito 5 CONTEXT: "activo",
+"entrada de activos", "salida de activos", "asignación"/"consumo".
+
+All of them are behind the login guard. The office of an order is always the asset's own office (the API rejects any
+other), so the forms show it instead of asking for it.
 
 ## API calls in development
 
@@ -93,6 +112,10 @@ The app calls the API on its own origin, and `next.config.mjs` rewrites those ca
 (`API_PROXY_TARGET`, default `http://localhost:8000`). No CORS, and in Codespaces only port 5174 needs forwarding.
 `/api` and `/auth` always go to the API; `/users` and `/profiles` only for API calls, not browser page loads.
 To call an API on another domain instead, set `NEXT_PUBLIC_API_BASE_URL` (see `.env.example`).
+
+The inventory API (`/inventory/*`) is reached as `/api/inventory/*`, because `/inventory/orders` is also a page of
+the app. `next.config.mjs` forwards it to `NEXT_PUBLIC_INVENTORY_API_URL` (from `.env.local`; default
+`API_PROXY_TARGET`). The browser still only talks to its own origin.
 
 ## Running locally
 
@@ -130,8 +153,10 @@ With the API and the backoffice running (`npm run dev`, or `npm run build && npm
 - `npm run e2e:guard` — route protection, open-redirect check, several tabs; also opens the public website on
   `:5173` (skip with `E2E_WEBSITE_URL=none`).
 - `npm run e2e:token` — token lifecycle (needs the supplier seed).
+- `npm run e2e:inventory` — inventory section (needs the inventory seed). Read-only: it never registers an order;
+  the API's 400 is simulated in the browser.
 
-All five pass against `next dev` and against the production build. See the header of each file in `e2e/`.
+The first five pass against `next dev` and against the production build. See the header of each file in `e2e/`.
 
 ## Incident manager
 

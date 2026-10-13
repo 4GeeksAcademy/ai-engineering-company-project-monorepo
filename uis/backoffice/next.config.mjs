@@ -7,6 +7,9 @@
 // but the app calls it as /api/suppliers so it never clashes with the /suppliers page.
 // API_PROXY_TARGET changes where they go; with NEXT_PUBLIC_API_BASE_URL set, the app calls the API directly.
 const API = process.env.API_PROXY_TARGET ?? "http://localhost:8000";
+// Where the inventory API (/inventory/*) lives, from .env.local. Next loads it into process.env before this file
+// runs. The browser still calls the same origin (/api/inventory/*, below), so there is no CORS to configure.
+const INVENTORY_API = (process.env.NEXT_PUBLIC_INVENTORY_API_URL || API).replace(/\/+$/, "");
 const notAPage = [{ type: "header", key: "accept", value: ".*text/html.*" }];
 
 // `next dev` only serves its dev assets (JS chunks, live reload) to localhost. In a GitHub Codespace the browser
@@ -25,6 +28,9 @@ const nextConfig = {
   allowedDevOrigins,
   async rewrites() {
     return [
+      // Before the generic /api rule: the inventory routes are /inventory/* on the API, not /api/inventory/*.
+      // The prefix keeps them apart from the /inventory/* pages of the app (/inventory/orders is both).
+      { source: "/api/inventory/:path*", destination: `${INVENTORY_API}/inventory/:path*` },
       { source: "/api/:path*", destination: `${API}/api/:path*` },
       { source: "/auth/:path*", destination: `${API}/auth/:path*` },
       { source: "/users", destination: `${API}/users`, missing: notAPage },

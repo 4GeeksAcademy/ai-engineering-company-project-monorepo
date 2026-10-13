@@ -15,7 +15,8 @@
     "e2e:register": "node e2e/register.e2e.mjs",
     "e2e:profile": "node e2e/profile.e2e.mjs",
     "e2e:guard": "node e2e/guard.e2e.mjs",
-    "e2e:token": "node e2e/token.e2e.mjs"
+    "e2e:token": "node e2e/token.e2e.mjs",
+    "e2e:inventory": "node e2e/inventory.e2e.mjs"
   },
   "dependencies": {
     "@repo/shared-types": "*",
