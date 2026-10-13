@@ -57,7 +57,8 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    const url = /^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path}`;
+    response = await fetch(url, { ...init, headers });
   } catch {
     // fetch only rejects when the request never got an answer (offline, API down, DNS...).
     throw new ApiError("No response from the server", 0);
@@ -73,10 +74,9 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
  * component ever calls fetch itself.
  */
 export async function jsonRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await apiFetch(path, {
-    ...init,
-    headers: init.body ? { "Content-Type": "application/json", ...init.headers } : init.headers,
-  });
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const response = await apiFetch(path, { ...init, headers });
   if (!response.ok) {
     throw await toApiError(response);
   }
@@ -169,16 +169,7 @@ export async function downloadResultsCsv(): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-async function suppliersRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await apiFetch(`/api/suppliers${path}`, {
-    ...init,
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-  });
-  if (!response.ok) {
-    throw await toApiError(response);
-  }
-  return response.json();
-}
+const suppliersRequest = <T>(path: string, init?: RequestInit) => jsonRequest<T>(`/api/suppliers${path}`, init);
 
 export const listSuppliers = () => suppliersRequest<Supplier[]>("");
 
@@ -207,16 +198,7 @@ export function filtersQuery(filters: IncidentFilters): URLSearchParams {
   return params;
 }
 
-async function incidentsRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await apiFetch(`/api/incidents${path}`, {
-    ...init,
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-  });
-  if (!response.ok) {
-    throw await toApiError(response);
-  }
-  return response.json();
-}
+const incidentsRequest = <T>(path: string, init?: RequestInit) => jsonRequest<T>(`/api/incidents${path}`, init);
 
 export function listIncidents(
   filters: IncidentFilters,

@@ -274,6 +274,16 @@ describe("describeInventoryError", () => {
       expect(describeInventoryError(new ApiError("Forbidden", 403), "x")).toMatch(/permiso/);
       expect(describeInventoryError(new ApiError("Asset 9 not found", 404), "x")).toMatch(/No se encontró el activo/);
     });
+    it("does not blame the asset for a 404 of the route itself (proxy or deployment problem)", () => {
+      const message = describeInventoryError(new ApiError("Not Found", 404), "x");
+      expect(message).toMatch(/error 404/);
+      expect(message).not.toMatch(/No se encontró el activo/);
+    });
+    it("keeps the detail of a server failure short: a stack trace is not for the staff", () => {
+      const message = describeInventoryError(new ApiError("x".repeat(500), 500), "x");
+      expect(message.length).toBeLessThan(260);
+      expect(message).toMatch(/…$/);
+    });
     it("uses the fallback for something that is not an API error", () => {
       expect(describeInventoryError(new TypeError("boom"), "No se pudo cargar.")).toBe("No se pudo cargar.");
     });

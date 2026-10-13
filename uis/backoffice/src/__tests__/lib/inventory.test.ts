@@ -8,7 +8,7 @@
 // Node environment for the real fetch / Response / Headers (jsdom lacks them), with an in-memory localStorage.
 //
 // Layout shared by every frontend test file: HAPPY PATH, EDGE CASES, FAILURE MODES. Arrange / Act / Assert.
-import { ApiError } from "@/lib/api";
+import { ApiError, jsonRequest } from "@/lib/api";
 import { createAsset, createInboundOrder, createOutboundOrder, getAsset, listAssets, listOrders } from "@/lib/inventory";
 import { clearToken, setToken } from "@/lib/token";
 
@@ -124,18 +124,47 @@ describe("inventory client", () => {
   describe("edge cases", () => {
     it("calls the API directly, on /inventory/*, when NEXT_PUBLIC_API_BASE_URL points to another domain", async () => {
       jest.resetModules();
-      process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.nexova.com";
+      process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.test";
       try {
         const { listAssets: listDirect } = await import("@/lib/inventory");
         fetchMock.mockResolvedValue(jsonResponse([ASSET]));
 
         await listDirect();
 
-        expect(lastCall().url).toBe("https://api.nexova.com/inventory/products");
+        expect(lastCall().url).toBe("https://api.example.test/inventory/products");
       } finally {
         delete process.env.NEXT_PUBLIC_API_BASE_URL;
         jest.resetModules();
       }
+    });
+
+    it("uses the inventory's own host in direct mode when NEXT_PUBLIC_INVENTORY_API_URL is set", async () => {
+      jest.resetModules();
+      process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.test";
+      process.env.NEXT_PUBLIC_INVENTORY_API_URL = "https://inventory.example.test/";
+      try {
+        const { listAssets: listDirect } = await import("@/lib/inventory");
+        fetchMock.mockResolvedValue(jsonResponse([ASSET]));
+
+        await listDirect();
+
+        expect(lastCall().url).toBe("https://inventory.example.test/inventory/products");
+      } finally {
+        delete process.env.NEXT_PUBLIC_API_BASE_URL;
+        delete process.env.NEXT_PUBLIC_INVENTORY_API_URL;
+        jest.resetModules();
+      }
+    });
+
+    it("keeps the headers a caller passes, whatever their form (Headers, array or object)", async () => {
+      fetchMock.mockImplementation(async () => jsonResponse({})); // a Response body can be read only once
+
+      await jsonRequest("/x", { method: "POST", body: "{}", headers: new Headers({ "X-Trace": "1" }) });
+      expect(lastCall().headers.get("X-Trace")).toBe("1");
+      expect(lastCall().headers.get("Content-Type")).toBe("application/json");
+
+      await jsonRequest("/x", { headers: [["X-Trace", "2"]] });
+      expect(lastCall().headers.get("X-Trace")).toBe("2");
     });
 
     it("sends no Authorization header when there is no session (the API answers 401)", async () => {

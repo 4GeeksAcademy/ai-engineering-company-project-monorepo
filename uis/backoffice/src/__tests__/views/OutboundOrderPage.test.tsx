@@ -166,6 +166,24 @@ describe("OutboundOrderPage", () => {
       await settled();
     });
 
+    it("ignores a late answer for the previous asset: the figure always belongs to the selected one", async () => {
+      let answerPaper: (asset: unknown) => void = () => undefined;
+      mockGet.mockImplementation((id: number) =>
+        id === PAPER.id ? new Promise((resolve) => (answerPaper = resolve)) : Promise.resolve({ ...LAPTOP, current_stock: 14 }),
+      );
+      render(<OutboundOrderPage />);
+      await screen.findByRole("option", { name: /NXV-OFF-001/ });
+
+      fireEvent.change(screen.getByLabelText("Activo"), { target: { value: String(PAPER.id) } }); // slow answer
+      fireEvent.change(screen.getByLabelText("Activo"), { target: { value: String(LAPTOP.id) } }); // fast answer
+      await waitFor(() => expect(screen.getByTestId("available-stock")).toHaveTextContent("14 unidades"));
+      answerPaper({ ...PAPER, current_stock: 1 }); // arrives late
+
+      await waitFor(() => expect(screen.queryByLabelText("Actualizando stock")).not.toBeInTheDocument());
+      expect(screen.getByTestId("available-stock")).toHaveTextContent("14 unidades");
+      expect(screen.getByTestId("stock-panel")).toHaveTextContent("Portátil 14");
+    });
+
     it("starts with nothing selected when the linked asset does not exist", async () => {
       render(<OutboundOrderPage initialAssetId="999" />);
 

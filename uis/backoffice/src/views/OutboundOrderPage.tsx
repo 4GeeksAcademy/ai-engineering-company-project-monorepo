@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { createOutboundOrder } from "../lib/inventory";
 import { ErrorBanner, Field, inputClass } from "../components/incidents/Field";
+import AssetSelect from "../components/inventory/AssetSelect";
+import SuccessNotice from "../components/inventory/SuccessNotice";
 import StockPanel from "../components/inventory/StockPanel";
 import { useAssets } from "../components/inventory/useAssets";
 import { useAssetStock } from "../components/inventory/useAssetStock";
+import { useClearUnknownAsset } from "../components/inventory/useClearUnknownAsset";
 import {
-  assetOptionLabel,
   describeInventoryError,
   isBadRequest,
   outboundPayload,
@@ -39,12 +41,7 @@ export default function OutboundOrderPage({ initialAssetId = "" }: { initialAsse
   const { asset, stock, refreshing, refresh } = useAssetStock(assets, form.assetId);
   const warning = stockWarning(form.quantity, stock);
 
-  // A link may name an asset that does not exist (any more): start with nothing selected rather than a blank select.
-  useEffect(() => {
-    if (!loading && form.assetId && !assets.some((a) => String(a.id) === form.assetId)) {
-      setForm((prev) => ({ ...prev, assetId: "" }));
-    }
-  }, [loading, assets, form.assetId]);
+  useClearUnknownAsset(assets, loading, form.assetId, () => setForm((prev) => ({ ...prev, assetId: "" })));
 
   const set = <K extends keyof OutboundForm>(field: K, value: OutboundForm[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -98,24 +95,14 @@ export default function OutboundOrderPage({ initialAssetId = "" }: { initialAsse
       )}
 
       <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <Field id="outbound-asset" label="Activo" error={errors.assetId}>
-          <select
-            id="outbound-asset"
-            value={form.assetId}
-            onChange={(e) => set("assetId", e.target.value)}
-            disabled={loading}
-            aria-invalid={Boolean(errors.assetId)}
-            aria-describedby={errors.assetId ? "outbound-asset-error" : undefined}
-            className={inputClass}
-          >
-            <option value="">{loading ? "Cargando activos…" : "Selecciona un activo"}</option>
-            {assets.map((a) => (
-              <option key={a.id} value={a.id}>
-                {assetOptionLabel(a)}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <AssetSelect
+          id="outbound-asset"
+          assets={assets}
+          loading={loading}
+          value={form.assetId}
+          onChange={(assetId) => set("assetId", assetId)}
+          error={errors.assetId}
+        />
 
         <StockPanel asset={asset} stock={stock} refreshing={refreshing} />
 
@@ -198,15 +185,7 @@ export default function OutboundOrderPage({ initialAssetId = "" }: { initialAsse
         )}
 
         {serverError && <ErrorBanner message={serverError} />}
-        {success && (
-          <div
-            role="status"
-            className="flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-          >
-            <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-            {success}
-          </div>
-        )}
+        {success && <SuccessNotice message={success} />}
 
         <div className="flex flex-wrap items-center gap-3">
           <button

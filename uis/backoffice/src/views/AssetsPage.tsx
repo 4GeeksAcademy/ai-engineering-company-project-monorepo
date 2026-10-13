@@ -32,7 +32,7 @@ const actionClass =
 
 /** `/inventory/products`: every asset with its `current_stock`, colour-coded, and a link per row to order for it. */
 export default function AssetsPage() {
-  const { assets, loading, error, reload } = useAssets();
+  const { assets, loading, error, retry } = useAssets();
   const [office, setOffice] = useState<Office | "">("");
   const [category, setCategory] = useState<AssetCategory | "">("");
   const [search, setSearch] = useState("");
@@ -84,7 +84,7 @@ export default function AssetsPage() {
           </div>
           <button
             type="button"
-            onClick={() => void reload()}
+            onClick={() => void retry()}
             className="flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:text-white"
           >
             <RefreshCw size={14} />
@@ -159,6 +159,7 @@ export default function AssetsPage() {
 
             <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
               <table className="w-full text-left">
+                <caption className="sr-only">Activos con su stock actual y nivel de stock</caption>
                 <thead className="text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-4 py-3">Activo</th>

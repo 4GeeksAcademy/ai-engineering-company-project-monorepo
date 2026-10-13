@@ -108,5 +108,20 @@ describe("AssetsPage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
       expect(await screen.findAllByTestId("asset-row")).toHaveLength(3);
     });
+
+    it("shows that it is loading while retrying, never an empty list that says there are no assets", async () => {
+      const { ApiError } = jest.requireMock("@/lib/api");
+      let finish: (assets: unknown[]) => void = () => undefined;
+      mockList.mockRejectedValueOnce(new ApiError("Boom", 0)).mockReturnValueOnce(new Promise((resolve) => (finish = resolve)));
+      render(<AssetsPage />);
+      await screen.findByRole("alert");
+
+      fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+
+      expect(await screen.findByText("Cargando inventario…")).toBeInTheDocument();
+      expect(screen.queryByText("Todavía no hay activos registrados.")).not.toBeInTheDocument();
+      finish(ASSETS);
+      expect(await screen.findAllByTestId("asset-row")).toHaveLength(3);
+    });
   });
 });

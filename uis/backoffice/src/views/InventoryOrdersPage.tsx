@@ -15,6 +15,7 @@ const TYPE_LABELS: Record<OrderType, string> = { inbound: "Entrada", outbound: "
 export default function InventoryOrdersPage() {
   const [orders, setOrders] = useState<InventoryOrder[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [namesFailed, setNamesFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<OrderType | "">("");
@@ -24,11 +25,17 @@ export default function InventoryOrdersPage() {
     setError(null);
     setLoading(true);
     try {
-      // The names are a nicety: if the directory fails the orders still show, with the author's short id.
+      // The names are a nicety: if the directory fails the orders still show, each with its user_uuid, and a note
+      // says that the names could not be read (a user missing from a working directory is just a deactivated one).
+      let directoryFailed = false;
       const [loaded, directory] = await Promise.all([
         listOrders(),
-        listUserDirectory().catch(() => []),
+        listUserDirectory().catch(() => {
+          directoryFailed = true;
+          return [];
+        }),
       ]);
+      setNamesFailed(directoryFailed);
       setOrders(loaded);
       setNames(Object.fromEntries(directory.map((entry) => [entry.user_id, entry.name])));
     } catch (err) {
@@ -81,6 +88,11 @@ export default function InventoryOrdersPage() {
       ) : (
         !error && (
           <>
+            {namesFailed && (
+              <p role="status" className="mt-6 text-sm text-amber-300">
+                No se pudieron cargar los nombres de los usuarios: cada orden muestra su identificador (user_uuid).
+              </p>
+            )}
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <select
                 aria-label="Filtrar por tipo"
@@ -112,6 +124,7 @@ export default function InventoryOrdersPage() {
 
             <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
               <table className="w-full text-left">
+                <caption className="sr-only">Historial de entradas y salidas de activos</caption>
                 <thead className="text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-4 py-3">Fecha</th>

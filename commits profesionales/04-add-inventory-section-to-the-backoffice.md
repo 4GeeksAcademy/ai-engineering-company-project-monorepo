@@ -30,6 +30,8 @@ Integration
   prefix keeps the API routes apart from the pages of the same name
 
 Verification
-- Add 103 tests (client, rules and the four views); the suite is at 527
+- Add 118 tests (client, rules, hooks and the four views); the suite is at 542
 - Add e2e/inventory.e2e.mjs (read-only; the 400 is simulated in the browser)
+  and run it, with the route-guard e2e, against the production build
 - Check the views and the API through the rewrite against the live API
+- Build for production and typecheck without errors

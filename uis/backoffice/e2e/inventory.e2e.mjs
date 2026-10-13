@@ -20,7 +20,9 @@ const context = await browser.newContext({ viewport: { width: 1300, height: 900 
 const page = await context.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
-page.on("console", (m) => m.type() === "error" && !m.text().includes("401") && errors.push(m.text()));
+// The browser logs the 401s of the logged-out views and the 400 this script simulates on purpose: expected.
+const expected = (m) => /status of (401|400)\b/.test(m.text());
+page.on("console", (m) => m.type() === "error" && !expected(m) && errors.push(m.text()));
 let fails = 0;
 const ok = (c, msg) => { if (!c) fails++; console.log(`${c ? "PASS" : "FAIL"}  ${msg}`); };
 const where = (p) => { const u = new globalThis.URL(p.url()); return `${u.pathname}${u.search}`; };
@@ -32,7 +34,9 @@ for (const route of VIEWS) {
   ok(where(page) === `/login?next=${encodeURIComponent(route)}`, `sin sesión, ${route} redirige a /login?next=…`);
 }
 
-// 2. login y vuelta a la vista pedida
+// 2. login y vuelta a la vista pedida (la app devuelve a la última URL que se pidió: se pide la primera)
+await page.goto(`${APP}${VIEWS[0]}`);
+await page.waitForURL("**/login**");
 await page.getByLabel("Email").fill(EMAIL);
 await page.getByLabel("Contraseña").fill(PASSWORD);
 await page.getByRole("button", { name: "Entrar" }).click();

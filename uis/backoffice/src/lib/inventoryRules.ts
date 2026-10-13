@@ -128,6 +128,9 @@ export function outboundPayload(form: OutboundForm, office: Office) {
 const INSUFFICIENT_STOCK = /^Insufficient stock for asset '(.*)'\. Available: (-?\d+), requested: (\d+)\.$/;
 const OFFICE_MISMATCH = /^Asset '(.*)' belongs to the (\w+) office: an order for it cannot be registered in (\w+)\.$/;
 
+/** A server detail can be a stack trace: only the start of it is worth showing. */
+const MAX_DETAIL = 160;
+
 const GENERIC_STATUS_TEXT = /^(|internal server error|bad gateway|service unavailable|gateway time-?out|server error)$/i;
 
 const FIELD_LABELS: Record<string, string> = {
@@ -165,12 +168,18 @@ export function describeInventoryError(err: unknown, fallback: string): string {
   if (err.status === 0) return "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.";
   if (err.status >= 500) {
     // The body's message, when it says more than the status text ("Internal Server Error" tells nothing).
-    const detail = GENERIC_STATUS_TEXT.test(err.message.trim()) ? "" : err.message.trim();
+    const text = err.message.trim();
+    const detail = GENERIC_STATUS_TEXT.test(text) ? "" : text.length > MAX_DETAIL ? `${text.slice(0, MAX_DETAIL)}…` : text;
     return `El servidor ha tenido un problema (error ${err.status}). Inténtalo de nuevo en unos minutos.${detail ? ` Detalle: ${detail}` : ""}`;
   }
   if (err.status === 401) return "Tu sesión ha caducado. Vuelve a iniciar sesión.";
   if (err.status === 403) return "No tienes permiso para hacer esto.";
-  if (err.status === 404) return "No se encontró el activo. Puede que ya no exista: recarga la página.";
+  if (err.status === 404) {
+    // "Asset 9 not found" is the API saying the asset is gone; any other 404 is a wrong route (proxy, deployment).
+    return /^Asset \d+ not found/i.test(err.message)
+      ? "No se encontró el activo. Puede que ya no exista: recarga la página."
+      : "No se encontró lo que se pidió al servidor (error 404). Recarga la página; si sigue igual, avisa a soporte técnico.";
+  }
 
   const stock = INSUFFICIENT_STOCK.exec(err.message);
   if (stock) {

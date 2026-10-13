@@ -13,8 +13,10 @@ import type {
 
 // The inventory routes are /inventory/* on the API. Their page paths (/inventory/orders...) are the same, so in
 // development the app calls them as /api/inventory/*, which next.config.mjs forwards to the inventory API
-// (NEXT_PUBLIC_INVENTORY_API_URL). With NEXT_PUBLIC_API_BASE_URL set the app calls the API directly.
-const PREFIX = API_BASE_URL ? "/inventory" : "/api/inventory";
+// (NEXT_PUBLIC_INVENTORY_API_URL, or API_PROXY_TARGET). With NEXT_PUBLIC_API_BASE_URL set the app calls the API
+// directly instead: at NEXT_PUBLIC_INVENTORY_API_URL if the inventory lives on its own host, else at the main one.
+const INVENTORY_URL = (process.env.NEXT_PUBLIC_INVENTORY_API_URL ?? "").replace(/\/+$/, "");
+const PREFIX = API_BASE_URL ? `${INVENTORY_URL || API_BASE_URL}/inventory` : "/api/inventory";
 
 /** GET /inventory/products — every asset with its `current_stock` (entries minus exits, computed by the API). */
 export const listAssets = () => jsonRequest<Asset[]>(`${PREFIX}/products`);

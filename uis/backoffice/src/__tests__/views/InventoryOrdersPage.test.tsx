@@ -73,6 +73,13 @@ describe("InventoryOrdersPage", () => {
   });
 
   describe("edge cases", () => {
+    it("does not show that note when the directory works (a deactivated user is just not listed)", async () => {
+      render(<InventoryOrdersPage />);
+      await screen.findAllByTestId("order-row");
+
+      expect(screen.queryByText(/No se pudieron cargar los nombres/)).not.toBeInTheDocument();
+    });
+
     it("filters by type", async () => {
       render(<InventoryOrdersPage />);
       await screen.findAllByTestId("order-row");
@@ -89,6 +96,7 @@ describe("InventoryOrdersPage", () => {
       const rows = await screen.findAllByTestId("order-row");
       expect(within(rows[0]).getByText("Usuario no disponible")).toBeInTheDocument();
       expect(within(rows[0]).getByTestId("order-user-uuid")).toHaveTextContent(MARTA);
+      expect(screen.getByRole("status")).toHaveTextContent(/No se pudieron cargar los nombres/);
     });
   });
 
