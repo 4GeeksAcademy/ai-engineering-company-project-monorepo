@@ -12,11 +12,10 @@ The engine is created lazily, so importing the app opens no connection, and test
 
 from __future__ import annotations
 
+import sqlite3
 from collections.abc import Iterator
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
-from sqlalchemy import event  # no SQLModel wrapper exists for connection events
 from sqlmodel import Session, SQLModel, create_engine
 from tinydb import TinyDB
 
@@ -25,29 +24,28 @@ from users import service as users_service
 
 from . import models  # noqa: F401  (registers the tables on SQLModel.metadata)
 
-if TYPE_CHECKING:
-    from sqlalchemy.engine import Engine
+_SQLITE_PREFIX = "sqlite:///"
 
 
-def build_engine(url: str) -> Engine:
+def build_engine(url: str):
     """Engine for ``url``. SQLite is only the local fallback: it does not enforce foreign
-    keys unless asked, so ask, to get the same integrity PostgreSQL gives."""
-    if url.startswith("sqlite"):
-        engine = create_engine(url, connect_args={"check_same_thread": False})
+    keys unless asked, so every connection it opens asks, to get the same integrity
+    PostgreSQL gives."""
+    if url.startswith(_SQLITE_PREFIX):
+        path = url[len(_SQLITE_PREFIX):]
 
-        @event.listens_for(engine, "connect")
-        def _enforce_foreign_keys(dbapi_connection, _record):
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
+        def connect() -> sqlite3.Connection:
+            connection = sqlite3.connect(path, check_same_thread=False)
+            connection.execute("PRAGMA foreign_keys=ON")
+            return connection
 
-        return engine
+        return create_engine("sqlite://", creator=connect)
     # pool_pre_ping: the Supabase pooler closes idle connections; check before reusing one.
     return create_engine(url, pool_pre_ping=True)
 
 
 @lru_cache(maxsize=1)
-def get_engine() -> Engine:
+def get_engine():
     return build_engine(get_database_url())
 
 

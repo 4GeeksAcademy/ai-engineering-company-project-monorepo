@@ -16,10 +16,10 @@ from core.errors import validation_error_handler
 from incidents.incident_router import router as incident_manager_router
 from incidents.router import router as incidents_router
 from inventory.database import init_db as init_inventory_db
-from inventory.router import router as inventory_router
 from inventory.seeding import seed_local_if_empty
 from profiles import service as profiles_service
 from profiles.router import router as profiles_router
+from routers.inventory import router as inventory_router
 from suppliers.router import router as suppliers_router
 from users import service as users_service
 from users.router import public_router as users_public_router

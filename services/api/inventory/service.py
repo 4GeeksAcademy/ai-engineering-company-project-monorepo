@@ -13,7 +13,6 @@ the number of rows: no N+1.
 
 from __future__ import annotations
 
-from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, col, func, select
 
 from .models import Asset, AssetEntry, AssetExit
@@ -86,15 +85,25 @@ def get_asset(session: Session, asset_id: int) -> AssetOut:
     return _asset_out(row[0], int(row[1]))
 
 
+def _sku_exists(session: Session, sku: str) -> bool:
+    return session.exec(select(Asset.id).where(Asset.sku == sku)).first() is not None
+
+
 def create_asset(session: Session, payload: AssetCreate) -> AssetOut:
     """A new asset starts at 0 units: stock only arrives through an inbound order."""
+    if _sku_exists(session, payload.sku):
+        raise DuplicateSkuError(payload.sku)
     asset = Asset(name=payload.name, sku=payload.sku, category=payload.category.value, office=payload.office.value)
     session.add(asset)
     try:
         session.commit()
-    except IntegrityError as exc:  # the UNIQUE constraint on sku is the source of truth
+    except Exception as exc:
+        # The UNIQUE constraint on sku is the source of truth: if another request took the
+        # SKU between the check above and this insert, it is the same conflict.
         session.rollback()
-        raise DuplicateSkuError(payload.sku) from exc
+        if _sku_exists(session, payload.sku):
+            raise DuplicateSkuError(payload.sku) from exc
+        raise
     session.refresh(asset)
     return _asset_out(asset, 0)
 

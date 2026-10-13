@@ -1,4 +1,6 @@
-"""Routes of the inventory domain, all under ``/inventory``.
+"""Routes of the inventory domain, all under ``/inventory`` (``routers/inventory.py``, as the
+Hito 5 CONTEXT places it). The models, schemas, queries and connections it uses live in the
+``inventory`` package.
 
 Every route needs a valid session (``get_current_user``, from the TinyDB users). Orders are
 stamped with that user's id. There is deliberately no PUT/PATCH/DELETE on assets or orders:
@@ -16,11 +18,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
 from auth.dependencies import CurrentUser, get_current_user
-
-from . import service
-from .database import get_db
-from .models import AssetCategory, Office
-from .schemas import AssetCreate, AssetEntryCreate, AssetExitCreate, AssetOut, OrderOut
+from inventory import service
+from inventory.database import get_db
+from inventory.models import AssetCategory, Office
+from inventory.schemas import AssetCreate, AssetEntryCreate, AssetExitCreate, AssetOut, OrderOut
 
 router = APIRouter(prefix="/inventory", tags=["inventory"], dependencies=[Depends(get_current_user)])
 
