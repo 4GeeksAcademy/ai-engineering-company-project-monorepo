@@ -56,10 +56,10 @@ Goal: name, position, status, and stage are visible immediately.
 
 Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api.ts`.
 
-- [ ] Check the list response for the exact field names for ID, name, position, status, stage, and email (needed for search). Note missing or nullable values and define the corresponding candidate type.
-- [ ] Inspect GET `/records`: identify whether the list is an array or inside a wrapper, record the list key, and define its response type.
-- [ ] Check whether GET `/records` returns all candidates or one page. If paginated, record page/page-size parameters and total-count or next-page response fields.
-- [ ] GET `/records`: define the candidate list item type and the list response type, including any wrapper and pagination fields.
+- [x] Check the list response for the exact field names for ID, name, position, status, stage, and email (needed for search). Note missing or nullable values and define the corresponding candidate type.
+- [x] Inspect GET `/records`: identify whether the list is an array or inside a wrapper, record the list key, and define its response type.
+- [x] Check whether GET `/records` returns all candidates or one page. If paginated, record page/page-size parameters and total-count or next-page response fields.
+- [x] GET `/records`: define the candidate list item type and the list response type, including any wrapper and pagination fields.
 - [ ] Use these types in the list API function and component props without `any`; validate the returned response shape.
 - [ ] Implement GET `/records` — list candidates — as a typed function in `lib/api.ts` using the shared fetch helper.
 - [ ] Replace the landing page with the app header and real candidate list.
@@ -84,8 +84,8 @@ Goal: filter by status and stage, and search by name or email without reloading 
 
 Files: candidate list page and its filter/search components.
 
-- [ ] Confirm the allowed status values from the backend documentation and define their TypeScript type.
-- [ ] Confirm the allowed stage values from the backend documentation and define their TypeScript type.
+- [x] Confirm the allowed status values from the backend documentation and define their TypeScript type.
+- [x] Confirm the allowed stage values from the backend documentation and define their TypeScript type.
 - [ ] Reuse GET `/records` from step 3; add documented query parameters if the API handles filtering or search.
 - [ ] Add Status and Stage filters using the backend's allowed values.
 - [ ] Use the [README.md mappings](README.md#api-and-data) for filter options: display UI labels, but use raw API values for filter logic, URL parameters, and API queries.
