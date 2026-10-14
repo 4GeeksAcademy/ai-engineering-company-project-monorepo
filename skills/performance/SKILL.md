@@ -1,70 +1,70 @@
 ---
 name: performance
-description: Optimize web performance for faster loading and better user experience. Use when asked to "speed up my site", "optimize performance", "reduce load time", "fix slow loading", "improve page speed", or "performance audit".
+description: Optimiza el rendimiento web para una carga más rápida y una mejor experiencia de usuario. Úsalo cuando se solicite "acelerar mi sitio", "optimizar rendimiento", "reducir tiempo de carga", "solucionar carga lenta", "mejorar velocidad de página" o "auditoría de rendimiento".
 license: MIT
 metadata:
   author: web-quality-skills
   version: "2.0"
 ---
 
-# Performance optimization
+# Optimización de rendimiento
 
-Evidence-led performance optimization using real-user signals for prioritization and browser traces for diagnosis. Focuses on loading speed, runtime responsiveness, and resource delivery.
+Optimización de rendimiento basada en evidencia utilizando señales de usuarios reales para priorizar y trazas de navegador para diagnosticar. Se enfoca en la velocidad de carga, la capacidad de respuesta en tiempo de ejecución y la entrega de recursos.
 
-## How it works
+## Cómo funciona
 
-1. If a page can run, read [the measurement workflow](references/MEASUREMENT.md) and establish a field-plus-lab baseline before editing.
-2. Prioritize poor real-user Core Web Vitals. Use a DevTools performance trace and its focused insights to find the cause.
-3. Inspect and change only the code or assets connected to measured bottlenecks.
-4. Re-run equivalent lab measurements and report before/after values, conditions, and uncertainty. Field verification remains pending until enough new user data arrives.
+1. Si la página puede ejecutarse, lee [el flujo de medición](references/MEASUREMENT.md) y establece una línea base de campo más laboratorio antes de editar.
+2. Prioriza los Core Web Vitals deficientes de usuarios reales. Utiliza una traza de rendimiento de DevTools y sus análisis específicos para encontrar la causa.
+3. Inspecciona y modifica únicamente el código o los recursos vinculados a los cuellos de botella medidos.
+4. Vuelve a ejecutar mediciones de laboratorio equivalentes y reporta los valores antes/después, condiciones e incertidumbre. La verificación en campo queda pendiente hasta que se recopilen suficientes datos de nuevos usuarios.
 
-When no runnable page exists, perform static inspection but call findings **hypotheses**, not measured regressions. Include the command or browser workflow that can verify each high-impact hypothesis.
+Cuando no exista una página ejecutable, realiza una inspección estática pero califica los hallazgos como **hipótesis**, no como regresiones medidas. Incluye el comando o flujo de navegador capaz de verificar cada hipótesis de alto impacto.
 
-Prefer a browser tool that records a performance trace and exposes focused insights. With Chrome DevTools MCP, use `performance_start_trace` and `performance_analyze_insight`; do not route performance through `lighthouse_audit`, which covers non-performance Lighthouse categories.
+Prioriza una herramienta de navegador que registre una traza de rendimiento y exponga diagnósticos detallados. Con Chrome DevTools MCP, utiliza `performance_start_trace` y `performance_analyze_insight`; no canalices el rendimiento a través de `lighthouse_audit`, ya que abarca categorías ajenas al rendimiento.
 
-## Starting performance budget
+## Presupuesto de rendimiento inicial
 
-Budgets must reflect the product's target devices, networks, page types, and user journeys. The values below are initial guardrails for a typical content or commerce page, not universal pass/fail criteria. Preserve an existing project budget when one is already defined.
+Los presupuestos deben reflejar los dispositivos, redes, tipos de página y recorridos de usuario del producto. Los valores a continuación son límites iniciales para una página típica de contenido o comercio, no criterios universales de aprobado/reprobado. Conserva el presupuesto existente del proyecto si ya está definido.
 
-| Resource | Budget | Rationale |
-|----------|--------|-----------|
-| Total page weight | < 1.5 MB | Bounds transfer time and data cost on constrained target networks; calibrate with representative pages |
-| JavaScript (compressed) | < 300 KB | Protect parse and execution cost |
-| CSS (compressed) | < 100 KB | Limit render-blocking work |
-| Images (above-fold) | < 500 KB | Protect likely LCP resources |
-| Fonts | < 100 KB | Limit critical font transfer |
-| Third-party | < 200 KB | Bound code outside product control |
+| Recurso | Presupuesto | Justificación |
+|---|---|---|
+| Peso total de la página | < 1.5 MB | Limita el tiempo de transferencia y el consumo de datos en redes restringidas; calibrar con páginas representativas |
+| JavaScript (comprimido) | < 300 KB | Protege el coste de parseo y ejecución |
+| CSS (comprimido) | < 100 KB | Limita el trabajo que bloquea el renderizado |
+| Imágenes (above-the-fold) | < 500 KB | Protege los recursos probables de LCP |
+| Fuentes | < 100 KB | Limita la transferencia de fuentes críticas |
+| Terceros | < 200 KB | Limita el código fuera del control del producto |
 
-## Critical rendering path
+## Ruta crítica de renderizado (Critical rendering path)
 
-### Server response
-* **TTFB < 800ms.** Time to First Byte should be fast. Use CDN, caching, and efficient backends.
-* **Enable compression.** Gzip or Brotli for text assets. Brotli preferred (15-20% smaller).
-* **HTTP/2 or HTTP/3.** Multiplexing reduces connection overhead.
-* **Edge caching.** Cache HTML at CDN edge when possible.
-* **Consider Early Hints (HTTP 103) for measured document latency.** If a trace shows slow HTML generation and stable critical subresources, send an interim `103` with `Link` headers before the normal final response from the same request. Use HTTP/2 or later. A CDN may synthesize the `103` from `Link` headers on an earlier `200`, or the origin/edge handler can emit it directly. Unsupported clients continue to the final response, but confirm current browser and infrastructure support. Limit hints to proven critical preloads or preconnects: inaccurate hints waste bandwidth. Cloudflare reported a 20–30% LCP improvement in an artificial, image-heavy test; treat that as a vendor case study, not an expected saving, and measure your result. See [MDN's 103 implementation example](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) and [the Cloudflare study](https://blog.cloudflare.com/early-hints-performance/).
+### Respuesta del servidor
+* **TTFB < 800ms.** El tiempo hasta el primer byte (Time to First Byte) debe ser rápido. Utiliza CDN, almacenamiento en caché y servidores backend eficientes.
+* **Habilitar compresión.** Gzip o Brotli para recursos de texto. Es preferible Brotli (15-20% más liviano).
+* **HTTP/2 o HTTP/3.** La multiplexación reduce la sobrecarga de conexión.
+* **Caché en el Edge.** Almacena en caché el HTML en el borde de la CDN siempre que sea posible.
+* **Considera Early Hints (HTTP 103) para latencia de documentos medida.** Si una traza muestra una generación de HTML lenta y subrecursos críticos estables, envía un código provisional `103` con encabezados `Link` antes de la respuesta final habitual de la misma petición. Usa HTTP/2 o superior. Una CDN puede sintetizar el `103` a partir de encabezados `Link` de un `200` anterior, o el backend/edge handler puede emitirlo directamente. Los clientes que no lo soporten continuarán hacia la respuesta final; aun así, valida el soporte actual del navegador e infraestructura. Limita los hints a precargas o preconexiones críticas demostradas: los hints imprecisos desperdician ancho de banda. Cloudflare reportó una mejora del 20–30% en LCP en una prueba artificial con muchas imágenes; trátalo como un caso de estudio de proveedor, no como un ahorro garantizado, y mide tus propios resultados. Consulta el [ejemplo de implementación 103 de MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) y el [estudio de Cloudflare](https://blog.cloudflare.com/early-hints-performance/).
 
-### Resource loading
+### Carga de recursos
 
-**Preconnect to required origins:**
+**Preconexión a orígenes requeridos:**
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://cdn.example.com" crossorigin>
 ```
 
-**Preload critical resources:**
+**Precargar recursos críticos:**
 
-Preload only resources whose late discovery is visible in the trace. Each preload competes for bandwidth and an unnecessary high-priority request can delay LCP.
+Precarga solo los recursos cuyo descubrimiento tardío sea visible en la traza. Cada precarga compite por ancho de banda y una petición de alta prioridad innecesaria puede retrasar el LCP.
 
 ```html
-<!-- LCP image -->
+<!-- Imagen LCP -->
 <link rel="preload" href="/hero.webp" as="image" fetchpriority="high">
 
-<!-- Critical font -->
+<!-- Fuente crítica -->
 <link rel="preload" href="/font.woff2" as="font" type="font/woff2" crossorigin>
 ```
 
-**Prerender likely-next navigations** with the [Speculation Rules API](https://developer.chrome.com/docs/web-platform/prerender-pages):
+**Prerenderizar navegaciones altamente probables** con la [Speculation Rules API](https://developer.chrome.com/docs/web-platform/prerender-pages):
 ```html
 <script type="speculationrules">
 {
@@ -75,74 +75,74 @@ Preload only resources whose late discovery is visible in the trace. Each preloa
 }
 </script>
 ```
-`moderate` waits for a stronger intent signal than eager modes. Measure prediction hit rate, transferred bytes, and server cost; a wrong prerender is roughly an unused navigation. See [core-web-vitals → LCP](../core-web-vitals/SKILL.md#lcp-largest-contentful-paint) for the tradeoffs and the `prerenderingchange` gating needed for analytics.
+`moderate` espera una señal de intención más fuerte que los modos activos (*eager*). Mide la tasa de acierto de predicción, los bytes transferidos y el coste del servidor; un prerenderizado erróneo equivale a una navegación no utilizada. Consulta [core-web-vitals → LCP](../core-web-vitals/SKILL.md#lcp-largest-contentful-paint) para ver las ventajas/desventajas y el control condicional `prerenderingchange` necesario para analíticas.
 
-**Defer non-critical CSS:**
+**Diferir CSS no crítico:**
 ```html
-<!-- Critical CSS inlined -->
-<style>/* Above-fold styles */</style>
+<!-- CSS crítico insertado inline -->
+<style>/* Estilos above-the-fold */</style>
 
-<!-- Non-critical CSS -->
+<!-- CSS no crítico -->
 <link rel="preload" href="/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="/styles.css"></noscript>
 ```
 
-### JavaScript optimization
+### Optimización de JavaScript
 
-**Defer non-essential scripts:**
+**Diferir scripts no esenciales:**
 ```html
-<!-- Parser-blocking (avoid) -->
+<!-- Bloquea el analizador/parser (evitar) -->
 <script src="/critical.js"></script>
 
-<!-- Deferred (preferred) -->
+<!-- Diferido (preferido) -->
 <script defer src="/app.js"></script>
 
-<!-- Async (for independent scripts) -->
+<!-- Asíncrono (para scripts independientes) -->
 <script async src="/analytics.js"></script>
 
-<!-- Module (deferred by default) -->
+<!-- Módulo (diferido por defecto) -->
 <script type="module" src="/app.mjs"></script>
 ```
 
-**Code splitting patterns:**
+**Patrones de división de código (Code splitting):**
 ```javascript
-// Route-based splitting
+// División basada en rutas
 const Dashboard = lazy(() => import('./Dashboard'));
 
-// Component-based splitting
+// División basada en componentes
 const HeavyChart = lazy(() => import('./HeavyChart'));
 
-// Feature-based splitting
+// División basada en funcionalidades
 if (user.isPremium) {
   const PremiumFeatures = await import('./PremiumFeatures');
 }
 ```
 
-**Tree shaking best practices:**
+**Buenas prácticas de Tree Shaking:**
 ```javascript
-// ❌ Imports entire library
+// ❌ Importa la librería completa
 import _ from 'lodash';
 _.debounce(fn, 300);
 
-// ✅ Imports only what's needed
+// ✅ Importa únicamente lo necesario
 import debounce from 'lodash/debounce';
 debounce(fn, 300);
 ```
 
-## Image optimization
+## Optimización de imágenes
 
-### Format selection
-| Format | Use case | Browser support |
-|--------|----------|-----------------|
-| AVIF | Photos, best compression | 92%+ |
-| WebP | Photos, good fallback | 97%+ |
-| PNG | Graphics with transparency | Universal |
-| SVG | Icons, logos, illustrations | Universal |
+### Selección de formato
+| Formato | Caso de uso | Soporte de navegadores |
+|---|---|---|
+| AVIF | Fotografías, mejor compresión | 92%+ |
+| WebP | Fotografías, buen respaldo | 97%+ |
+| PNG | Gráficos con transparencias | Universal |
+| SVG | Iconos, logotipos, ilustraciones | Universal |
 
-### Responsive images
+### Imágenes responsivas
 ```html
 <picture>
-  <!-- AVIF for modern browsers -->
+  <!-- AVIF para navegadores modernos -->
   <source 
     type="image/avif"
     srcset="hero-400.avif 400w,
@@ -150,7 +150,7 @@ debounce(fn, 300);
             hero-1200.avif 1200w"
     sizes="(max-width: 600px) 100vw, 50vw">
   
-  <!-- WebP fallback -->
+  <!-- Respaldo WebP -->
   <source 
     type="image/webp"
     srcset="hero-400.webp 400w,
@@ -158,7 +158,7 @@ debounce(fn, 300);
             hero-1200.webp 1200w"
     sizes="(max-width: 600px) 100vw, 50vw">
   
-  <!-- JPEG fallback -->
+  <!-- Respaldo JPEG -->
   <img 
     src="hero-800.jpg"
     srcset="hero-400.jpg 400w,
@@ -167,15 +167,15 @@ debounce(fn, 300);
     sizes="(max-width: 600px) 100vw, 50vw"
     width="1200" 
     height="600"
-    alt="Hero image"
+    alt="Imagen principal"
     loading="lazy"
     decoding="async">
 </picture>
 ```
 
-### LCP image priority
+### Prioridad de imagen LCP
 ```html
-<!-- Above-fold LCP image: eager loading, high priority -->
+<!-- Imagen LCP above-the-fold: carga inmediata, alta prioridad -->
 <img 
   src="hero.webp" 
   fetchpriority="high"
@@ -183,43 +183,43 @@ debounce(fn, 300);
   decoding="sync"
   alt="Hero">
 
-<!-- Below-fold images: lazy loading -->
+<!-- Imágenes below-the-fold: carga diferida (lazy loading) -->
 <img 
   src="product.webp" 
   loading="lazy"
   decoding="async"
-  alt="Product">
+  alt="Producto">
 ```
 
-## Font optimization
+## Optimización de fuentes
 
-### Loading strategy
+### Estrategia de carga
 ```css
-/* System font stack as fallback */
+/* Pila de fuentes del sistema como respaldo */
 body {
   font-family: 'Custom Font', -apple-system, BlinkMacSystemFont, 
                'Segoe UI', Roboto, sans-serif;
 }
 
-/* Prevent invisible text */
+/* Evitar texto invisible (FOIT) */
 @font-face {
   font-family: 'Custom Font';
   src: url('/fonts/custom.woff2') format('woff2');
-  font-display: swap; /* or optional for non-critical */
+  font-display: swap; /* u optional para fuentes no críticas */
   font-weight: 400;
   font-style: normal;
-  unicode-range: U+0000-00FF; /* Subset to Latin */
+  unicode-range: U+0000-00FF; /* Subconjunto a caracteres latinos */
 }
 ```
 
-### Preloading critical fonts
+### Precargar fuentes críticas
 ```html
 <link rel="preload" href="/fonts/heading.woff2" as="font" type="font/woff2" crossorigin>
 ```
 
-### Variable fonts
+### Fuentes variables
 ```css
-/* One file instead of multiple weights */
+/* Un solo archivo en lugar de múltiples variantes de peso */
 @font-face {
   font-family: 'Inter';
   src: url('/fonts/Inter-Variable.woff2') format('woff2-variations');
@@ -228,26 +228,26 @@ body {
 }
 ```
 
-## Caching strategy
+## Estrategia de almacenamiento en caché
 
-### Cache-Control headers
+### Encabezados Cache-Control
 ```
-# HTML (short or no cache)
+# HTML (caché corta o sin caché)
 Cache-Control: no-cache, must-revalidate
 
-# Static assets with hash (immutable)
+# Recursos estáticos con hash de versión (inmutables)
 Cache-Control: public, max-age=31536000, immutable
 
-# Static assets without hash
+# Recursos estáticos sin hash
 Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
-# API responses
+# Respuestas de API
 Cache-Control: private, max-age=0, must-revalidate
 ```
 
-### Service worker caching
+### Caché con Service Worker
 ```javascript
-// Cache-first for static assets
+// Estrategia Cache-first para recursos estáticos
 self.addEventListener('fetch', (event) => {
   if (event.request.destination === 'image' ||
       event.request.destination === 'style' ||
@@ -265,24 +265,24 @@ self.addEventListener('fetch', (event) => {
 });
 ```
 
-## Runtime performance
+## Rendimiento en tiempo de ejecución (Runtime)
 
-### Avoid layout thrashing
+### Evitar el reflujo excesivo (Layout Thrashing)
 ```javascript
-// ❌ Forces multiple reflows
+// ❌ Fuerza múltiples reflujos de diseño
 elements.forEach(el => {
-  const height = el.offsetHeight; // Read
-  el.style.height = height + 10 + 'px'; // Write
+  const height = el.offsetHeight; // Lectura
+  el.style.height = height + 10 + 'px'; // Escritura
 });
 
-// ✅ Batch reads, then batch writes
-const heights = elements.map(el => el.offsetHeight); // All reads
+// ✅ Agrupa lecturas primero, luego escrituras
+const heights = elements.map(el => el.offsetHeight); // Todas las lecturas
 elements.forEach((el, i) => {
-  el.style.height = heights[i] + 10 + 'px'; // All writes
+  el.style.height = heights[i] + 10 + 'px'; // Todas las escrituras
 });
 ```
 
-### Debounce expensive operations
+### Limitar operaciones costosas (Debounce)
 ```javascript
 function debounce(fn, delay) {
   let timeout;
@@ -292,69 +292,69 @@ function debounce(fn, delay) {
   };
 }
 
-// Debounce scroll/resize handlers
+// Limitar manejadores de eventos scroll/resize
 window.addEventListener('scroll', debounce(handleScroll, 100));
 ```
 
-### Use requestAnimationFrame
+### Usar requestAnimationFrame
 ```javascript
-// ❌ May cause jank
+// ❌ Puede generar tirones (jank)
 setInterval(animate, 16);
 
-// ✅ Synced with display refresh
+// ✅ Sincronizado con la tasa de refresco de la pantalla
 function animate() {
-  // Animation logic
+  // Lógica de animación
   requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
 ```
 
-### Virtualize long lists
+### Virtualizar listas largas
 ```javascript
-// For lists > 100 items, render only visible items
-// Use libraries like react-window, vue-virtual-scroller, or native CSS:
+// Para listas > 100 elementos, renderizar únicamente los elementos visibles
+// Usar librerías como react-window, vue-virtual-scroller, o CSS nativo:
 .virtual-list {
   content-visibility: auto;
-  contain-intrinsic-size: 0 50px; /* Estimated item height */
+  contain-intrinsic-size: 0 50px; /* Altura estimada por elemento */
 }
 ```
 
-### Smooth navigations with View Transitions
+### Navegaciones fluidas con View Transitions
 
-The [View Transitions API](https://developer.chrome.com/docs/web-platform/view-transitions) lets the browser cross-fade (or custom-animate) between two DOM states using a single GPU-composited snapshot — no double-render, no layout thrash, and the snapshot doesn't count toward CLS.
+La [API View Transitions](https://developer.chrome.com/docs/web-platform/view-transitions) permite que el navegador realice una transición con desvanecimiento cruzado (o animación personalizada) entre dos estados del DOM usando una única captura compuesta por GPU: sin doble renderizado, sin sobrecarga de diseño y sin que la captura compute para el CLS.
 
-**Same-document (SPA-style) — Baseline 2026:**
+**Mismo documento (estilo SPA) — Baseline 2026:**
 ```javascript
-// Wrap the DOM mutation that swaps the view
+// Envolver la mutación del DOM que intercambia la vista
 function navigate(newView) {
   if (!document.startViewTransition) return swapDOM(newView);
   document.startViewTransition(() => swapDOM(newView));
 }
 ```
 
-**Cross-document (MPA-style) — Chromium-stable, progressive enhancement elsewhere:**
+**Entre documentos (estilo MPA) — Estable en Chromium, mejora progresiva en otros navegadores:**
 ```css
-/* On both source and destination pages */
+/* En ambas páginas (origen y destino) */
 @view-transition { navigation: auto; }
 ```
-That's the entire integration — same-origin navigations now fade automatically. To opt specific elements into shared-element transitions (e.g. a thumbnail expanding into a hero), give them a matching `view-transition-name`:
+Esa es toda la integración: las navegaciones del mismo origen ahora tendrán una transición suave automática. Para incluir elementos específicos en transiciones de elementos compartidos (por ejemplo, una miniatura que se expande a imagen principal), asígnales un `view-transition-name` coincidente:
 ```css
 .product-thumb[data-id="42"], .product-hero { view-transition-name: product-42; }
 ```
 
-Pair this with Speculation Rules (above) for instant + animated navigations.
+Combina esto con Speculation Rules (visto anteriormente) para lograr navegaciones instantáneas y animadas.
 
-## Third-party scripts
+## Scripts de terceros
 
-### Load strategies
+### Estrategias de carga
 ```javascript
-// ❌ Blocks main thread
+// ❌ Bloquea el hilo principal
 <script src="https://analytics.example.com/script.js"></script>
 
-// ✅ Async loading
+// ✅ Carga asíncrona
 <script async src="https://analytics.example.com/script.js"></script>
 
-// ✅ Delay until interaction
+// ✅ Retrasar hasta interacción del usuario
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const observer = new IntersectionObserver((entries) => {
@@ -370,30 +370,30 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 ```
 
-### Facade pattern
+### Patrón Facade (Fachada)
 ```html
-<!-- Show static placeholder until interaction -->
+<!-- Muestra un marcador de posición estático hasta que el usuario interactúe -->
 <div class="youtube-facade" 
      data-video-id="abc123" 
      onclick="loadYouTube(this)">
-  <img src="/thumbnails/abc123.jpg" alt="Video title">
-  <button aria-label="Play video">▶</button>
+  <img src="/thumbnails/abc123.jpg" alt="Título del video">
+  <button aria-label="Reproducir video">▶</button>
 </div>
 ```
 
-## Measurement
+## Medición
 
-Use [the measurement workflow](references/MEASUREMENT.md) whenever a URL is runnable. It defines Chrome DevTools MCP routing, CrUX and fallback sources, repeatable lab conditions, and a compact evidence format.
+Utiliza [el flujo de medición](references/MEASUREMENT.md) siempre que una URL sea ejecutable. Define el enrutamiento de Chrome DevTools MCP, fuentes de CrUX y respaldos, condiciones de laboratorio reproducibles y un formato de evidencia compacto.
 
-| Metric | Kind | Interpretation |
-|--------|------|----------------|
-| LCP, INP, CLS at p75 | Field | User-outcome Core Web Vitals; use for pass/fail prioritization |
-| LCP, CLS in a trace | Lab | Reproducible diagnostic values for one navigation |
-| TBT | Lab | Main-thread blocking diagnostic and a rough INP proxy, not field INP |
-| FCP, Speed Index | Lab | Loading diagnostics, not Core Web Vitals |
+| Métrica | Tipo | Interpretación |
+|---|---|---|
+| LCP, INP, CLS en p75 | Campo | Core Web Vitals de experiencia de usuario; usar para priorizar aprobado/reprobado |
+| LCP, CLS en una traza | Laboratorio | Valores diagnósticos reproducibles para una navegación |
+| TBT | Laboratorio | Diagnóstico de bloqueo del hilo principal y aproximación a INP, no INP de campo |
+| FCP, Speed Index | Laboratorio | Diagnósticos de carga, no son Core Web Vitals |
 
-Raw `PerformanceObserver` snippets are useful for the current browser session but are not real-user data by themselves. When the user wants production telemetry, read [the first-party RUM reference](references/RUM.md) and prefer `web-vitals` over a hand-rolled metric implementation.
+Los fragmentos de código directos con `PerformanceObserver` son útiles para la sesión actual del navegador, pero no constituyen datos de usuarios reales por sí solos. Cuando se requiera telemetría en producción, consulta [la referencia de RUM de origen](references/RUM.md) y prioriza `web-vitals` frente a una implementación manual de métricas.
 
-## References
+## Referencias
 
-For Core Web Vitals specific optimizations, see [Core Web Vitals](../core-web-vitals/SKILL.md).
+Para optimizaciones específicas de Core Web Vitals, consulta [Core Web Vitals](../core-web-vitals/SKILL.md).
