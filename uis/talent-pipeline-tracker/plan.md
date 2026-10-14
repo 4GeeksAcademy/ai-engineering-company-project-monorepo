@@ -25,7 +25,7 @@ hooks/useRecordsFilters.ts       # Optional: URL filters and local search
 Use local `useState`, `useReducer`, or small hooks for view state. Do not introduce Redux, Zustand, Jotai, or similar global state libraries.
 
 - [ ] Confirm `app/page.tsx` exists for the candidate list.
-- [ ] Read the assigned `CONTEXT-company.md` before writing application code; use its company scenario, labels, and terminology throughout the interface.
+- [ ] Read the assigned [context-healthcore.md](context-healthcore.md) before writing application code; use its company scenario, labels, and terminology throughout the interface.
 - [ ] Confirm this app is inside your existing fork of the course monorepo at `uis/talent-pipeline-tracker`, rather than a new standalone repository.
 - [ ] Create `app/candidates/[id]/page.tsx` for candidate details.
 - [ ] Confirm `app/layout.tsx` exists for the root layout, fonts, and global style imports.
@@ -67,6 +67,8 @@ Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api.
 - [ ] Choose how to load GET `/records`: fetch on mount in a client component with `useEffect`, or use server-component `fetch` with an explicit revalidation/refresh strategy. Follow the installed Next.js documentation and ensure successful mutations refresh the displayed data without a full document reload.
 - [ ] Show Name, Position, Status, and Stage in a desktop table and mobile cards.
 - [ ] Display status/stage using the UI labels in [README.md](README.md#api-and-data), never raw API values.
+- [ ] Color status badges by meaning (Received blue, In progress amber, Selected green, Discarded rose), matching the screenshots. Keep stage badges neutral grey; stage is a position in the process, not a judgment.
+- [ ] Add `whitespace-nowrap` to badges and short buttons so labels like "In progress", "Drawer View", and "Edit Candidate" stay on one line. Several screenshots show them wrapping; treat that as an export bug, not the design.
 - [ ] Show the correct candidate count and page controls if the API uses pagination, so every candidate can be reached.
 - [ ] Show a loading spinner or skeleton while fetching candidates, an error message with Retry on failure, and an empty state when the API returns no candidates.
 - [ ] Check: HTTP errors and malformed list responses are displayed in the list UI.
@@ -165,6 +167,7 @@ Files: candidate detail Notes tab, shared note components, and `lib/api.ts`.
 - [ ] Show notes only within the candidate detail view, in both drawer and expanded presentations.
 - [ ] Use the same candidate ID for record and notes requests. Optionally load GET `/records/:id` and GET `/records/:id/notes` in parallel with `Promise.all`, while making request failures visible.
 - [ ] Show notes, their actual count, and an empty state. Show dates/authors only when supplied by the API.
+- [ ] Pick one note card layout before building it and use it in both drawer and expanded views. The screenshots show three versions (text with date and trash; author with relative time and no trash; author with date and trash); choose based on which fields the notes API returns, and keep a delete action on every card.
 - [ ] Make Add Note open an inline text box with Cancel and Save Note.
 - [ ] Reject blank notes and save through POST `/records/:id/notes` using the documented payload.
 - [ ] Add inline Cancel and Delete Note confirmation before deletion.
