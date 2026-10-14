@@ -36,7 +36,7 @@ Use local `useState`, `useReducer`, or small hooks for view state. Do not introd
 - [x] Create `.env.example` to document `NEXT_PUBLIC_API_URL` in step 2.
 - [x] Decide whether `hooks/useRecordsFilters.ts` is needed; create it if it helps keep the list page readable.
 
-## 2. Configure the API URL and shared fetch helper
+## 2. Configure the API URL and shared fetch helper ✅
 
 Complete this setup before starting step 3: Show all candidates in a list.
 
@@ -44,11 +44,11 @@ Files: `lib/api.ts`, `.env.example`.
 
 No authentication is required for now.
 
-- [ ] Configure `NEXT_PUBLIC_API_URL` and document it in `.env.example`.
-- [ ] Create `.env.local` in the app directory with `NEXT_PUBLIC_API_URL=https://playground.4geeks.com/tracker/api/v1`.
-- [ ] Treat endpoint paths as relative to `NEXT_PUBLIC_API_URL`, which may already include `/api/v1`; do not append that prefix twice.
-- [ ] Create a shared fetch helper in `lib/api.ts`. Show a clear error if `NEXT_PUBLIC_API_URL` is missing, normalize trailing slashes, merge headers with `new Headers(init?.headers)`, and handle HTTP errors, invalid JSON, and explicitly permitted empty responses.
-- [ ] Use `async/await` for API requests, check `response.ok`, and parse JSON only when the endpoint expects a JSON response. Throw useful errors for HTTP failures and malformed responses so each workflow can display them.
+- [x] Configure `NEXT_PUBLIC_API_URL` and document it in `.env.example`.
+- [x] Create `.env.local` in the app directory with `NEXT_PUBLIC_API_URL=https://playground.4geeks.com/tracker/api/v1`.
+- [x] Treat endpoint paths as relative to `NEXT_PUBLIC_API_URL`, which may already include `/api/v1`; do not append that prefix twice.
+- [x] Create a shared fetch helper in `lib/api.ts`. Show a clear error if `NEXT_PUBLIC_API_URL` is missing, normalize trailing slashes, merge headers with `new Headers(init?.headers)`, and handle HTTP errors, invalid JSON, and explicitly permitted empty responses.
+- [x] Use `async/await` for API requests, check `response.ok`, and parse JSON only when the endpoint expects a JSON response. Throw useful errors for HTTP failures and malformed responses so each workflow can display them.
 
 ## 3. Show all candidates in a list
 
