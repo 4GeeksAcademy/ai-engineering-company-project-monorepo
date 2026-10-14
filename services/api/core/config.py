@@ -38,29 +38,39 @@ def get_allowed_origins() -> list[str]:
     ]
 
 
+def _data_file(package: str, filename: str) -> Path:
+    """Runtime state file. DATA_DIR (set in containers) moves them all into one persistent volume."""
+    data_dir = os.environ.get("DATA_DIR")
+    if data_dir:
+        path = Path(data_dir) / package / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+    return Path(__file__).resolve().parent.parent / package / filename
+
+
 def get_suppliers_db_path() -> Path:
     """TinyDB file for the suppliers domain (gitignored runtime state)."""
-    return Path(__file__).resolve().parent.parent / "suppliers" / "db.json"
+    return _data_file("suppliers", "db.json")
 
 
 def get_incidents_db_path() -> Path:
     """TinyDB file for the managed incidents (gitignored runtime state)."""
-    return Path(__file__).resolve().parent.parent / "incidents" / "db.json"
+    return _data_file("incidents", "db.json")
 
 
 def get_users_db_path() -> Path:
     """TinyDB file for the internal users (gitignored runtime state)."""
-    return Path(__file__).resolve().parent.parent / "users" / "db.json"
+    return _data_file("users", "db.json")
 
 
 def get_profiles_db_path() -> Path:
     """TinyDB file for the user profiles (gitignored runtime state)."""
-    return Path(__file__).resolve().parent.parent / "profiles" / "db.json"
+    return _data_file("profiles", "db.json")
 
 
 def get_local_inventory_db_path() -> Path:
     """SQLite file used by the inventory domain when DATABASE_URL is not set (gitignored)."""
-    return Path(__file__).resolve().parent.parent / "inventory" / "db.sqlite"
+    return _data_file("inventory", "db.sqlite")
 
 
 def uses_local_inventory_db() -> bool:

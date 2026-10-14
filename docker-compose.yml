@@ -1,0 +1,42 @@
+# `docker compose up` desde la raíz. Toda la configuración sale de .env (ver .env.example).
+# Los servicios se hablan por nombre de servicio (api, uis) dentro de la red nexova-net, nunca por localhost.
+services:
+  api:
+    build:
+      context: ./services
+      additional_contexts:
+        shared: ./packages/shared
+    env_file: .env
+    volumes:
+      - ./services/api:/app/services/api
+    ports:
+      - "${API_PORT}:8000"
+    networks: [nexova-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  uis:
+    build:
+      context: ./uis
+      additional_contexts:
+        monorepo: .
+    env_file: .env
+    command: ["start.sh"]
+    volumes:
+      - ./uis/website/src:/app/uis/website/src
+      - ./uis/backoffice/src:/app/uis/backoffice/src
+      - ./packages/shared:/app/packages/shared
+    ports:
+      - "${WEBSITE_PORT}:3000"
+      - "${BACKOFFICE_PORT}:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [nexova-net]
+
+networks:
+  nexova-net:
+    name: nexova-net
