@@ -5,7 +5,7 @@ Before writing Next.js code, read the relevant installed guides in `node_modules
 
 Visual styling is not formally evaluated in the assignment; usability and clearly displayed required information are required. Drawers, expanded form presentations, and screenshot comparisons are additional scope retained in this plan.
 
-## 1. Set up the project structure
+## 1. Set up the project structure ✅
 
 Check the existing structure and add any missing folders or starter files. Implement their contents in the related steps below:
 
@@ -24,17 +24,17 @@ hooks/useRecordsFilters.ts       # Optional: URL filters and local search
 
 Use local `useState`, `useReducer`, or small hooks for view state. Do not introduce Redux, Zustand, Jotai, or similar global state libraries.
 
-- [ ] Confirm `app/page.tsx` exists for the candidate list.
-- [ ] Read the assigned [context-healthcore.md](context-healthcore.md) before writing application code; use its company scenario, labels, and terminology throughout the interface.
-- [ ] Confirm this app is inside your existing fork of the course monorepo at `uis/talent-pipeline-tracker`, rather than a new standalone repository.
-- [ ] Create `app/candidates/[id]/page.tsx` for candidate details.
-- [ ] Confirm `app/layout.tsx` exists for the root layout, fonts, and global style imports.
-- [ ] Confirm `app/globals.css` exists for global styles.
-- [ ] Create `components/` for list rows/cards, filters, notes, forms, and loading/error feedback.
-- [ ] Confirm `lib/api.ts` exists for the shared fetch helper and endpoint functions.
-- [ ] Create `types/` for candidate, note, payload, and response types.
-- [ ] Create `.env.example` to document `NEXT_PUBLIC_API_URL` in step 2.
-- [ ] Decide whether `hooks/useRecordsFilters.ts` is needed; create it if it helps keep the list page readable.
+- [x] Confirm `app/page.tsx` exists for the candidate list.
+- [x] Read the assigned [context-healthcore.md](context-healthcore.md) before writing application code; use its company scenario, labels, and terminology throughout the interface.
+- [x] Confirm this app is inside your existing fork of the course monorepo at `uis/talent-pipeline-tracker`, rather than a new standalone repository.
+- [x] Create `app/candidates/[id]/page.tsx` for candidate details.
+- [x] Confirm `app/layout.tsx` exists for the root layout, fonts, and global style imports.
+- [x] Confirm `app/globals.css` exists for global styles.
+- [x] Create `components/` for list rows/cards, filters, notes, forms, and loading/error feedback.
+- [x] Confirm `lib/api.ts` exists for the shared fetch helper and endpoint functions.
+- [x] Create `types/` for candidate, note, payload, and response types.
+- [x] Create `.env.example` to document `NEXT_PUBLIC_API_URL` in step 2.
+- [x] Decide whether `hooks/useRecordsFilters.ts` is needed; create it if it helps keep the list page readable.
 
 ## 2. Configure the API URL and shared fetch helper
 
