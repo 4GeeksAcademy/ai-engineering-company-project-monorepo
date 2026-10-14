@@ -1,192 +1,219 @@
-# HealthCore Talent Pipeline Tracker — Implementation Plan
+# Talent Pipeline Tracker — Build Plan
 
-Build a typed Next.js App Router frontend for HealthCore's recruitment pipeline. Candidates, filters, updates, and notes must work without full document reloads.
+Follow the steps in order. Use `public/ui-ux/` screenshots as visual references.
+Before writing Next.js code, read the relevant installed guides in `node_modules/next/dist/docs/`, as required by `AGENTS.md`.
 
-## Progress dashboard
+Visual styling is not formally evaluated in the assignment; usability and clearly displayed required information are required. Drawers, expanded form presentations, and screenshot comparisons are additional scope retained in this plan.
 
-| Metric | Starting value | Completion target |
-| --- | --- | --- |
-| Implementation tasks completed | 0 / 38 | 38 / 38 (28 feature tasks + 10 UI tasks) |
-| Progress | 0% | Completed tasks / 38 × 100 |
-| REST actions verified | 0 / 8 | 8 / 8 |
-| Acceptance checks passed | 0 / 16 | 16 / 16 |
-| Mockup comparisons passed | 0 / 33 | 33 / 33 (11 view/state groups × 3 sizes) |
-| Final lint, type, and build checks passed | 0 / 3 | 3 / 3 |
-| Open blockers | Not assessed | 0 |
+## 1. Set up the project structure
 
-Update this dashboard after each work session. All tasks start unchecked because implementation has not been verified.
-
-## How to use this plan
-
-- Work in 15–30 minute intervals; estimates below are timeboxes, not guarantees. Total estimated implementation effort: 14–18 hours including the mockup requirements, excluding API access delays.
-- Pick the next unblocked task. If it exceeds 30 minutes, split its remaining work into smaller subtasks under the same ID.
-- Check a task only after its completion check passes.
-- If blocked, record the missing information and continue with independent tasks. Do not invent API fields or enum values.
-- Use local `useState`, `useReducer`, or small hooks. Do not add Redux, Zustand, Jotai, or similar libraries.
-
-## Intended structure
+Check the existing structure and add any missing folders or starter files. Implement their contents in the related steps below:
 
 ```text
 app/
   page.tsx                       # Candidate list at /
-  candidates/[id]/page.tsx        # Candidate detail
-  layout.tsx                     # Fonts, metadata, shared layout
-  globals.css
-components/                      # Rows, filters, forms, notes, feedback
-lib/api.ts                       # Fetch helper and typed endpoint wrappers
-types/                           # Records, notes, payloads, API envelopes
-hooks/useRecordsFilters.ts       # Optional URL/filter hook
-.env.example                     # Public API URL only
+  candidates/[id]/page.tsx        # Candidate detail at /candidates/[id]
+  layout.tsx                     # Root layout, fonts, and global style imports
+  globals.css                    # Global styles
+components/                      # List rows/cards, filters, notes, forms, loading/error feedback
+lib/api.ts                       # Shared fetch helper and typed endpoint functions
+types/                           # Candidate, note, payload, and response types
+.env.example                     # Documents NEXT_PUBLIC_API_URL
+hooks/useRecordsFilters.ts       # Optional: URL filters and local search
 ```
 
-Default to client view components for loading and local mutation state. Keep App Router navigation with `Link`. Follow the installed Next.js documentation for client boundaries, dynamic route parameters, and `useSearchParams`; add the required Suspense boundary where applicable. Use the mockups in `public/ui-ux/` as presentation references, with the specific requirements below. Confirm labels against the assigned HealthCore CONTEXT.
+Use local `useState`, `useReducer`, or small hooks for view state. Do not introduce Redux, Zustand, Jotai, or similar global state libraries.
 
-## Mockup requirements and scope
+- [ ] Confirm `app/page.tsx` exists for the candidate list.
+- [ ] Read the assigned `CONTEXT-company.md` before writing application code; use its company scenario, labels, and terminology throughout the interface.
+- [ ] Confirm this app is inside your existing fork of the course monorepo at `uis/talent-pipeline-tracker`, rather than a new standalone repository.
+- [ ] Create `app/candidates/[id]/page.tsx` for candidate details.
+- [ ] Confirm `app/layout.tsx` exists for the root layout, fonts, and global style imports.
+- [ ] Confirm `app/globals.css` exists for global styles.
+- [ ] Create `components/` for list rows/cards, filters, notes, forms, and loading/error feedback.
+- [ ] Confirm `lib/api.ts` exists for the shared fetch helper and endpoint functions.
+- [ ] Create `types/` for candidate, note, payload, and response types.
+- [ ] Create `.env.example` to document `NEXT_PUBLIC_API_URL` in step 2.
+- [ ] Decide whether `hooks/useRecordsFilters.ts` is needed; create it if it helps keep the list page readable.
 
-The repository's reference folder is `public/ui-ux/`. It contains 33 images: candidate list (3), detail overview (6), detail notes in list/composer/delete-confirmation states (18), and create candidate (6). Each group covers desktop, tablet, and mobile. Folder names such as `add-notes` and `save-notes` describe screenshots of interaction states, not additional API operations.
+## 2. Configure the API URL and shared fetch helper
 
-| Area | Reference folders | Implementation requirement |
-| --- | --- | --- |
-| Candidate list | `candidate-list/` | Branded header, search, two filters, Clear filters, blue add button, status/stage pills, desktop/tablet table, mobile cards and candidate count |
-| Detail overview | `candidate-detail/{drawer,expanded}/overview/` | Initials avatar, name/position, status/stage pills, Overview/Notes tabs with note count, Recruitment Progress and General Information sections, Edit action |
-| Detail notes | `candidate-detail/{drawer,expanded}/notes/{add-notes,save-notes,delete-notes}/` | Internal Notes list, Add Note action, inline textarea composer with Cancel/Save Note, timestamps, delete icons, inline confirmation with Cancel/Delete Note |
-| Candidate creation | `create-candidate/{Drawer,expanded}/` | Drawer and expanded form, close/view-switch controls, labeled fields, required markers, Cancel/Create Candidate actions, single-column narrow layout and two-column wide layout |
+Complete this setup before starting step 3: Show all candidates in a list.
 
-Presentation rules:
+Files: `lib/api.ts`, `.env.example`.
 
-- Use a pale gray page background, white surfaces, subtle borders/shadows, rounded controls/cards, dark headings, muted secondary text, and blue primary actions. Keep status text visible alongside colors: Received blue, In progress amber, Selected green, Discarded red, subject to confirmed API enums. Stage pills use neutral styling.
-- Treat desktop/tablet detail drawers as right-side panels over a dimmed list; mobile drawers fill the available viewport. Expanded detail is the canonical `/candidates/[id]` page. Share detail/form components across presentations rather than duplicating business logic.
-- Opening a candidate from the list should support the drawer and an expand action; direct links and refresh must render the canonical detail page. Closing or switching back must preserve list filters, search, pagination, and relevant scroll position. Select the routing approach after task 02; do not require advanced routing if a small local drawer meets these checks.
-- Overview and Notes are tabs for the same candidate. Preserve the selected tab and any unsaved form/note input when changing drawer/expanded presentation. Note counts, header pills, and the underlying candidate list must reflect successful mutations.
-- Mockup counts, people, dates, and note authors are sample data. Show Last Updated and note author metadata only if returned by the API; never fabricate them. Use actual API totals for server pagination. If all records are returned, filter/search before client pagination; do not display a global-search claim when only one server page is loaded.
-- Creation includes Full Name, Email Address, Phone Number, Position, LinkedIn URL, CV URL, and Years of Experience. Name/email/position have required markers in the mockups; reconcile them with the API. CV is a URL field, not a file-upload requirement. Keep form actions reachable while scrolling, even where a screenshot crops them out.
-- Edit has no dedicated mockup. Reuse the candidate form and visual style while retaining the required PUT behavior. Loading/error/success states remain required even though the reference images mostly show successful data.
-- Use the mockups for layout intent, not device-frame decorations, clipped text, awkward button wrapping, or sample values. Determine responsive breakpoints from usable content; verify the three reference sizes plus a narrow 375px viewport.
+No authentication is required for now.
 
-## UI tasks — schedule alongside feature tasks
+- [ ] Configure `NEXT_PUBLIC_API_URL` and document it in `.env.example`.
+- [ ] Create `.env.local` in the app directory with `NEXT_PUBLIC_API_URL=https://playground.4geeks.com/tracker/api/v1`.
+- [ ] Treat endpoint paths as relative to `NEXT_PUBLIC_API_URL`, which may already include `/api/v1`; do not append that prefix twice.
+- [ ] Create a shared fetch helper in `lib/api.ts`. Show a clear error if `NEXT_PUBLIC_API_URL` is missing, normalize trailing slashes, merge headers with `new Headers(init?.headers)`, and handle HTTP errors, invalid JSON, and explicitly permitted empty responses.
+- [ ] Use `async/await` for API requests, check `response.ok`, and parse JSON only when the endpoint expects a JSON response. Throw useful errors for HTTP failures and malformed responses so each workflow can display them.
 
-These ten tasks are part of the 38-task total. Complete UI01–UI02 before task 09; schedule the others beside the specified feature tasks. Final task 28 depends on all UI tasks.
+## 3. Show all candidates in a list
 
-- [ ] **UI01 — Define shared visual styles (20–30 min).** Establish colors, spacing, type hierarchy, borders, radii, buttons, and status/stage pills from the references. **Done:** shared styles render consistently on list, detail, and forms; status meaning is readable without color.
-- [ ] **UI02 — Build the application header (15–25 min).** Add the product mark/title and responsive content container in the shared layout. **Done:** desktop, tablet, and mobile match the header's hierarchy and alignment without overflow.
-- [ ] **UI03 — Build responsive list presentation (20–30 min; alongside 09).** Render a semantic table on wide layouts and candidate cards with a navigation affordance on mobile. **Done:** all four required list fields remain visible in both layouts; visible candidate count comes from real data.
-- [ ] **UI04 — Add Clear filters and pagination (20–30 min; after 11–12).** Clear status, stage, and local search together while retaining unrelated URL parameters. Add accurate range/total labels and working page controls where multiple pages exist. **Done:** clearing resets to page one; changing filters/search resets or clamps pagination; first/last controls disable correctly; counts and search scope match the contract.
-- [ ] **UI05 — Build drawer behavior (20–30 min; alongside 13–14).** Create a shared responsive panel with overlay, close/expand controls, scroll containment, accessible dialog labeling, focus containment, Escape handling, and focus restoration. **Done:** panel works at all three sizes; keyboard cannot enter the obscured list; closing returns focus to the opener.
-- [ ] **UI06 — Connect expanded views and detail tabs (20–30 min; alongside 15 and 18).** Share detail content, render initials/header pills, and connect Overview/Notes tabs plus drawer/expanded navigation. **Done:** deep links work; tab selection, list context, and unsaved input survive view changes; note badge reflects the actual notes count.
-- [ ] **UI07 — Match the note composer (15–25 min; alongside 19).** Add an inline textarea with Cancel and Save Note. **Done:** Add Note opens/focuses the composer; Cancel makes no POST; failed save retains text; successful save updates list and count once.
-- [ ] **UI08 — Add inline note deletion confirmation (15–25 min; before completing 20).** Show the selected note's destructive confirmation with red Delete Note and Cancel controls. **Done:** opening/canceling confirmation sends no DELETE; confirming targets only that note; failure retains the note and shows an error; success updates counts in both views.
-- [ ] **UI09 — Match create/edit form presentations (20–30 min; alongside 21–23).** Share the form across drawer/expanded views, add close/view-switch controls, and keep footer actions reachable. **Done:** narrow/wide layouts match the reference field hierarchy; view switching preserves input; Cancel sends no mutation; Edit is discoverable from detail.
-- [ ] **UI10 — Record responsive comparison evidence (20–30 min; after UI03–UI09).** Complete the 33-cell matrix below using screenshots and interaction observations. **Done:** every cell passes or has a documented fix; all fixes are verified before task 28. Split comparison work by view group if it exceeds the timebox.
+Goal: name, position, status, and stage are visible immediately.
 
-## Phase 1 — Confirm the contract and prepare the app
+Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api.ts`.
 
-- [ ] **01 — Record the real API contract (20–30 min).** Find project CONTEXT and official API documentation. Record exact fields, required fields, status/stage enums, date formats, list envelope/pagination, note payload, response shapes, authentication requirements, and error shapes. **Done:** all eight REST actions below have documented request/response expectations; unknowns are recorded as blockers.
-- [ ] **02 — Review version-specific routing guidance (15–20 min).** Read relevant guides from the resolved `node_modules/next/dist/docs/` location before writing code, as required by `AGENTS.md`. Confirm dynamic params and search-param/Suspense conventions. **Done:** the routing approach follows the installed documentation.
-- [ ] **03 — Configure the API URL (15–20 min).** Document `NEXT_PUBLIC_API_URL` in `.env.example`, normalize trailing slashes centrally, and show a useful missing-configuration error. Keep secrets out of source control; public variables are browser-visible. **Done:** configured URLs with/without trailing slashes produce the same endpoint; missing URL produces an actionable error.
-- [ ] **04 — Define domain and payload types (20–30 min).** Add candidate, note, create, full-update, partial-update, and actual response-envelope types. Use exact API names. **Done:** required display fields and all request bodies are typed without `any`.
+- [ ] Check the list response for the exact field names for ID, name, position, status, stage, and email (needed for search). Note missing or nullable values and define the corresponding candidate type.
+- [ ] Inspect GET `/records`: identify whether the list is an array or inside a wrapper, record the list key, and define its response type.
+- [ ] Check whether GET `/records` returns all candidates or one page. If paginated, record page/page-size parameters and total-count or next-page response fields.
+- [ ] GET `/records`: define the candidate list item type and the list response type, including any wrapper and pagination fields.
+- [ ] Use these types in the list API function and component props without `any`; validate the returned response shape.
+- [ ] Implement GET `/records` — list candidates — as a typed function in `lib/api.ts` using the shared fetch helper.
+- [ ] Replace the landing page with the app header and real candidate list.
+- [ ] Load candidates using the GET `/records` function implemented in this step.
+- [ ] Choose how to load GET `/records`: fetch on mount in a client component with `useEffect`, or use server-component `fetch` with an explicit revalidation/refresh strategy. Follow the installed Next.js documentation and ensure successful mutations refresh the displayed data without a full document reload.
+- [ ] Show Name, Position, Status, and Stage in a desktop table and mobile cards.
+- [ ] Display status/stage using the UI labels in [README.md](README.md#api-and-data), never raw API values.
+- [ ] Show the correct candidate count and page controls if the API uses pagination, so every candidate can be reached.
+- [ ] Show a loading spinner or skeleton while fetching candidates, an error message with Retry on failure, and an empty state when the API returns no candidates.
+- [ ] Check: HTTP errors and malformed list responses are displayed in the list UI.
+- [ ] Check: `/` lists real candidates from GET `/records`, with name, position, status, and stage visible immediately.
+- [ ] Check: list state uses local React state/hooks without external global state libraries; components, types, and API access are separated, and types match the API structures.
+- [ ] Check: the list header, field labels, and status/stage labels reflect the assigned HealthCore CONTEXT.
+- [ ] Check: a successful fetch visibly renders the loaded list or empty result, completing the loading/success/error states for list fetching.
+- [ ] Keep list state near the components that use it; avoid passing state through unrelated intermediate components solely to reach a child (prop drilling).
 
-## Phase 2 — Build the API layer
+## 4. Filter and search without reloading
 
-Depends on 01–04. The existing `lib/api.ts` is empty and can hold these helpers.
+Goal: filter by status and stage, and search by name or email without reloading the page.
 
-- [ ] **05 — Add the shared fetch helper (20–30 min).** Use async/await, normalize the base once, merge headers safely, check `response.ok`, and handle HTTP errors. **Done:** successful JSON and non-2xx responses produce the expected typed result or useful error.
-- [ ] **06 — Handle response edge cases (20–30 min).** Handle 204/empty responses where allowed; reject unexpected empty data, invalid JSON, and malformed payload shapes. TypeScript assertions alone do not validate responses. **Done:** valid JSON, permitted no-content, invalid JSON, and wrong-shape fixtures each have a documented outcome.
-- [ ] **07 — Add candidate endpoint wrappers (20–30 min).** Implement list, get, create, replace, and partial update. **Done:** all five methods/paths and typed bodies match the contract table; pagination/envelope behavior follows confirmed docs.
-- [ ] **08 — Add note endpoint wrappers (15–25 min).** Implement list, add, and delete using record/note IDs. **Done:** all three wrappers use correct methods, paths, and response handling, including no-content deletion.
+Files: candidate list page and its filter/search components.
 
-## Phase 3 — Candidate list
+- [ ] Confirm the allowed status values from the backend documentation and define their TypeScript type.
+- [ ] Confirm the allowed stage values from the backend documentation and define their TypeScript type.
+- [ ] Reuse GET `/records` from step 3; add documented query parameters if the API handles filtering or search.
+- [ ] Add Status and Stage filters using the backend's allowed values.
+- [ ] Use the [README.md mappings](README.md#api-and-data) for filter options: display UI labels, but use raw API values for filter logic, URL parameters, and API queries.
+- [ ] Add a search box that matches name or email, ignoring letter case.
+- [ ] Keep the search string in local `useState`. For client-side search, filter the loaded candidates using case-insensitive `includes` on name and email. If the official API documentation supports a search query parameter, refetch with that parameter instead where appropriate. Typing must update results without a full page reload.
+- [ ] Make search and both filters work together without a full page reload.
+- [ ] Store status and stage in the URL so refreshing keeps them; preserve unrelated URL parameters.
+- [ ] Read status and stage using `useSearchParams`; follow the installed Next.js guidance for any required Suspense boundary.
+- [ ] On a filter change, copy the current query into `URLSearchParams`, set the changed filter value, or delete its key when empty. Keep unrelated parameters.
+- [ ] Navigate with `router.push` or `router.replace`, using `usePathname` for the current path. Append `?${params.toString()}` only when parameters remain, so an empty query does not leave a trailing `?`.
+- [ ] Add Clear filters to reset search, status, and stage.
+- [ ] Reset pagination when search or filters change and show accurate result counts.
+- [ ] Search/filter all loaded candidates before client pagination. If the backend paginates, use its documented search/filter support to search beyond the current page; record a blocker if that support is missing.
+- [ ] Show a “No matching candidates” empty state when search or status/stage filters leave the list empty.
+- [ ] Check: status and stage filters are driven by URL query parameters. Refresh the page and open a copied URL to confirm both restore.
+- [ ] Check: name and email searches update results without a full page reload.
+- [ ] Keep filter/search state in the list view or a small hook, without prop drilling through unrelated components.
 
-Depends on 07 and UI01–UI02. Complete 09 before the remaining list tasks; pair list features with UI03–UI04.
+## 5. Open candidate details and edit the candidate
 
-- [ ] **09 — Load and render candidates (20–30 min).** Fetch records and extract the documented list shape. **Done:** `/` displays API candidates with name, position, status, and stage.
-- [ ] **10 — Add list loading/error/empty states (20–25 min).** Show loading feedback, an error with retry, and separate empty-list/no-match messages. **Done:** delayed, failed, empty, and filtered-empty requests each render the expected state.
-- [ ] **11 — Synchronize status/stage with the URL (20–30 min).** Read query values, preserve unrelated parameters, remove empty filter keys, and navigate with App Router. Avoid a trailing `?` when no parameters remain. **Done:** each filter and their combination restore after refresh, link sharing, and back/forward navigation.
-- [ ] **12 — Add name/email search (15–25 min).** Use case-insensitive client search across the loaded records unless documented server search is required. Combine search with both filters. **Done:** mixed-case name and email searches return expected matches without document reloads; pagination/search scope follows the API contract.
-- [ ] **13 — Add candidate navigation (15–20 min).** Link each row to `/candidates/[id]`. **Done:** two different candidates open their corresponding details, and navigation back returns to the list.
+Goal: open a candidate's full details, update their status or stage, and correct their information from the details page.
 
-## Phase 4 — Candidate detail and partial updates
+Files: `app/candidates/[id]/page.tsx`, `components/candidate-form.tsx`, shared detail/drawer components, and `lib/api.ts`.
 
-Depends on 07–08 and 13. Pair detail work with UI05–UI06 so drawer and expanded views share data and mutations.
+- [ ] Confirm the full detail response fields, including phone, LinkedIn URL, CV URL, years of experience, and application date. Note missing or nullable values and extend the candidate/response types.
+- [ ] Confirm the PUT and PATCH request bodies and responses, reusing status/stage types from step 4.
+- [ ] GET `/records/:id`: define the full candidate detail response type, including optional or nullable fields.
+- [ ] PUT `/records/:id`: define the full-edit request payload and response type, including all fields required for replacement.
+- [ ] PATCH `/records/:id`: define the partial-update request payload and response type for status/stage changes.
+- [ ] Use these types in the detail/update API functions and component props without `any`; validate returned response shapes.
+- [ ] Implement GET `/records/:id` — get full candidate details — using the shared fetch helper.
+- [ ] Implement PATCH `/records/:id` — update status or stage — using the shared fetch helper.
+- [ ] Implement PUT `/records/:id` — save edited candidate information — using the shared fetch helper.
+- [ ] Make each list candidate open their own details using GET `/records/:id`.
+- [ ] Use the route's candidate ID for GET `/records/:id`. Once notes are implemented in step 6, the record and notes requests can run in parallel with `Promise.all`.
+- [ ] Show name, email, phone, position, LinkedIn URL, CV URL, years of experience, status, stage, and application date.
+- [ ] Keep exact API property names in the detail types and map them to display labels from the assigned HealthCore CONTEXT. Render LinkedIn and CV as usable links when valid URLs are present.
+- [ ] Display readable placeholders for missing optional values and loading/error feedback.
+- [ ] Add status and stage controls and save only the intended changes through PATCH `/records/:id`.
+- [ ] Use the [README.md mappings](README.md#api-and-data) in detail controls and labels: send raw API values in PATCH bodies, but show only UI labels in the interface.
+- [ ] Send the minimal PATCH body documented by the API. After success, update local candidate state or refetch the record so the changed status/stage appears without a full document reload.
+- [ ] Add an Edit action on the candidate details page that opens a form populated with their existing information.
+- [ ] Place the edit form on the detail page or a separate edit route reached from that page. Submit PUT `/records/:id` with the full resource or exact replacement shape required by the API.
+- [ ] Build a reusable form with Full Name, Email, Phone, Position, LinkedIn URL, CV URL, and Years of Experience. CV is a URL field.
+- [ ] Validate required fields and formats against the backend documentation.
+- [ ] Save corrected information through PUT `/records/:id`, preserving required data outside the form.
+- [ ] Add Cancel and retain entered values after a failed save. Keep form actions reachable on mobile.
+- [ ] Prevent duplicate submissions and show saving, success, and failure feedback.
+- [ ] Show inline or banner success feedback after a successful edit submission and error feedback after a failed attempt.
+- [ ] Update the detail and list labels after successful changes.
+- [ ] After a successful PUT edit, update local candidate state or refetch the record and synchronize the list so corrected information appears without a full document reload.
+- [ ] Support a detail drawer with Close and Expand, and a full page at `/candidates/[id]`, sharing the same content.
+- [ ] Preserve list filters, pagination, scroll position, and unsaved changes when switching views.
+- [ ] Support mobile drawers, keyboard focus containment, Escape to close, and focus returning to the opener.
+- [ ] Check: `/candidates/[id]` loads the correct record and shows every required field, including when opened directly.
+- [ ] Check: navigation uses Next.js App Router `Link` and dynamic segments.
+- [ ] Check: status and stage updates send PATCH requests from the detail view and persist after refresh.
+- [ ] Check: the edit form validates required fields, sends PUT, and shows saving, success, and error feedback.
+- [ ] Check: loading/error feedback is visible for detail requests, and terminology matches HealthCore CONTEXT.
+- [ ] Check: HTTP errors and malformed responses from GET, PUT, and PATCH are displayed in the detail/edit UI.
+- [ ] Check: successful detail fetching displays the correct loaded record, completing the loading/success/error states.
+- [ ] Keep detail and edit state scoped to their shared view/components; avoid prop drilling through unrelated components.
 
-- [ ] **14 — Load record and notes (20–30 min).** Fetch both, preferably in parallel; expose loading and request failures clearly. **Done:** the selected ID is used in both requests; an invalid ID produces a readable error and a route back.
-- [ ] **15 — Render the complete overview (20–30 min).** Display name, email, phone, position, LinkedIn, CV link, years of experience, status, stage, and application date using actual API fields. **Done:** all 11 fields have HealthCore labels; optional missing values are readable and valid links work.
-- [ ] **16 — Update status with PATCH (20–30 min).** Submit the minimal documented body, disable duplicate submits, and update local data or refetch after success. **Done:** network request contains only the intended fields; the new status appears immediately and persists after refresh; failures show feedback.
-- [ ] **17 — Update stage with PATCH (20–30 min).** Use documented stage values and the same mutation feedback pattern. **Done:** stage persists after refresh without a document reload during submission; a failed request does not display a false success.
+## 6. Add and remove internal notes
 
-## Phase 5 — Notes
+Goal: add notes after calls or interviews and remove notes when they are no longer relevant.
 
-Depends on 14 and 08. Pair note features with UI07–UI08; deletion requires the mockup's inline confirmation.
+Files: candidate detail Notes tab, shared note components, and `lib/api.ts`.
 
-- [ ] **18 — Render notes and their states (15–25 min).** Display documented note fields and an empty state. **Done:** populated and empty notes lists render correctly, and note failures remain visible.
-- [ ] **19 — Add a note (20–30 min).** Validate required content and POST the documented payload. **Done:** blank content is blocked; a valid note appears once without reload and persists after refresh; success/error feedback is visible.
-- [ ] **20 — Delete a note (20–30 min).** DELETE with the correct note ID, then remove locally or refetch only after success. **Done:** deleted note disappears and remains absent after refresh; failures retain the note and show an error; repeated clicks do not duplicate requests.
+- [ ] Confirm note fields, the list response structure, the add-note payload, and the delete response.
+- [ ] GET `/records/:id/notes`: define the note type and notes list response type, including any wrapper.
+- [ ] POST `/records/:id/notes`: define the add-note request payload and response type.
+- [ ] DELETE `/records/:id/notes/:note_id`: define the documented delete response type, using `void` if no content is returned.
+- [ ] Use these types in the note API functions and component props without `any`; validate returned response shapes.
+- [ ] Implement GET `/records/:id/notes` — list notes — using the shared fetch helper.
+- [ ] Implement POST `/records/:id/notes` — add a note — using the shared fetch helper.
+- [ ] Implement DELETE `/records/:id/notes/:note_id` — delete a note — using the shared fetch helper.
+- [ ] Add Overview and Notes tabs and load notes through GET `/records/:id/notes`.
+- [ ] Show notes only within the candidate detail view, in both drawer and expanded presentations.
+- [ ] Use the same candidate ID for record and notes requests. Optionally load GET `/records/:id` and GET `/records/:id/notes` in parallel with `Promise.all`, while making request failures visible.
+- [ ] Show notes, their actual count, and an empty state. Show dates/authors only when supplied by the API.
+- [ ] Make Add Note open an inline text box with Cancel and Save Note.
+- [ ] Reject blank notes and save through POST `/records/:id/notes` using the documented payload.
+- [ ] Add inline Cancel and Delete Note confirmation before deletion.
+- [ ] Delete through DELETE `/records/:id/notes/:note_id` and remove the note only after success.
+- [ ] After a successful note POST, add the returned note to local state or refetch notes. After a successful DELETE using the selected note's ID, remove that note from state or refetch notes. Both operations must update the UI without a full document reload.
+- [ ] Prevent duplicate requests and show saving/deleting, success, and failure feedback.
+- [ ] Retain note text after a failed save and retain the existing note after a failed delete.
+- [ ] Keep note counts synchronized and preserve the selected tab and unsaved note text between drawer and expanded views.
+- [ ] Check: notes load with GET, save with POST, and delete with DELETE; the list and count update without a full page reload.
+- [ ] Check: note requests show loading or pending feedback, successful mutations show success feedback, and failures show errors.
+- [ ] Check: note labels match HealthCore CONTEXT and note types match the API structures.
+- [ ] Check: HTTP errors and malformed responses from note requests are displayed in the Notes UI.
+- [ ] Check: successful notes fetching displays the notes or empty result, completing the loading/success/error states.
+- [ ] Keep note and composer state within the detail/notes components or a small shared hook; avoid prop drilling through unrelated components.
 
-## Phase 6 — Create and full edit
+## 7. Create a new candidate
 
-Depends on 04, 07, and the list/detail views. Pair with UI09: creation must support drawer and expanded presentations, and editing reuses the same form. A dedicated create route is optional.
+Goal: create a candidate who comes through a referral.
 
-- [ ] **21 — Build a reusable candidate form (20–30 min).** Use typed fields, labels, required-field validation, and API-documented format constraints. **Done:** blank required values and invalid documented formats are blocked with field-level messages; edit defaults preserve existing data.
-- [ ] **22 — Connect candidate creation (20–30 min).** POST the validated body and refresh local list data or navigate to the created record. **Done:** one valid submit creates one candidate visible in the UI and after refresh; success/error and pending states are visible.
-- [ ] **23 — Connect full candidate editing (20–30 min).** PUT the full resource or exact documented replacement shape, preserving fields the form does not expose. **Done:** edited values persist after refresh, required existing data is preserved, and failure feedback leaves entered values available to retry.
+Files: `components/candidate-form.tsx`, candidate list/create views, and `lib/api.ts`.
 
-## Phase 7 — Review and finish
+- [ ] Confirm the required creation fields and POST response.
+- [ ] POST `/records`: define the create-candidate request payload and response type, marking required and optional fields according to the backend documentation. Reuse existing candidate types where appropriate.
+- [ ] Use these types in the creation API function and component props without `any`; validate the returned response shape.
+- [ ] Implement POST `/records` — create a candidate — using the shared fetch helper.
+- [ ] Add an Add Candidate action to the list.
+- [ ] Open the new-candidate form on the list page, in a modal/drawer, or on a dedicated create route. Validate required fields before submitting POST `/records`.
+- [ ] Reuse the candidate form from step 5 with empty fields for a new candidate.
+- [ ] Include every field required by the API in the registration form.
+- [ ] Validate required fields and formats against the backend documentation.
+- [ ] Open an empty form for a referred candidate and save through POST `/records`. Add referral metadata only if supported by the documented API.
+- [ ] Support drawer and expanded form views while preserving entered values.
+- [ ] Add Cancel and saving/success/error feedback; prevent duplicate submissions and retain input after a failed save.
+- [ ] Show inline or banner success feedback after a successful creation submission and error feedback after a failed attempt.
+- [ ] Show the new candidate in the list after saving and keep form actions reachable on mobile.
+- [ ] After a successful POST creation, update local list state or refetch candidates so the new candidate appears without a full document reload.
+- [ ] Check: the creation form validates required fields, sends POST, and shows saving, success, and error feedback.
+- [ ] Check: creation field labels match HealthCore CONTEXT, and request/response types match the API structures.
+- [ ] Check: HTTP errors and malformed creation responses are displayed in the create form UI.
+- [ ] Keep creation form state in the form or its owning view; avoid prop drilling through unrelated components.
 
-Depends on the relevant feature tasks; final checks depend on all implementation tasks.
+## Final check
 
-- [ ] **24 — Verify mutation feedback (20–25 min).** Exercise status, stage, add note, delete note, create, and edit with success and failure responses. **Done:** all six flows show pending/success/error feedback and prevent duplicate submissions; malformed responses surface visibly.
-- [ ] **25 — Review layout, terminology, and accessibility (20–30 min).** Compare with HealthCore CONTEXT and existing UI references at mobile/tablet/desktop widths. Check labels, keyboard operation, visible focus, and readable feedback. **Done:** all three sizes are usable with no horizontal overflow; controls work with keyboard; labels follow CONTEXT.
-- [ ] **26 — Verify the eight REST actions (20–30 min).** Use a disposable candidate and note against the documented API; record method, path, status, and resulting UI state without storing secrets or personal data. **Done:** 8/8 actions below pass, including persistence after refresh and local mutation updates.
-- [ ] **27 — Run final quality checks (15–30 min).** Run `npm run lint`, `npx tsc --noEmit`, and `npm run build`; fix relevant failures and rerun failed checks. **Done:** all three exit successfully, including route/search-param build requirements.
-- [ ] **28 — Complete handoff and acceptance review (20–30 min).** Update README with setup, API variable, drawer/expanded behavior, verification steps, and any limitations. Complete the acceptance checklist and progress dashboard after UI01–UI10. **Done:** 16/16 acceptance checks and 33/33 mockup comparisons pass, no unresolved issues prevent completion.
-
-## REST verification matrix
-
-Paths are relative to the normalized `NEXT_PUBLIC_API_URL`, which may already include `/api/v1`.
-
-| Verified | Action | Method | Path | Observable result |
-| --- | --- | --- | --- | --- |
-| [ ] | List candidates | GET | `/records` | API candidates appear on `/` |
-| [ ] | Get candidate | GET | `/records/:id` | Correct record and full overview appear |
-| [ ] | Create candidate | POST | `/records` | New candidate persists |
-| [ ] | Replace candidate | PUT | `/records/:id` | Full edited record persists |
-| [ ] | Partial update | PATCH | `/records/:id` | Both status and stage changes persist |
-| [ ] | List notes | GET | `/records/:id/notes` | Correct candidate's notes appear |
-| [ ] | Add note | POST | `/records/:id/notes` | New note appears once and persists |
-| [ ] | Delete note | DELETE | `/records/:id/notes/:note_id` | Correct note is removed persistently |
-
-## Final acceptance checklist
-
-- [ ] **A01:** `/` lists candidates from GET `/records` with name, position, status, and stage.
-- [ ] **A02:** Status/stage filters use URL query parameters and restore on refresh/share.
-- [ ] **A03:** Name/email search works without full document reload.
-- [ ] **A04:** `/candidates/[id]` loads the correct record and shows all required fields.
-- [ ] **A05:** Detail status and stage controls both work through PATCH.
-- [ ] **A06:** Notes list, POST add, and DELETE work with immediate UI updates.
-- [ ] **A07:** POST create and PUT edit validate required fields and show success/error feedback.
-- [ ] **A08:** Async operations show loading, success where relevant, and HTTP/malformed-response errors.
-- [ ] **A09:** State remains local; navigation uses App Router links and dynamic segments.
-- [ ] **A10:** Components, types, and API access are separated; types match actual payloads without `any`.
-- [ ] **A11:** Terminology and labels follow HealthCore's assigned CONTEXT.
-- [ ] **A12:** List uses wide-screen tables/mobile cards, accurate counts, Clear filters, and functional pagination where applicable.
-- [ ] **A13:** Detail drawer/expanded views and Overview/Notes tabs work; direct detail links render correctly; switching preserves list context and unsaved input.
-- [ ] **A14:** Note composer supports Cancel/Save; deletion requires inline confirmation; note counts and candidate pills stay synchronized after mutations.
-- [ ] **A15:** Create supports drawer/expanded layouts with preserved input, required markers, reachable actions, and a discoverable Edit flow.
-- [ ] **A16:** All 33 visual comparisons pass; drawers, tabs, icon buttons, and forms support keyboard access, focus visibility, and narrow screens.
-
-## Mockup comparison matrix
-
-Each cell represents one supplied reference image. Check it after comparing an implementation screenshot and verifying the relevant interaction. Image filenames contain spelling differences, so use the actual files under the listed folders.
-
-| View / state | Desktop | Tablet | Mobile |
-| --- | --- | --- | --- |
-| Candidate list | [ ] | [ ] | [ ] |
-| Drawer overview | [ ] | [ ] | [ ] |
-| Expanded overview | [ ] | [ ] | [ ] |
-| Drawer notes list (`add-notes`) | [ ] | [ ] | [ ] |
-| Expanded notes list (`add-notes`) | [ ] | [ ] | [ ] |
-| Drawer note composer (`save-notes`) | [ ] | [ ] | [ ] |
-| Expanded note composer (`save-notes`) | [ ] | [ ] | [ ] |
-| Drawer note delete confirmation | [ ] | [ ] | [ ] |
-| Expanded note delete confirmation | [ ] | [ ] | [ ] |
-| Create candidate drawer | [ ] | [ ] | [ ] |
-| Create candidate expanded | [ ] | [ ] | [ ] |
+- [ ] Exercise the five workflows above in order using a disposable candidate.
+- [ ] Check loading, empty, and failed request states, including failed saves.
+- [ ] Compare all supplied screenshots with their desktop, tablet, and mobile views; also check a 375px-wide screen.
+- [ ] Check HealthCore labels, keyboard navigation, visible focus, and drawer behavior.
+- [ ] Run `npm run lint`, `npx tsc --noEmit`, and `npm run build`; fix failures.
+- [ ] Update `README.md` with setup, API configuration, and remaining limitations.
+- [ ] Verify `.env.local` is ignored by Git and is not included in the commit; include `.env.example` documenting the required environment variable.
+- [ ] Commit and push the finished changes to your existing course monorepo fork on GitHub.
+- [ ] Submit the repository link using your instructor's delivery instructions.
