@@ -52,7 +52,7 @@ export async function apiFetch<T>(
   }
 
   try {
-    return JSON.parse(text) as T;
+    return JSON.parse(text) as T; // tells TypeScript “trust me, this is a T
   } catch {
     throw new Error("The server returned an invalid response.");
   }

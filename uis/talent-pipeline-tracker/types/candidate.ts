@@ -35,3 +35,12 @@ export type CandidateListResponse = {
   limit: number; // page size, default 20
   data: Candidate[];
 };
+
+// Query options for GET /records
+export type GetRecordsParams = {
+  page?: number;
+  limit?: number;
+  status?: CandidateStatus;
+  stage?: CandidateStage;
+  search?: string;
+};

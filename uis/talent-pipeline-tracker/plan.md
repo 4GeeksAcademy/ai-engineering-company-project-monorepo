@@ -16,7 +16,10 @@ app/
   layout.tsx                     # Root layout, fonts, and global style imports
   globals.css                    # Global styles
 components/                      # List rows/cards, filters, notes, forms, loading/error feedback
-lib/api.ts                       # Shared fetch helper and typed endpoint functions
+lib/api/api-fetch.ts             # Shared fetch helper (buildUrl + apiFetch)
+lib/api/records.ts               # Typed candidate (records) endpoint functions
+lib/api/notes.ts                 # Typed notes endpoint functions
+lib/constants.ts                 # Status/stage UI labels and other fixed values
 types/                           # Candidate, note, payload, and response types
 .env.example                     # Documents NEXT_PUBLIC_API_URL
 hooks/useRecordsFilters.ts       # Optional: URL filters and local search
@@ -31,7 +34,7 @@ Use local `useState`, `useReducer`, or small hooks for view state. Do not introd
 - [x] Confirm `app/layout.tsx` exists for the root layout, fonts, and global style imports.
 - [x] Confirm `app/globals.css` exists for global styles.
 - [x] Create `components/` for list rows/cards, filters, notes, forms, and loading/error feedback.
-- [x] Confirm `lib/api.ts` exists for the shared fetch helper and endpoint functions.
+- [x] Confirm `lib/api/` exists for the shared fetch helper and endpoint functions.
 - [x] Create `types/` for candidate, note, payload, and response types.
 - [x] Create `.env.example` to document `NEXT_PUBLIC_API_URL` in step 2.
 - [x] Decide whether `hooks/useRecordsFilters.ts` is needed; create it if it helps keep the list page readable.
@@ -40,28 +43,28 @@ Use local `useState`, `useReducer`, or small hooks for view state. Do not introd
 
 Complete this setup before starting step 3: Show all candidates in a list.
 
-Files: `lib/api.ts`, `.env.example`.
+Files: `lib/api/api-fetch.ts`, `.env.example`.
 
 No authentication is required for now.
 
 - [x] Configure `NEXT_PUBLIC_API_URL` and document it in `.env.example`.
 - [x] Create `.env.local` in the app directory with `NEXT_PUBLIC_API_URL=https://playground.4geeks.com/tracker/api/v1`.
 - [x] Treat endpoint paths as relative to `NEXT_PUBLIC_API_URL`, which may already include `/api/v1`; do not append that prefix twice.
-- [x] Create a shared fetch helper in `lib/api.ts`. Show a clear error if `NEXT_PUBLIC_API_URL` is missing, normalize trailing slashes, merge headers with `new Headers(init?.headers)`, and handle HTTP errors, invalid JSON, and explicitly permitted empty responses.
+- [x] Create a shared fetch helper in `lib/api/api-fetch.ts`. Show a clear error if `NEXT_PUBLIC_API_URL` is missing, normalize trailing slashes, merge headers with `new Headers(init?.headers)`, and handle HTTP errors, invalid JSON, and explicitly permitted empty responses.
 - [x] Use `async/await` for API requests, check `response.ok`, and parse JSON only when the endpoint expects a JSON response. Throw useful errors for HTTP failures and malformed responses so each workflow can display them.
 
 ## 3. Show all candidates in a list
 
 Goal: name, position, status, and stage are visible immediately.
 
-Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api.ts`.
+Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api/records.ts`.
 
 - [x] Check the list response for the exact field names for ID, name, position, status, stage, and email (needed for search). Note missing or nullable values and define the corresponding candidate type.
 - [x] Inspect GET `/records`: identify whether the list is an array or inside a wrapper, record the list key, and define its response type.
 - [x] Check whether GET `/records` returns all candidates or one page. If paginated, record page/page-size parameters and total-count or next-page response fields.
 - [x] GET `/records`: define the candidate list item type and the list response type, including any wrapper and pagination fields.
 - [ ] Use these types in the list API function and component props without `any`; validate the returned response shape.
-- [ ] Implement GET `/records` — list candidates — as a typed function in `lib/api.ts` using the shared fetch helper.
+- [x] Implement GET `/records` — list candidates — as a typed function in `lib/api/records.ts` using the shared fetch helper.
 - [ ] Replace the landing page with the app header and real candidate list.
 - [ ] Load candidates using the GET `/records` function implemented in this step.
 - [ ] Choose how to load GET `/records`: fetch on mount in a client component with `useEffect`, or use server-component `fetch` with an explicit revalidation/refresh strategy. Follow the installed Next.js documentation and ensure successful mutations refresh the displayed data without a full document reload.
@@ -70,6 +73,7 @@ Files: `app/page.tsx`, candidate list components in `components/`, and `lib/api.
 - [ ] Color status badges by meaning (Received blue, In progress amber, Selected green, Discarded rose), matching the screenshots. Keep stage badges neutral grey; stage is a position in the process, not a judgment.
 - [ ] Add `whitespace-nowrap` to badges and short buttons so labels like "In progress", "Drawer View", and "Edit Candidate" stay on one line. Several screenshots show them wrapping; treat that as an export bug, not the design.
 - [ ] Show the correct candidate count and page controls if the API uses pagination, so every candidate can be reached.
+- [ ] Compute the last page as `Math.max(1, Math.ceil(total / limit))`. Show page buttons only from 1 to the last page, and disable Previous on page 1 and Next on the last page. The API returns an empty list, not an error, for a page beyond the last one, so the controls must never offer one.
 - [ ] Show a loading spinner or skeleton while fetching candidates, an error message with Retry on failure, and an empty state when the API returns no candidates.
 - [ ] Check: HTTP errors and malformed list responses are displayed in the list UI.
 - [ ] Check: `/` lists real candidates from GET `/records`, with name, position, status, and stage visible immediately.
@@ -97,18 +101,21 @@ Files: candidate list page and its filter/search components.
 - [ ] On a filter change, copy the current query into `URLSearchParams`, set the changed filter value, or delete its key when empty. Keep unrelated parameters.
 - [ ] Navigate with `router.push` or `router.replace`, using `usePathname` for the current path. Append `?${params.toString()}` only when parameters remain, so an empty query does not leave a trailing `?`.
 - [ ] Add Clear filters to reset search, status, and stage.
-- [ ] Reset pagination when search or filters change and show accurate result counts.
+- [ ] Reset pagination to page 1 whenever search, status, or stage changes, and show accurate result counts.
+- [ ] Correct out-of-range or invalid pages: if the requested page is beyond the last page while `total > 0` (for example `?page=99`, an old bookmark, or fewer results after a change), jump to the last valid page; treat invalid values such as `?page=abc` or `?page=-3` as page 1. Never show an empty page while matching candidates exist.
+- [ ] Tell empty results apart using `total`: `total === 0` with no filters shows "No candidates yet"; `total === 0` with filters shows "No matching candidates" with Clear filters; an empty page with `total > 0` is corrected automatically, not shown as empty.
 - [ ] Search/filter all loaded candidates before client pagination. If the backend paginates, use its documented search/filter support to search beyond the current page; record a blocker if that support is missing.
 - [ ] Show a “No matching candidates” empty state when search or status/stage filters leave the list empty.
 - [ ] Check: status and stage filters are driven by URL query parameters. Refresh the page and open a copied URL to confirm both restore.
 - [ ] Check: name and email searches update results without a full page reload.
+- [ ] Check: on page 5, apply a filter with few results and confirm the list returns to page 1. Open `/?page=99` and `/?page=abc` and confirm both land on a valid page showing candidates.
 - [ ] Keep filter/search state in the list view or a small hook, without prop drilling through unrelated components.
 
 ## 5. Open candidate details and edit the candidate
 
 Goal: open a candidate's full details, update their status or stage, and correct their information from the details page.
 
-Files: `app/candidates/[id]/page.tsx`, `components/candidate-form.tsx`, shared detail/drawer components, and `lib/api.ts`.
+Files: `app/candidates/[id]/page.tsx`, `components/candidate-form.tsx`, shared detail/drawer components, and `lib/api/records.ts`.
 
 - [ ] Confirm the full detail response fields, including phone, LinkedIn URL, CV URL, years of experience, and application date. Note missing or nullable values and extend the candidate/response types.
 - [ ] Confirm the PUT and PATCH request bodies and responses, reusing status/stage types from step 4.
@@ -153,7 +160,7 @@ Files: `app/candidates/[id]/page.tsx`, `components/candidate-form.tsx`, shared d
 
 Goal: add notes after calls or interviews and remove notes when they are no longer relevant.
 
-Files: candidate detail Notes tab, shared note components, and `lib/api.ts`.
+Files: candidate detail Notes tab, shared note components, and `lib/api/notes.ts`.
 
 - [ ] Confirm note fields, the list response structure, the add-note payload, and the delete response.
 - [ ] GET `/records/:id/notes`: define the note type and notes list response type, including any wrapper.
@@ -187,7 +194,7 @@ Files: candidate detail Notes tab, shared note components, and `lib/api.ts`.
 
 Goal: create a candidate who comes through a referral.
 
-Files: `components/candidate-form.tsx`, candidate list/create views, and `lib/api.ts`.
+Files: `components/candidate-form.tsx`, candidate list/create views, and `lib/api/records.ts`.
 
 - [ ] Confirm the required creation fields and POST response.
 - [ ] POST `/records`: define the create-candidate request payload and response type, marking required and optional fields according to the backend documentation. Reuse existing candidate types where appropriate.
