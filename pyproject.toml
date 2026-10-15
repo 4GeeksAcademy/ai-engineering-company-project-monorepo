@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.2.3",
     "httpx>=0.28.1",
     "pandas>=3.0.6",
+    "prefect>=3",
 ]
 
 [project.scripts]

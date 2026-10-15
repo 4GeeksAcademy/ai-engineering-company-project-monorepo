@@ -24,6 +24,7 @@ from services.api.database import get_tinydb
 from services.api.security import get_password_hash
 from services.api.models import IncidentAnalysisResponse
 from analyzer_core import process_incidents, calculate_metrics
+from services.reporting import router as reporting_router
 
 def ensure_admin_user():
     admin_email= os.getenv('ADMIN_EMAIL')
@@ -115,6 +116,7 @@ app.include_router(inventory.router)
 app.include_router(incidents.router)
 app.include_router(candidates.router)
 app.include_router(telemetry.router)
+app.include_router(reporting_router)
 
 latest_metrics = None
 

@@ -46,7 +46,12 @@ A pesar de contar con visibilidad sobre la estabilidad de los servidores, la dir
 
 ### 2.2 Especificación de Extracción
 - **Fuente primaria:** Tabla relacional `public.telemetry_events` en Supabase/PostgreSQL.
-- **Cadencia de extracción:** Ejecución por micro-lotes programados (Batch) cada 1 hora para métricas intra-día, más un flow de consolidación diario nocturno (02:00 AM UTC).
+- **Cadencia de extracción y ciclo de reporting:** Ejecución por micro-lotes programados (Batch) cada 1 hora para métricas intra-día, más un flow de consolidación diario nocturno (02:00 AM UTC). Cron recomendado: `0 2 * * *`.
+- **Comando de ejecución directa (CLI):**
+  ```bash
+  uv run python data/pipelines/pipeline.py [YYYY-MM-DD]
+  # Si se omite la fecha, procesa la ventana del día actual UTC
+  ```
 - **Formato del dato origen:** 
   - Registros inmutables con envoltura canónica JSONB.
   - Campos clave extraídos: `event_type`, `timestamp`, `requestId` y el objeto `properties`.

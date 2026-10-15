@@ -1,148 +1,108 @@
-# Telemetría de tu compañía – Reporte técnico
+# Hito — Pipeline de Desempeño de Negocio Resiliente (Parte 2 de 3)
 
-> **Antes de empezar:** necesitas la tabla `telemetry_events` en Supabase con al menos 20 filas de eventos reales generados desde el backoffice, incluyendo al menos un evento técnico (error, login fallido, etc.) además de los de negocio. Sin datos reales no hay nada que analizar.  
-> Este proyecto produce un reporte técnico, no un reporte de negocio. Las métricas orientadas a decisiones de negocio (ventas, conversión, ingresos) se construyen más adelante, en el Hito de Data Pipelines, con herramientas dedicadas a ese análisis.
+**Antes de empezar:** Mantén abierto tu `CONTEXT-company.md` mientras programas — es la fuente de verdad para nombres de KPIs, esquema de la tabla de destino y el contrato del endpoint que implementas. Ten también a mano tu `data/pipelines/PIPELINE_DESIGN.md` aprobado de la Parte 1.
 
 ---
 
 ## 🎯 Tu reto
 
-📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
+> 📌 **Estás construyendo sobre tu propia copia del monorepo de la compañía seleccionada al inicio del curso — no en un repositorio nuevo.**
 
-Los datos ya están ahí. La tabla `telemetry_events` tiene eventos reales con `timestamp`, `event_type` y `tags`. Pero el dato crudo no es la respuesta — es la materia prima. Hoy la transformas, pero no en un reporte de negocio: en un reporte técnico. Un radar operacional para el propio equipo de ingeniería — qué tan sano está el sistema, qué tan rápido responde, dónde fallan las cosas, qué eventos ocurren con más frecuencia y por qué.
+El documento de diseño está aprobado. Ahora toca construirlo — un pipeline que lee de `telemetry_events` y produce los KPIs de negocio que acotaste en la Parte 1, exactamente como se nombran en tu `CONTEXT-company.md`. Tu sistema técnico de telemetría existente (`telemetry_events`, `services/telemetry/analysis.py`, `GET /telemetry/report`) no es parte de este trabajo — se queda intacto, sirviendo a ingeniería.
 
-El entregable es un pipeline de análisis en Python y un endpoint que sirve el resultado: métricas operacionales calculadas a partir de los eventos almacenados, servidas como JSON, listas para ser consumidas por cualquier dashboard técnico o herramienta de monitoreo interno.
+Hay una diferencia fundamental entre un script que funciona en tu máquina y un pipeline que puede correr desatendido en producción: la resiliencia.
 
-### Mensaje del Tech Lead:
-
-> "Tenemos datos. Ahora necesito visibilidad técnica sobre el sistema.
->
-> Escribe el pipeline de análisis. Para cada dimensión operacional relevante, una función de Python que cargue los eventos correspondientes, los transforme con Pandas, y devuelva un resultado serializable. Luego un endpoint `GET /telemetry/report` que los sirva juntos.
->
-> Dos reglas no negociables: primero, no calcules nada dentro del endpoint en cada request — el pipeline va aparte y el endpoint lo llama, con cache. Segundo, convierte los timestamps a datetime antes de cualquier agrupación — si no lo haces, vas a obtener grupos incorrectos sin ningún error visible, y vas a perder horas encontrando el bug.
->
-> Una aclaración importante: esto no es el reporte para el CEO. Nada de tasas de conversión ni ingresos — eso lo vamos a construir con los pipelines de datos más adelante. Hoy quiero saber qué tan sano está el sistema: volumen de eventos, tasa de errores, latencia, qué tipos de evento dominan. Métricas con dimensión temporal real, no un número global sin contexto."
-
----
-
-## 📚 Conocimiento complementario — La fórmula de cualquier reporte
-
-Los datos en `telemetry_events` responden "¿qué pasó?". Las preguntas operacionales son distintas: "¿cuántos eventos de error hubo por día esta semana?" o "¿qué tipo de evento es más frecuente?". Responderlas requiere transformación — siempre en el mismo orden:
-
-$$\text{cargar (SQL)} \rightarrow \text{refinar (Pandas)} \rightarrow \text{convertir tipos} \rightarrow \text{agrupar} \rightarrow \text{agregar} \rightarrow \text{servir}$$
-
-### Dónde va cada filtro
-
-| Criterio | Capa | Cómo |
-| :--- | :--- | :--- |
-| **Rango de timestamp (`start_date` / `end_date`)** | SQL | `WHERE timestamp >= :start AND timestamp < :end` — límites de inicio inclusivo, fin exclusivo en UTC |
-| **`event_type` (uno o varios)** | SQL | `WHERE event_type = '...'` o `WHERE event_type IN (...)` — las métricas de tasa/ratio necesitan cargar todos los tipos relevantes en una sola consulta |
-| **Dimensiones dentro de `tags` (almacén, endpoint, etc.)** | Pandas | Extraer de `tags`, descartar filas donde la dimensión es nula, luego `groupby` — segmenta todos los valores, no prefiltres a un solo valor |
-| **Flags derivados (`is_error`, tasas)** | Pandas | Construir columnas después de cargar, luego `.agg()` |
-| **Predicados opcionales sobre `tags` (ej. `endpoint = X`)** | Pandas (por defecto) | Filtrar el DataFrame después de extraer el campo; el push-down `tags->>'...'` en SQL es optimización opcional, no obligatoria |
+> [!NOTE]
+> ### Ticket de Implementación — Pipeline de Desempeño de Negocio Resiliente
+> El diseño está aprobado. El liderazgo quiere ver este pipeline corriendo, no solo documentado. Requisitos no negociables antes de entregarlo a producción:
+> - El pipeline debe tolerar fallos parciales sin interrumpir toda la ejecución.
+> - Las tasks que tocan servicios externos deben tener reintentos configurados.
+> - El pipeline debe poder correrse como script desde la línea de comandos.
+> - Si una task ya corrió exitosamente en la última hora, no debe repetirse innecesariamente.
+> 
+> **Punto de partida:** tu `data/pipelines/PIPELINE_DESIGN.md` del día anterior. Implementa lo que diseñaste — leyendo de telemetría, escribiendo en la nueva tabla de reporting de negocio que acotaste, sin que nada del reporte técnico existente cambie.
 
 ---
 
-## Reglas del Pipeline y Transformación
+## 🔗 ¿Qué hace resiliente a un pipeline?
 
-1. **Cargar (SQL):** Trae solo las filas que la métrica necesita. Nunca cargues toda la tabla `telemetry_events` en memoria.
-2. **Refinar (Pandas):** Después de cargar: extrae campos de `tags`, descarta filas con dimensiones nulas, aplica cualquier filtro adicional a nivel de fila que la métrica requiera. Esto no sustituye el filtrado de `event_type` / `timestamp` en SQL.
-3. **Propiedad de la ventana de fechas:** El endpoint calcula el período por defecto (últimos 7 días cuando no se pasan parámetros) y lo pasa a cada función de métrica. Las funciones aplican esa ventana una vez en SQL; no vuelvas a aplicar un filtro "últimos 7 días" en Pandas.
-4. **Convertir tipos:** Los timestamps llegan como strings. Hacer `groupby()` sobre strings que parecen fechas produce grupos incorrectos sin lanzar ningún error. Convierte siempre antes de agrupar:
-   ```python
-   df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
-   df['date'] = df['timestamp'].dt.date
-   ```
-5. **Agrupar:** Con `groupby()` por la dimensión que responde la pregunta: por día, por `event_type`, por el valor de una propiedad dentro de `tags`.
-6. **Agregar:** Con `.count()`, `.sum()`, o `.mean()`. La fórmula mental es siempre:
-   $$\text{MÉTRICA} = \text{AGREGACIÓN}(\text{columna}) \text{ agrupada por } \text{DIMENSIÓN}$$
-7. **Servir:** El resultado como una lista de dicts con `.reset_index().to_dict(orient='records')` — directamente serializable a JSON.
+Un pipeline resiliente no es uno que nunca falla — es uno que falla bien. En Prefect, eso significa tres cosas concretas:
 
-> [!WARNING]
-> **Qué NO hacer:** Calcular el reporte dentro del endpoint en cada request. Si el dato no cambia cada segundo, el cálculo va en una función separada, llamada una vez, con el resultado en cache.
+- **Tolerancia a fallos parciales:** una task que falla no tumba todo el flow. Prefect distingue entre tasks críticas (cuyo fallo debe detener todo) y tasks opcionales (cuyo fallo debe registrarse y permitir que el flow continúe).
+- **Reintentos inteligentes:** las tasks que interactúan con servicios externos (bases de datos, APIs) se configuran con `retries` y `retry_delay_seconds` para absorber fallos transitorios sin intervención humana.
+- **Caché de resultados:** si una task ya produjo un resultado válido recientemente, Prefect puede reutilizarlo en lugar de repetir el cómputo. Esto es especialmente útil para transformaciones costosas.
 
 ---
 
-## 🌱 Cómo Empezar el Proyecto
+## 🌱 Cómo Empezar
 
-1. Abre tu copia del monorepo y ubica `services/` (backend FastAPI).
-2. Revisa `telemetry_events` en Supabase y confirma que tienes al menos 20 filas con variedad de `event_type` — si no, genera actividad en el backoffice primero (incluyendo al menos un evento técnico).
-3. Revisa tu catálogo de eventos (`telemetry-plan.md`) — hoy trabajas con las dimensiones **técnicas/operacionales** de ese catálogo, no con las de negocio.
-4. Sigue el orden: funciones de análisis $\rightarrow$ endpoint de reporte $\rightarrow$ cache.
+1. Corre `git pull` en tu copia del monorepo para asegurarte de tener el estado más reciente.
+2. Abre tu `data/pipelines/PIPELINE_DESIGN.md` — ese documento es tu especificación. Implementa lo que diseñaste.
+3. Mantén abierto tu `CONTEXT-company.md` del contexto de data pipelines mientras programas: es la fuente de verdad para los nombres exactos de los KPIs (su sección "KPIs a medir"), el esquema de la tabla de destino, y el contrato del endpoint que estás implementando. (Los campos de evento de los que estás extrayendo son los que tu `CONTEXT-company.md` de telemetría ya definió como obligatorios.)
+4. Escribe el código de tu pipeline en `data/pipelines/`. El punto de entrada principal debe llamarse `data/pipelines/pipeline.py`. Usa `data/raw/` para datos de entrada y archivos intermedios, `data/process/` para scripts de transformación reutilizables, y `data/eval/` para salidas de validación del pipeline.
+5. La task de extracción lee de `telemetry_events` (y cualquier otra tabla de dominio que necesites) — en modo solo lectura. La task de carga escribe en la **tabla de destino nombrada en tu `CONTEXT-company.md`** (bajo el esquema `reporting`) que diseñaste en la Parte 1. No escribas de vuelta en `telemetry_events` ni modifiques `services/telemetry/analysis.py`.
+6. Cualquier endpoint que exponga o dispare el pipeline (por ejemplo, para consultar el estado de la última corrida o lanzar una corrida manual) debe implementarse en `services/reporting/`, un módulo separado de `services/telemetry/`, importando funciones y flows desde `data/pipelines/` según se necesite.
+7. Instala Prefect 3 en tu entorno: `uv add "prefect>=3"`.
 
 ---
 
 ## 💻 Qué Necesitas Hacer
 
-### Fase 1 — Pipeline de análisis con Pandas
+### Fase 1 — Flows y tasks
+- [ ] Implementa el pipeline como uno o más **flows** de Prefect (`@flow`) siguiendo la estructura de etapas de tu diseño: extracción, transformación, y carga como mínimo.
+- [ ] Cada etapa debe ser una **task** (`@task`) independiente con inputs y outputs explícitos.
+- [ ] Incluye al menos un paso **opcional / no crítico** (por ejemplo, una notificación, exportación secundaria o snapshot de eval) e invócalo con `return_state=True` para que un fallo en ese paso no interrumpa la ejecución principal extract $\rightarrow$ transform $\rightarrow$ load.
 
-- [ ] Crea `services/telemetry/analysis.py` con al menos **3 funciones de métrica**, cada una encapsulando el cálculo de una dimensión operacional distinta a partir de tu propio catálogo de eventos. Ejemplos válidos (adapta a lo que realmente capturaste):
-- [ ] Cada función debe ser **independiente y libre de efectos secundarios** — llamarla dos veces con los mismos parámetros debe producir el mismo resultado.
-- [ ] No uses loops para calcular métricas — solo operaciones de Pandas (`.groupby()`, `.agg()`, `.count()`, `.sum()`, `.mean()`).
+### Fase 2 — Resiliencia
+- [ ] Agrega `retries` y `retry_delay_seconds` a cada task que interactúe con servicios externos (base de datos, APIs). Justifica el número de reintentos elegido en un comentario.
+- [ ] Maneja al menos un fallo de task explícitamente en el flow usando `return_state=True` en lugar de dejar que se propague automáticamente.
+- [ ] Agrega caché (`cache_key_fn`, `cache_expiration`) a al menos una task de transformación costosa. Explica en un comentario qué define la clave de caché y cuánto tiempo es válida.
 
-> [!CAUTION]
-> **IMPORTANTE:** Las métricas que elijas deben responder preguntas **técnicas u operacionales** sobre el comportamiento del sistema — volumen, errores, latencia, disponibilidad — no preguntas de negocio (ventas, conversión, ingresos). Un reporte de negocio disfrazado de reporte técnico no será aceptado; ese análisis se aborda en el Hito de Data Pipelines.
+### Fase 3 — Idempotencia
+- [ ] La fase de carga debe ser idempotente: si el pipeline corre dos veces sobre el mismo rango de datos, el resultado en la tabla de destino de tu CONTEXT debe ser idéntico después de ambas corridas. Implementa la estrategia que documentaste en tu diseño (upsert, tabla de control, timestamp, u otra) — el constraint único del esquema de tu `CONTEXT-company.md` es en el que debe apoyarse tu upsert.
+- [ ] Registra en la base de datos o en un archivo de log la metadata mínima de ejecución de cada corrida: hora de inicio, hora de fin, registros procesados, estado final, y cualquier error capturado.
 
----
+### Fase 4 — Ejecución basada en script
+- [ ] Asegúrate de que `data/pipelines/pipeline.py` pueda ejecutarse directamente como script de CLI (por ejemplo, con un bloque `if __name__ == "__main__":` que invoque el flow principal).
+- [ ] Verifica que el pipeline completo corre sin errores: `python data/pipelines/pipeline.py`.
+- [ ] Documenta la frecuencia prevista para el ciclo de reporting de tu compañía en `data/pipelines/PIPELINE_DESIGN.md` y el comando de ejecución en un comentario o en el mismo documento de diseño.
 
-### Fase 2 — Endpoint de reporte
+### Fase 5 — Endpoints del backend
+- [ ] En `services/reporting/`, implementa **tres endpoints** relacionados con este pipeline: (1) consultar el estado y metadata de la última corrida, (2) disparar una corrida manual del flow, (3) **consultar las filas de KPIs** de la tabla de destino del CONTEXT — esto es lo que consumirá el dashboard de la Parte 3. Mantenlos en su propio módulo, separado de `services/telemetry/`.
+- [ ] Los endpoints deben importar flows o funciones desde `data/pipelines/` — no dupliques la lógica del pipeline en `services/`.
+- [ ] Los endpoints siguen las mismas convenciones de autenticación y estructura de respuesta que el resto de tu API, y la forma de la respuesta del endpoint de consulta de KPIs coincide con el contrato de tu `CONTEXT-company.md`.
 
-- [ ] Crea el endpoint `GET /telemetry/report` en FastAPI. Debe:
-  - Aceptar parámetros de query opcionales `start_date` y `end_date` en formato ISO 8601; si no se proveen, usar por defecto los últimos 7 días (`start_date = now - 7d`, `end_date = now`, ambos UTC)
-  - Resolver el período una sola vez y pasar `start_date` / `end_date` a cada función de métrica — las funciones no aplican su propia ventana por defecto
-  - Llamar a las funciones de métrica del pipeline de análisis con esos parámetros
-  - Devolver un JSON con la estructura:
-    ```json
-    {
-      "period": { "from": "...", "to": "..." },
-      "metrics": {
-        "events_per_day": [...],
-        "error_rate_by_type": [...]
-      }
-    }
-    ```
-- [ ] El endpoint **no debe correr el pipeline en cada request** — implementa un cache simple en memoria con TTL de 60 segundos. Si se pide la misma combinación de `start_date` / `end_date` dentro del TTL, devuelve el resultado en cache sin recalcular.
-
----
-
-## 🔵 Actividades Adicionales
-
-### Actividad adicional — Métrica de autenticación
-
-- [ ] Si instrumentaste el flujo de autenticación en el proyecto anterior, agrega una tercera función de métrica que calcule la tasa diaria de fallos de login: `user_login_failed` dividido entre el total de intentos (`user_login_failed` + `user_login_succeeded`) por día. Carga ambos tipos de evento con `event_type IN (...)` en SQL, y calcula la razón en Pandas. Inclúyela en el endpoint bajo la clave `auth_failure_rate`.
-
-### Actividad adicional — Dashboard visual simple
-
-- [ ] Construye una página mínima en `uis/backoffice/` (ej. `/telemetry`) que consuma `GET /telemetry/report` y lo muestre de forma visual — un gráfico o una tabla por métrica es suficiente (gráfico de barras o líneas para `events_per_day`, `error_rate_by_type`, etc.). Usa cualquier librería de gráficos que ya esté disponible en el frontend, o una tabla HTML simple si prefieres mantenerlo minimalista.
-- [ ] La página debe mostrar el `period` (`from` / `to`) que se está visualizando, para que quede claro qué ventana de tiempo cubren los números.
-- [ ] Este dashboard es una vista **técnica** para el equipo de ingeniería, no un dashboard de negocio — limítate a visualizar las mismas métricas operacionales de tu reporte, nada más.
-- [ ] No necesitas pulirlo: el objetivo es una visualización funcional y legible de datos reales, no un ejercicio de diseño.
+> [!WARNING]
+> **IMPORTANTE:** Los nombres de flows, tasks, tablas, y campos deben coincidir con lo definido en `data/pipelines/PIPELINE_DESIGN.md` y tu `CONTEXT-company.md` del contexto de data pipelines (KPIs y esquema) — consistentes, a su vez, con los campos de evento ya definidos en tu `CONTEXT-company.md` de telemetría. Una implementación genérica que ignore el modelo de datos de tu compañía no será aceptada.
 
 ---
 
 ## ✅ Qué Vamos a Evaluar
 
-- [ ] El archivo `services/telemetry/analysis.py` existe y contiene al menos tres funciones de métrica independientes
-- [ ] Cada función sigue la fórmula `cargar (SQL)` $\rightarrow$ `refinar (Pandas)` $\rightarrow$ `convertir tipos` $\rightarrow$ `agrupar` $\rightarrow$ `agregar` en ese orden
-- [ ] Los timestamps se convierten a `datetime` con `utc=True` antes de cualquier `groupby()` temporal
-- [ ] No se usan loops para calcular métricas — solo operaciones de Pandas
-- [ ] Cada función devuelve una lista de dicts serializable a JSON
-- [ ] El endpoint `GET /telemetry/report` acepta `start_date` y `end_date` opcionales y usa 7 días por defecto
-- [ ] El endpoint devuelve JSON con la estructura `{ "period": {...}, "metrics": {...} }`
-- [ ] El endpoint tiene cache en memoria con TTL de 60 segundos — no recalcula en cada request
-- [ ] Cada métrica responde una pregunta **técnica/operacional** sobre el comportamiento del sistema — no una pregunta de negocio
-- [ ] Las métricas devueltas tienen una dimensión de agrupamiento — no son números globales sin contexto
+- [ ] El archivo `data/pipelines/pipeline.py` existe y define al menos un flow con tres o más tasks.
+- [ ] Al menos una task tiene `retries` configurado con un valor mayor a cero y un comentario que justifica el número elegido.
+- [ ] Al menos una task opcional se invoca con `return_state=True` y el flow continúa ejecutándose cuando esa task falla.
+- [ ] Al menos una task de transformación tiene caché configurado con `cache_key_fn` y `cache_expiration`.
+- [ ] La fase de carga es idempotente: correr el pipeline dos veces sobre los mismos datos no produce duplicados en la tabla de destino del CONTEXT.
+- [ ] Cada corrida del pipeline registra al menos cinco campos de metadata (hora de inicio, hora de fin, registros procesados, estado, errores) en la base de datos o en un archivo de log estructurado.
+- [ ] `python data/pipelines/pipeline.py` corre el flujo ETL completo sin errores.
+- [ ] El comando de ejecución está documentado en `data/pipelines/PIPELINE_DESIGN.md` o en comentarios inline.
+- [ ] El pipeline escribe en la tabla de destino definida en la sección Destination table de tu `CONTEXT-company.md` — `telemetry_events` y `services/telemetry/analysis.py` quedan intactos.
+- [ ] Existe al menos un endpoint en `services/reporting/` que devuelve la metadata de la última corrida del pipeline (estado, hora de inicio, hora de fin, registros procesados).
+- [ ] Existe al menos un endpoint en `services/reporting/` que dispara una corrida manual del flow, importando la función desde `data/pipelines/` sin duplicar la lógica.
+- [ ] Existe al menos un endpoint en `services/reporting/` que devuelve las filas de KPIs de la tabla de destino del CONTEXT (el contrato que consumirá el dashboard de la Parte 3).
+- [ ] Los valores de los KPIs producidos coinciden con las definiciones de la sección "KPIs a medir" de tu `CONTEXT-company.md` — no con una reinterpretación de ellos.
+- [ ] El diseño implementado es consistente con `data/pipelines/PIPELINE_DESIGN.md` — las etapas, entidades, y estrategias de resiliencia descritas ahí se reflejan en el código.
 
 ---
 
 ## 📦 Cómo Entregar
 
-1. Asegúrate de que los cambios estén en tu copia: `analysis.py` en `services/telemetry/` y el endpoint `GET /telemetry/report` en `services/`.
-2. Crea un Pull Request contra la rama principal del monorepo con el título: `feat: telemetry report endpoint`.
-3. En la descripción del PR, incluye:
-   - El nombre de las métricas implementadas y qué pregunta operacional responde cada una
-   - Una muestra del JSON devuelto por `GET /telemetry/report` con datos reales
-   - Si implementaste la métrica de autenticación adicional y/o el dashboard visual simple
+1. Asegúrate de que `data/pipelines/pipeline.py`, los endpoints en `services/reporting/`, y cualquier archivo de soporte estén commiteados en tu copia del monorepo.
+2. Haz commit con el mensaje: `feat: implement resilient business performance pipeline`.
+3. Sube tus cambios a tu repositorio de GitHub y comparte la URL con tu tech lead.
+
+
 
 
 
