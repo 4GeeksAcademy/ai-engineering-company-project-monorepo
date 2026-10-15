@@ -1,0 +1,60 @@
+# `docker compose up` desde la raíz: funciona sin configurar nada.
+# Para sobrescribir valores (login inicial, SECRET_KEY, puertos...) copia .env.example a .env (gitignored).
+# Los servicios se hablan por nombre de servicio (api, uis) dentro de la red nexova-net, nunca por localhost.
+services:
+  api:
+    build:
+      context: ./services
+      additional_contexts:
+        shared: ./packages/shared
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+    volumes:
+      - ./services/api:/app/services/api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    networks: [nexova-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://api:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  uis:
+    build:
+      context: ./uis
+      additional_contexts:
+        monorepo: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Nombre del servicio Docker, no localhost: los rewrites del backoffice reenvían aquí.
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://api:8000}
+      NEXT_PUBLIC_INVENTORY_API_URL: ${NEXT_PUBLIC_INVENTORY_API_URL:-http://api:8000}
+      # Hostnames/IPs desde los que se abre el backoffice (si no es localhost); sin esto Next en dev responde 403 al JS.
+      DEV_ALLOWED_ORIGINS: ${DEV_ALLOWED_ORIGINS:-}
+      # Hot reload sobre bind mounts (necesario en Docker Desktop macOS/Windows).
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
+    command: ["start.sh"]
+    volumes:
+      - ./uis/website/src:/app/uis/website/src
+      - ./uis/backoffice/src:/app/uis/backoffice/src
+      - ./packages/shared:/app/packages/shared
+    ports:
+      - "${WEBSITE_PORT:-3000}:3000"
+      - "${BACKOFFICE_PORT:-3001}:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [nexova-net]
+    restart: unless-stopped
+
+networks:
+  nexova-net:
+    name: nexova-net

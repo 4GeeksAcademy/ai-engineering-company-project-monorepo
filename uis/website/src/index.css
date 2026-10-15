@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ── */
+:root {
+  --color-brand-400: #67e8f9;
+  --color-brand-500: #22d3ee;
+  --color-brand-600: #0891b2;
+  --color-surface: #020617;
+  --color-elevated: #0f172a;
+  --color-border: #1e293b;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; overflow-x: hidden; }
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Focus ring accesible ── */
+:focus-visible { outline: 3px solid var(--color-brand-400); outline-offset: 3px; }
+
+/* ── Grid pattern de fondo (suave, tipo Stripe/Linear) ── */
+.hero-grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Glow radial sutil ── */
+.hero-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,211,238,.15), transparent);
+}
+
+/* ── Glassmorphism ── */
+.glass-card {
+  background: rgba(15, 23, 42, .65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(103, 232, 249, .15);
+  border-radius: 2rem;
+}
+
+/* ── Gradient text ── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-brand-400), var(--color-brand-600));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Animaciones ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes counter-in {
+  from { opacity: 0; transform: scale(.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up  { animation: fade-up  .6s ease-out both; }
+.animate-fade-in  { animation: fade-in  .6s ease-out both; }
+.animate-counter  { animation: counter-in .8s ease-out .4s both; }
+
+/* Delay de entrada escalonada */
+.delay-1 { animation-delay: .1s; }
+.delay-2 { animation-delay: .2s; }
+.delay-3 { animation-delay: .3s; }
+.delay-4 { animation-delay: .4s; }
+.delay-5 { animation-delay: .5s; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

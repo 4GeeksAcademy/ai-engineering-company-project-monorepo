@@ -1,0 +1,16 @@
+__pycache__/
+**/__pycache__/
+*.pyc
+**/*.pyc
+.env*
+**/.env*
+!**/.env.example
+tests/
+**/tests/
+*.log
+**/*.log
+.venv/
+.pytest_cache/
+db.json
+**/db.json
+**/db.sqlite
