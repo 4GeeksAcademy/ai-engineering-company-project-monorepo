@@ -16,10 +16,17 @@ const notAPage = [{ type: "header", key: "accept", value: ".*text/html.*" }];
 // comes through the forwarded URL (<codespace>-5174.app.github.dev), which it would answer with 403, leaving the
 // pages without JavaScript. Allow exactly this codespace's forwarded hostname; nothing changes elsewhere.
 const { CODESPACE_NAME, GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN } = process.env;
-const allowedDevOrigins =
-  CODESPACE_NAME && GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+// DEV_ALLOWED_ORIGINS (comma-separated hostnames or IPs) does the same for a server reached by IP or domain,
+// e.g. a Docker stack running `next dev` on a VPS.
+const allowedDevOrigins = [
+  ...(CODESPACE_NAME && GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
     ? [`${CODESPACE_NAME}-5174.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`]
-    : [];
+    : []),
+  ...(process.env.DEV_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((host) => host.trim())
+    .filter(Boolean),
+];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

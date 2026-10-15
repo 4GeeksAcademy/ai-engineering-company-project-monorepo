@@ -36,6 +36,8 @@ services:
       # Nombre del servicio Docker, no localhost: los rewrites del backoffice reenvían aquí.
       API_PROXY_TARGET: ${API_PROXY_TARGET:-http://api:8000}
       NEXT_PUBLIC_INVENTORY_API_URL: ${NEXT_PUBLIC_INVENTORY_API_URL:-http://api:8000}
+      # Hostnames/IPs desde los que se abre el backoffice (si no es localhost); sin esto Next en dev responde 403 al JS.
+      DEV_ALLOWED_ORIGINS: ${DEV_ALLOWED_ORIGINS:-}
       # Hot reload sobre bind mounts (necesario en Docker Desktop macOS/Windows).
       WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
       CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
