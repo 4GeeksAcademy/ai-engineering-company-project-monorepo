@@ -11,6 +11,7 @@ El agente debe cargar estos archivos antes de proponer cambios:
 - Aplica a todos los hitos y tareas, aunque no se solicite un commit.
 - Antes de implementar nuevas funciones, contrastar el contexto activo con el progreso y los antecedentes historicos para no duplicar trabajo ni inventar requisitos.
 - Al cerrar cada hito, guardar una copia integra del `CONTEXT.md` utilizado en `memory-bank/history/HITOxx-CONTEXT.md` (o un nombre descriptivo si no hay numero). Verificar que coincide con el original; no vaciar ni modificar el contexto de raiz.
+- Aunque el desarrollador indique que el contexto esta actualizado, archivar siempre la copia integra de la version efectivamente usada y actualizar `memory-bank/progress.md` al cerrar cada tarea; no omitirlo por considerarlo ya vigente.
 - No sobrescribir un contexto historico distinto o anterior. Si el hito ya esta archivado, comprobar su coincidencia y conservarlo; ante una revision diferente, crear un archivo de version con nombre identificable.
 - Actualizar siempre `memory-bank/progress.md` al finalizar la tarea con lo implementado, estado actual, comandos/resultados de validacion, bloqueos y siguientes pasos. No declarar verificadas pruebas no ejecutadas o bloqueadas.
 - El desarrollador autoriza permanentemente actualizar `memory-bank/progress.md` y crear los archivos de `memory-bank/history/` necesarios para este protocolo. El resto de las rutas protegidas sigue requiriendo confirmacion explicita.
