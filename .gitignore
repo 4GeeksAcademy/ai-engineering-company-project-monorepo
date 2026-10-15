@@ -1,0 +1,17 @@
+# Local environments, generated databases and frontend build artifacts
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+services/api/data/
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.env*
+!.env.example
+test-results/
+playwright-report/
+
+.env.auth
