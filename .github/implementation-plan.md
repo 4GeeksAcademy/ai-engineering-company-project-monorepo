@@ -1,128 +1,162 @@
-# Implementation Plan: Pipeline de Desempeño de Negocio Resiliente (Parte 2 de 3)
+# Implementation Plan: Mejora del Pipeline — Subflows, Tests y Dashboard Ejecutivo (Parte 3 de 3)
 
-> **Documento de Planificación y Arquitectura de Ejecución**  
-> **Basado en:** `.github/STRATEGY.md`, `data/pipelines/PIPELINE_DESIGN.md`, `CONTEXT-company.md` (Nexova Solutions), `docs/telemetry/telemetry-plan.md`  
-> **Marco Metodológico:** Code Refinement Suite (Nivel 3 — Arquitectura Crítica de Datos)  
-> **Modalidad:** Modo Tutor / Aprendizaje guiado (el usuario ejecuta, el mentor acompaña)  
-
----
-
-## 📌 Contexto y Objetivos
-
-Con el documento de diseño arquitectónico formalmente aprobado en `data/pipelines/PIPELINE_DESIGN.md` y commiteado en el monorepo, este hito corresponde a la **implementación del pipeline en código funcional y resiliente**.
-
-El pipeline debe construirse con **Prefect 3**, leyendo de la tabla de telemetría técnica `public.telemetry_events` y transformando esos eventos en indicadores ejecutivos de desempeño comercial y contractual, persistidos en la tabla `reporting.executive_kpis` y auditados en `reporting.pipeline_runs`.
-
-### Principios y Restricciones Innegociables:
-1. **Cero impacto en telemetría técnica:** `services/telemetry/analysis.py` y el endpoint `GET /telemetry/report` permanecen **intactos**.
-2. **Separación estricta de destino:** `telemetry_events` es exclusivamente fuente de lectura; el destino es `reporting.executive_kpis`.
-3. **Resiliencia de Producción:**
-   - Tasks con reintentos configurados (`retries`, `retry_delay_seconds`).
-   - Al menos una task opcional invocada con `return_state=True` que no interrumpa el flujo si falla.
-   - Caché de resultados (`cache_key_fn`, `cache_expiration`) en la transformación pesada.
-4. **Idempotencia Estricta:** Re-ejecutar el pipeline sobre la misma ventana no duplica filas en `reporting.executive_kpis` gracias al `UPSERT`.
-5. **Autonomía CLI:** `python data/pipelines/pipeline.py` debe ser ejecutable desde terminal.
-6. **Endpoints desacoplados:** Los 3 endpoints (`GET /reporting/status`, `POST /reporting/trigger`, `GET /reporting/kpis`) residen en `services/reporting/` e importan desde `data/pipelines/`, protegidos obligatoriamente con **Auth Guard** (`Depends(get_current_user)`).
+> **Documento de Planificación y Arquitectura de Producción**  
+> **Basado en:** `.github/STRATEGY.md`, `CONTEXT-company.md` (Nexova Solutions), `data/pipelines/PIPELINE_DESIGN.md`, `docs/plans/resilient-business-performance-pipeline-plan.md`  
+> **Marco Metodológico:** Code Refinement Suite (Nivel 3 — Arquitectura Crítica de Datos & Fullstack)  
+> **Modalidad:** Modo Tutor / Aprendizaje guiado (el mentor acompaña, el usuario ejecuta paso a paso)  
 
 ---
 
-## 🏛️ Evaluación de Arquitectura y Decisiones Técnicas (PACK 1: ARCHITECT)
+## 📌 Contexto y Objetivos del Hito
 
-Se analizaron tres alternativas de implementación mediante **Tree of Thoughts (ToT)**:
+En la **Parte 2**, Nexova Solutions implementó con éxito el pipeline básico con Prefect 3, transformando los eventos de `public.telemetry_events` en indicadores de negocio en `reporting.executive_kpis` y exponiéndolos vía endpoints en `services/reporting/`.
+
+En esta **Parte 3**, el reto consiste en **llevar la solución a grado de producción industrial**:
+1. **Modularizar la orquestación:** Refactorizar el flow monolítico en **subflows reutilizables** (`@flow`) para extracción, transformación y carga, con interfaces explícitas.
+2. **Blindaje de Calidad (Testing Automatizado):** Diseñar una suite de tests unitarios aislados en `tests/pipelines/test_pipeline.py` con fixtures en memoria, validando tanto cálculos exactos como resiliencia ante datos malformados.
+3. **Preservación CLI:** Garantizar que `python data/pipelines/pipeline.py` mantenga su autonomía operativa sin regresiones.
+4. **Activación de Negocio (Dashboard Ejecutivo):** Construir una interfaz web en `uis/backoffice/` (Next.js) que consuma `GET /reporting/kpis` para que la CEO Laura Mendoza y los directores de departamento visualicen el valor real generado.
+
+---
+
+## 🏛️ PACK 1: ARCHITECT — Evaluación de Alternativas Técnicas y Veredicto
+
+Se evaluaron tres enfoques mediante **Tree of Thoughts (ToT)** para la topología de subflows y la integración del dashboard:
 
 ### Comparativa de Alternativas (ToT):
-1. **Rama A (Script plano con Cron y sin Framework):**
-   - *Enfoque:* Un script de Python tradicional ejecutado por cron que realiza consultas directas con `psycopg2`.
-   - *Veredicto:* **Descartada.** Carece de gestión declarativa de estados, no ofrece reintentos automáticos ni control nativo de concurrencia y viola el mandato del ticket de usar Prefect.
-2. **Rama B (Prefect con persistencia volátil en memoria / SQLite local):**
-   - *Enfoque:* Flow de Prefect que persiste los KPIs y corridas en archivos locales JSON o SQLite temporal.
-   - *Veredicto:* **Descartada.** Provoca divergencia en producción y desacopla los reportes de la base de datos principal de Supabase.
-3. **Rama C (Prefect 3 Modular + Supabase/SQLModel + Módulo `services/reporting/`) [Seleccionada]:**
-   - *Enfoque:* Pipeline estructurado con `@flow` y `@task` en `data/pipelines/pipeline.py`, lógica de agregación en `data/process/transformations.py`, auditoría en `reporting.pipeline_runs`, persistencia idempotente vía `UPSERT` en `reporting.executive_kpis`, y exposición HTTP mediante FastAPI en `services/reporting/routes.py`.
-   - *Veredicto:* **Aprobada.** Satisface los 13 criterios de evaluación de `.github/STRATEGY.md` y asegura compatibilidad con la Parte 3 (Dashboard).
+
+```mermaid
+flowchart TD
+    Root[Decisión Arquitectónica Parte 3] --> A[Rama A: Subflows en archivos separados + Dashboard externo Grafana]
+    Root --> B[Rama B: Subflows monolíticos en pipeline.py + Dashboard Next.js SSR en backoffice]
+    Root --> C[Rama C: Subflows modulares en pipeline.py + Módulo Client Component Next.js con fallback]
+    
+    A -->|Descartada| A1[Sobrecarga operativa innecesaria y desacople del stack Next.js del monorepo]
+    B -->|Riesgo| B1[Complejidad de tokens JWT en SSR y poca interactividad]
+    C -->|Seleccionada| C1[Topología desacoplada Prefect 3 + UI interactiva con filtros y Auth Guard]
+```
+
+1. **Rama A (Subflows dispersos en múltiples archivos + Dashboard externo en Grafana/Metabase):**
+   - *Enfoque:* Dividir cada etapa en scripts independientes (`extract_flow.py`, `transform_flow.py`, etc.) y levantar un contenedor de BI externo.
+   - *Veredicto:* **Descartada.** Fragmenta innecesariamente el monorepo para un pipeline de un solo dominio y contradice la instrucción de integrar el dashboard directamente en `uis/backoffice/`.
+2. **Rama B (Subflows inline en `pipeline.py` + Página SSR pura en Next.js sin interactividad):**
+   - *Enfoque:* Definir subflows decorados con `@flow` en `data/pipelines/pipeline.py` y renderizar una tabla estática en el servidor.
+   - *Veredicto:* **Descartada.** Dificulta la experiencia de filtrado interactivo por departamento/fechas para los ejecutivos y no aprovecha la reactividad de la UI existente.
+3. **Rama C (Subflows modulares en `data/pipelines/pipeline.py` + Subflow Opcional resiliente + Página `/reporting` en `uis/backoffice/` con Client Component reactivo) [Seleccionada]:**
+   - *Enfoque:* 
+     - Cuatro flows Prefect 3: Flow orquestador principal (`business_performance_flow`), subflow de extracción (`extract_telemetry_events_subflow`), subflow de transformación (`transform_business_kpis_subflow`), subflow de carga idempotente (`load_executive_kpis_subflow`), y subflow opcional de snapshot (`eval_snapshot_subflow`) con `return_state=True`.
+     - Suite de tests en `tests/pipelines/test_pipeline.py` usando `pytest` y fixtures sin dependencias de red ni BD.
+     - Dashboard en `uis/backoffice/src/app/reporting/page.tsx` conectado al backend FastAPI con manejo de estados de carga, filtros de departamento y tarjetas KPI legibles para no técnicos.
+   - *Veredicto:* **Aprobada.** Satisface los 12 criterios de evaluación de `.github/STRATEGY.md`.
 
 ### Veredicto de los 3 Expertos:
-- **Dev Lead:** La separación entre `data/pipelines/pipeline.py` (orquestación) y `data/process/transformations.py` (cálculo matricial con Pandas) permite probar de forma unitaria las métricas sin necesidad de levantar Prefect.
-- **Sec Specialist:** Credenciales leídas exclusivamente de variables de entorno (`.env` / Supabase), y todos los nuevos endpoints protegidos con JWT mediante `Auth Guard Standard`.
-- **UX / Business Lead:** Los datos se estructuran con el contrato JSON exacto que consumirá el panel ejecutivo de Laura Mendoza, eliminando los reportes manuales en PDF.
+- **Dev Lead:** Los subflows de Prefect 3 aplican el principio de responsabilidad única (SRP). El subflow de transformación recibe DataFrames y entrega DataFrames, permitiendo testear unitariamente tanto las tasks como el subflow completo con fixtures en memoria.
+- **Sec Specialist:** El endpoint `GET /reporting/kpis` continúa protegido por el `Auth Guard Standard` (`Depends(get_current_user)`). El dashboard en Next.js gestionará las credenciales y el token de forma segura sin exponer secretos de Supabase al navegador.
+- **UX / Business Lead:** El dashboard no será una consola de programador. Se agruparán los KPIs en dos paneles temáticos: **Atención al Cliente** (MTTR vs SLA 24h y % Automatización Chatbot vs Meta 40%) y **Operaciones de Selección** (Cribado de CVs y Calidad Media de Perfiles), con colores semánticos (verde/amarillo/rojo) legibles para Laura Mendoza.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-### Fase 0: Preparación del Entorno
-- [x] **Paso 0.1 — Instalación de dependencias:** Instalar Prefect 3 mediante `uv add "prefect>=3"`.
-- [x] **Paso 0.2 — Creación de estructura de directorios:** Asegurar la existencia de `data/pipelines/`, `data/process/`, `data/raw/`, `data/eval/` y `services/reporting/`.
-- [x] **Paso 0.3 — Modelos y Tablas de Base de Datos:** Definir los esquemas/tablas `reporting.executive_kpis` y `reporting.pipeline_runs` (soporte en Supabase/PostgreSQL o fallback SQLite transaccional según entorno).
+### Fase 1: Refactorización en Subflows (`data/pipelines/pipeline.py`)
+- [x] **Paso 1.1 — Análisis de la topología existente:** Mapear las tasks actuales (`extract_events_task`, `transform_kpis_task`, `load_kpis_task`, `optional_eval_snapshot_task`, `log_pipeline_run_task`) hacia los contratos de los nuevos subflows.
+- [x] **Paso 1.2 — Creación del Subflow de Extracción:**
+  - Definir `@flow(name="extract-telemetry-events-subflow")` con parámetros explícitos (`start_time`, `end_time`).
+  - Invocar `extract_telemetry_events_task` y retornar la lista de eventos crudos sin recurrir a variables globales.
+- [x] **Paso 1.3 — Creación del Subflow de Transformación:**
+  - Definir `@flow(name="transform-business-kpis-subflow")` con parámetros explícitos (`raw_events`, `window_date`).
+  - Invocar `transform_business_kpis_task` (manteniendo la lógica de caché) y retornar la lista de KPIs estructurados.
+- [x] **Paso 1.4 — Creación del Subflow de Carga Idempotente:**
+  - Definir `@flow(name="load-executive-kpis-subflow")` con parámetros explícitos (`kpis`, `run_id`).
+  - Invocar `load_executive_kpis_task` ejecutando el `UPSERT` transaccional sobre `reporting.executive_kpis`.
+- [x] **Paso 1.5 — Creación del Subflow Opcional de Snapshot:**
+  - Definir `@flow(name="eval-snapshot-subflow")` que encapsule la exportación a `data/eval/`.
+  - Invocación desde el flow principal con `return_state=True` para garantizar resiliencia ante errores secundarios.
+- [x] **Paso 1.6 — Orquestación en Flow Coordinador:**
+  - Refactorizar `business_performance_flow` para que actúe exclusivamente como director de orquesta entre los subflows y registre la auditoría en `reporting.pipeline_runs`.
+  - Preservar el entrypoint CLI `if __name__ == "__main__":`.
 
 ---
 
-### Fase 1: Implementación de Transformaciones y Métricas de Negocio (`data/process/`)
-- [x] **Paso 1.1 — Transformación de Soporte (MTTR & SLAs):** Implementar el cálculo de MTTR (horas) y % de tickets con SLA excedido (> 24h) a partir de `support_ticket_resolved`.
-- [x] **Paso 1.2 — Transformación de Chatbot (Tasa de Automatización):** Implementar el cálculo de tasa de resolución autónoma a partir de `chatbot_issue_resolved` (meta: 40%).
-- [x] **Paso 1.3 — Transformación de Selección (Scoring de Talento):** Implementar el conteo de CVs evaluados y distribución de scores a partir de `candidate_score_calculated`.
-- [x] **Paso 1.4 — Deduplicación y Consolidación:** Consolidar métricas por ventana de fecha y departamento con deduplicación por entidad.
+### Fase 2: Suite de Tests Unitarios Aislados (`tests/pipelines/test_pipeline.py`)
+- [x] **Paso 2.1 — Creación de fixtures sintéticas en memoria:**
+  - Crear fixtures de Pytest simulando eventos reales de Nexova: `support_ticket_resolved`, `chatbot_issue_resolved`, y `candidate_score_calculated`.
+  - Garantizar cero llamadas de red y cero dependencias de base de datos.
+- [x] **Paso 2.2 — Test 1: Transformación de Soporte y SLA (MTTR & Breaches):**
+  - Validar cálculo de tiempo medio de resolución y porcentaje de tickets fuera de SLA (> 24h).
+- [x] **Paso 2.3 — Test 2: Transformación de Chatbot (Tasa de Resolución Autónoma):**
+  - Validar el ratio de tickets resueltos por bot vs escalados a agentes humanos frente al umbral objetivo (40%).
+- [x] **Paso 2.4 — Test 3: Transformación de Talento y Selección (Scoring de CVs):**
+  - Validar agregación de perfiles evaluados y score promedio por vacante/departamento.
+- [x] **Paso 2.5 — Test 4: Comportamiento Defensivo ante Entradas Inválidas:**
+  - Probar eventos con payloads vacíos, fechas malformadas o campos nulos sin que la task lance una excepción no controlada.
+- [x] **Paso 2.6 — Test 5: Verificación Determinista con Cálculo Manual:**
+  - Contrastar la métrica resultante contra un valor calculado a mano con números fijos verificables.
+- [x] **Paso 2.7 — Ejecución y Validación Pytest:**
+  - Correr `uv run pytest tests/pipelines/test_pipeline.py` y verificar que el 100% de los tests pasan en verde.
 
 ---
 
-### Fase 2: Construcción del Pipeline Resiliente con Prefect (`data/pipelines/pipeline.py`)
-- [x] **Paso 2.1 — Task de Extracción (`extract_events_task`):** 
-  - Lectura de `telemetry_events` por ventana temporal.
-  - Configurada con `retries=3` y `retry_delay_seconds=10` (con comentario justificativo para fallos transitorios de red).
-- [x] **Paso 2.2 — Task de Transformación con Caché (`transform_kpis_task`):**
-  - Invoca la lógica de `data/process/`.
-  - Configurada con `cache_key_fn` y `cache_expiration=timedelta(minutes=60)` (con comentario explicando clave por ventana).
-- [x] **Paso 2.3 — Task de Carga Idempotente (`load_kpis_task`):**
-  - `UPSERT` en `reporting.executive_kpis` apoyado en el constraint único `(window_date, department, metric_name)`.
-  - Configurada con `retries=3` y `retry_delay_seconds=5`.
-- [x] **Paso 2.4 — Task Opcional No Crítica (`optional_eval_snapshot_task`):**
-  - Genera un snapshot analítico en `data/eval/`.
-  - Invocada dentro del flow con `return_state=True` para que un fallo no interrumpa la ejecución principal.
-- [x] **Paso 2.5 — Task de Registro de Auditoría (`log_pipeline_run_task`):**
-  - Inserta metadata de la corrida en `reporting.pipeline_runs` (`run_id`, `started_at`, `finished_at`, `records_processed`, `status`, `error_message`).
-- [x] **Paso 2.6 — Flow Coordinador (`business_performance_flow`):**
-  - Orquestación completa de las tasks con manejo explícito de errores.
-  - Bloque `if __name__ == "__main__":` para ejecución directa vía CLI (`python data/pipelines/pipeline.py`).
+### Fase 3: Verificación de Autonomía CLI y No Regresión
+- [x] **Paso 3.1 — Ejecución del script CLI:**
+  - Ejecutar `uv run python data/pipelines/pipeline.py` directamente en terminal.
+  - Verificar en logs la ejecución secuencial de los 3 subflows principales y del subflow opcional.
+- [x] **Paso 3.2 — Verificación de Persistencia e Idempotencia:**
+  - Comprobar que los registros se actualizan en `reporting.executive_kpis` y que no se generan duplicados al correr por segunda vez.
+- [x] **Paso 3.3 — Auditoría de Intocabilidad Técnica:**
+  - Confirmar mediante `git diff` que `telemetry_events` y `services/telemetry/analysis.py` no sufrieron alteraciones.
 
 ---
 
-### Fase 3: Endpoints del Backend (`services/reporting/`)
-- [x] **Paso 3.1 — Creación del Router (`services/reporting/routes.py`):**
-  - `GET /reporting/status`: Consulta el último registro de `reporting.pipeline_runs`.
-  - `POST /reporting/trigger`: Dispara manualmente el flow de Prefect importado desde `data/pipelines/pipeline.py`.
-  - `GET /reporting/kpis`: Devuelve las filas de KPIs de `reporting.executive_kpis` con filtro por fecha y departamento.
-- [x] **Paso 3.2 — Cumplimiento de Seguridad (Auth Guard):**
-  - Proteger los 3 endpoints con `current_user: dict = Depends(get_current_user)`.
-- [x] **Paso 3.3 — Registro en FastAPI (`services/api/main.py`):**
-  - Incluir `app.include_router(reporting.router)` en `services/api/main.py`.
+### Fase 4: Construcción del Dashboard de Negocio (`uis/backoffice/`)
+- [x] **Paso 4.1 — Servicio de Datos en Frontend (`src/services/reporting.ts`):**
+  - Implementar cliente tipado en TypeScript para consumir `GET /reporting/kpis` y `GET /reporting/status` desde FastAPI.
+- [x] **Paso 4.2 — Creación de la Página del Dashboard (`src/app/reporting/page.tsx`):**
+  - Crear la ruta `/reporting` dentro del backoffice con diseño limpio, responsivo y corporativo.
+- [x] **Paso 4.3 — Componentes de Métricas Ejecutivas:**
+  - Tarjetas de resumen para CEO Laura Mendoza con semaforización SLA (Cumplido / En Riesgo / Incumplido).
+  - Bloque 1: **Atención al Cliente** (Roberto Díaz) — MTTR en horas y % resolución del Chatbot IA.
+  - Bloque 2: **Operaciones de Selección** (Javier Almeida) — Total CVs analizados y distribución de scores.
+- [x] **Paso 4.4 — Filtros Interactivos:**
+  - Selector de departamento (`Todos`, `customer_support`, `talent_acquisition`) y rango de fechas.
+  - Botón de refresco y estado de última sincronización del pipeline.
+- [x] **Paso 4.5 — Verificación de Compilación y Calidad:**
+  - Validar build en `uis/backoffice/` con `npm run build` o `npx tsc --noEmit`.
 
 ---
 
-### Fase 4: Pruebas, Verificación y Documentación
-- [x] **Paso 4.1 — Verificación CLI:** Ejecutar `python data/pipelines/pipeline.py` y verificar salida sin errores y registro en BD.
-- [x] **Paso 4.2 — Verificación de Idempotencia:** Correr el script por segunda vez y constatar que no existen filas duplicadas en la tabla de destino.
-- [x] **Paso 4.3 — Verificación de Endpoints HTTP:** Probar peticiones locales a `/reporting/status`, `/reporting/trigger` y `/reporting/kpis`.
-- [x] **Paso 4.4 — Actualización de Documentación:** Registrar en `data/pipelines/PIPELINE_DESIGN.md` el comando exacto de CLI y la frecuencia del cron.
-
----
-
-### Fase 5: Auditoría y Entrega Git (PACK 4: AUDITOR)
-- [x] **Paso 5.1 — Checklist de Evaluación:** Contrastar los 13 ítems de la sección `## ✅ Qué Vamos a Evaluar` de `.github/STRATEGY.md`.
-- [ ] **Paso 5.2 — Commit Formal:** Commit con el mensaje exacto: `feat: implement resilient business performance pipeline`.
-- [ ] **Paso 5.3 — Push a GitHub:** Solicitar confirmación al usuario antes del push a la rama remota.
+### Fase 5: Auditoría, Checklist y Entrega Git (PACK 4: AUDITOR)
+- [x] **Paso 5.1 — Checklist de Evaluación de `.github/STRATEGY.md`:**
+  - [x] El flow principal en `data/pipelines/pipeline.py` invoca al menos tres subflows (`@flow`).
+  - [x] Cada subflow tiene inputs y outputs explícitos y puede ejecutarse de forma independiente.
+  - [x] El archivo `tests/pipelines/test_pipeline.py` existe con al menos tres tests unitarios.
+  - [x] Tests en aislamiento total con fixtures in-memory.
+  - [x] Al menos un test defensivo ante inputs inválidos.
+  - [x] Al menos un test de validación exacta contra cálculo manual de `CONTEXT-company.md`.
+  - [x] `uv run pytest tests/pipelines/test_pipeline.py` pasa sin errores.
+  - [x] `python data/pipelines/pipeline.py` corre sin errores conservando el entrypoint CLI.
+  - [x] Nombres de subflows y tasks reflejan el vocabulario de dominio de Nexova.
+  - [x] `telemetry_events` y `services/telemetry/analysis.py` intactos.
+  - [x] Dashboard funcional en `uis/backoffice/` consumiendo `services/reporting/`.
+  - [x] Dashboard legible para stakeholders de negocio no técnicos.
+- [ ] **Paso 5.2 — Commit Formal:**
+  - Realizar commit con el mensaje exacto:
+    `feat: refactor business performance pipeline into subflows, add unit tests, and add reporting dashboard`
+- [ ] **Paso 5.3 — Protocolo Git Pre-Push:**
+  - Solicitar consentimiento explícito al usuario antes de enviar cambios al repositorio remoto.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
 
-1. **Tree of Thoughts (ToT - PACK 1):**
-   Se contrastaron tres alternativas para la ejecución del pipeline (Script tradicional, almacenamiento volátil y Prefect 3 modular con Supabase). Se seleccionó la tercera para garantizar observabilidad, reintentos desacoplados y persistencia auditable.
+1. **Tree of Thoughts (ToT - PACK 1: ARCHITECT):**
+   Se contrastaron tres alternativas de arquitectura para la división en subflows y el front de visualización. Se seleccionó la modularización in-place dentro del monorepo con un cliente reactivo en `uis/backoffice/` para evitar dispersión tecnológica y garantizar compatibilidad inmediata con FastAPI.
 
-2. **Step-Back Prompting & Domain Abstraction (PACK 2):**
-   Se abstrajeron las métricas técnicas hacia los contratos de negocio de Nexova: SLA contractual de 24h en atención al cliente, 40% de resolución autónoma por chatbot y volumen de cribado con IA para 40 consultores de talento.
+2. **Step-Back Prompting & Domain Abstraction (PACK 2: PLANNER):**
+   Se abstrajeron las necesidades de los directores de Nexova (Laura Mendoza, Roberto Díaz, Javier Almeida), asegurando que los nombres de los subflows y las tarjetas del dashboard hablen el lenguaje del negocio (horas de SLA, tasa de automatización del 40%, volumen de cribado de talento) y no jerga técnica abstracta.
 
-3. **Chain of Verification (CoVe - PACK 3):**
-   Se verificó que los endpoints pertenezcan a `services/reporting/`, que `services/telemetry/` permanezca inmutable, que las importaciones sean estrictamente unidireccionales (`services` $\rightarrow$ `data/pipelines`), y que el comando de ejecución directa cumpla con `python data/pipelines/pipeline.py`.
+3. **Chain of Verification (CoVe) & TDD (PACK 3: CODER):**
+   Antes de codificar, se definen fixtures sintéticas deterministas para aislar el cómputo de KPIs de la infraestructura de persistencia. Se valida la compatibilidad estricta de tipos entre Pydantic (FastAPI) y TypeScript (Next.js).
 
-4. **Red Teaming & Resilience Audit (PACK 4):**
-   Se diseñó la tolerancia a fallos transitorios de red mediante `retries` y `retry_delay_seconds`, la no interrupción del flow ante caídas de la tarea de evaluación mediante `return_state=True`, y la protección de endpoints sensibles aplicando obligatoriamente el `Auth Guard Standard` (`Depends(get_current_user)`).
+4. **Red Teaming & Resilience Audit (PACK 4: AUDITOR):**
+   Se somete el subflow opcional a pruebas de falla simulada con `return_state=True`, se verifica que inputs corruptos en telemetría no provoquen un fallo general del pipeline, y se constata la protección de endpoints mediante `Auth Guard Standard`. Se respeta rigurosamente la regla de no auto-push.
