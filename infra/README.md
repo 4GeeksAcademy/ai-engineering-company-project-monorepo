@@ -9,7 +9,7 @@ This folder contains **infrastructure configurations** for the monorepo (for exa
 
 ## Docker
 
-`cp .env.example .env` (fill in the secrets; `.env` is gitignored) and run `docker compose up` from the repo root.
+Run `docker compose up` from the repo root: it works with no configuration. Optionally `cp .env.example .env` (gitignored) to set `SECRET_KEY`, the initial admin (`AUTH_INITIAL_EMAIL` / `AUTH_INITIAL_PASSWORD`) and ports; without an initial admin nobody can log in.
 
 | Service | Port | Notes |
 | --- | --- | --- |
