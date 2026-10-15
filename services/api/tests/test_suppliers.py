@@ -1,10 +1,13 @@
 import ast
+import secrets
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from services.api import database
+from services.api.auth import storage
+from services.api.auth.security import create_access_token, hash_password
 from services.api.main import app
 from services.api.models import SupplierCreate
 from services.api.seed import SUPPLIERS_SEED, seed
@@ -13,9 +16,24 @@ from services.api.seed import SUPPLIERS_SEED, seed
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("SUPPLIERS_DB_PATH", str(tmp_path / "suppliers.json"))
+    monkeypatch.setenv("AUTH_DB_PATH", str(tmp_path / "auth.json"))
+    monkeypatch.setenv("JWT_SECRET_KEY", secrets.token_urlsafe(48))
+
     database.close_db()
+
+    user = storage.create_user(
+        email="tests@example.com",
+        hashed_password=hash_password("ClaveTest1234"),
+    )
+
+    token = create_access_token(user["id"])
+
     with TestClient(app) as test_client:
+        test_client.headers.update({
+            "Authorization": f"Bearer {token}"
+        })
         yield test_client
+
     database.close_db()
 
 
