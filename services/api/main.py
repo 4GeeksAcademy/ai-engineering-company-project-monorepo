@@ -6,7 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import database_lifespan
+from routes.auth import router as auth_router
+from routes.profiles import router as profiles_router
 from routes.suppliers import router
+from routes.users import router as users_router
 
 
 def create_app(path: Path | None = None) -> FastAPI:
@@ -15,10 +18,13 @@ def create_app(path: Path | None = None) -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=origins.split(","),
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
-        allow_headers=["content-type"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allow_headers=["content-type", "authorization"],
     )
     application.include_router(router)
+    application.include_router(users_router)
+    application.include_router(profiles_router)
+    application.include_router(auth_router)
     return application
 
 

@@ -60,11 +60,19 @@ def test_valid_contracts_and_multiple_categories():
 
 
 @pytest.fixture
-def client(tmp_path):
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "test-secret-key-with-at-least-32-bytes")
+    monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
     from fastapi.testclient import TestClient
     from main import create_app
 
     with TestClient(create_app(tmp_path / "suppliers.json")) as connection:
+        connection.post("/users", json={"email": "supplier-test@example.com", "password": "secure-password"})
+        token = connection.post(
+            "/auth/login",
+            json={"email": "supplier-test@example.com", "password": "secure-password"},
+        ).json()["access_token"]
+        connection.headers.update({"Authorization": f"Bearer {token}"})
         yield connection
 
 
@@ -111,14 +119,20 @@ def test_directory_lifecycle(client):
     assert client.patch(f"{endpoint}/status", json={"status": "active"}).status_code == 404
 
 
-def test_seed_idempotence_and_persistence(tmp_path):
+def test_seed_idempotence_and_persistence(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     from seed import SUPPLIERS_SEED, seed_database
     from main import create_app
 
+    monkeypatch.setenv("SECRET_KEY", "test-secret-key-with-at-least-32-bytes")
     path = tmp_path / "suppliers.json"
     assert seed_database(path) == 15
     with TestClient(create_app(path)) as connection:
+        connection.post("/users", json={"email": "seed-test@example.com", "password": "secure-password"})
+        token = connection.post(
+            "/auth/login", json={"email": "seed-test@example.com", "password": "secure-password"}
+        ).json()["access_token"]
+        connection.headers.update({"Authorization": f"Bearer {token}"})
         records = connection.get("/suppliers").json()
         assert len(records) == 15
         for record, expected in zip(records, SUPPLIERS_SEED):
@@ -131,6 +145,10 @@ def test_seed_idempotence_and_persistence(tmp_path):
         connection.patch("/suppliers/1/rate", json={"rate_per_shipment": 10})
     assert seed_database(path) == 0
     with TestClient(create_app(path)) as connection:
+        token = connection.post(
+            "/auth/login", json={"email": "seed-test@example.com", "password": "secure-password"}
+        ).json()["access_token"]
+        connection.headers.update({"Authorization": f"Bearer {token}"})
         assert connection.get("/suppliers/1").json()["rate_per_shipment"] == 10
         assert len(connection.get("/suppliers").json()) == 15
 
@@ -138,7 +156,7 @@ def test_seed_idempotence_and_persistence(tmp_path):
 def test_seed_matches_context_exactly():
     from seed import SUPPLIERS_SEED
 
-    context_path = Path(__file__).resolve().parents[3] / "CONTEXT.md"
+    context_path = Path(__file__).resolve().parents[3] / "memory-bank" / "history" / "HITO09-CONTEXT.md"
     blocks = re.findall(r"```python\n(.*?)\n```", context_path.read_text(encoding="utf-8"), re.DOTALL)
     declarations = {}
     for block in blocks:
@@ -165,7 +183,11 @@ def running_server(path):
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port)],
         cwd=Path(__file__).resolve().parents[1],
-        env={**os.environ, "SUPPLIERS_DB_PATH": str(path)},
+        env={
+            **os.environ,
+            "SUPPLIERS_DB_PATH": str(path),
+            "SECRET_KEY": "test-secret-key-with-at-least-32-bytes",
+        },
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0,
     )
     try:
@@ -191,13 +213,22 @@ def running_server(path):
 def test_persistence_after_real_server_restart(tmp_path):
     path = tmp_path / "suppliers.json"
     with running_server(path) as url:
-        response = httpx.post(f"{url}/suppliers", json=supplier_payload(), timeout=10)
+        registration = httpx.post(
+            f"{url}/users", json={"email": "restart-test@example.com", "password": "secure-password"}, timeout=10
+        )
+        assert registration.status_code == 201
+        login = httpx.post(
+            f"{url}/auth/login", json={"email": "restart-test@example.com", "password": "secure-password"}, timeout=10
+        )
+        headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+        response = httpx.post(f"{url}/suppliers", json=supplier_payload(), headers=headers, timeout=10)
         assert response.status_code == 201
         supplier_id = response.json()["id"]
         endpoint = f"/suppliers/{supplier_id}"
-        assert httpx.patch(f"{url}{endpoint}/rate", json={"rate_per_shipment": 8.75}).status_code == 200
-        assert httpx.patch(f"{url}{endpoint}/status", json={"status": "suspended"}).status_code == 200
-        persisted = httpx.get(f"{url}{endpoint}").json()
+        assert httpx.patch(f"{url}{endpoint}/rate", json={"rate_per_shipment": 8.75}, headers=headers).status_code == 200
+        assert httpx.patch(f"{url}{endpoint}/status", json={"status": "suspended"}, headers=headers).status_code == 200
+        persisted = httpx.get(f"{url}{endpoint}", headers=headers).json()
     with running_server(path) as url:
-        assert httpx.get(f"{url}{endpoint}").json() == persisted
-        assert httpx.get(f"{url}/suppliers").json() == [persisted]
+        headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+        assert httpx.get(f"{url}{endpoint}", headers=headers).json() == persisted
+        assert httpx.get(f"{url}/suppliers", headers=headers).json() == [persisted]

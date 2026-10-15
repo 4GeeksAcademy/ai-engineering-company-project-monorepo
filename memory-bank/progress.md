@@ -1,7 +1,12 @@
 # Progress Log — TrackFlow
 
 ## Estado general
-- Actualizacion 2026-10-08: implementado el Hito 09, directorio de proveedores de TrackFlow, conforme al `CONTEXT.md` activo y la rubrica de entrega.
+- Actualizacion 2026-10-15: implementado AUTH-01 (Hito 10) sobre la API FastAPI/TinyDB; suite backend completa con 35 pruebas correctas.
+- El `CONTEXT.md` AUTH-01 activo se archivo integro en `memory-bank/history/HITO10-CONTEXT.md`; no se modifico el contexto de raiz.
+- AUTH-01 implementa JWT stateless, hash bcrypt con libpass, usuarios y perfiles en TinyDB, y protege las seis rutas de proveedores.
+- La verificacion automatica cubre `/docs`/OpenAPI, registro-login-Bearer, 401/403 y JWT expirado. La secuencia visual manual en Swagger aun no se ejecuto.
+- La clave real no se crea ni se versiona en este cambio; `services/api/README.md` documenta generacion local de `.env`, excluido de Git.
+- Actualizacion 2026-10-08: implementado el Hito 09, directorio de proveedores de TrackFlow, conforme al contexto archivado y la rubrica de entrega.
 - Backend y frontend funcionales; backend, persistencia real, integracion HTTP, build y lint verificados. Verificacion visual de navegador pendiente por bibliotecas del contenedor.
 - Contexto del Hito 09 archivado integro en `memory-bank/history/HITO09-CONTEXT.md`; el original de raiz se conserva.
 - Se mantiene el analizador de incidencias anterior, cuyo contexto esta archivado en `memory-bank/history/INCIDENTS-ANALYSIS-CONTEXT.md`.
@@ -13,6 +18,15 @@
 - Al cerrar cada hito, archivar una copia integra del contexto en `memory-bank/history/` y actualizar este archivo, incluso sin commit. Preservar historicos existentes y registrar expresamente pruebas pendientes o bloqueadas.
 
 ## Completado
+- Hito 10 - AUTH-01:
+  - Modelos `User` con email, contraseña hasheada, estado, rol enum y fecha; `Profile` independiente, 1:1 por `user_id`. El modelo User no incluye nombre ni contacto.
+  - Servicios TinyDB para crear/buscar/listar/actualizar/eliminar usuarios y leer/actualizar perfiles; el registro crea el perfil asociado y la eliminación lo borra.
+  - `/users` ofrece registro público con rol fijo `user`; CRUD protegido con reglas de dueño/admin y modificación de roles limitada a admin.
+  - `/auth/login` emite JWT firmado, con expiración `ACCESS_TOKEN_EXPIRE_MINUTES`; `/auth/me` incluye perfil. Bcrypt usa `libpass[bcrypt]` y `from passlib.hash import bcrypt`.
+  - `/profiles/me` solo opera sobre el perfil propio. `get_current_user` valida Bearer, firma, expiración y existencia/estado del usuario; tokens ausentes, inválidos y expirados reciben 401, recursos ajenos 403.
+  - Los seis endpoints existentes de `/suppliers` ahora requieren JWT. OAuth2 bearer y HTTP bearer están publicados en OpenAPI para usar `/docs` y pegar el token.
+  - Clave tomada desde `services/api/.env`, nunca definida en código; el archivo se ignora en Git. `README.md` documenta crearla con `openssl rand` y ejecutar el servicio.
+  - Se archivó el contexto activo completo como `memory-bank/history/HITO10-CONTEXT.md`; `AGENTS.md` explicita que debe hacerse incluso si se indica que el contexto ya está actualizado.
 - Hito 09 - directorio de proveedores:
   - Estructura de entrega: `services/api/main.py`, `models.py`, `database.py`, `routes/suppliers.py` y `seed.py`.
   - Modelos Pydantic separados de entrada/respuesta con los campos exactos, categorias del contexto, estados `active`/`suspended`, tarifa positiva y finita, moneda por pais y `updated_at` UTC generado por el sistema.
@@ -58,9 +72,14 @@
 - Creacion de `services/api` con endpoint `GET /health` y README operativo.
 
 ## En progreso
+- Hito 10: pendiente abrir `/docs` en navegador y ejecutar allí el registro-login-Authorize manual; el flujo HTTP, los esquemas OpenAPI, errores 401/403 y expiración ya están cubiertos por pruebas.
 - Hito 09: pendiente completar la verificacion visual/funcional en Chromium (desktop y movil) tras instalar las dependencias de sistema del navegador.
 
 ## Validaciones ejecutadas
+- Hito 10: `cd services/api && uv run pytest -q`: 35 pruebas correctas; una advertencia preexistente de Starlette/httpx.
+- Hito 10: `uv run pytest -q tests/test_auth.py`: 6 pruebas correctas, incluyendo registro, hash bcrypt, login JSON/formulario OAuth2, roles, permisos, perfil, JWT inválido/expirado y esquema OpenAPI.
+- Hito 10: persistencia de proveedores validada con autorización Bearer a través de reinicio real de Uvicorn.
+- Hito 10: compilación Python y registro de rutas en OpenAPI validados; import de `jose.jwt`, `dotenv.load_dotenv` y `passlib.hash.bcrypt` validado.
 - Hito 09: `cd services/api && uv run pytest -q --tb=short`: 29 pruebas correctas; incluye comparacion literal de seeder/categorias/estados con `CONTEXT.md` y reinicio de un proceso Uvicorn real con recuperacion de los datos.
 - Hito 09: `uv run seed` dos veces sobre base temporal nueva: `Proveedores insertados: 15` y `Proveedores insertados: 0`. Base existente: 0 y 0.
 - Hito 09: `cd uis/backoffice && npm run test:e2e -- --grep 'API integrada'`: 1 prueba correcta a traves de Vite/Node/FastAPI, con validaciones, CRUD y conservacion del endpoint de incidencias.
@@ -77,6 +96,7 @@
 - `npm --prefix uis/backoffice run build`: OK.
 
 ## Proximos pasos
+- Hito 10: generar `services/api/.env` siguiendo el comando de `services/api/README.md` y completar la comprobacion manual visual de `/docs`.
 - Instalar bibliotecas Linux de Chromium con `npx playwright install-deps chromium` desde una terminal con permisos adecuados y ejecutar `npm run test:e2e` en el backoffice con ambos servicios activos.
 - Revisar por separado la vulnerabilidad alta preexistente de `source-map-js@1.2.1`, detectada por npm audit; no se ha aplicado una actualizacion ajena al alcance.
 
