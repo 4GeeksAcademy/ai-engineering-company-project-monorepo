@@ -1,57 +1,30 @@
 # Progress
 
-## Current phase
+## Completed
 
-Milestone 2 implementation plus feedback remediation.
+- Added script-first incident analyzer with context-aligned metrics.
+- Created deterministic 100-row fixtures:
+  - scripts/incidents-trackflow.csv
+  - scripts/incidents-company.csv
+- Verified script output matches expected totals:
+  - total 100, valid 95, invalid 5
+  - categories 14/38/19/17/7
+  - status 29/52/14
+  - country 50/45
+  - satisfaction average 3.06 with 6/11/15/14/6 distribution
+- Implemented backend analysis and export endpoints reusing shared logic.
+- Refactored backoffice into launcher + app directories:
+  - / hosts homepage with dropdown application launcher.
+  - /incident-file-analyzer hosts the incident analysis implementation.
+  - /website and /talent-pipeline-tracker are available as additional launcher options.
+- Implemented backoffice incident-file-analyzer page with upload and CSV download.
+- Implemented supplier directory milestone in services/api with TinyDB persistence and startup seeding.
+- Added supplier endpoints for list/filter, create, detail, rate update, status update, and delete.
+- Added backoffice /suppliers page with live API-backed filters, supplier registration form, rate editing, and status toggle.
+- Added root pyproject.toml script entry so `uv run seed` is defined when `uv` is installed in the environment.
 
-The repository has moved beyond pure setup: core logistics utility functions now exist in `src/` and both UI targets (`uis/website`, `uis/backoffice`) were updated to address teacher feedback.
+## Notes
 
-## What is now true
-
-- The `src/` area now includes Milestone 2 TypeScript domain models and utility modules:
-	- `src/types/models.ts`
-	- `src/utils/collections.ts`
-	- `src/utils/search.ts`
-	- `src/utils/transformations.ts`
-	- `src/utils/validations.ts`
-	- `src/index.ts` barrel exports
-	- `src/demo.ts` execution/demo script
-- A Milestone 2 browser testing surface now exists in `src/index.html` with controller logic in `src/testing-interface.js`.
-- Milestone 2 output generation is now shared through `src/milestone2-output.js` and exposed in the testing interface via a dedicated "Generate Milestone 2 Output" action.
-- Milestone 2 sync artifacts are now generated from the same data source used by the testing interface (`src/testing-interface.js`), not from a separate embedded default dataset.
-- The Generate Milestone 2 Output action now passes `selectedShipmentId`, so output reflects the currently selected shipment in the testing interface.
-- The testing interface now tracks an `activeShipmentId` that is updated by shipment search, product search (by matching shipment SKU), and carrier analysis selection, so Generate Milestone 2 Output follows recent user actions instead of staying fixed.
-- The public site under `uis/website` now includes Milestone 1 structural sections (header/navigation, contact section, and footer) and has been migrated to TypeScript app files.
-- The static milestone page `src/TrackFlow.html` now has explicit clickable nav targets for Header (`#header`), Nav (`#site-nav-target`), Contact (`#contact`), and Footer (`#footer`), while keeping Apply linked to `application.html`.
-- The internal app under `uis/backoffice` has been migrated to TypeScript app files.
-- Backoffice now uses `/` as an Operations Home page with descriptive text and a large dropdown launcher for internal pages.
-- Backoffice route `/` now imports and renders generated Milestone 2 output via `uis/backoffice/lib/milestone2.ts` using `.trackflow-milestone2-output.json` sourced from the testing-interface dataset.
-- Milestone 2 output details were moved to `/milestone-2-output` inside the backoffice app.
-- Both `uis/website` and `uis/backoffice` now include TypeScript toolchain files and scripts (`tsconfig.json`, `next-env.d.ts`, `typecheck`).
-- `uis/backoffice` now auto-syncs Milestone 2 output before `dev` and `build` through `npm run milestone2:sync`.
-- For non-default scenarios, sync can now target a shipment explicitly: `npm run milestone2:sync -- --shipment=<shipmentId>`.
-- For automated runs (`dev`/`build`), shipment selection can also be overridden with `TRACKFLOW_SHIPMENT_ID=<shipmentId>`.
-
-## Feedback status snapshot
-
-- Feedback point 1 (website missing Milestone 1 sections): addressed in `uis/website/app/page.tsx` and `uis/website/app/globals.css`.
-- Feedback point 2 (apps were JavaScript, not TypeScript): addressed in both apps.
-- Feedback point 3 (backoffice recomputed carrier logic inline): addressed by generated-output import flow from `src` helper logic through artifacts consumed in `uis/backoffice/lib/milestone2.ts` and display in `uis/backoffice/app/page.tsx`.
-- Backoffice wording now reflects this source explicitly, and the section title is `Milestone 2 Output Snapshot`.
-
-## Existing repo reality still relevant
-
-- `uis/talent-pipeline-tracker` still exists as a separate, recruitment-domain app and can still cause domain drift if new work is not explicitly targeted.
-- `packages/shared` still has placeholder shared types; Milestone 2 logic currently lives under `src/` rather than shared package boundaries.
-
-## Risks and watchouts
-
-- Milestone 2 logic exists in `src/` and in a separate backoffice parser flow; without consolidation, business rules could diverge over time.
-- The backoffice import reads generated JSON output, so stale artifacts can misrepresent the latest logic if sync is not rerun.
-- Mixed implementation surfaces (static `src/` assets and Next.js apps) remain a coordination risk until a single source-of-truth architecture is chosen.
-
-## Next practical steps
-
-1. Decide whether Milestone 2 business logic should stay in `src/` or move to a reusable shared package for both static and Next.js surfaces.
-2. Add a small verification script that checks `uis/backoffice` can load `.trackflow-milestone2-output.json` before submission.
-3. Keep memory-bank entries updated when milestone outputs or UI integration paths change.
+- No customer emails are printed or exported by script/API/UI outputs.
+- API dependency pin uses FastAPI + Pydantic v1 compatibility due Python 3.15 beta environment constraints.
+- `uv run seed` is configured in-repo, but this machine currently does not have `uv` installed on PATH and package download for `uv` was blocked by network connectivity during validation.

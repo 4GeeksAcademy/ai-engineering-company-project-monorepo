@@ -1,4 +1,10 @@
-**/node_modules/
+.venv/
+node_modules/
 .next/
 out/
-.DS_Store
+*.tsbuildinfo
+results.csv
+__pycache__/
+*.pyc
+services/api/data/
+uv.lock

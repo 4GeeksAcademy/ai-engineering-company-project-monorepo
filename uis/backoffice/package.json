@@ -1,25 +1,22 @@
 {
   "name": "trackflow-backoffice",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "milestone2:sync": "node ../../scripts/generate_milestone2_output.cjs",
-    "predev": "npm run milestone2:sync",
     "dev": "next dev",
-    "prebuild": "npm run milestone2:sync",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "16.2.12",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "next": "15.4.6",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
   },
   "devDependencies": {
-    "@types/node": "^24.5.2",
-    "@types/react": "^19.1.12",
-    "@types/react-dom": "^19.1.9",
-    "typescript": "^5.9.2"
+    "@types/node": "24.3.0",
+    "@types/react": "19.1.11",
+    "@types/react-dom": "19.1.7",
+    "typescript": "5.9.2"
   }
 }

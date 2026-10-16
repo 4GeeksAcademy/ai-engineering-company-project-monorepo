@@ -1,85 +1,79 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
-const pageOptions = [
+type AppOption = {
+  id: string;
+  label: string;
+  description: string;
+  path: string;
+};
+
+const APP_OPTIONS: AppOption[] = [
   {
-    value: "/milestone-2-output",
-    label: "Milestone 2 Output",
-    description: "View generated warehouse, carrier, and delivery output from the testing-interface dataset.",
+    id: "suppliers",
+    label: "Supplier Directory",
+    description: "Manage TrackFlow suppliers, rates, and suspension status.",
+    path: "/suppliers",
   },
   {
-    value: "http://localhost:3001",
+    id: "incident-file-analyzer",
+    label: "Incident File Analyzer",
+    description: "Upload incidents CSV and review quality and CX metrics.",
+    path: "/incident-file-analyzer",
+  },
+  {
+    id: "website",
+    label: "Website",
+    description: "Open the public company website route.",
+    path: "/website",
+  },
+  {
+    id: "talent-pipeline-tracker",
     label: "Talent Pipeline Tracker",
-    description: "Open the separate tracker app (run uis/talent-pipeline-tracker locally first).",
+    description: "Open the hiring tracker route.",
+    path: "/talent-pipeline-tracker",
   },
 ];
 
 export default function Page() {
-  const [selectedPage, setSelectedPage] = useState(pageOptions[0].value);
-  const router = useRouter();
-
-  const selectedOption = pageOptions.find((option) => option.value === selectedPage);
-
-  const handleOpenPage = () => {
-    if (selectedPage.startsWith("http")) {
-      window.open(selectedPage, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    router.push(selectedPage);
-  };
+  const [selectedId, setSelectedId] = useState<string>(APP_OPTIONS[0].id);
+  const selected = useMemo(
+    () => APP_OPTIONS.find((option) => option.id === selectedId) ?? APP_OPTIONS[0],
+    [selectedId],
+  );
 
   return (
-    <main className="shell">
-      <header>
-        <p className="eyebrow">TrackFlow Backoffice</p>
-        <h1>Operations Home</h1>
-        <p>
-          Internal entry point for TrackFlow tools. Use the launcher below to open the operational view you want to
-          run in this session.
-        </p>
-      </header>
+    <main>
+      <h1>TrackFlow Backoffice</h1>
+      <p>
+        Operations Home for internal application routing. Choose an app and continue
+        from the launcher.
+      </p>
 
       <section className="panel">
-        <h2>Page Launcher</h2>
-        <p className="lead">
-          Select a page and open it. Milestone 2 Output opens inside this backoffice app. Talent Pipeline Tracker opens
-          in a new browser tab.
-        </p>
+        <h2>Application Launcher</h2>
+        <label htmlFor="appSelector">Choose app</label>
+        <select
+          id="appSelector"
+          className="selector"
+          value={selectedId}
+          onChange={(event) => setSelectedId(event.target.value)}
+        >
+          {APP_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
 
-        <div className="launcher-grid">
-          <label className="launcher-label" htmlFor="page-selector">
-            Choose a page
-          </label>
-          <select
-            id="page-selector"
-            className="launcher-select"
-            value={selectedPage}
-            onChange={(event) => setSelectedPage(event.target.value)}
-          >
-            {pageOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+        <p className="launcher-note">{selected.description}</p>
 
-          <p className="launcher-description">{selectedOption?.description}</p>
-
-          <button type="button" className="open-btn" onClick={handleOpenPage}>
-            Open Selected Page
-          </button>
+        <div className="actions">
+          <a href={selected.path} className="launcher-link">
+            Open {selected.label}
+          </a>
         </div>
-      </section>
-
-      <section className="panel">
-        <h2>Available Routes</h2>
-        <ul>
-          <li>Milestone 2 Output: /milestone-2-output</li>
-          <li>Talent Pipeline Tracker: http://localhost:3001</li>
-        </ul>
       </section>
     </main>
   );

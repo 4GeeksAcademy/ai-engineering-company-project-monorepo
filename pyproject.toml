@@ -1,0 +1,16 @@
+[project]
+name = "trackflow-monorepo"
+version = "0.1.0"
+description = "TrackFlow monorepo utilities"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.99.1",
+  "uvicorn==0.35.0",
+  "python-multipart==0.0.20",
+  "pydantic<2",
+  "starlette<0.28",
+  "tinydb==4.8.0"
+]
+
+[project.scripts]
+seed = "services.api.seed:main"
