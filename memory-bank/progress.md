@@ -28,3 +28,14 @@
 - No customer emails are printed or exported by script/API/UI outputs.
 - API dependency pin uses FastAPI + Pydantic v1 compatibility due Python 3.15 beta environment constraints.
 - `uv run seed` is configured in-repo, but this machine currently does not have `uv` installed on PATH and package download for `uv` was blocked by network connectivity during validation.
+
+## Restored website/backoffice baseline
+
+- Restored the TrackFlow public website to a componentized structure with reusable `Header` and `FeatureCard` components instead of the monolithic inline page.
+- Re-established the source-of-truth data flow from `src/trackflow-website/content.ts` to the shared website screen used by the public app and backoffice route.
+- Fixed the Next.js 16 module-boundary issue by resolving the shared content through an alias (`@trackflow-content`) and by keeping the required Turbopack/webpack configuration compatible with the repo setup.
+- Verified both app builds pass after the restoration:
+  - `uis/website`: `npm run build` succeeded
+  - `uis/backoffice`: `npm run build` succeeded
+
+This is the current working baseline to preserve before additional feature work or remote merges.

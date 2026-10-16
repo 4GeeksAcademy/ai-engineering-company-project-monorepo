@@ -17,6 +17,12 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@trackflow-content": [
+        "../../src/trackflow-website/content"
+      ]
+    },
     "plugins": [
       {
         "name": "next"
