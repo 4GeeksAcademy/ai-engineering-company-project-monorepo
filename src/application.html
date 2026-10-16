@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Track Flow client application form for warehousing, fulfillment, and last-mile delivery services."
+    content="Track Flow validation interface for Product, Shipment, and Carrier business rules."
   />
-  <title>Track Flow | Client Application</title>
+  <title>Track Flow | Validation Interface</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -57,11 +57,11 @@
   <main class="mx-auto w-full max-w-5xl px-4 pb-14 pt-8 sm:px-6 lg:px-8">
     <section class="mb-8 rounded-3xl border border-blue-100 bg-white p-6 shadow-panel sm:p-8">
       <p class="mb-3 inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-flowBlueDeep">
-        Faster routes, smarter deliveries
+        Milestone 2 business rules
       </p>
-      <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">Client Logistics Application</h1>
+      <h1 class="font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">TrackFlow Data Validation Interface</h1>
       <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-        Tell us what your operation needs and we will build a warehousing and distribution model around your goals.
+        Validate Product, Shipment, and Carrier inputs against the exact rules defined in the project context.
       </p>
     </section>
 
@@ -71,145 +71,131 @@
       </p>
 
       <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Company Details</legend>
-        <div class="grid gap-5 sm:grid-cols-2">
-          <div class="space-y-2 sm:col-span-2">
-            <label for="companyName" class="block text-sm font-semibold text-slate-800">Company name <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input id="companyName" name="companyName" type="text" required autocomplete="organization" placeholder="Example: NorthPoint Commerce" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
-            <p id="companyNameError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-          </div>
-
-          <div class="space-y-2 sm:col-span-2">
-            <label for="companyWebsite" class="block text-sm font-semibold text-slate-800">Company website</label>
-            <input id="companyWebsite" name="companyWebsite" type="url" autocomplete="url" placeholder="https://example.com" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
-            <p id="companyWebsiteError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-          </div>
-
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Product Validation</legend>
+        <div class="grid gap-5 sm:grid-cols-3">
           <div class="space-y-2">
-            <label for="operatingCountry" class="block text-sm font-semibold text-slate-800">Main operating country <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <select id="operatingCountry" name="operatingCountry" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
-              <option value="">Select one</option>
-              <option value="mexico">Mexico</option>
-              <option value="spain">Spain</option>
-              <option value="both">Both</option>
-              <option value="other">Other</option>
-            </select>
-            <p id="operatingCountryError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <label for="sku" class="block text-sm font-semibold text-slate-800">SKU <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="sku" name="sku" type="text" required placeholder="SHOE-BLK-42" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="skuError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
-
           <div class="space-y-2">
-            <label for="productType" class="block text-sm font-semibold text-slate-800">Product type <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <select id="productType" name="productType" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
-              <option value="">Select one</option>
-              <option value="fashion">Fashion</option>
-              <option value="electronics">Electronics</option>
-              <option value="cosmetics">Cosmetics</option>
-              <option value="food">Food</option>
-              <option value="other">Other</option>
-            </select>
-            <p id="productTypeError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <label for="weightKg" class="block text-sm font-semibold text-slate-800">Weight (kg) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="weightKg" name="weightKg" type="number" min="0" step="0.01" required placeholder="0.8" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="weightKgError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
-
           <div class="space-y-2 sm:col-span-2">
-            <label for="shippingVolume" class="block text-sm font-semibold text-slate-800">Estimated monthly shipping volume <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <select id="shippingVolume" name="shippingVolume" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue">
-              <option value="">Select one</option>
-              <option value="0-100">0-100</option>
-              <option value="101-500">101-500</option>
-              <option value="501-2000">501-2000</option>
-              <option value="2000+">2000+</option>
-              <option value="not-sure">Not sure</option>
-            </select>
-            <p id="shippingVolumeError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <label for="stockQuantity" class="block text-sm font-semibold text-slate-800">Stock quantity <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="stockQuantity" name="stockQuantity" type="number" min="0" step="1" required placeholder="45" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="stockQuantityError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="lengthCm" class="block text-sm font-semibold text-slate-800">Length (cm) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="lengthCm" name="lengthCm" type="number" min="0" step="0.01" required placeholder="35" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="lengthCmError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="widthCm" class="block text-sm font-semibold text-slate-800">Width (cm) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="widthCm" name="widthCm" type="number" min="0" step="0.01" required placeholder="22" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="widthCmError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="heightCm" class="block text-sm font-semibold text-slate-800">Height (cm) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="heightCm" name="heightCm" type="number" min="0" step="0.01" required placeholder="12" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="heightCmError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="minStockThreshold" class="block text-sm font-semibold text-slate-800">Minimum stock threshold <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="minStockThreshold" name="minStockThreshold" type="number" min="0" step="1" required placeholder="20" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="minStockThresholdError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="unitCostUSD" class="block text-sm font-semibold text-slate-800">Unit cost (USD) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="unitCostUSD" name="unitCostUSD" type="number" min="0" step="0.01" required placeholder="35" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="unitCostUSDError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
         </div>
       </fieldset>
 
       <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Contact Information</legend>
-        <div class="grid gap-5 sm:grid-cols-2">
-          <div class="space-y-2 sm:col-span-2">
-            <label for="contactPerson" class="block text-sm font-semibold text-slate-800">Contact person <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input id="contactPerson" name="contactPerson" type="text" required autocomplete="name" placeholder="First and last name" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
-            <p id="contactPersonError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-          </div>
-
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Shipment Validation</legend>
+        <div class="grid gap-5 sm:grid-cols-3">
           <div class="space-y-2">
-            <label for="corporateEmail" class="block text-sm font-semibold text-slate-800">Corporate email <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input id="corporateEmail" name="corporateEmail" type="email" required autocomplete="email" placeholder="you@company.com" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
-            <p id="corporateEmailError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <label for="quantity" class="block text-sm font-semibold text-slate-800">Quantity <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="quantity" name="quantity" type="number" min="0" step="1" required placeholder="1" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="quantityError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
-
           <div class="space-y-2">
-            <label for="phone" class="block text-sm font-semibold text-slate-800">Phone <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
-            <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+34 612345678" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
-            <p id="phoneError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+            <label for="declaredValueUSD" class="block text-sm font-semibold text-slate-800">Declared value (USD) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="declaredValueUSD" name="declaredValueUSD" type="number" min="0" step="0.01" required placeholder="650" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="declaredValueUSDError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="distanceKm" class="block text-sm font-semibold text-slate-800">Distance (km) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="distanceKm" name="distanceKm" type="number" min="0" step="0.01" required placeholder="320" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="distanceKmError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
         </div>
       </fieldset>
 
-      <fieldset id="servicesFieldset" class="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Services of interest <span class="text-flowBlueDeep" aria-hidden="true">*</span></legend>
-        <p class="text-sm text-slate-600">Select one or more options.</p>
-        <div class="grid gap-3 sm:grid-cols-3">
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="checkbox" name="services" value="warehousing" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            Warehousing
-          </label>
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="checkbox" name="services" value="last-mile" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            Last mile
-          </label>
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="checkbox" name="services" value="reverse-logistics" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            Reverse logistics
-          </label>
-        </div>
-        <p id="servicesError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-      </fieldset>
-
-      <fieldset id="current3plFieldset" class="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Do you currently work with another 3PL? <span class="text-flowBlueDeep" aria-hidden="true">*</span></legend>
-        <div class="grid gap-3 sm:grid-cols-3">
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="radio" name="current3pl" value="yes" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            Yes
-          </label>
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="radio" name="current3pl" value="no" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            No
-          </label>
-          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
-            <input type="radio" name="current3pl" value="evaluating" required class="h-4 w-4 border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-            Evaluating options
-          </label>
-        </div>
-        <p id="current3plError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-      </fieldset>
-
-      <fieldset class="space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Additional Notes</legend>
-        <div class="space-y-2">
-          <label for="comments" class="block text-sm font-semibold text-slate-800">Comments or specific needs</label>
-          <textarea id="comments" name="comments" rows="5" maxlength="500" placeholder="Tell us about inventory profile, channels, seasonality, or operational constraints." class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue"></textarea>
-          <div class="flex items-center justify-between">
-            <p id="commentsError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-            <p id="commentsCounter" class="text-xs font-medium text-slate-500">0 / 500</p>
+      <fieldset id="operatesInFieldset" class="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <legend class="px-2 font-heading text-lg font-semibold text-slate-900">Carrier Validation</legend>
+        <p class="text-sm text-slate-600">Carrier must operate in at least one country.</p>
+        <div class="grid gap-5 sm:grid-cols-3">
+          <div class="space-y-2">
+            <label for="baseRateUSD" class="block text-sm font-semibold text-slate-800">Base rate (USD) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="baseRateUSD" name="baseRateUSD" type="number" min="0" step="0.01" required placeholder="5" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="baseRateUSDError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="ratePerKgUSD" class="block text-sm font-semibold text-slate-800">Rate per kg (USD) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="ratePerKgUSD" name="ratePerKgUSD" type="number" min="0" step="0.01" required placeholder="1.2" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="ratePerKgUSDError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="ratePerKmUSD" class="block text-sm font-semibold text-slate-800">Rate per km (USD) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="ratePerKmUSD" name="ratePerKmUSD" type="number" min="0" step="0.01" required placeholder="0.05" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="ratePerKmUSDError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="avgDeliveryDays" class="block text-sm font-semibold text-slate-800">Average delivery days <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="avgDeliveryDays" name="avgDeliveryDays" type="number" min="0" step="0.1" required placeholder="3" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="avgDeliveryDaysError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="onTimeRate" class="block text-sm font-semibold text-slate-800">On-time rate (0-100) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="onTimeRate" name="onTimeRate" type="number" min="0" max="100" step="0.01" required placeholder="88" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="onTimeRateError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
+          </div>
+          <div class="space-y-2">
+            <label for="maxWeightKg" class="block text-sm font-semibold text-slate-800">Max weight (kg) <span class="text-flowBlueDeep" aria-hidden="true">*</span></label>
+            <input id="maxWeightKg" name="maxWeightKg" type="number" min="0" step="0.01" required placeholder="30" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:border-flowBlue" />
+            <p id="maxWeightKgError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
           </div>
         </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="checkbox" name="operatesIn" value="United States" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Operates in United States
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-800">
+            <input type="checkbox" name="operatesIn" value="Spain" class="h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
+            Operates in Spain
+          </label>
+        </div>
+        <p id="operatesInError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
       </fieldset>
 
-      <div id="privacyGroup" class="space-y-2 rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <label for="privacyAccepted" class="flex items-start gap-3 text-sm font-medium text-slate-800">
-          <input id="privacyAccepted" name="privacyAccepted" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-slate-300 text-flowBlue focus:ring-2 focus:ring-blue-300" />
-          <span>I accept the privacy policy <span class="text-flowBlueDeep" aria-hidden="true">*</span></span>
-        </label>
-        <p id="privacyAcceptedError" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert"></p>
-      </div>
+      <aside class="space-y-3 rounded-2xl border border-slate-200 bg-slate-950 p-5 text-slate-100">
+        <p class="text-xs uppercase tracking-[0.12em] text-slate-400">Validation Result</p>
+        <pre id="validationOutput" class="max-h-64 overflow-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-xs leading-5">{
+  "message": "Run validation to see results"
+}</pre>
+      </aside>
 
       <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
         <button type="reset" id="clearBtn" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200">Clear form</button>
-        <button type="submit" id="submitBtn" class="inline-flex items-center justify-center rounded-xl border border-flowBlue bg-flowBlue px-5 py-3 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300">Submit application</button>
+        <button type="submit" id="submitBtn" class="inline-flex items-center justify-center rounded-xl border border-flowBlue bg-flowBlue px-5 py-3 text-sm font-semibold text-white transition hover:bg-flowBlueDeep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">Validate Entities</button>
       </div>
     </form>
   </main>

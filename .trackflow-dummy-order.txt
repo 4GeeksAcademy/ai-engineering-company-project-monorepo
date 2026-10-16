@@ -1,0 +1,25 @@
+TRACKFLOW DUMMY ORDER
+
+Input Summary
+- Order ID: TF-ORDER-001
+- Client: Northstar Outfitters
+- Destination: Madrid, Spain
+- Urgency: Express
+- Total Weight: 2.3 kg
+
+Warehouse Assignment
+- Assigned warehouse: Zaragoza
+- Reason: Shipment origin Zaragoza is used for this milestone planning scenario.
+
+Carrier Decision
+- Selected carrier: UPS
+- Reason: Selected via Milestone 2 scoring (score 76.4) and cost optimization (USD 30.89).
+
+Tracking and Delivery
+- Dummy tracking ID: TF-UPS-SH-2024-8821
+- Expected delivery window: 1 to 2 business days
+- CX note: Parcel planned from Zaragoza with UPS. Share 1 to 2 business days expectation with customer support.
+
+Computed Metrics
+- Selected carrier score: 76.4
+- Selected carrier cost (USD): 30.89
