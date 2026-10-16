@@ -1,0 +1,850 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Nexova Solutions - Catálogo de Esquemas de Telemetría",
+    "description": "Especificación formal de validación para eventos de telemetría con Event Envelope uniforme y Allowlists estrictos.",
+    "definitions": {
+        "EventEnvelopeBase": {
+            "type": "object",
+            "required": [
+            "eventId",
+            "timestamp",
+            "sessionId",
+            "userId",
+            "event_type",
+            "schemaVersion",
+            "requestId",
+            "properties"
+            ],
+            "properties": {
+                "eventId": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "description": "Identificador único global del evento (UUID v4)."
+                },
+                "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Marca temporal en formato ISO 8601 UTC."
+                },
+                "sessionId": {
+                "type": "string",
+                "minLength": 8,
+                "description": "Identificador único de la sesión del usuario o cliente."
+                },
+                "userId": {
+                "type": ["string", "null"],
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "Hash SHA-256 del identificador interno del usuario, o null si es pre-login/anónimo."
+                },
+                "event_type": {
+                "type": "string",
+                "description": "Tipo canónico del evento en taxonomía entidad_acción."
+                },
+                "schemaVersion": {
+                "type": "string",
+                "pattern": "^1\\.0\\.0$",
+                "description": "Versión semántica del esquema del evento."
+                },
+                "requestId": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "description": "ID de correlación distribuida propagado por HTTP headers (X-Request-ID)."
+                },
+                "properties": {
+                "type": "object",
+                "description": "Payload de datos del evento, restringido estrictamente por el allowlist específico."
+                }
+            }
+        },
+        "support_ticket_resolved": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "support_ticket_resolved" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "ticket_id",
+                                "resolution_time_minutes",
+                                "channel",
+                                "agent_id_hash",
+                                "sla_breached"
+                            ],
+                            "properties": {
+                                "ticket_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                                    "description": "Identificador único del ticket (UUID)."
+                                },
+                                "resolution_time_minutes": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Tiempo total transcurrido desde la creación hasta el cierre."
+                                },
+                                "channel": {
+                                    "type": "string",
+                                    "enum": ["chat", "email", "phone"],
+                                    "description": "Canal de atención utilizado."
+                                },
+                                "agent_id_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$",
+                                    "description": "Hash SHA-256 del ID del agente resolutor."
+                                },
+                                "sla_breached": {
+                                    "type": "boolean",
+                                    "description": "Indica si se superó el límite de 24h (1440 min)."
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "chatbot_issue_resolved": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "chatbot_issue_resolved" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "conversation_id",
+                                "category",
+                                "message_count",
+                                "resolution_type"
+                            ],
+                            "properties": {
+                                "conversation_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "category": {
+                                    "type": "string",
+                                    "enum": ["tech_support", "billing", "onboarding", "general"]
+                                },
+                                "message_count": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "satisfaction_score": {
+                                    "type": ["integer", "null"],
+                                    "minimum": 1,
+                                    "maximum": 5
+                                },
+                                "resolution_type": {
+                                    "type": "string",
+                                    "enum": ["faq_matched", "workflow_completed", "self_service"]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "candidate_score_calculated": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "candidate_score_calculated" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "candidate_id_hash",
+                                "job_position_id",
+                                "score_value",
+                                "model_version",
+                                "calculation_duration_ms"
+                            ],
+                            "properties": {
+                                "candidate_id_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$",
+                                    "description": "Hash SHA-256 anónimo del candidato evaluado."
+                                },
+                                "job_position_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "score_value": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                "model_version": {
+                                    "type": "string"
+                                },
+                                "calculation_duration_ms": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "inventory_compliance_audited": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "inventory_compliance_audited" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "audit_run_id",
+                                "discrepancy_count",
+                                "total_checked_skus",
+                                "compliance_rate_percent",
+                                "flagged_items"
+                            ],
+                            "properties": {
+                                "audit_run_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "discrepancy_count": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "total_checked_skus": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "compliance_rate_percent": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                "flagged_items": {
+                                    "type": "array",
+                                    "items": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "direct_stock_edit_rejected": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "direct_stock_edit_rejected" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "endpoint_attempted",
+                                "method",
+                                "user_role",
+                                "target_sku",
+                                "rejection_reason"
+                            ],
+                            "properties": {
+                                "endpoint_attempted": {
+                                    "type": "string"
+                                },
+                                "method": {
+                                    "type": "string",
+                                    "enum": ["PUT", "PATCH", "DELETE"]
+                                },
+                                "user_role": {
+                                    "type": "string"
+                                },
+                                "target_sku": {
+                                    "type": "string"
+                                },
+                                "rejection_reason": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "inbound_order_created": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "inbound_order_created" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "order_id",
+                                "supplier_id_hash",
+                                "sku_list_count",
+                                "total_units",
+                                "expected_delivery_date"
+                            ],
+                            "properties": {
+                                "order_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "supplier_id_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$",
+                                    "description": "Hash SHA-256 anónimo del identificador del proveedor."
+                                },
+                                "sku_list_count": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "total_units": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "expected_delivery_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "order_validation_failed": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "order_validation_failed" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "order_id",
+                                "order_type",
+                                "sku",
+                                "requested_quantity",
+                                "available_quantity",
+                                "error_code"
+                            ],
+                            "properties": {
+                                "order_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "order_type": {
+                                    "type": "string",
+                                    "enum": ["inbound", "outbound"]
+                                },
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "requested_quantity": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "available_quantity": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "error_code": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "outbound_order_completed": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "outbound_order_completed" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "order_id",
+                                "destination_department",
+                                "item_count",
+                                "total_units_dispatched",
+                                "fulfillment_duration_seconds"
+                            ],
+                            "properties": {
+                                "order_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "destination_department": {
+                                    "type": "string"
+                                },
+                                "item_count": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "total_units_dispatched": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "fulfillment_duration_seconds": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "stock_threshold_triggered": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "stock_threshold_triggered" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "sku",
+                                "current_stock",
+                                "minimum_threshold",
+                                "replenishment_recommended",
+                                "warehouse_id"
+                            ],
+                            "properties": {
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "current_stock": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "minimum_threshold": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "replenishment_recommended": {
+                                    "type": "boolean"
+                                },
+                                "warehouse_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "auth_login_succeeded": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "auth_login_succeeded" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "user_id_hash",
+                                "auth_method",
+                                "user_role",
+                                "client_ip_hash"
+                            ],
+                            "properties": {
+                                "user_id_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                },
+                                "auth_method": {
+                                    "type": "string",
+                                    "enum": ["password", "sso"]
+                                },
+                                "user_role": {
+                                    "type": "string"
+                                },
+                                "client_ip_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "auth_login_failed": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "auth_login_failed" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "failure_reason",
+                                "attempt_number",
+                                "client_ip_hash",
+                                "user_agent_category"
+                            ],
+                            "properties": {
+                                "failure_reason": {
+                                    "type": "string"
+                                },
+                                "attempt_number": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "client_ip_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                },
+                                "user_agent_category": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "user_session_expired": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "user_session_expired" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "session_duration_minutes",
+                                "last_active_route",
+                                "user_role"
+                            ],
+                            "properties": {
+                                "session_duration_minutes": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "last_active_route": {
+                                    "type": "string"
+                                },
+                                "user_role": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "api_latency_recorded": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "api_latency_recorded" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "endpoint",
+                                "http_method",
+                                "status_code",
+                                "response_time_ms",
+                                "db_queries_count"
+                            ],
+                            "properties": {
+                                "endpoint": {
+                                    "type": "string"
+                                },
+                                "http_method": {
+                                    "type": "string",
+                                    "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+                                },
+                                "status_code": {
+                                    "type": "integer",
+                                    "minimum": 100,
+                                    "maximum": 599
+                                },
+                                "response_time_ms": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "db_queries_count": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "client_unhandled_error_captured": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "client_unhandled_error_captured" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "error_name",
+                                "error_message_sanitized",
+                                "current_url",
+                                "stack_trace_hash"
+                            ],
+                            "properties": {
+                                "error_name": {
+                                    "type": "string"
+                                },
+                                "error_message_sanitized": {
+                                    "type": "string"
+                                },
+                                "current_url": {
+                                    "type": "string"
+                                },
+                                "stack_trace_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "database_query_slow_detected": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "database_query_slow_detected" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "table_name",
+                                "operation",
+                                "duration_ms",
+                                "query_signature_hash"
+                            ],
+                            "properties": {
+                                "table_name": {
+                                    "type": "string"
+                                },
+                                "operation": {
+                                    "type": "string",
+                                    "enum": ["SELECT", "INSERT", "UPDATE", "DELETE"]
+                                },
+                                "duration_ms": {
+                                    "type": "integer",
+                                    "minimum": 500
+                                },
+                                "query_signature_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "funnel_step_abandoned": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "funnel_step_abandoned" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "funnel_name",
+                                "step_number",
+                                "step_name",
+                                "time_spent_seconds"
+                            ],
+                            "properties": {
+                                "funnel_name": {
+                                    "type": "string"
+                                },
+                                "step_number": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "step_name": {
+                                    "type": "string"
+                                },
+                                "time_spent_seconds": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "candidate_score_card_expanded": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "candidate_score_card_expanded" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "candidate_id_hash",
+                                "job_position_id",
+                                "time_viewing_seconds"
+                            ],
+                            "properties": {
+                                "candidate_id_hash": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                },
+                                "job_position_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "time_viewing_seconds": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "support_ticket_escalated": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "support_ticket_escalated" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "ticket_id",
+                                "conversation_id",
+                                "escalation_reason",
+                                "unresolved_category"
+                            ],
+                            "properties": {
+                                "ticket_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "conversation_id": {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                },
+                                "escalation_reason": {
+                                    "type": "string"
+                                },
+                                "unresolved_category": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "filter_applied": {
+            "allOf": [
+                { "$ref": "#/definitions/EventEnvelopeBase" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "event_type": { "const": "filter_applied" },
+                        "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "view_name",
+                                "filter_keys",
+                                "active_filters_count",
+                                "results_count"
+                            ],
+                            "properties": {
+                                "view_name": {
+                                    "type": "string"
+                                },
+                                "filter_keys": {
+                                    "type": "array",
+                                    "items": { "type": "string" }
+                                },
+                                "active_filters_count": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "results_count": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "oneOf": [
+        { "$ref": "#/definitions/support_ticket_resolved" },
+        { "$ref": "#/definitions/chatbot_issue_resolved" },
+        { "$ref": "#/definitions/candidate_score_calculated" },
+        { "$ref": "#/definitions/inventory_compliance_audited" },
+        { "$ref": "#/definitions/direct_stock_edit_rejected" },
+        { "$ref": "#/definitions/inbound_order_created" },
+        { "$ref": "#/definitions/order_validation_failed" },
+        { "$ref": "#/definitions/outbound_order_completed" },
+        { "$ref": "#/definitions/stock_threshold_triggered" },
+        { "$ref": "#/definitions/auth_login_succeeded" },
+        { "$ref": "#/definitions/auth_login_failed" },
+        { "$ref": "#/definitions/user_session_expired" },
+        { "$ref": "#/definitions/api_latency_recorded" },
+        { "$ref": "#/definitions/client_unhandled_error_captured" },
+        { "$ref": "#/definitions/database_query_slow_detected" },
+        { "$ref": "#/definitions/funnel_step_abandoned" },
+        { "$ref": "#/definitions/candidate_score_card_expanded" },
+        { "$ref": "#/definitions/support_ticket_escalated" },
+        { "$ref": "#/definitions/filter_applied" }
+    ]
+}

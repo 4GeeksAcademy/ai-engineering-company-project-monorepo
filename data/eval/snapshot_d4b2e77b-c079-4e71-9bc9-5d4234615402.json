@@ -1,0 +1,33 @@
+{
+  "run_id": "d4b2e77b-c079-4e71-9bc9-5d4234615402",
+  "timestamp": "2026-10-15T19:44:26.828095+00:00",
+  "kpis": [
+    {
+      "window_date": "2026-10-15",
+      "window_granularity": "daily",
+      "department": "customer_support",
+      "metric_name": "mttr_hours",
+      "metric_value": 0.0,
+      "target_value": 24.0,
+      "sla_status": "ON_TRACK"
+    },
+    {
+      "window_date": "2026-10-15",
+      "window_granularity": "daily",
+      "department": "customer_support",
+      "metric_name": "chatbot_automation_rate",
+      "metric_value": 0.0,
+      "target_value": 40.0,
+      "sla_status": "ON_TRACK"
+    },
+    {
+      "window_date": "2026-10-15",
+      "window_granularity": "daily",
+      "department": "talent_acquisition",
+      "metric_name": "cvs_ai_scored_count",
+      "metric_value": 0.0,
+      "target_value": 50.0,
+      "sla_status": "AT_RISK"
+    }
+  ]
+}

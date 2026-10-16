@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./services
+    ports:
+      - "8080:8000"
+    volumes:
+      # Bind mount para que los cambios en código de Python se reflejen
+      - ./services:/app/services
+      - ./scripts:/app/scripts
+      - ./packages:/app/packages
+    env_file:
+      - .env
+    networks:
+      - nexova-network
+  interfaces:
+    build:
+      context: ./uis
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      # Bind mounts del código fuente
+      - ./uis/website:/app/website
+      - ./uis/backoffice:/app/backoffice
+      # Volúmenes anónimos para proteger las dependencias de Linux Alpine
+      - /app/website/node_modules
+      - /app/website/.next
+      - /app/backoffice/node_modules
+      - /app/backoffice/.next
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - nexova-network
+networks:
+  nexova-network:
+    name: nexova-network
+    driver: bridge

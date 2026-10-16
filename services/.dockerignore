@@ -1,0 +1,19 @@
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Configuración local y secretos
+.env*
+.git/
+
+# Logs y tests
+*.log
+.pytest_cache/
+tests/
