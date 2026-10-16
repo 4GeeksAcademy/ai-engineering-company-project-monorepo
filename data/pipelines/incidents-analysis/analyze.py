@@ -110,18 +110,16 @@ def validate_records(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
 
     return valid_df, invalid_breakdown
 
+
 def export_results(
     valid_df: pd.DataFrame,
     invalid_breakdown: dict,
+    total_records: int,
     output_path: Path,
 ) -> None:
     """Export analysis results to a CSV file."""
 
     rows = []
-
-    total_records = len(valid_df) + sum(
-        invalid_breakdown.values()
-    )
 
     invalid_records = total_records - len(valid_df)
 
@@ -235,6 +233,7 @@ def export_results(
     print()
     print(f"Results exported to: {output_path}")
 
+
 def main() -> None:
     """Run the Brasaland incident analysis."""
 
@@ -322,21 +321,21 @@ def main() -> None:
         / "process"
         / "incident_analysis_results.csv"
     )
+
     export_choice = input(
         "\n¿Deseas exportar los resultados a CSV? (s/n): "
     ).strip().lower()
 
     if export_choice == "s":
-        project_root = Path(__file__).resolve().parents[3]
-        output_path = project_root / "results.csv"
-
         export_results(
             valid_df,
             invalid_breakdown,
+            len(df),
             output_path,
         )
     else:
         print("\nExportación omitida.")
+
 
 if __name__ == "__main__":
     main()
