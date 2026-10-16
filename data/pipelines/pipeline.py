@@ -281,13 +281,62 @@ def log_pipeline_run_task(
 
 
 # =====================================================================
+# SUBFLOWS MODULARES DE PREFECT 3 (TOPOLOGÍA DE PRODUCCIÓN)
+# =====================================================================
+
+@flow(name="extract-telemetry-events-subflow", log_prints=True)
+def extract_telemetry_events_subflow(start_time: datetime, end_time: datetime) -> List[Dict[str, Any]]:
+    """
+    Subflow 1: Extracción de eventos de telemetría de negocio desde public.telemetry_events.
+    Inputs explícitos: start_time (datetime), end_time (datetime).
+    Output explícito: List[Dict[str, Any]] con los eventos crudos en memoria.
+    """
+    print(f"📥 [Subflow Extracción] Obteniendo eventos brutos para la ventana [{start_time} - {end_time}]...")
+    return extract_telemetry_events_task(start_time, end_time)
+
+
+@flow(name="transform-business-kpis-subflow", log_prints=True)
+def transform_business_kpis_subflow(raw_events: List[Dict[str, Any]], window_date: str) -> List[Dict[str, Any]]:
+    """
+    Subflow 2: Transformación analítica de eventos a métricas y KPIs de Nexova Solutions.
+    Inputs explícitos: raw_events (List[Dict]), window_date (str YYYY-MM-DD).
+    Output explícito: List[Dict[str, Any]] con los KPIs calculados por departamento.
+    """
+    print(f"🔄 [Subflow Transformación] Procesando métricas de negocio para la fecha {window_date}...")
+    return transform_business_kpis_task(raw_events, window_date)
+
+
+@flow(name="load-executive-kpis-subflow", log_prints=True)
+def load_executive_kpis_subflow(kpis: List[Dict[str, Any]], run_id: str) -> int:
+    """
+    Subflow 3: Carga idempotente (UPSERT) en la tabla destino reporting.executive_kpis.
+    Inputs explícitos: kpis (List[Dict]), run_id (str).
+    Output explícito: int (total de registros persistidos o actualizados).
+    """
+    print(f"💾 [Subflow Carga] Persistiendo KPIs en destino relacional para run_id={run_id}...")
+    return load_executive_kpis_task(kpis, run_id)
+
+
+@flow(name="eval-snapshot-subflow", log_prints=True)
+def eval_snapshot_subflow(kpis: List[Dict[str, Any]], run_id: str) -> str:
+    """
+    Subflow Opcional / No Crítico:
+    Generación de snapshot analítico en data/eval/ para validación offline.
+    Invocado desde el flow principal con return_state=True para tolerancia a fallos.
+    """
+    print(f"📄 [Subflow Opcional] Generando snapshot de evaluación...")
+    return optional_eval_snapshot_task(kpis, run_id)
+
+
+# =====================================================================
 # FLOW COORDINADOR PRINCIPAL (PREFECT)
 # =====================================================================
 @flow(name="business-performance-pipeline", log_prints=True)
 def business_performance_flow(target_date: Optional[str] = None) -> Dict[str, Any]:
     """
-    Flow principal de Prefect que coordina la extracción, transformación,
-    carga idempotente, task opcional de evaluación y auditoría.
+    Flow principal de Prefect 3 que coordina los subflows de extracción,
+    transformación, carga idempotente, subflow opcional de snapshot y auditoría.
+    Mantiene dependencias e interfaces desacopladas sin variables globales.
     """
     ensure_reporting_tables_exist()
 
@@ -306,20 +355,19 @@ def business_performance_flow(target_date: Optional[str] = None) -> Dict[str, An
 
     records_processed = 0
     try:
-        # 1. Extracción con reintentos
-        events = extract_telemetry_events_task(window_start, window_end)
+        # 1. Extracción mediante Subflow dedicado
+        events = extract_telemetry_events_subflow(window_start, window_end)
 
-        # 2. Transformación con caché
-        kpis = transform_business_kpis_task(events, target_date)
+        # 2. Transformación mediante Subflow dedicado
+        kpis = transform_business_kpis_subflow(events, target_date)
 
-        # 3. Carga idempotente con reintentos
-        records_processed = load_executive_kpis_task(kpis, run_id)
+        # 3. Carga idempotente mediante Subflow dedicado
+        records_processed = load_executive_kpis_subflow(kpis, run_id)
 
-        # 4. Task opcional/no crítica: se invoca con return_state=True
-        # para manejar su estado sin que interrumpa el pipeline si falla
-        opt_state = optional_eval_snapshot_task(kpis, run_id, return_state=True)
+        # 4. Subflow opcional/no crítico con return_state=True
+        opt_state = eval_snapshot_subflow(kpis, run_id, return_state=True)
         if opt_state.is_failed():
-            print("⚠️ Aviso: La task opcional de snapshot falló, pero el flujo principal continúa sin interrupciones.")
+            print("⚠️ Aviso: El subflow opcional de snapshot falló, pero el flujo principal continúa sin interrupciones.")
 
         finished_at = datetime.now(timezone.utc)
         status = "COMPLETED"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { inventoryService, Asset } from "@/lib/inventory";
-import { Package, ArrowDownToLine, ArrowUpFromLine, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, AlertCircle, CheckCircle2, XCircle, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import styles from "./products.module.css";
 
@@ -39,11 +39,33 @@ export default function ProductsPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.titleWrapper}>
-          <Package className={styles.titleIcon} size={32} />
-          <h1 className={styles.title}>Activos Corporativos</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <div className={styles.titleWrapper}>
+              <Package className={styles.titleIcon} size={32} />
+              <h1 className={styles.title}>Activos Corporativos</h1>
+            </div>
+            <p className={styles.subtitle}>Gestión de stock de licencias y equipamiento (Nexova Solutions)</p>
+          </div>
+          <Link
+            href="/reporting"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.6rem 1rem",
+              background: "#2563eb",
+              color: "#ffffff",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}
+          >
+            <BarChart3 size={16} /> Ver Panel de KPIs
+          </Link>
         </div>
-        <p className={styles.subtitle}>Gestión de stock de licencias y equipamiento (Nexova Solutions)</p>
       </header>
 
       <div className={styles.tableContainer}>

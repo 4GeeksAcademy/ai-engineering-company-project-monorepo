@@ -12,8 +12,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     // Leemos el token del localStorage, que es donde nuestro sistema de auth lo guarda
     const token = localStorage.getItem("access_token");
     
-    // Si no hay token y estamos intentando acceder a una ruta de inventario, redirigimos
-    if (!token && pathname.startsWith("/inventory")) {
+    // Si no hay token y estamos intentando acceder a rutas protegidas, redirigimos al login
+    if (!token && (pathname.startsWith("/inventory") || pathname.startsWith("/reporting"))) {
       router.push("/login");
     } else {
       setIsAuthenticated(true);
