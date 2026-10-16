@@ -85,6 +85,9 @@ Implication:
 - JavaScript vs TypeScript issue for website/backoffice: resolved.
 - Backoffice inline logic issue: resolved by importing generated output based on `src/testing-interface.js` data.
 - Milestone output consistency is now driven by `scripts/generate_milestone2_output.cjs`, which writes both `.trackflow-dummy-order.txt` and `.trackflow-milestone2-output.json` from the shared helper using `src/testing-interface.js` data as input.
+- The shared TrackFlow website surface was restored to the componentized state expected by the review: reusable `Header` and `FeatureCard` components, a shared content file in `src/trackflow-website/content.ts`, and the public/backoffice apps both rendering the same screen.
+- The Next.js 16 app boundary issue was fixed by aliasing the source content with `@trackflow-content` and adding the matching webpack/Turbopack config in both app folders so the root-level content file resolves correctly without breaking the build.
+- Final validation status: both `uis/website` and `uis/backoffice` pass `npm run build` in the current restored baseline.
 
 ## Technical constraints and assumptions
 
