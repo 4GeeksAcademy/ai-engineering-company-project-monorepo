@@ -4,12 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
+import { selectClass } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "../lib/api";
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
-
-const selectClass =
-  "rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

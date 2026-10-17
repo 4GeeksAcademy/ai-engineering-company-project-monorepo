@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { inputClass } from "../ui/Field";
 import { ApiError, createSupplier } from "../../lib/api";
 import {
   CATEGORIES,
@@ -14,9 +15,6 @@ interface Props {
   onCreated: (supplier: Supplier) => void;
   onCancel: () => void;
 }
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
 
 export default function SupplierForm({ onCreated, onCancel }: Props) {
   const [name, setName] = useState("");

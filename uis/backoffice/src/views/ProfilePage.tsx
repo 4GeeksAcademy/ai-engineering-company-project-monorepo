@@ -3,11 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { inputClass } from "../components/ui/Field";
 import { ApiError } from "../lib/api";
 import { profileChanges, toProfileForm, validateProfileFields, type ProfileFieldValues } from "../lib/profileFields";
-
-const inputClass =
-  "mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none aria-[invalid=true]:border-rose-500";
 
 type Field = keyof ProfileFieldValues;
 type FieldErrors = Partial<Record<Field, string>>;
@@ -91,7 +89,7 @@ export default function ProfilePage() {
     onChange: (e: { target: { value: string } }) => change(field)(e.target.value),
     "aria-invalid": fieldErrors[field] ? true : undefined,
     "aria-describedby": fieldErrors[field] ? `${field}-error` : undefined,
-    className: inputClass,
+    className: `${inputClass} mt-1`,
   });
   const fieldError = (field: Field) =>
     fieldErrors[field] && (
@@ -108,7 +106,7 @@ export default function ProfilePage() {
       <form onSubmit={handleSubmit} noValidate className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
         <div className="text-sm text-slate-300">
           <label htmlFor="email">Email</label>
-          <input id="email" type="email" value={user.email} readOnly aria-readonly className={`${inputClass} cursor-not-allowed text-slate-400`} />
+          <input id="email" type="email" value={user.email} readOnly aria-readonly className={`${inputClass} mt-1 cursor-not-allowed text-slate-400`} />
           <span className="mt-1 block text-xs text-slate-400">Es el email con el que inicias sesión; no se cambia desde aquí.</span>
         </div>
         <div className="mt-4 text-sm text-slate-300">

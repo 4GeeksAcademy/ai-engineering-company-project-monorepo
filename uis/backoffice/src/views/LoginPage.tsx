@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { inputClass } from "../components/ui/Field";
 import { ApiError } from "../lib/api";
 import { currentReturnTo } from "../lib/returnTo";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
 
 export default function LoginPage() {
   const { status, login } = useAuth();

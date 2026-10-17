@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { inputClass } from "../components/ui/Field";
 import { emptyForm, signUpErrorFromApi, validateSignUp, type Field, type FieldErrors, type Form } from "../lib/signUpForm";
 import type { SignUpPayload } from "../types/auth";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none aria-[invalid=true]:border-rose-500";
 
 export default function RegisterPage() {
   const { status, register } = useAuth();
