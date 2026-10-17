@@ -72,13 +72,22 @@ Un observador de `layout-shift` con `previousRect`/`currentRect` (técnica de la
 
 `text-slate-500` / `text-slate-600` sobre fondos `slate-900/950` dan ≈ 3,7 : 1 (WCAG AA exige 4,5 : 1). Afecta a la etiqueta «Backoffice» del menú, el email del usuario, las cabeceras de tabla, notas y pistas de formulario. **31 usos** repartidos por el código.
 
+- **Causa raíz:** los grises del texto secundario no llegan a 4,5:1: `#64748b` (`slate-500`) sobre `#0f172a` da 3,7:1. Hay **un segundo origen**, que solo apareció al volver a medir: la fila de un proveedor suspendido llevaba `opacity-60`, que atenúa todo su texto (incluido el que ya cumplía) hasta 3,3:1.
+- **Evidencia:** `color-contrast` señala los elementos exactos (`<p class="px-2 text-xs uppercase tracking-widest text-slate-500">`, las `<th>` de las tablas…) y, tras corregir los grises, el color calculado de las filas suspendidas seguía siendo `#5f6b7f`, que no es ninguna clase de Tailwind: delata la opacidad.
+
 ### P3 — Falta de `robots.txt` válido (website, SEO 92) · impacto **medio**
 
 No existía `public/robots.txt`: el servidor devuelve el `index.html` de la SPA para esa URL y Lighthouse lo analiza como robots inválido (**«16 errors found»**). Un crawler que lee eso puede interpretar reglas inexistentes.
 
+- **Causa raíz:** el website no tiene carpeta `public/` y Vite, al ser una SPA, responde con el `index.html` a cualquier URL que no existe, `/robots.txt` incluido. Lighthouse intenta leer ese HTML como reglas de robots.
+- **Evidencia:** la auditoría `robots-txt` falla con «16 errors found» y `/sitemap.xml` tampoco existe.
+
 ### P4 — Sin favicon: 404 en consola (Best Practices 96) · impacto **bajo**
 
 `/favicon.ico` devuelve 404 en ambos frontends; el navegador lo pide siempre. Afecta a Best Practices (`errors-in-console`) y a la imagen de marca en pestañas y resultados de búsqueda.
+
+- **Causa raíz:** ninguno de los dos frontends declara un icono (el website no tiene `public/` ni `<link rel="icon">`; el backoffice no tiene `public/` ni `app/icon.*`, la convención de Next), y el navegador pide `/favicon.ico` en cada carga aunque no se lo hayas ofrecido.
+- **Evidencia:** el informe de `/login` del backoffice registra `Failed to load resource: 404` sobre `/favicon.ico` (`errors-in-console`), y el del website marca la misma auditoría.
 
 ### P5 — Accesibilidad de componentes concretos · impacto **bajo/medio**
 
@@ -88,13 +97,21 @@ No existía `public/robots.txt`: el servidor devuelve el `index.html` de la SPA 
 | `label-content-name-mismatch` | `/suppliers` | El botón muestra «Activo» pero su `aria-label` es «Suspender X»: quien use control por voz dice «clic en Activo» y no funciona (WCAG 2.5.3) |
 | `link-in-text-block` | website `/talento`, backoffice | Enlaces dentro de texto que solo se distinguen por el color (WCAG 1.4.1) |
 
+**Evidencia:** cada auditoría señala el elemento exacto: `<h3 class="font-semibold text-white">` (`heading-order`), `<button aria-label="Suspender LinkedIn Talent Solutions" …>` (`label-content-name-mismatch`) y `<a class="text-cyan-300 hover:text-cyan-200" href="/register">` (`link-in-text-block`).
+
 ### P6 — Metadatos SEO iguales en todas las rutas (website) · impacto **medio** (no lo detecta Lighthouse)
 
 `/talento` conserva el título, la descripción y la URL canónica de la home. Lighthouse no lo marca porque comprueba que existan, no que sean correctos para cada página, pero para un buscador son dos URLs con la misma identidad.
 
+- **Causa raíz:** `title`, `description` y `canonical` están fijos en un único `index.html` estático que sirve las dos rutas, y nada los cambia cuando la app navega de `/` a `/talento`.
+- **Evidencia:** al abrir `/talento` (o al navegar a ella) el título sigue siendo «Nexova | Construimos equipos excepcionales» y el canonical sigue apuntando a `/`.
+
 ### P7 — Prefetch masivo de filas (backoffice `/incidents`) · impacto **bajo**
 
 El `<Link>` por defecto de Next precarga cada enlace que entra en el viewport. La tabla tiene 15 filas con ruta dinámica: en la carga medida aparecen **28 peticiones `_rsc`** (51 peticiones en total) para enlaces que el usuario abre de uno en uno.
+
+- **Causa raíz:** `<Link>` de Next precarga por defecto todo enlace que entra en el viewport, y cada fila de la tabla es un enlace a una ruta dinámica (`/incidents/[incidentId]`), así que cada carga dispara una petición por fila visible aunque el usuario solo abra una.
+- **Evidencia:** el árbol de red del informe de `/incidents` lista 28 peticiones `_rsc` entre las 51 totales (las de las filas de la tabla y las de los enlaces visibles de la página).
 
 ### P8 — Duplicación de código (análisis de refactorización) · impacto **mantenibilidad**
 
