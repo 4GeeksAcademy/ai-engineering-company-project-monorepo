@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
+import LoadingState from "../components/ui/LoadingState";
 import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "../lib/api";
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
 
@@ -107,10 +108,7 @@ export default function SuppliersPage() {
       )}
 
       {loading ? (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Cargando...
-        </div>
+        <LoadingState label="Cargando..." reserveSpace className="mt-6" />
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
           <table className="w-full text-left">

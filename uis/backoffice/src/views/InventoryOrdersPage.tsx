@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDownToLine, ArrowUpFromLine, Loader2, RefreshCw } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, RefreshCw } from "lucide-react";
 import { ErrorBanner, inputClass } from "../components/incidents/Field";
+import LoadingState from "../components/ui/LoadingState";
 import { listUserDirectory } from "../lib/api";
 import { listOrders } from "../lib/inventory";
 import { formatDateTime } from "../lib/format";
@@ -81,10 +82,7 @@ export default function InventoryOrdersPage() {
       )}
 
       {loading ? (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Cargando órdenes…
-        </div>
+        <LoadingState label="Cargando órdenes…" reserveSpace className="mt-8" />
       ) : (
         !error && (
           <>

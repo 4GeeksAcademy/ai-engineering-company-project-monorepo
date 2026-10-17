@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, PackageMinus, PackagePlus, RefreshCw } from "lucide-react";
+import { PackageMinus, PackagePlus, RefreshCw } from "lucide-react";
 import { ErrorBanner, inputClass } from "../components/incidents/Field";
 import StockBadge from "../components/inventory/StockBadge";
 import { useAssets } from "../components/inventory/useAssets";
+import LoadingState from "../components/ui/LoadingState";
 import {
   compareByUrgency,
   countByLevel,
@@ -94,10 +95,7 @@ export default function AssetsPage() {
       )}
 
       {loading ? (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Cargando inventario…
-        </div>
+        <LoadingState label="Cargando inventario…" reserveSpace className="mt-8" />
       ) : (
         !error && (
           <>

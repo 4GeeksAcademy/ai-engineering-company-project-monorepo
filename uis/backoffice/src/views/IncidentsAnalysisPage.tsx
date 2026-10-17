@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import CsvUploader from "../components/incidents/CsvUploader";
 import MetricsSummary from "../components/incidents/MetricsSummary";
+import LoadingState from "../components/ui/LoadingState";
 import { analyzeIncidentsFile, downloadResultsCsv, ApiError } from "../lib/api";
 import type { AnalyzeResponse } from "../types/incidents";
 
@@ -61,10 +62,7 @@ export default function IncidentsAnalysisPage() {
       </div>
 
       {isAnalyzing && (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Analizando archivo...
-        </div>
+        <LoadingState label="Analizando archivo..." className="mt-8" />
       )}
 
       {error && (

@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
 import { ErrorBanner } from "../components/incidents/Field";
 import HistoryTimeline from "../components/incidents/HistoryTimeline";
 import IncidentForm from "../components/incidents/IncidentForm";
 import StatusActions from "../components/incidents/StatusActions";
 import StatusBadge from "../components/incidents/StatusBadge";
+import LoadingState from "../components/ui/LoadingState";
 import { getIncident, getIncidentFacets } from "../lib/api";
 import { describeError, isNotFound } from "../lib/errors";
 import { formatDateTime } from "../lib/format";
@@ -62,10 +63,7 @@ export default function IncidentDetailPage() {
 
   if (loading && !incident) {
     return (
-      <div className="mx-auto max-w-4xl flex items-center gap-3 text-slate-300">
-        <Loader2 className="animate-spin" size={20} />
-        Cargando…
-      </div>
+      <LoadingState className="mx-auto max-w-4xl" />
     );
   }
   if (notFound) {
