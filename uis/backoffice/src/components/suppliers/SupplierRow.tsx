@@ -43,8 +43,9 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
     }
   };
 
+  // A suspended supplier is dimmed, but only to 80 %: at 60 % its grey text fell to 3.3:1 (WCAG AA needs 4.5:1).
   return (
-    <tr className={`border-t border-slate-800 ${suspended ? "opacity-60" : ""} ${renewalSoon ? "bg-amber-400/5" : ""}`}>
+    <tr className={`border-t border-slate-800 ${suspended ? "opacity-80" : ""} ${renewalSoon ? "bg-amber-400/5" : ""}`}>
       <td className="px-4 py-3">
         <p className="font-medium text-white">{supplier.name}</p>
         {supplier.contact_email && <p className="mt-0.5 text-xs text-slate-400">{supplier.contact_email}</p>}
