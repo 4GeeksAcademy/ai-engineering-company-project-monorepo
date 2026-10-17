@@ -1,0 +1,58 @@
+{
+  "url": "http://127.0.0.1:5174/login",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 91,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcpMs": 241,
+      "lcpMs": 429,
+      "tbtMs": 0,
+      "cls": 0,
+      "speedIndexMs": 241,
+      "ttfbMs": 14,
+      "transferKB": 159
+    },
+    {
+      "performance": 100,
+      "accessibility": 91,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcpMs": 213,
+      "lcpMs": 396,
+      "tbtMs": 18,
+      "cls": 0,
+      "speedIndexMs": 213,
+      "ttfbMs": 7,
+      "transferKB": 159
+    },
+    {
+      "performance": 100,
+      "accessibility": 91,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcpMs": 220,
+      "lcpMs": 545,
+      "tbtMs": 21,
+      "cls": 0,
+      "speedIndexMs": 220,
+      "ttfbMs": 11,
+      "transferKB": 159
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 91,
+    "bestPractices": 96,
+    "seo": 100,
+    "fcpMs": 213,
+    "lcpMs": 396,
+    "tbtMs": 18,
+    "cls": 0,
+    "speedIndexMs": 213,
+    "ttfbMs": 7,
+    "transferKB": 159
+  }
+}
