@@ -10,6 +10,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const template = readFileSync(join(root, "dist/index.html"), "utf8");
 const { render, PAGES, ORIGIN } = await import(pathToFileURL(join(root, "dist-ssr/entry-server.js")).href);
 
+// The page now carries its content, so the first paint only waits for the stylesheet. Inlining it (11 KB, 3.5 KB gzip)
+// removes that request from the critical path.
+function inlineCss(html) {
+  return html.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/, (_tag, href) => {
+    return `<style>${readFileSync(join(root, "dist", href), "utf8")}</style>`;
+  });
+}
+
 const escapeAttr = (value) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
 function withMeta(html, route) {
@@ -23,7 +31,7 @@ function withMeta(html, route) {
 
 for (const route of ["/", "/talento"]) {
   const body = render(route);
-  const html = withMeta(template.replace('<div id="root"></div>', `<div id="root" data-route="${route}">${body}</div>`), route);
+  const html = inlineCss(withMeta(template.replace('<div id="root"></div>', `<div id="root" data-route="${route}">${body}</div>`), route));
   if (html === template) throw new Error(`prerender: #root not found in dist/index.html (${route})`);
   const file = route === "/" ? join(root, "dist/index.html") : join(root, "dist", route.slice(1), "index.html");
   mkdirSync(dirname(file), { recursive: true });
