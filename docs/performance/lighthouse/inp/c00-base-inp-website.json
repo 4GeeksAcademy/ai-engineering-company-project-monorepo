@@ -1,0 +1,86 @@
+{
+  "app": "website",
+  "base": "http://127.0.0.1:4174",
+  "cpuSlowdown": 4,
+  "runs": [
+    {
+      "run": 1,
+      "interactions": 24,
+      "inp": 56,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 56,
+          "input": 6,
+          "processing": 1
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 5,
+          "processing": 1
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 3,
+          "processing": 1,
+          "target": "BUTTON"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "interactions": 21,
+      "inp": 56,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 56,
+          "input": 4,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 6,
+          "processing": 1
+        },
+        {
+          "type": "keydown",
+          "duration": 32,
+          "input": 1,
+          "processing": 1,
+          "target": "INPUT"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "interactions": 21,
+      "inp": 56,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 56,
+          "input": 5,
+          "processing": 1
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 9,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 3,
+          "processing": 1,
+          "target": "BUTTON"
+        }
+      ]
+    }
+  ],
+  "medianInp": 56
+}

@@ -1,0 +1,32 @@
+{
+  "url": "http://127.0.0.1:5175/incidents",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 178,
+      "lcpMs": 351,
+      "tbtMs": 0,
+      "cls": 0.014,
+      "speedIndexMs": 337,
+      "ttfbMs": 6,
+      "transferKB": 24
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 178,
+    "lcpMs": 351,
+    "tbtMs": 0,
+    "cls": 0.014,
+    "speedIndexMs": 337,
+    "ttfbMs": 6,
+    "transferKB": 24
+  }
+}

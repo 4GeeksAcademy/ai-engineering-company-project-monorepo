@@ -1,0 +1,91 @@
+{
+  "app": "backoffice",
+  "base": "http://127.0.0.1:5175",
+  "cpuSlowdown": 4,
+  "runs": [
+    {
+      "run": 1,
+      "interactions": 12,
+      "inp": 80,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 80,
+          "input": 11,
+          "processing": 1,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 80,
+          "input": 4,
+          "processing": 1,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 9,
+          "processing": 2
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "interactions": 12,
+      "inp": 120,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 120,
+          "input": 9,
+          "processing": 3,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 72,
+          "input": 6,
+          "processing": 0,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 3,
+          "processing": 1,
+          "target": "BUTTON"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "interactions": 12,
+      "inp": 72,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 72,
+          "input": 7,
+          "processing": 3,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 3,
+          "processing": 1,
+          "target": "BUTTON"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 56,
+          "input": 3,
+          "processing": 3,
+          "target": "BUTTON"
+        }
+      ]
+    }
+  ],
+  "medianInp": 80
+}
