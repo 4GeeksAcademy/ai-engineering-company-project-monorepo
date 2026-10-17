@@ -1,0 +1,17 @@
+# ============================================
+# .dockerignore - services/inventory
+# ============================================
+
+__pycache__
+*.pyc
+.env
+dev.db
+.git
+.gitignore
+README.md
+*.md
+.DS_Store
+.venv
+.pytest_cache
+.coverage
+scripts/

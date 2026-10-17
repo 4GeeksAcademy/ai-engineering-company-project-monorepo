@@ -1,0 +1,16 @@
+# ============================================
+# .dockerignore - uis/website
+# ============================================
+
+node_modules
+.next
+.git
+.gitignore
+README.md
+*.md
+.DS_Store
+.env.local
+.env
+.eslint.config.mjs
+tsconfig.tsbuildinfo
+next-env.d.ts
