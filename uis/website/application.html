@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brasaland | Application / Sign Up</title>
+    <meta
+      name="description"
+      content="Apply or sign up for Brasaland updates and reservation opportunities."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ember: "#d97706",
+              charcoal: "#111827",
+              cream: "#fff7ed"
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-cream text-charcoal antialiased">
+    <header class="border-b border-amber-200 bg-white" role="banner">
+      <nav class="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 sm:px-6" aria-label="Application navigation">
+        <a href="index.html" class="text-lg font-extrabold">Brasaland</a>
+        <a href="index.html" class="rounded-md border border-charcoal px-3 py-2 text-sm font-semibold hover:bg-charcoal hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ember">Back to Landing</a>
+      </nav>
+    </header>
+
+    <main class="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6" id="main-content">
+      <section aria-labelledby="form-title">
+        <h1 id="form-title" class="text-3xl font-black">Application / Sign-up Form</h1>
+        <p class="mt-3 max-w-2xl text-sm text-gray-700">
+          Complete your details to apply for Brasaland updates and reservation flow. Field names and IDs align with the project domain model in CONTEXT.md.
+        </p>
+
+        <div id="form-feedback" class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800" role="status" aria-live="polite"></div>
+
+        <form id="application-form" class="mt-8 space-y-8" novalidate>
+          <fieldset class="rounded-2xl border border-amber-200 bg-white p-5 sm:p-6">
+            <legend class="px-2 text-sm font-bold uppercase tracking-wide text-ember">Customer Entity</legend>
+            <div class="mt-4 grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="customer_id" class="mb-1 block text-sm font-semibold">customer_id *</label>
+                <input id="customer_id" name="customer_id" type="text" required aria-describedby="customer_id-error" placeholder="CUST-0001" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="customer_id-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="name" class="mb-1 block text-sm font-semibold">name *</label>
+                <input id="name" name="name" type="text" required aria-describedby="name-error" placeholder="Full name" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="name-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="contact" class="mb-1 block text-sm font-semibold">contact *</label>
+                <input id="contact" name="contact" type="email" required aria-describedby="contact-error" placeholder="name@email.com" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="contact-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="city" class="mb-1 block text-sm font-semibold">city *</label>
+                <input id="city" name="city" type="text" required aria-describedby="city-error" placeholder="Bogota" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="city-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="loyalty_tier" class="mb-1 block text-sm font-semibold">loyalty_tier *</label>
+                <select id="loyalty_tier" name="loyalty_tier" required aria-describedby="loyalty_tier-error" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200">
+                  <option value="">Select a tier</option>
+                  <option value="basic">basic</option>
+                  <option value="silver">silver</option>
+                  <option value="gold">gold</option>
+                </select>
+                <p id="loyalty_tier-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div class="md:col-span-2">
+                <label for="preferences" class="mb-1 block text-sm font-semibold">preferences *</label>
+                <textarea id="preferences" name="preferences" required aria-describedby="preferences-error" rows="3" placeholder="Tell us your menu preferences or allergens." class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200"></textarea>
+                <p id="preferences-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="rounded-2xl border border-amber-200 bg-white p-5 sm:p-6">
+            <legend class="px-2 text-sm font-bold uppercase tracking-wide text-ember">Reservation Entity</legend>
+            <div class="mt-4 grid gap-5 md:grid-cols-2">
+              <div>
+                <label for="reservation_id" class="mb-1 block text-sm font-semibold">reservation_id *</label>
+                <input id="reservation_id" name="reservation_id" type="text" required aria-describedby="reservation_id-error" placeholder="RES-1001" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="reservation_id-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="branch_id" class="mb-1 block text-sm font-semibold">branch_id *</label>
+                <select id="branch_id" name="branch_id" required aria-describedby="branch_id-error" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200">
+                  <option value="">Select branch_id</option>
+                  <option value="CO-BOG-01">CO-BOG-01</option>
+                  <option value="CO-MED-01">CO-MED-01</option>
+                  <option value="US-MIA-01">US-MIA-01</option>
+                  <option value="US-ORL-01">US-ORL-01</option>
+                </select>
+                <p id="branch_id-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="datetime" class="mb-1 block text-sm font-semibold">datetime *</label>
+                <input id="datetime" name="datetime" type="datetime-local" required aria-describedby="datetime-error" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="datetime-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="party_size" class="mb-1 block text-sm font-semibold">party_size *</label>
+                <input id="party_size" name="party_size" type="number" min="1" max="20" required aria-describedby="party_size-error" placeholder="4" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                <p id="party_size-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="status" class="mb-1 block text-sm font-semibold">status *</label>
+                <select id="status" name="status" required aria-describedby="status-error" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-amber-200">
+                  <option value="">Select status</option>
+                  <option value="pending">pending</option>
+                  <option value="confirmed">confirmed</option>
+                  <option value="cancelled">cancelled</option>
+                </select>
+                <p id="status-error" class="mt-1 min-h-5 text-sm text-red-700" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="flex flex-wrap gap-3">
+            <button type="submit" class="rounded-lg bg-ember px-5 py-3 text-sm font-bold text-white hover:bg-amber-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-charcoal">Submit Application</button>
+            <button type="reset" id="clear-form" class="rounded-lg border border-charcoal px-5 py-3 text-sm font-bold hover:bg-charcoal hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ember">Clear Form</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script src="validation.js"></script>
+  </body>
+</html>

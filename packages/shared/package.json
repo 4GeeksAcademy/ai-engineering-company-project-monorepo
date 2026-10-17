@@ -3,9 +3,17 @@
   "version": "0.0.1",
   "private": true,
   "description": "Shared types for AI Engineering transversal projects",
-  "main": "index.ts",
-  "types": "index.ts",
-  "scripts": {},
+  "main": "types/index.ts",
+  "types": "types/index.ts",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "validate": "npm run typecheck",
+    "dev": "tsx types/demo.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  },
   "keywords": [
     "types",
     "shared"

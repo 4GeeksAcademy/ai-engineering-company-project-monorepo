@@ -12,4 +12,12 @@ Organize `uis/` by **different concerns** — each subfolder covers a distinct a
 - **Main purpose**: to centralize in a single place all frontend applications that support the company's use cases.
 - **Recommendation**: document in this file (or in sub-READMEs) the applications you add, their objective, the technology used, and how to run them.
 
+## Current applications
+
+- `website/` — Brasaland Milestone 1 public site with:
+	- `index.html` (landing page)
+	- `application.html` (application/sign-up form)
+	- `validation.js` (client-side validation)
+	- `README.md` (local run instructions)
+
 > _Estas instrucciones también están disponibles en [español](./README.es.md)._
