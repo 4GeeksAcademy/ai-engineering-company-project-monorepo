@@ -49,7 +49,7 @@ export default function IncidentSummaryPanel({ summary }: { summary: IncidentSum
       ) : (
         <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <h3 className="font-semibold text-white">Por categoría</h3>
+            <h2 className="font-semibold text-white">Por categoría</h2>
             <div className="mt-4 space-y-3">
               {INCIDENT_CATEGORIES.map((c) => (
                 <BreakdownBar
@@ -62,7 +62,7 @@ export default function IncidentSummaryPanel({ summary }: { summary: IncidentSum
             </div>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <h3 className="font-semibold text-white">Por origen</h3>
+            <h2 className="font-semibold text-white">Por origen</h2>
             <div className="mt-4 space-y-3">
               {INCIDENT_ORIGINS.map((o) => (
                 <BreakdownBar
@@ -86,7 +86,7 @@ function RankCard({ title, items, empty }: { title: string; items: { name: strin
   const max = Math.max(1, ...items.map((i) => i.count));
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-      <h3 className="font-semibold text-white">{title}</h3>
+      <h2 className="font-semibold text-white">{title}</h2>
       {items.length === 0 && empty && <p className="mt-4 text-sm text-slate-400">{empty}</p>}
       <ol className="mt-4 space-y-3">
         {items.map((item) => (
