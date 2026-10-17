@@ -18,9 +18,10 @@ const reasons = [
   "Especialización sectorial en tecnología, retail y finanzas",
 ];
 
-export default function App() {
+// `initialPath` is for the prerender (there is no window on the server); in the browser it is not passed and the URL decides.
+export default function App({ initialPath }: { initialPath?: string }) {
   const [menu, setMenu] = useState(false);
-  const [path, setPath] = useState(currentPath);
+  const [path, setPath] = useState(() => initialPath ?? currentPath());
   const sync = () => {
     setPath(currentPath());
     setMenu(false);

@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { TALENT_PATH } from "./router";
 
-const ORIGIN = "https://nexova.com";
+export const ORIGIN = "https://nexova.com";
 
 // The home values are the ones index.html ships with; /talento replaces them when the visitor navigates to it.
-const PAGES: Record<string, { title: string; description: string; path: string }> = {
+export const PAGES: Record<string, { title: string; description: string; path: string }> = {
   "/": {
     title: "Nexova | Construimos equipos excepcionales",
     description: "Nexova conecta empresas en crecimiento con talento excepcional mediante headhunting, outsourcing y formación corporativa.",
