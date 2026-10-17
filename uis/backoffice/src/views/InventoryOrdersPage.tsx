@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, RefreshCw } from "lucide-react";
-import { ErrorBanner, inputClass } from "../components/incidents/Field";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import { listUserDirectory } from "../lib/api";
 import { listOrders } from "../lib/inventory";

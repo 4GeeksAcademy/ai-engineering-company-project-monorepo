@@ -14,7 +14,7 @@ import {
 } from "@repo/shared-types";
 import { ApiError, createIncident, updateIncident, type IncidentFields } from "../../lib/api";
 import { describeError } from "../../lib/errors";
-import { ErrorBanner, Field, inputClass } from "./Field";
+import { ErrorBanner, Field, inputClass } from "../ui/Field";
 
 interface Props {
   /** Present = edit that incident (only the fields that changed are sent); absent = report a new one. */

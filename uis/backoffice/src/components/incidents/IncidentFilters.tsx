@@ -13,7 +13,7 @@ import {
   type IncidentOrigin,
   type IncidentStatus,
 } from "@repo/shared-types";
-import { inputClass } from "./Field";
+import { inputClass } from "../ui/Field";
 
 interface Props {
   filters: IncidentFilters;

@@ -14,7 +14,7 @@ import IncidentFiltersBar from "../components/incidents/IncidentFilters";
 import IncidentForm from "../components/incidents/IncidentForm";
 import IncidentSummaryPanel, { IncidentSummarySkeleton } from "../components/incidents/IncidentSummaryPanel";
 import IncidentTable from "../components/incidents/IncidentTable";
-import { ErrorBanner } from "../components/incidents/Field";
+import { ErrorBanner } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import {
   getIncidentFacets,

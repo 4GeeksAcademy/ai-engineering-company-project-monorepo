@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createInboundOrder } from "../lib/inventory";
-import { ErrorBanner, Field, inputClass } from "../components/incidents/Field";
+import { ErrorBanner, Field, inputClass } from "../components/ui/Field";
 import AssetSelect from "../components/inventory/AssetSelect";
 import SuccessNotice from "../components/inventory/SuccessNotice";
 import StockPanel from "../components/inventory/StockPanel";

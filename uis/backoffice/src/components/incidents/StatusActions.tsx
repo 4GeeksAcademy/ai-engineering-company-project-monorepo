@@ -12,7 +12,7 @@ import {
 import { ApiError, changeIncidentStatus } from "../../lib/api";
 import { describeError, isConflict } from "../../lib/errors";
 import { statusActionLabel } from "../../lib/labels";
-import { ErrorBanner, inputClass } from "./Field";
+import { ErrorBanner, inputClass } from "../ui/Field";
 
 interface Props {
   incident: Incident;

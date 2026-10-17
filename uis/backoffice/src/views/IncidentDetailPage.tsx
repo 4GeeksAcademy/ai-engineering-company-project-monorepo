@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
-import { ErrorBanner } from "../components/incidents/Field";
+import { ErrorBanner } from "../components/ui/Field";
 import HistoryTimeline from "../components/incidents/HistoryTimeline";
 import IncidentForm from "../components/incidents/IncidentForm";
 import StatusActions from "../components/incidents/StatusActions";

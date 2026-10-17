@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PackageMinus, PackagePlus, RefreshCw } from "lucide-react";
-import { ErrorBanner, inputClass } from "../components/incidents/Field";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import StockBadge from "../components/inventory/StockBadge";
 import { useAssets } from "../components/inventory/useAssets";
 import LoadingState from "../components/ui/LoadingState";
