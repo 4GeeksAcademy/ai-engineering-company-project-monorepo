@@ -5,6 +5,7 @@ import { CheckItem, SectionHeading, TextLink } from "./components";
 import { CONTACT } from "./content";
 import { TALENT_PATH, Link, currentPath } from "./router";
 import TalentForm from "./TalentForm";
+import { usePageMeta } from "./seo";
 
 const schema = { "@context": "https://schema.org", "@type": "Organization", name: "Nexova", description: "Consultora de recursos humanos y adquisición de talento", url: "https://nexova.com", foundingDate: "2011", address: [{ "@type": "PostalAddress", addressCountry: "ES", addressLocality: "Valencia", addressRegion: "Comunidad Valenciana" }, { "@type": "PostalAddress", addressCountry: "US", addressLocality: "Miami", addressRegion: "Florida" }], contactPoint: { "@type": "ContactPoint", telephone: "+34-960-123-456", contactType: "customer service", availableLanguage: ["Spanish", "English"] }, sameAs: ["https://linkedin.com/company/nexova", "https://instagram.com/nexova"] };
 
@@ -28,6 +29,7 @@ export default function App() {
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
+  usePageMeta(path);
   // Tras navegar, baja a la sección del hash (o al inicio si no hay).
   useEffect(() => {
     const id = window.location.hash.slice(1);
