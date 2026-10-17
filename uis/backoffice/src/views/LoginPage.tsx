@@ -59,7 +59,7 @@ export default function LoginPage() {
         <p className="text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <h1 className="mt-6 text-lg font-semibold text-white">Iniciar sesión</h1>
 
         <label className="mt-4 block text-sm text-slate-300">

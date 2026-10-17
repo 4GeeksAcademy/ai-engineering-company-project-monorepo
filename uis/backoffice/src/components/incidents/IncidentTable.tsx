@@ -23,7 +23,7 @@ export default function IncidentTable({ items, sort, order, onSort }: Props) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
       <table className="w-full text-left text-sm">
-        <thead className="text-xs text-slate-500">
+        <thead className="text-xs text-slate-400">
           <tr>
             {sortable("id", "ID")}
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Título</th>

@@ -115,7 +115,7 @@ export default function RegisterPage() {
           {fieldError("confirmPassword")}
         </div>
 
-        <p className="mt-6 text-xs uppercase tracking-widest text-slate-500">Perfil (opcional)</p>
+        <p className="mt-6 text-xs uppercase tracking-widest text-slate-400">Perfil (opcional)</p>
         <div className="mt-2 text-sm text-slate-300">
           <label className="block">
             Nombre
@@ -170,7 +170,7 @@ function Shell({ children }: { children: ReactNode }) {
         <p className="text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <h1 className="mt-6 text-lg font-semibold text-white">Crear cuenta</h1>
         {children}
       </div>

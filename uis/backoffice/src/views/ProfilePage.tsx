@@ -109,7 +109,7 @@ export default function ProfilePage() {
         <div className="text-sm text-slate-300">
           <label htmlFor="email">Email</label>
           <input id="email" type="email" value={user.email} readOnly aria-readonly className={`${inputClass} cursor-not-allowed text-slate-400`} />
-          <span className="mt-1 block text-xs text-slate-500">Es el email con el que inicias sesión; no se cambia desde aquí.</span>
+          <span className="mt-1 block text-xs text-slate-400">Es el email con el que inicias sesión; no se cambia desde aquí.</span>
         </div>
         <div className="mt-4 text-sm text-slate-300">
           <label htmlFor="name">Nombre</label>

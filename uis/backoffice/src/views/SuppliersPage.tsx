@@ -98,7 +98,7 @@ export default function SuppliersPage() {
             </option>
           ))}
         </select>
-        <p className="self-center text-sm text-slate-500">{visible.length} proveedores</p>
+        <p className="self-center text-sm text-slate-400">{visible.length} proveedores</p>
       </div>
 
       {error && (
@@ -112,7 +112,7 @@ export default function SuppliersPage() {
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
           <table className="w-full text-left">
-            <thead className="text-xs uppercase tracking-wider text-slate-500">
+            <thead className="text-xs uppercase tracking-wider text-slate-400">
               <tr>
                 <th className="px-4 py-3">Proveedor</th>
                 <th className="px-4 py-3">País</th>
@@ -128,7 +128,7 @@ export default function SuppliersPage() {
               ))}
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">
                     No hay proveedores con esos filtros.
                   </td>
                 </tr>

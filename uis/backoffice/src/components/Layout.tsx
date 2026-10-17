@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <p className="px-2 text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="px-2 text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="px-2 text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <nav className="mt-8 space-y-1" aria-label="Navegación principal">
           {navItems.map(({ href, label, icon: Icon, end, exclude }) => {
             const isActive =
@@ -64,7 +64,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <p className="truncate text-sm font-medium text-white" data-testid="current-user">
             {user?.profile.name ?? user?.email}
           </p>
-          <p className="truncate text-xs text-slate-500">{user?.email}</p>
+          <p className="truncate text-xs text-slate-400">{user?.email}</p>
           <button
             type="button"
             onClick={logout}

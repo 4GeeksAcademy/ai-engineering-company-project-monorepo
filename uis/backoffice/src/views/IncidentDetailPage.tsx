@@ -18,7 +18,7 @@ import { formatDateTime } from "../lib/format";
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wider text-slate-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wider text-slate-400">{label}</dt>
       <dd className="mt-1 text-sm text-slate-200">{children}</dd>
     </div>
   );
@@ -116,7 +116,7 @@ export default function IncidentDetailPage() {
       {notice && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{notice}</p>}
       {error && <ErrorBanner message={error} />}
       {!incident.editable && (
-        <p className="text-sm text-slate-500">Las incidencias resueltas o descartadas no se pueden editar. Reábrela para modificarla.</p>
+        <p className="text-sm text-slate-400">Las incidencias resueltas o descartadas no se pueden editar. Reábrela para modificarla.</p>
       )}
 
       {editing ? (

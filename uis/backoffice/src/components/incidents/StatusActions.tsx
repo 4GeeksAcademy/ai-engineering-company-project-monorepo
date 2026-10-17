@@ -117,7 +117,7 @@ export default function StatusActions({ incident, onChanged, onConflict }: Props
                   </label>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-slate-500">Pulsa de nuevo la puntuación elegida para quitarla.</p>
+              <p className="mt-2 text-xs text-slate-400">Pulsa de nuevo la puntuación elegida para quitarla.</p>
               {errors.satisfaction_score && <p id="score-error" className="mt-2 text-xs text-rose-300">{errors.satisfaction_score}</p>}
             </fieldset>
           )}

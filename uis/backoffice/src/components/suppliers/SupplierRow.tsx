@@ -48,7 +48,7 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
       <td className="px-4 py-3">
         <p className="font-medium text-white">{supplier.name}</p>
         {supplier.contact_email && <p className="mt-0.5 text-xs text-slate-400">{supplier.contact_email}</p>}
-        {supplier.notes && <p className="mt-0.5 max-w-xs text-xs text-slate-500">{supplier.notes}</p>}
+        {supplier.notes && <p className="mt-0.5 max-w-xs text-xs text-slate-400">{supplier.notes}</p>}
       </td>
       <td className="px-4 py-3 text-sm text-slate-300">{supplier.country}</td>
       <td className="px-4 py-3">
@@ -89,13 +89,13 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
                 setEditing(true);
               }}
               aria-label={`Editar tarifa de ${supplier.name}`}
-              className="text-slate-500 hover:text-cyan-300"
+              className="text-slate-400 hover:text-cyan-300"
             >
               <Pencil size={14} />
             </button>
           </div>
         )}
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-slate-400">
           Actualizada {formatDateTime(supplier.updated_at)}
         </p>
       </td>
@@ -107,7 +107,7 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
             {renewalOverdue && <span className="block text-xs">Fecha vencida</span>}
           </span>
         ) : (
-          <span className="text-slate-600">—</span>
+          <span className="text-slate-400">—</span>
         )}
       </td>
       <td className="px-4 py-3">

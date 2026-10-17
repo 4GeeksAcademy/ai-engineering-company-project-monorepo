@@ -115,7 +115,7 @@ export default function InventoryOrdersPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-sm text-slate-500" aria-live="polite">
+              <p className="text-sm text-slate-400" aria-live="polite">
                 {visible.length} de {orders.length} órdenes
               </p>
             </div>
@@ -123,7 +123,7 @@ export default function InventoryOrdersPage() {
             <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
               <table className="w-full text-left">
                 <caption className="sr-only">Historial de entradas y salidas de activos</caption>
-                <thead className="text-xs uppercase tracking-wider text-slate-500">
+                <thead className="text-xs uppercase tracking-wider text-slate-400">
                   <tr>
                     <th className="px-4 py-3">Fecha</th>
                     <th className="px-4 py-3">Tipo</th>
@@ -156,7 +156,7 @@ export default function InventoryOrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-medium text-white">{o.asset.name}</span>
-                        <span className="ml-2 whitespace-nowrap font-mono text-xs text-slate-500">{o.asset.sku}</span>
+                        <span className="ml-2 whitespace-nowrap font-mono text-xs text-slate-400">{o.asset.sku}</span>
                       </td>
                       <td className="px-4 py-3 text-right font-bold tabular-nums">
                         {o.type === "inbound" ? "+" : "−"}
@@ -166,7 +166,7 @@ export default function InventoryOrdersPage() {
                       <td className="px-4 py-3 text-slate-300">{orderDetail(o)}</td>
                       <td className="px-4 py-3">
                         <span className="block">{authorName(o.user_uuid, names)}</span>
-                        <span className="block font-mono text-[11px] text-slate-500" data-testid="order-user-uuid">
+                        <span className="block font-mono text-[11px] text-slate-400" data-testid="order-user-uuid">
                           {o.user_uuid}
                         </span>
                       </td>
@@ -174,7 +174,7 @@ export default function InventoryOrdersPage() {
                   ))}
                   {visible.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                      <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-400">
                         {orders.length === 0 ? "Todavía no hay órdenes registradas." : "No hay órdenes con esos filtros."}
                       </td>
                     </tr>

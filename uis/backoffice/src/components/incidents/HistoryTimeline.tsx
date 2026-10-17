@@ -10,7 +10,7 @@ export default function HistoryTimeline({ history }: { history: HistoryEntry[] }
         {[...history].reverse().map((entry, index) => (
           <li key={`${entry.at}-${index}`} className="border-l-2 border-slate-700 pl-4 text-sm">
             <p className="text-slate-200">{describeHistoryEntry(entry)}</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               <time dateTime={entry.at}>{formatDateTime(entry.at)}</time> · {entry.actor}
             </p>
           </li>
