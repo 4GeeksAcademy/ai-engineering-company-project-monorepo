@@ -1,0 +1,88 @@
+# Progress
+
+- [x] Setup: Monorepo, Workspaces y configuracion TypeScript.
+- [x] Logic: modulo `@trackflow/logic` centralizado en `packages/logic`.
+- [x] Protocol: `AGENTS.md` con flujo obligatorio pre-commit y zonas protegidas.
+- [x] Contexto: `CONTEXT.md` y `CONTEXT.es.md` alineados con TrackFlow.
+- [x] Infra de agentes: `.agents/rules` y `.agents/skills` creados con alcance e inputs claros.
+- [x] Website: ruta `/` migrada a web corporativa en componentes TypeScript reutilizables.
+- [x] Backoffice: app interna con layout propio y vista inicial operativa.
+- [x] Integracion Hito 2: script de pruebas de fuego reutilizable importado desde `packages/logic` y visible en UI.
+- [x] Verificacion tecnica: `npm run type-check` y builds de `uis/website` + `uis/backoffice` sin errores.
+- [x] Hito 4 incidencias: script Python CLI, API FastAPI y UI de backoffice para analisis y exportacion CSV con metricas validadas (100/95/5 y satisfaccion 3.06).
+- [x] Auditoría completa: website creado con catálogo y envíos usando `@trackflow/logic`.
+- [x] Corrección: Website `package.json` con dependencia `@trackflow/logic`.
+- [x] Corrección: `talentApi.ts` refactorizado sin dependencia directa de `process.env` (Next.js).
+- [x] Corrección: `package.json` raíz limpiado de dependencias duplicadas.
+- [x] Corrección: Path alias `@trackflow/logic` agregado en `uis/backoffice/tsconfig.json`.
+- [x] Corrección: Exports de `talentApi` agregados en `packages/logic/src/index.ts` y `trackflow/index.ts`.
+- [x] Auditoría completa del repositorio (Milestone 9 - Supplier Directory):
+  - [x] Backend FastAPI: CRUD proveedores funcional, 15 suppliers seedeados, endpoints verificados
+  - [x] Frontend Backoffice: build exitoso, páginas (inicio, incidencias, proveedores), proxy API configurado
+  - [x] Frontend Website: build exitoso, páginas (inicio, catálogo, envíos), integración con `@trackflow/logic`
+  - [x] TypeScript: `tsc --noEmit` pasa sin errores
+  - [x] Dependencias Python instaladas (fastapi, uvicorn, tinydb, etc.)
+  - [x] `@swc/helpers` instalado para compatibilidad Next.js 16.2.9
+  - [x] Backend probado: health, list, filter, create, rate/status update, delete — todo OK
+  - [x] Ambos frontends compilados exitosamente (production build)
+- [x] **Feature Auth (AUTH-01) — Autenticación JWT + Protección de rutas**:
+  - [x] Rama `feature/auth` creada desde `milestrone-9`
+  - [x] Dependencias instaladas: `python-jose[cryptography]`, `passlib[bcrypt]`, `bcrypt==4.0.1`, `email-validator`
+  - [x] `models/` package creado con `__init__.py`, `supplier_models.py`, `user_models.py`, `profile_models.py`
+  - [x] `services/` creado con `auth_service.py` (hash, verify, JWT) y `user_service.py` (CRUD User+Profile)
+  - [x] `dependencies/` creado con `auth_deps.py` (`get_current_user`, `get_admin_user`)
+  - [x] `routes/users.py` — CRUD completo (POST público, resto protegido con owner/admin check)
+  - [x] `routes/profiles.py` — GET/PUT /me (protegido, solo owner)
+  - [x] `routes/auth.py` — POST /login (JWT) + GET /me (protegido)
+  - [x] `routes/suppliers.py` — 6 endpoints protegidos con `Depends(get_current_user)`
+  - [x] `main.py` actualizado con imports de nuevos routers
+  - [x] `.env` con `SECRET_KEY` y `ACCESS_TOKEN_EXPIRE_MINUTES`
+  - [x] `models.py` eliminado (reemplazado por `models/supplier_models.py` dentro del package)
+  - [x] Testing manual completado: registro, login, /auth/me, /profiles/me, suppliers protegidos, permisos owner/admin, edge cases
+  - [x] Todos los tests pasados: 200 OK, 401, 403, 409, 404 según corresponda
+- [x] **Feature Auth (AUTH-02) — Authentication Flows in the Frontend**:
+  - [x] Rama `feature/auth-frontend` creada desde `feature/auth`
+  - [x] `lib/api.ts` — helper fetch con authHeaders, apiGet, apiPost, apiPut
+  - [x] `lib/auth-actions.ts` — loginUser, registerUser, logoutUser, getCurrentUser, updateProfile
+  - [x] `components/login-form.tsx` + `app/login/page.tsx` — formulario de login con manejo de errores
+  - [x] `components/register-form.tsx` + `app/register/page.tsx` — formulario de registro con validación local
+  - [x] `components/profile-form.tsx` + `app/account/profile/page.tsx` — perfil de usuario con edición
+  - [x] `app/account/layout.tsx` — layout protegido client-side para /account/*
+  - [x] `middleware.ts` — capa adicional de protección (edge, opcional)
+  - [x] `components/navbar-auth.tsx` — navbar con login/logout/perfil según estado de auth
+  - [x] `app/layout.tsx` — actualizado para usar NavbarAuth
+  - [x] `app/suppliers/components/SuppliersClient.tsx` — migrado de fetch directo a authFetch con token
+  - [x] `next.config.ts` — añadidos proxies para /auth/, /users/, /profiles/
+  - [x] `.env.local` — creado con NEXT_PUBLIC_API_URL
+  - [x] Build exitoso (next build) — 11 rutas generadas sin errores
+  - [x] TypeScript compila sin errores (tsc --noEmit)
+- [x] **Caching Plan (rama `cachear`)**:
+  - [x] Paso 1: Middleware de timing HTTP en `services/api/main.py` — loguea método, ruta, status y duración en ms
+  - [x] Paso 2: Módulo `services/api/core/cache.py` — caché en memoria con TTL e invalidación por prefijo
+  - [x] Paso 3: Caché aplicada en GETs — suppliers list/detail (60s), incidents list (60s), incidents summary (30s)
+  - [x] Paso 4: Invalidación en escrituras — `cache_invalidate_prefix("suppliers:")` en POST/PATCH rate/PATCH status/DELETE suppliers; `cache_invalidate_prefix("incidents:")` en POST/PATCH status incidents
+  - [x] Paso 5: Checklist de seguridad de caché verificado:
+    - [x] Sin datos por-usuario bajo claves compartidas (`profiles.py` y `auth.py` no usan caché)
+    - [x] TTL obligatorio en TODA entrada: suppliers list (60s), suppliers detail (60s), incidents list (60s), incidents summary (30s)
+    - [x] Invalidación por prefijo en TODA escritura que afecta a lecturas cacheadas
+    - [x] Endpoints rechazados documentados (GET /profiles/me, POST /auth/login, GET /api/incidents/{id})
+  - [ ] Paso 6: Caché en Frontend (useMemo + next/dynamic)
+  - [ ] Paso 7: Seed de datos realistas (cientos/miles de filas)
+  - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
+  - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
+  - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Hito — Diseño de Pipeline de Desempeño de Negocio (Parte 1 de 3)**:
+  - [x] Rama `feature/pipeline-business-performance` creada desde `main`
+  - [x] Obtenido CONTEXT-trackflow.md (data-pipelines) del syllabus 4Geeks: entregable "Weekly Warehouse & Client Performance Report", 4 KPIs (Inbound Volume, Outbound Throughput, Stockout Frequency, Discrepancy Rate), grain warehouse×client_id×ISO week, tabla destino `reporting.weekly_warehouse_client_performance` con UNIQUE(warehouse, client_id, week_start)
+  - [x] `data/pipelines/PIPELINE_DESIGN.md` creado con: Current State + brecha de negocio, propósito en una frase, formato de extracción (telemetry_events read-only + cadencia semanal lunes 06:00 UTC), diagrama Mermaid 3 etapas con nombres reales, estrategia de updates (UPSERT), idempotencia explícita (ON CONFLICT), log de ejecución con 10 campos, mapping Prefect (1 flow + 3 tasks + estados), 3 endpoints en services/reporting/ con funciones de data/pipelines/ que importan
+  - [x] Diseño cumple los 13 criterios de evaluación del Hito
+  - [x] **Auditoría de precisión (schema real) — Correcciones aplicadas**:
+    - [x] Verificado el DDL real de `telemetry_events` en branch `feature/telemetry-storage`: columnas `id` (PK), `timestamp`, `service`, `event_type`, `level`, `value`, `message`, `tags` (jsonb) + 3 índices (timestamp BTREE, event_type BTREE, tags GIN)
+    - [x] Verificado el INSERT real: 7 columnas, tags jsonb con envelope + payload dentro
+    - [x] Verificado `profiles` en `services/api/models/profile_models.py`: solo `name`, `phone`, `address` (TinyDB) — NO existe `company_name` ni `client_id` como tabla
+    - [x] Verificada la función `_build_tags`: escribe en tags eventId, sessionId, userId, schemaVersion, requestId + allowlist (warehouse, client_id, product_id, product_category, quantity, etc.)
+    - [x] Verificado `value` numérico extraído por `_extract_value` desde `properties.get("quantity")` en el stub actual
+    - [x] **15 correcciones aplicadas** a `data/pipelines/PIPELINE_DESIGN.md`:
+      - 13 reemplazos: `properties →` → `tags->>`, eliminar `company_name`, corregir dedup (PK es `id`, no UNIQUE eventId), checkpoint con `last_event_id`, etc.
+      - 2 reemplazos adicionales: eliminar enriquecimiento falso (`profiles` como clientes), B3 del diagrama simplificado
+    - [x] Documento validado: 419 líneas, 12 fences balanceados, 0 referencias a columnas inexistentes
