@@ -1,28 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
 import { ErrorBanner, selectClass } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
+import { useAsyncResource } from "../lib/useAsyncResource";
 import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "../lib/api";
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
 
+const NO_SUPPLIERS: Supplier[] = [];
+const describeLoadError = (err: unknown) => (err instanceof ApiError ? err.message : "No se pudo cargar el directorio.");
+
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: suppliers, setData: setSuppliers, loading, error, setError } = useAsyncResource(listSuppliers, NO_SUPPLIERS, describeLoadError);
   const [showForm, setShowForm] = useState(false);
   const [country, setCountry] = useState<Country | "">("");
   const [category, setCategory] = useState<Category | "">("");
-
-  useEffect(() => {
-    listSuppliers()
-      .then(setSuppliers)
-      .catch((err) => setError(err instanceof ApiError ? err.message : "No se pudo cargar el directorio."))
-      .finally(() => setLoading(false));
-  }, []);
 
   const replace = (updated: Supplier) =>
     setSuppliers((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
