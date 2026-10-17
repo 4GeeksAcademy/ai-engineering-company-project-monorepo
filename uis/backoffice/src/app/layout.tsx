@@ -6,6 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Nexova | Backoffice", template: "%s | Nexova Backoffice" },
   description: "Backoffice interno de Nexova.",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = { themeColor: "#0f172a" };
