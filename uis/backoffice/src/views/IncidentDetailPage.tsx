@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
-import { ErrorBanner } from "../components/incidents/Field";
+import { ErrorBanner } from "../components/ui/Field";
 import HistoryTimeline from "../components/incidents/HistoryTimeline";
 import IncidentForm from "../components/incidents/IncidentForm";
 import StatusActions from "../components/incidents/StatusActions";
 import StatusBadge from "../components/incidents/StatusBadge";
+import LoadingState from "../components/ui/LoadingState";
 import { getIncident, getIncidentFacets } from "../lib/api";
 import { describeError, isNotFound } from "../lib/errors";
 import { formatDateTime } from "../lib/format";
@@ -17,7 +18,7 @@ import { formatDateTime } from "../lib/format";
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wider text-slate-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wider text-slate-400">{label}</dt>
       <dd className="mt-1 text-sm text-slate-200">{children}</dd>
     </div>
   );
@@ -62,10 +63,7 @@ export default function IncidentDetailPage() {
 
   if (loading && !incident) {
     return (
-      <div className="mx-auto max-w-4xl flex items-center gap-3 text-slate-300">
-        <Loader2 className="animate-spin" size={20} />
-        Cargando…
-      </div>
+      <LoadingState className="mx-auto max-w-4xl" />
     );
   }
   if (notFound) {
@@ -118,7 +116,7 @@ export default function IncidentDetailPage() {
       {notice && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{notice}</p>}
       {error && <ErrorBanner message={error} />}
       {!incident.editable && (
-        <p className="text-sm text-slate-500">Las incidencias resueltas o descartadas no se pueden editar. Reábrela para modificarla.</p>
+        <p className="text-sm text-slate-400">Las incidencias resueltas o descartadas no se pueden editar. Reábrela para modificarla.</p>
       )}
 
       {editing ? (

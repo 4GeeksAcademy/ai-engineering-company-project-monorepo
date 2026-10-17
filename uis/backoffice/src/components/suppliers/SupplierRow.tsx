@@ -43,12 +43,13 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
     }
   };
 
+  // A suspended supplier is dimmed, but only to 80 %: at 60 % its grey text fell to 3.3:1 (WCAG AA needs 4.5:1).
   return (
-    <tr className={`border-t border-slate-800 ${suspended ? "opacity-60" : ""} ${renewalSoon ? "bg-amber-400/5" : ""}`}>
+    <tr className={`border-t border-slate-800 ${suspended ? "opacity-80" : ""} ${renewalSoon ? "bg-amber-400/5" : ""}`}>
       <td className="px-4 py-3">
         <p className="font-medium text-white">{supplier.name}</p>
         {supplier.contact_email && <p className="mt-0.5 text-xs text-slate-400">{supplier.contact_email}</p>}
-        {supplier.notes && <p className="mt-0.5 max-w-xs text-xs text-slate-500">{supplier.notes}</p>}
+        {supplier.notes && <p className="mt-0.5 max-w-xs text-xs text-slate-400">{supplier.notes}</p>}
       </td>
       <td className="px-4 py-3 text-sm text-slate-300">{supplier.country}</td>
       <td className="px-4 py-3">
@@ -89,13 +90,13 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
                 setEditing(true);
               }}
               aria-label={`Editar tarifa de ${supplier.name}`}
-              className="text-slate-500 hover:text-cyan-300"
+              className="text-slate-400 hover:text-cyan-300"
             >
               <Pencil size={14} />
             </button>
           </div>
         )}
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-slate-400">
           Actualizada {formatDateTime(supplier.updated_at)}
         </p>
       </td>
@@ -107,14 +108,15 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
             {renewalOverdue && <span className="block text-xs">Fecha vencida</span>}
           </span>
         ) : (
-          <span className="text-slate-600">—</span>
+          <span className="text-slate-400">—</span>
         )}
       </td>
       <td className="px-4 py-3">
         <button
           onClick={toggle}
           disabled={busy}
-          aria-label={suspended ? `Activar ${supplier.name}` : `Suspender ${supplier.name}`}
+          // WCAG 2.5.3 (label in name): the accessible name starts with the visible text ("Activo"/"Suspendido").
+          aria-label={suspended ? `Suspendido: activar ${supplier.name}` : `Activo: suspender ${supplier.name}`}
           className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold transition disabled:opacity-60 ${
             suspended
               ? "bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"

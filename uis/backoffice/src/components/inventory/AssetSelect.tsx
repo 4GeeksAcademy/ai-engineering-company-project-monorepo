@@ -1,4 +1,4 @@
-import { Field, inputClass } from "../incidents/Field";
+import { Field, inputClass } from "../ui/Field";
 import { assetOptionLabel } from "../../lib/inventoryRules";
 import type { Asset } from "../../types/inventory";
 

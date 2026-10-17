@@ -13,7 +13,7 @@ import {
   type IncidentOrigin,
   type IncidentStatus,
 } from "@repo/shared-types";
-import { inputClass } from "./Field";
+import { inputClass, selectClass } from "../ui/Field";
 
 interface Props {
   filters: IncidentFilters;
@@ -21,7 +21,6 @@ interface Props {
   onChange: (filters: IncidentFilters) => void;
 }
 
-const selectClass = inputClass.replace("w-full", "w-auto");
 
 export default function IncidentFiltersBar({ filters, facets, onChange }: Props) {
   const set = <K extends keyof IncidentFilters>(key: K, value: IncidentFilters[K]) => onChange({ ...filters, [key]: value });

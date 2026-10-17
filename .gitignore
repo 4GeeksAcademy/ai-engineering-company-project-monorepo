@@ -38,3 +38,4 @@ results.csv
 # Logs
 *.log
 npm-debug.log*
+dist-ssr/

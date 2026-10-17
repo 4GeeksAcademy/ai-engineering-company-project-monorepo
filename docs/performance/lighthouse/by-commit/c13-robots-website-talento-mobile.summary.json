@@ -1,0 +1,32 @@
+{
+  "url": "http://127.0.0.1:4174/talento/",
+  "preset": "mobile",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 95,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcpMs": 1421,
+      "lcpMs": 1421,
+      "tbtMs": 41,
+      "cls": 0,
+      "speedIndexMs": 1421,
+      "ttfbMs": 3,
+      "transferKB": 78
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 95,
+    "bestPractices": 96,
+    "seo": 100,
+    "fcpMs": 1421,
+    "lcpMs": 1421,
+    "tbtMs": 41,
+    "cls": 0,
+    "speedIndexMs": 1421,
+    "ttfbMs": 3,
+    "transferKB": 78
+  }
+}

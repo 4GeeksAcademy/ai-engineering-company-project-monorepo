@@ -23,7 +23,7 @@ export default function StockPanel({
       className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"
     >
       {!asset || stock === null ? (
-        <p className="text-slate-500">Selecciona un activo para ver su stock disponible.</p>
+        <p className="text-slate-400">Selecciona un activo para ver su stock disponible.</p>
       ) : (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-slate-300">
@@ -33,7 +33,7 @@ export default function StockPanel({
             </strong>
           </p>
           <StockBadge stock={stock} />
-          {refreshing && <Loader2 className="animate-spin text-slate-500" size={14} aria-label="Actualizando stock" />}
+          {refreshing && <Loader2 className="animate-spin text-slate-400" size={14} aria-label="Actualizando stock" />}
         </div>
       )}
     </div>

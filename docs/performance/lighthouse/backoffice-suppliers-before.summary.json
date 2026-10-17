@@ -1,0 +1,58 @@
+{
+  "url": "http://127.0.0.1:5174/suppliers",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 83,
+      "accessibility": 96,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 175,
+      "lcpMs": 330,
+      "tbtMs": 0,
+      "cls": 0.351,
+      "speedIndexMs": 368,
+      "ttfbMs": 5,
+      "transferKB": 22
+    },
+    {
+      "performance": 83,
+      "accessibility": 96,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 188,
+      "lcpMs": 396,
+      "tbtMs": 0,
+      "cls": 0.351,
+      "speedIndexMs": 368,
+      "ttfbMs": 3,
+      "transferKB": 20
+    },
+    {
+      "performance": 83,
+      "accessibility": 96,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 188,
+      "lcpMs": 417,
+      "tbtMs": 1,
+      "cls": 0.351,
+      "speedIndexMs": 377,
+      "ttfbMs": 0,
+      "transferKB": 19
+    }
+  ],
+  "median": {
+    "performance": 83,
+    "accessibility": 96,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 188,
+    "lcpMs": 396,
+    "tbtMs": 0,
+    "cls": 0.351,
+    "speedIndexMs": 368,
+    "ttfbMs": 3,
+    "transferKB": 20
+  }
+}

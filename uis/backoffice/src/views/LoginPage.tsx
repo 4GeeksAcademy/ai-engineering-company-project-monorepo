@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import { ApiError } from "../lib/api";
 import { currentReturnTo } from "../lib/returnTo";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
 
 export default function LoginPage() {
   const { status, login } = useAuth();
@@ -59,7 +57,7 @@ export default function LoginPage() {
         <p className="text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <h1 className="mt-6 text-lg font-semibold text-white">Iniciar sesión</h1>
 
         <label className="mt-4 block text-sm text-slate-300">
@@ -84,9 +82,7 @@ export default function LoginPage() {
         </label>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-            {error}
-          </div>
+          <ErrorBanner message={error} className="mt-4" />
         )}
 
         <button
@@ -99,7 +95,7 @@ export default function LoginPage() {
         </button>
         <p className="mt-4 text-center text-sm text-slate-400">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="text-cyan-300 hover:text-cyan-200">
+          <Link href="/register" className="text-cyan-300 underline hover:text-cyan-200">
             Regístrate
           </Link>
         </p>

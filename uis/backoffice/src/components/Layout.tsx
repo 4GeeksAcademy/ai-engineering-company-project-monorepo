@@ -34,11 +34,12 @@ export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   return (
     <div className="flex min-h-screen bg-slate-950">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-900/60 px-4 py-6">
+      {/* sticky + h-screen: the menu is as tall as the window, not as the page, so its user block does not slide down (a layout shift) when a long table loads. */}
+      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-800 bg-slate-900/60 px-4 py-6">
         <p className="px-2 text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="px-2 text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="px-2 text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <nav className="mt-8 space-y-1" aria-label="Navegación principal">
           {navItems.map(({ href, label, icon: Icon, end, exclude }) => {
             const isActive =
@@ -63,7 +64,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <p className="truncate text-sm font-medium text-white" data-testid="current-user">
             {user?.profile.name ?? user?.email}
           </p>
-          <p className="truncate text-xs text-slate-500">{user?.email}</p>
+          <p className="truncate text-xs text-slate-400">{user?.email}</p>
           <button
             type="button"
             onClick={logout}

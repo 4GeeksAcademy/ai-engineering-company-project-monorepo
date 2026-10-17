@@ -23,7 +23,7 @@ export default function IncidentTable({ items, sort, order, onSort }: Props) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
       <table className="w-full text-left text-sm">
-        <thead className="text-xs text-slate-500">
+        <thead className="text-xs text-slate-400">
           <tr>
             {sortable("id", "ID")}
             <th scope="col" className="px-4 py-3 uppercase tracking-wider">Título</th>
@@ -38,7 +38,8 @@ export default function IncidentTable({ items, sort, order, onSort }: Props) {
           {items.map((i) => (
             <tr key={i.id} className="border-t border-slate-800 text-slate-200">
               <td className="whitespace-nowrap px-4 py-3">
-                <Link href={`/incidents/${i.id}`} className="font-medium text-cyan-300 hover:underline">
+                {/* prefetch off: the default would fetch all 15 rows on every load, and a user opens one at a time. */}
+                <Link href={`/incidents/${i.id}`} prefetch={false} className="font-medium text-cyan-300 hover:underline">
                   {i.id}
                 </Link>
               </td>

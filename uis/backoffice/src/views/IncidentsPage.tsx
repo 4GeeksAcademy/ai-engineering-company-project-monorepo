@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import {
   EMPTY_FILTERS,
   type Incident,
@@ -12,9 +12,10 @@ import {
 } from "@repo/shared-types";
 import IncidentFiltersBar from "../components/incidents/IncidentFilters";
 import IncidentForm from "../components/incidents/IncidentForm";
-import IncidentSummaryPanel from "../components/incidents/IncidentSummaryPanel";
+import IncidentSummaryPanel, { IncidentSummarySkeleton } from "../components/incidents/IncidentSummaryPanel";
 import IncidentTable from "../components/incidents/IncidentTable";
-import { ErrorBanner } from "../components/incidents/Field";
+import { ErrorBanner } from "../components/ui/Field";
+import LoadingState from "../components/ui/LoadingState";
 import {
   getIncidentFacets,
   getIncidentSummary,
@@ -127,7 +128,7 @@ export default function IncidentsPage() {
         </div>
       )}
 
-      <div className="mt-8">{summary ? <IncidentSummaryPanel summary={summary} /> : null}</div>
+      <div className="mt-8">{summary ? <IncidentSummaryPanel summary={summary} /> : <IncidentSummarySkeleton />}</div>
 
       <div className="mt-8">
         <IncidentFiltersBar filters={filters} facets={facets} onChange={changeFilters} />
@@ -141,10 +142,7 @@ export default function IncidentsPage() {
 
       <div className="mt-6" aria-busy={loading}>
         {list === null && loading ? (
-          <div className="flex items-center gap-3 text-slate-300">
-            <Loader2 className="animate-spin" size={20} />
-            Cargando…
-          </div>
+          <LoadingState reserveSpace />
         ) : list && list.total === 0 ? (
           <p className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-10 text-center text-sm text-slate-400">
             {hasFilters

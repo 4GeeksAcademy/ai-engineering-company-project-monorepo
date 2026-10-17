@@ -1,29 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
+import { ErrorBanner, selectClass } from "../components/ui/Field";
+import LoadingState from "../components/ui/LoadingState";
+import { useAsyncResource } from "../lib/useAsyncResource";
 import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "../lib/api";
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
 
-const selectClass =
-  "rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
+const NO_SUPPLIERS: Supplier[] = [];
+const describeLoadError = (err: unknown) => (err instanceof ApiError ? err.message : "No se pudo cargar el directorio.");
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: suppliers, setData: setSuppliers, loading, error, setError } = useAsyncResource(listSuppliers, NO_SUPPLIERS, describeLoadError);
   const [showForm, setShowForm] = useState(false);
   const [country, setCountry] = useState<Country | "">("");
   const [category, setCategory] = useState<Category | "">("");
-
-  useEffect(() => {
-    listSuppliers()
-      .then(setSuppliers)
-      .catch((err) => setError(err instanceof ApiError ? err.message : "No se pudo cargar el directorio."))
-      .finally(() => setLoading(false));
-  }, []);
 
   const replace = (updated: Supplier) =>
     setSuppliers((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
@@ -97,24 +91,19 @@ export default function SuppliersPage() {
             </option>
           ))}
         </select>
-        <p className="self-center text-sm text-slate-500">{visible.length} proveedores</p>
+        <p className="self-center text-sm text-slate-400">{visible.length} proveedores</p>
       </div>
 
       {error && (
-        <div role="alert" className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-          {error}
-        </div>
+        <ErrorBanner message={error} className="mt-6" />
       )}
 
       {loading ? (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Cargando...
-        </div>
+        <LoadingState label="Cargando..." reserveSpace className="mt-6" />
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
           <table className="w-full text-left">
-            <thead className="text-xs uppercase tracking-wider text-slate-500">
+            <thead className="text-xs uppercase tracking-wider text-slate-400">
               <tr>
                 <th className="px-4 py-3">Proveedor</th>
                 <th className="px-4 py-3">País</th>
@@ -130,7 +119,7 @@ export default function SuppliersPage() {
               ))}
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">
                     No hay proveedores con esos filtros.
                   </td>
                 </tr>

@@ -1,0 +1,137 @@
+{
+  "app": "website",
+  "base": "http://127.0.0.1:4174",
+  "cpuSlowdown": 4,
+  "runs": [
+    {
+      "run": 1,
+      "interactions": 26,
+      "inp": 64,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 5,
+          "processing": 3
+        },
+        {
+          "type": "pointerdown",
+          "duration": 48,
+          "input": 12,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 14,
+          "processing": 0,
+          "target": "INPUT"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "interactions": 21,
+      "inp": 120,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 120,
+          "input": 6,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 14,
+          "processing": 3
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 3,
+          "processing": 2,
+          "target": "BUTTON"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "interactions": 23,
+      "inp": 64,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 5,
+          "processing": 1
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 6,
+          "processing": 1
+        },
+        {
+          "type": "keydown",
+          "duration": 32,
+          "input": 1,
+          "processing": 1,
+          "target": "INPUT"
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "interactions": 23,
+      "inp": 64,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 6,
+          "processing": 0
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 10,
+          "processing": 1
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 1,
+          "processing": 1
+        }
+      ]
+    },
+    {
+      "run": 5,
+      "interactions": 26,
+      "inp": 64,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 64,
+          "input": 5,
+          "processing": 4
+        },
+        {
+          "type": "keyup",
+          "duration": 40,
+          "input": 29,
+          "processing": 1,
+          "target": "INPUT"
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 2,
+          "processing": 4
+        }
+      ]
+    }
+  ],
+  "medianInp": 64
+}

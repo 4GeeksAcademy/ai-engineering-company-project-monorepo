@@ -9,6 +9,22 @@ _These instructions are also available in [English](./README.md)._
 
 ---
 
+## 📦 Entrega: auditoría de rendimiento (Lighthouse)
+
+Todo lo de la auditoría está en este repositorio, en `main`:
+
+| Qué | Dónde |
+|---|---|
+| **Auditoría**: puntuaciones iniciales, causa raíz de cada problema, casos de duplicación, qué identifican las skills de agente | [`AUDIT.md`](./AUDIT.md) |
+| **Informe**: cada mejora, puntuaciones antes/después, impacto de cada commit, INP, qué tuvo mayor impacto | [`REPORT.md`](./REPORT.md) |
+| **Capturas de Lighthouse** | [`audit/before/`](./audit/before/) · [`audit/after/`](./audit/after/) |
+| Evidencia en bruto (JSON de Lighthouse, resultados por commit, INP, comparaciones A/B) | [`docs/performance/`](./docs/performance/) |
+| Apuntes de estudio (cómo se hizo, decisiones, errores) | [`aprendiendo con la ia - PERF-AUDIT.md`](./aprendiendo%20con%20la%20ia%20-%20PERF-AUDIT.md) |
+
+En una línea: las cuatro categorías de Lighthouse quedan en 100 en el website (móvil y escritorio) y en el backoffice, se corrigieron los desplazamientos de diseño del backoffice (CLS 0,255 y 0,351; Performance 87 y 83 → 100), y cada commit corrige un problema y está medido. Cómo reproducirlo: [`REPORT.md` §8](./REPORT.md#8-cómo-reproducir).
+
+---
+
 ## Propósito
 
 Este repositorio es la **plantilla de inicio** para los proyectos transversales. Trabajarás con escenarios de empresas reales (Brasaland, TrackFlow, Nexova) construyendo entregables que se corresponden con los hitos del curso (Web, Programación, Backend, Telemetría, RAG, Agentes, Workflows, Tiempo real).

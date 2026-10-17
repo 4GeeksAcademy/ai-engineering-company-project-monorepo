@@ -1,0 +1,32 @@
+{
+  "url": "http://127.0.0.1:5175/suppliers",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 96,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 195,
+      "lcpMs": 364,
+      "tbtMs": 3,
+      "cls": 0,
+      "speedIndexMs": 395,
+      "ttfbMs": 4,
+      "transferKB": 22
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 96,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 195,
+    "lcpMs": 364,
+    "tbtMs": 3,
+    "cls": 0,
+    "speedIndexMs": 395,
+    "ttfbMs": 4,
+    "transferKB": 22
+  }
+}

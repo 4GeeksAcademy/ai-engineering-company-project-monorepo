@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import { emptyForm, signUpErrorFromApi, validateSignUp, type Field, type FieldErrors, type Form } from "../lib/signUpForm";
 import type { SignUpPayload } from "../types/auth";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none aria-[invalid=true]:border-rose-500";
 
 export default function RegisterPage() {
   const { status, register } = useAuth();
@@ -115,7 +113,7 @@ export default function RegisterPage() {
           {fieldError("confirmPassword")}
         </div>
 
-        <p className="mt-6 text-xs uppercase tracking-widest text-slate-500">Perfil (opcional)</p>
+        <p className="mt-6 text-xs uppercase tracking-widest text-slate-400">Perfil (opcional)</p>
         <div className="mt-2 text-sm text-slate-300">
           <label className="block">
             Nombre
@@ -139,9 +137,7 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-            {error}
-          </div>
+          <ErrorBanner message={error} className="mt-4" />
         )}
 
         <button
@@ -155,7 +151,7 @@ export default function RegisterPage() {
       </form>
       <p className="mt-4 text-center text-sm text-slate-400">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/login" className="text-cyan-300 underline hover:text-cyan-200">
           Inicia sesión
         </Link>
       </p>
@@ -170,7 +166,7 @@ function Shell({ children }: { children: ReactNode }) {
         <p className="text-xl font-black text-white">
           nexova<span className="text-cyan-400">.</span>
         </p>
-        <p className="text-xs uppercase tracking-widest text-slate-500">Backoffice</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">Backoffice</p>
         <h1 className="mt-6 text-lg font-semibold text-white">Crear cuenta</h1>
         {children}
       </div>

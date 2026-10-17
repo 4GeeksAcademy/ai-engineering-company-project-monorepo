@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, PackageMinus, PackagePlus, RefreshCw } from "lucide-react";
-import { ErrorBanner, inputClass } from "../components/incidents/Field";
+import { PackageMinus, PackagePlus, RefreshCw } from "lucide-react";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import StockBadge from "../components/inventory/StockBadge";
 import { useAssets } from "../components/inventory/useAssets";
+import LoadingState from "../components/ui/LoadingState";
 import {
   compareByUrgency,
   countByLevel,
@@ -94,10 +95,7 @@ export default function AssetsPage() {
       )}
 
       {loading ? (
-        <div className="mt-8 flex items-center gap-3 text-slate-300">
-          <Loader2 className="animate-spin" size={20} />
-          Cargando inventario…
-        </div>
+        <LoadingState label="Cargando inventario…" reserveSpace className="mt-8" />
       ) : (
         !error && (
           <>
@@ -152,7 +150,7 @@ export default function AssetsPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-sm text-slate-500" aria-live="polite">
+              <p className="text-sm text-slate-400" aria-live="polite">
                 {visible.length} de {assets.length} activos
               </p>
             </div>
@@ -160,7 +158,7 @@ export default function AssetsPage() {
             <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
               <table className="w-full text-left">
                 <caption className="sr-only">Activos con su stock actual y nivel de stock</caption>
-                <thead className="text-xs uppercase tracking-wider text-slate-500">
+                <thead className="text-xs uppercase tracking-wider text-slate-400">
                   <tr>
                     <th className="px-4 py-3">Activo</th>
                     <th className="px-4 py-3">SKU</th>
@@ -208,7 +206,7 @@ export default function AssetsPage() {
                   ))}
                   {visible.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                      <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-400">
                         {assets.length === 0 ? "Todavía no hay activos registrados." : "No hay activos con esos filtros."}
                       </td>
                     </tr>

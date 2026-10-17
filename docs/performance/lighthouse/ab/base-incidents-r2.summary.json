@@ -1,0 +1,45 @@
+{
+  "url": "http://127.0.0.1:5175/incidents",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 87,
+      "accessibility": 94,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 182,
+      "lcpMs": 420,
+      "tbtMs": 0,
+      "cls": 0.255,
+      "speedIndexMs": 403,
+      "ttfbMs": 7,
+      "transferKB": 31
+    },
+    {
+      "performance": 87,
+      "accessibility": 94,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 175,
+      "lcpMs": 412,
+      "tbtMs": 0,
+      "cls": 0.255,
+      "speedIndexMs": 381,
+      "ttfbMs": 4,
+      "transferKB": 29
+    }
+  ],
+  "median": {
+    "performance": 87,
+    "accessibility": 94,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 175,
+    "lcpMs": 412,
+    "tbtMs": 0,
+    "cls": 0.255,
+    "speedIndexMs": 381,
+    "ttfbMs": 4,
+    "transferKB": 29
+  }
+}

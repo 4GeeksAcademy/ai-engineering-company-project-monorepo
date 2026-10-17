@@ -23,7 +23,7 @@ export function Field({
         {label}
       </label>
       <div className="mt-1">{children}</div>
-      {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
       {error && (
         <p id={`${id}-error`} className="mt-1 text-xs text-rose-300">
           {error}
@@ -33,9 +33,12 @@ export function Field({
   );
 }
 
-export function ErrorBanner({ message }: { message: string }) {
+/** Same control as `inputClass` for a <select> that sits in a row of filters (its width follows its options). */
+export const selectClass = inputClass.replace("w-full", "w-auto");
+
+export function ErrorBanner({ message, className = "" }: { message: string; className?: string }) {
   return (
-    <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+    <div role="alert" className={`rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 ${className}`.trim()}>
       {message}
     </div>
   );
