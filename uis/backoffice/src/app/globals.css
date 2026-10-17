@@ -1,0 +1,491 @@
+* {
+  box-sizing: border-box;
+}
+
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+
+body {
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  background:
+    #f4f5f7;
+
+  color:
+    #1c2128;
+}
+
+
+a {
+  color: inherit;
+
+  text-decoration: none;
+}
+
+
+button,
+input {
+  font: inherit;
+}
+
+
+.navbar {
+  background:
+    #181b20;
+
+  color:
+    white;
+}
+
+
+.navContent {
+  width:
+    min(
+      1100px,
+      92%
+    );
+
+  height:
+    68px;
+
+  margin:
+    auto;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+}
+
+
+.logo {
+  font-weight:
+    800;
+
+  letter-spacing:
+    1.5px;
+}
+
+
+.navLinks {
+  display:
+    flex;
+
+  gap:
+    24px;
+}
+
+
+.navLinks a {
+  opacity:
+    0.75;
+}
+
+
+.navLinks a:hover {
+  opacity:
+    1;
+}
+
+
+.container {
+  width:
+    min(
+      1100px,
+      92%
+    );
+
+  margin:
+    48px auto;
+}
+
+
+.hero {
+  padding:
+    70px 0;
+}
+
+
+.hero h1,
+.pageHeader h1 {
+  margin:
+    8px 0 12px;
+
+  font-size:
+    42px;
+}
+
+
+.hero p,
+.pageHeader p {
+  color:
+    #656d76;
+
+  line-height:
+    1.6;
+}
+
+
+.eyebrow {
+  font-size:
+    12px;
+
+  letter-spacing:
+    2px;
+
+  font-weight:
+    800;
+
+  color:
+    #777f89;
+}
+
+
+.button,
+button {
+  display:
+    inline-block;
+
+  border:
+    0;
+
+  border-radius:
+    8px;
+
+  background:
+    #1f2328;
+
+  color:
+    white;
+
+  padding:
+    12px 18px;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+}
+
+
+.button {
+  margin-top:
+    16px;
+}
+
+
+button:disabled {
+  opacity:
+    0.55;
+
+  cursor:
+    default;
+}
+
+
+.card {
+  background:
+    white;
+
+  border:
+    1px solid #e5e7eb;
+
+  border-radius:
+    14px;
+
+  padding:
+    24px;
+
+  margin-bottom:
+    20px;
+
+  box-shadow:
+    0 5px 20px
+    rgba(
+      0,
+      0,
+      0,
+      0.04
+    );
+}
+
+
+.card h2 {
+  margin-top:
+    0;
+}
+
+
+.uploadForm {
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  flex-wrap:
+    wrap;
+}
+
+
+.fileArea {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    10px;
+}
+
+
+.fileArea label {
+  font-weight:
+    700;
+}
+
+
+.fileArea small {
+  color:
+    #656d76;
+}
+
+
+.error {
+  margin-top:
+    20px;
+
+  padding:
+    14px;
+
+  border-radius:
+    8px;
+
+  background:
+    #feecec;
+
+  color:
+    #a12020;
+}
+
+
+.metrics {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      1fr
+    );
+
+  gap:
+    16px;
+
+  margin-bottom:
+    20px;
+}
+
+
+.metric {
+  padding:
+    22px;
+
+  border-radius:
+    14px;
+
+  background:
+    white;
+
+  border:
+    1px solid #e5e7eb;
+
+  box-shadow:
+    0 5px 20px
+    rgba(
+      0,
+      0,
+      0,
+      0.04
+    );
+}
+
+
+.metric span {
+  display:
+    block;
+
+  margin-bottom:
+    10px;
+
+  color:
+    #656d76;
+}
+
+
+.metric strong {
+  font-size:
+    30px;
+}
+
+
+.twoColumns {
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    20px;
+}
+
+
+.dataList {
+  list-style:
+    none;
+
+  padding:
+    0;
+
+  margin:
+    0;
+}
+
+
+.dataList li {
+  display:
+    flex;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  padding:
+    11px 0;
+
+  border-bottom:
+    1px solid #edf0f2;
+}
+
+
+.satisfactionGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      1fr
+    );
+
+  gap:
+    16px;
+
+  margin:
+    20px 0 28px;
+}
+
+
+.satisfactionGrid div {
+  padding:
+    16px;
+
+  background:
+    #f6f7f8;
+
+  border-radius:
+    10px;
+}
+
+
+.satisfactionGrid span {
+  display:
+    block;
+
+  color:
+    #656d76;
+
+  margin-bottom:
+    7px;
+}
+
+
+.satisfactionGrid strong {
+  font-size:
+    22px;
+}
+
+
+.downloadButton {
+  margin-top:
+    24px;
+}
+
+
+@media (
+  max-width: 750px
+) {
+
+  .metrics {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+
+  .twoColumns {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .satisfactionGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .navContent {
+    height:
+      auto;
+
+    padding:
+      18px 0;
+
+    flex-direction:
+      column;
+
+    gap:
+      14px;
+  }
+
+
+  .hero h1,
+  .pageHeader h1 {
+    font-size:
+      34px;
+  }
+
+}
