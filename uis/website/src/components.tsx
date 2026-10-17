@@ -21,10 +21,10 @@ export function CheckItem({ children, compact = false }: { children: ReactNode; 
   );
 }
 
-/** Link inside running text. */
+/** Link inside running text: underlined too, so it does not depend on its colour alone to be told apart (WCAG 1.4.1). */
 export function TextLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a className="text-cyan-300" href={href}>
+    <a className="text-cyan-300 underline" href={href}>
       {children}
     </a>
   );
