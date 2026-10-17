@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import CsvUploader from "../components/incidents/CsvUploader";
 import MetricsSummary from "../components/incidents/MetricsSummary";
+import { ErrorBanner } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import { analyzeIncidentsFile, downloadResultsCsv, ApiError } from "../lib/api";
 import type { AnalyzeResponse } from "../types/incidents";
@@ -66,9 +67,7 @@ export default function IncidentsAnalysisPage() {
       )}
 
       {error && (
-        <div role="alert" className="mt-8 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-          {error}
-        </div>
+        <ErrorBanner message={error} className="mt-8" />
       )}
 
       {result && !isAnalyzing && (

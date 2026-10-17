@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { inputClass } from "../ui/Field";
+import { ErrorBanner, inputClass } from "../ui/Field";
 import { ApiError, createSupplier } from "../../lib/api";
 import {
   CATEGORIES,
@@ -126,9 +126,7 @@ export default function SupplierForm({ onCreated, onCancel }: Props) {
         </div>
       </fieldset>
       {error && (
-        <div role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-          {error}
-        </div>
+        <ErrorBanner message={error} className="mt-4" />
       )}
       <div className="mt-6 flex gap-3">
         <button

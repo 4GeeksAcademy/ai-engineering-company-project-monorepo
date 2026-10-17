@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
-import { selectClass } from "../components/ui/Field";
+import { ErrorBanner, selectClass } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "../lib/api";
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
@@ -100,9 +100,7 @@ export default function SuppliersPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-          {error}
-        </div>
+        <ErrorBanner message={error} className="mt-6" />
       )}
 
       {loading ? (

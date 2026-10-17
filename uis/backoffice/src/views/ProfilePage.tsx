@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
-import { inputClass } from "../components/ui/Field";
+import { ErrorBanner, inputClass } from "../components/ui/Field";
 import { ApiError } from "../lib/api";
 import { profileChanges, toProfileForm, validateProfileFields, type ProfileFieldValues } from "../lib/profileFields";
 
@@ -37,9 +37,7 @@ export default function ProfilePage() {
 
   if (loadError) {
     return (
-      <div role="alert" className="mx-auto max-w-2xl rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-        {loadError}
-      </div>
+      <ErrorBanner message={loadError} className="mx-auto max-w-2xl" />
     );
   }
   if (!user || !form) return <p className="text-sm text-slate-400">Cargando tu perfil…</p>;
@@ -126,9 +124,7 @@ export default function ProfilePage() {
         </div>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-            {error}
-          </div>
+          <ErrorBanner message={error} className="mt-4" />
         )}
         {saved && (
           <div role="status" className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
