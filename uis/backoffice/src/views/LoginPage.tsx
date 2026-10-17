@@ -99,7 +99,7 @@ export default function LoginPage() {
         </button>
         <p className="mt-4 text-center text-sm text-slate-400">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="text-cyan-300 hover:text-cyan-200">
+          <Link href="/register" className="text-cyan-300 underline hover:text-cyan-200">
             Regístrate
           </Link>
         </p>
