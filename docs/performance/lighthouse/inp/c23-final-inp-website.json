@@ -1,0 +1,85 @@
+{
+  "app": "website",
+  "base": "http://127.0.0.1:4174",
+  "cpuSlowdown": 4,
+  "runs": [
+    {
+      "run": 1,
+      "interactions": 26,
+      "inp": 80,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 80,
+          "input": 6,
+          "processing": 0
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 9,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 5,
+          "processing": 0,
+          "target": "INPUT"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "interactions": 28,
+      "inp": 72,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 72,
+          "input": 2,
+          "processing": 0
+        },
+        {
+          "type": "pointerdown",
+          "duration": 32,
+          "input": 9,
+          "processing": 2
+        },
+        {
+          "type": "keyup",
+          "duration": 32,
+          "input": 23,
+          "processing": 0,
+          "target": "INPUT"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "interactions": 26,
+      "inp": 72,
+      "worst": [
+        {
+          "type": "pointerdown",
+          "duration": 72,
+          "input": 5,
+          "processing": 3
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 8,
+          "processing": 2
+        },
+        {
+          "type": "pointerdown",
+          "duration": 40,
+          "input": 5,
+          "processing": 1
+        }
+      ]
+    }
+  ],
+  "medianInp": 72
+}

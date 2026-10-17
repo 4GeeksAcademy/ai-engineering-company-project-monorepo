@@ -1,0 +1,101 @@
+ticket_id,date,client_company,category,description,agent_id,status,customer_email,satisfaction_score
+NXV-000001,2024-01-18,FinServ Group,ACCESS,Role permissions not updated after department change,AGT-08,CLOSED,elena.smith13@icloud.com,5
+NXV-000002,2024-01-20,CloudBase Ltd,BILLING,Missing credit note from previous billing cycle,AGT-03,CLOSED,mike.rodriguez11@hotmail.com,4
+NXV-000003,2024-01-14,Retail Iberia SL,ACCESS,User locked out after three failed login attempts,AGT-14,CLOSED,anna.lee25@icloud.com,5
+NXV-000004,2024-01-27,FinServ Group,ACCESS,SSO authentication failing for Microsoft 365 accounts,AGT-15,CLOSED,mike.rodriguez44@protonmail.com,5
+NXV-000005,2024-01-27,RetailMax Corp,HR_QUERY,Request to update bank account for payroll,AGT-04,CLOSED,elena.rodriguez28@protonmail.com,5
+NXV-000006,2024-01-07,UrbanMobility SA,ACCESS,Client admin cannot create sub-accounts,AGT-12,OPEN,carlos.smith45@protonmail.com,
+NXV-000007,2024-01-11,DataBridge Ltd,COMPLAINT,Client reports inconsistent answers across agents,AGT-14,DISCARDED,james.johnson48@hotmail.com,
+NXV-000008,2024-01-19,InsureNow Group,ACCESS,SSO authentication failing for Microsoft 365 accounts,AGT-14,CLOSED,carlos.lee78@protonmail.com,3
+NXV-000009,2024-01-12,Logify GmbH,HR_QUERY,Clarification needed on remote work expense policy,AGT-13,CLOSED,tom.lee51@gmail.com,2
+NXV-000010,2024-01-23,CloudBase Ltd,HR_QUERY,Clarification needed on remote work expense policy,AGT-07,CLOSED,laura.lee15@yahoo.com,5
+NXV-000011,2024-01-24,RetailMax Corp,BILLING,Missing credit note from previous billing cycle,AGT-15,DISCARDED,tom.lee94@icloud.com,
+NXV-000012,2024-01-05,RetailMax Corp,BILLING,Invoice amount does not match agreed contract rate,AGT-03,CLOSED,sofia.smith66@outlook.com,4
+NXV-000013,2024-01-17,RetailMax Corp,COMPLAINT,Agent response time exceeded 48-hour SLA,AGT-12,OPEN,carlos.lee93@gmail.com,
+NXV-000014,2024-01-03,RetailMax Corp,BILLING,Client requesting VAT breakdown on recent invoice,AGT-06,DISCARDED,tom.brown20@yahoo.com,
+NXV-000015,2024-01-28,InsureNow Group,ACCESS,Client admin cannot create sub-accounts,AGT-07,CLOSED,sofia.brown72@hotmail.com,4
+NXV-000016,2024-01-02,UrbanMobility SA,ACCESS,New team member cannot access the admin panel,AGT-04,DISCARDED,mike.garcia21@protonmail.com,
+NXV-000017,2024-01-22,,TECHNICAL,User cannot access the reporting module,AGT-04,OPEN,carlos.johnson49@icloud.com,
+NXV-000018,2024-01-04,InsureNow Group,COMPLAINT,Agent response time exceeded 48-hour SLA,AGT-08,OPEN,carlos.brown48@outlook.com,
+NXV-000019,2024-01-02,Logify GmbH,TECHNICAL,Email notifications not being delivered to users,AGT-01,DISCARDED,mike.johnson57@protonmail.com,
+NXV-000020,2024-01-05,CloudBase Ltd,HR_QUERY,Clarification needed on remote work expense policy,AGT-07,OPEN,carlos.garcia32@outlook.com,
+NXV-000021,2024-01-20,PharmaCore SL,HR_QUERY,Clarification needed on remote work expense policy,AGT-11,OPEN,laura.lee84@gmail.com,
+NXV-000022,2024-01-08,RetailMax Corp,TECHNICAL,API endpoint returns incorrect data for date ranges,AGT-05,OPEN,elena.johnson95@outlook.com,
+NXV-000023,2024-01-29,RetailMax Corp,TECHNICAL,Integration with CRM stopped syncing last night,AGT-11,CLOSED,carlos.smith66@yahoo.com,4
+NXV-000024,2024-01-19,MediaFirst SA,HR_QUERY,Query about probation period terms in contract,AGT-07,CLOSED,mike.lee48@gmail.com,3
+NXV-000025,2024-01-13,RetailMax Corp,TECHNICAL,User unable to log in after password reset,AGT-04,CLOSED,tom.rodriguez55@hotmail.com,4
+NXV-000026,2024-01-10,SkyTech SL,TECHNICAL,Integration with CRM stopped syncing last night,AGT-01,OPEN,tom.johnson11@hotmail.com,
+NXV-000027,2024-01-28,InsureNow Group,HR_QUERY,Query about probation period terms in contract,AGT-01,DISCARDED,elena.johnson39@hotmail.com,
+NXV-000028,2024-01-26,Logify GmbH,ACCESS,User locked out after three failed login attempts,AGT-11,DISCARDED,laura.rodriguez42@icloud.com,
+NXV-000029,2024-01-25,SkyTech SL,TECHNICAL,Email notifications not being delivered to users,AGT-11,OPEN,carlos.brown22@icloud.com,
+NXV-000030,2024-01-21,TechNova Inc,TECHNICAL,Integration with CRM stopped syncing last night,AGT-13,OPEN,elena.smith84@yahoo.com,
+NXV-000031,2024-01-24,FinServ Group,TECHNICAL,User unable to log in after password reset,AGT-15,OPEN,mike.johnson63@gmail.com,
+NXV-000032,2024-01-07,FinServ Group,COMPLAINT,Complaint about tone of communication from agent,AGT-15,CLOSED,sofia.rodriguez74@yahoo.com,3
+NXV-000033,2024-01-27,FinServ Group,ACCESS,Role permissions not updated after department change,AGT-15,CLOSED,elena.johnson53@outlook.com,4
+NXV-000034,2024-01-15,Retail Iberia SL,ACCESS,User locked out after three failed login attempts,AGT-13,OPEN,laura.brown96@protonmail.com,
+NXV-000035,2024-01-31,DataBridge Ltd,BILLING,Client requesting VAT breakdown on recent invoice,AGT-02,DISCARDED,tom.smith43@hotmail.com,
+NXV-000036,2024-01-04,RetailMax Corp,TECHNICAL,Integration with CRM stopped syncing last night,AGT-11,CLOSED,mike.rodriguez58@icloud.com,1
+NXV-000037,2024-01-31,Logify GmbH,TECHNICAL,User unable to log in after password reset,AGT-11,CLOSED,laura.lee13@hotmail.com,5
+NXV-000038,2024-01-29,DataBridge Ltd,HR_QUERY,Question on overtime policy during public holidays,AGT-15,CLOSED,laura.brown18@icloud.com,2
+NXV-000039,2024-01-27,RetailMax Corp,HR_QUERY,Query about probation period terms in contract,AGT-05,CLOSED,tom.smith27@outlook.com,4
+NXV-000040,2024-01-31,TechNova Inc,HR_QUERY,Question on overtime policy during public holidays,AGT-08,CLOSED,anna.smith40@hotmail.com,3
+NXV-000041,2024-01-05,PharmaCore SL,TECHNICAL,Dashboard loading times exceed 30 seconds,AGT-06,CLOSED,tom.rodriguez29@protonmail.com,5
+NXV-000042,2024-01-21,Retail Iberia SL,COMPLAINT,Escalation ignored for three business days,AGT-10,CLOSED,tom.johnson14@icloud.com,5
+NXV-000043,2024-01-23,RetailMax Corp,,Uncategorised issue reported by client manager,AGT-09,OPEN,tom.garcia86@icloud.com,
+NXV-000044,2024-01-12,CloudBase Ltd,HR_QUERY,Request to update bank account for payroll,AGT-08,OPEN,laura.johnson22@icloud.com,
+NXV-000045,2024-01-12,DataBridge Ltd,BILLING,Missing credit note from previous billing cycle,AGT-06,CLOSED,james.lee45@gmail.com,3
+NXV-000046,2024-01-31,Retail Iberia SL,HR_QUERY,Request to update bank account for payroll,AGT-02,CLOSED,laura.brown91@hotmail.com,1
+NXV-000047,2024-01-01,TechNova Inc,TECHNICAL,Email notifications not being delivered to users,AGT-06,CLOSED,laura.garcia82@gmail.com,5
+NXV-000048,2024-01-03,DataBridge Ltd,TECHNICAL,Application throws 500 error on report export,AGT-10,CLOSED,laura.garcia52@gmail.com,4
+NXV-000049,2024-01-26,UrbanMobility SA,ACCESS,New team member cannot access the admin panel,AGT-05,CLOSED,carlos.garcia79@yahoo.com,3
+NXV-000050,2024-01-26,FinServ Group,TECHNICAL,User unable to log in after password reset,AGT-11,CLOSED,james.garcia11@yahoo.com,4
+NXV-000051,2024-01-26,CloudBase Ltd,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-06,CLOSED,james.garcia43@outlook.com,3
+NXV-000052,2024-01-05,SkyTech SL,TECHNICAL,Dashboard loading times exceed 30 seconds,AGT-09,CLOSED,anna.brown18@protonmail.com,3
+NXV-000053,2024-01-15,Logify GmbH,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-10,OPEN,anna.lee74@gmail.com,
+NXV-000054,2024-01-31,UrbanMobility SA,TECHNICAL,User unable to log in after password reset,AGT-12,OPEN,mike.lee92@outlook.com,
+NXV-000055,2024-01-02,RetailMax Corp,BILLING,Payment processed but service still showing suspended,AGT-07,OPEN,anna.lee66@outlook.com,
+NXV-000056,2024-01-29,Retail Iberia SL,BILLING,Client requesting VAT breakdown on recent invoice,AGT-10,CLOSED,carlos.smith26@yahoo.com,4
+NXV-000057,2024-01-20,InsureNow Group,ACCESS,Client admin cannot create sub-accounts,AGT-09,DISCARDED,sofia.lee86@hotmail.com,
+NXV-000058,2024-01-10,RetailMax Corp,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-10,CLOSED,tom.smith99@outlook.com,5
+NXV-000059,2024-01-28,InsureNow Group,ACCESS,Password reset email not arriving in inbox,AGT-15,CLOSED,laura.lee67@gmail.com,5
+NXV-000060,2024-01-14,Logify GmbH,COMPLAINT,Escalation ignored for three business days,AGT-07,CLOSED,tom.brown22@yahoo.com,3
+NXV-000061,2024-01-14,Logify GmbH,COMPLAINT,Client reports inconsistent answers across agents,AGT-06,OPEN,carlos.brown70@outlook.com,
+NXV-000062,2024-01-03,Retail Iberia SL,TECHNICAL,User unable to log in after password reset,AGT-07,CLOSED,anna.brown57@gmail.com,2
+NXV-000063,2024-01-18,TechNova Inc,COMPLAINT,Complaint about tone of communication from agent,AGT-09,OPEN,sofia.brown25@protonmail.com,
+NXV-000064,2024-01-12,InsureNow Group,COMPLAINT,Escalation ignored for three business days,AGT-14,CLOSED,james.johnson86@yahoo.com,4
+NXV-000065,2024-01-12,Retail Iberia SL,HR_QUERY,Clarification needed on remote work expense policy,AGT-09,OPEN,laura.garcia94@protonmail.com,
+NXV-000066,2024-01-08,Retail Iberia SL,ACCESS,Role permissions not updated after department change,AGT-14,CLOSED,sofia.smith45@hotmail.com,4
+NXV-000067,2024-01-08,PharmaCore SL,BILLING,Dispute over pro-rata charge for partial month,AGT-13,OPEN,james.rodriguez94@icloud.com,
+NXV-000068,2024-01-09,TechNova Inc,BILLING,Double charge detected on last monthly statement,AGT-05,DISCARDED,mike.johnson54@outlook.com,
+NXV-000069,2024-01-06,FinServ Group,ACCESS,Client admin cannot create sub-accounts,AGT-11,CLOSED,tom.smith28@icloud.com,4
+NXV-000070,2024-01-21,TechNova Inc,BILLING,Invoice amount does not match agreed contract rate,AGT-12,CLOSED,laura.lee63@protonmail.com,4
+NXV-000071,2024-01-11,FinServ Group,BILLING,Client requesting VAT breakdown on recent invoice,AGT-05,OPEN,sofia.rodriguez86@outlook.com,
+NXV-000072,2024-01-29,TechNova Inc,TECHNICAL,Application throws 500 error on report export,AGT-03,OPEN,james.brown20@yahoo.com,
+NXV-000073,2024-01-15,InsureNow Group,TECHNICAL,Dashboard loading times exceed 30 seconds,AGT-08,OPEN,elena.lee44@gmail.com,
+NXV-000074,2024-01-25,DataBridge Ltd,ACCESS,New team member cannot access the admin panel,AGT-06,CLOSED,tom.smith46@icloud.com,5
+NXV-000075,2024-01-22,UrbanMobility SA,COMPLAINT,Escalation ignored for three business days,AGT-09,CLOSED,mike.smith38@protonmail.com,2
+NXV-000076,2024-01-20,TechNova Inc,ACCESS,New team member cannot access the admin panel,AGT-04,DISCARDED,mike.garcia27@yahoo.com,
+NXV-000077,2024-01-10,Logify GmbH,HR_QUERY,Request for confirmation of employment letter,AGT-01,CLOSED,elena.brown65@gmail.com,4
+NXV-000078,2024-01-05,PharmaCore SL,HR_QUERY,Clarification needed on remote work expense policy,AGT-12,CLOSED,laura.rodriguez81@icloud.com,5
+NXV-000079,2024-01-26,Logify GmbH,COMPLAINT,Agent response time exceeded 48-hour SLA,AGT-07,CLOSED,james.lee12@protonmail.com,4
+NXV-000080,2024-01-30,Retail Iberia SL,ACCESS,Role permissions not updated after department change,AGT-10,CLOSED,tom.rodriguez61@icloud.com,4
+NXV-000081,2024-01-21,PharmaCore SL,BILLING,Client requesting VAT breakdown on recent invoice,AGT-02,CLOSED,tom.smith51@gmail.com,5
+NXV-000082,2024-01-26,UrbanMobility SA,TECHNICAL,Dashboard loading times exceed 30 seconds,AGT-14,CLOSED,sofia.smith65@outlook.com,4
+NXV-000083,2024-01-08,PharmaCore SL,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-07,CLOSED,anna.lee49@icloud.com,4
+NXV-000084,2024-01-11,CloudBase Ltd,ACCESS,Role permissions not updated after department change,AGT-13,CLOSED,carlos.smith75@icloud.com,5
+NXV-000085,2024-01-04,DataBridge Ltd,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-04,CLOSED,sofia.johnson92@gmail.com,4
+NXV-000086,2024-01-31,FinServ Group,BILLING,Client disputes charge on last invoice,AGT-11,OPEN,not-an-email,
+NXV-000087,2024-01-08,Retail Iberia SL,HR_QUERY,Query about holiday entitlement for part-time contract,AGT-05,CLOSED,laura.garcia87@gmail.com,4
+NXV-000088,2024-01-25,InsureNow Group,COMPLAINT,Agent response time exceeded 48-hour SLA,AGT-03,OPEN,elena.lee82@hotmail.com,
+NXV-000089,2024-01-15,InsureNow Group,HR_QUERY,Clarification needed on remote work expense policy,AGT-11,CLOSED,sofia.brown50@gmail.com,3
+NXV-000090,2024-01-03,CloudBase Ltd,ACCESS,Admin panel access restored after ticket raised,AGT-06,CLOSED,mike.rodriguez58@icloud.com,
+NXV-000091,2024-01-15,Retail Iberia SL,BILLING,Payment processed but service still showing suspended,AGT-08,OPEN,mike.johnson85@outlook.com,
+NXV-000092,2024-01-12,DataBridge Ltd,BILLING,Invoice amount does not match agreed contract rate,AGT-05,CLOSED,elena.lee14@outlook.com,5
+NXV-000093,2024-01-12,MediaFirst SA,BILLING,Invoice amount does not match agreed contract rate,AGT-11,CLOSED,anna.rodriguez86@hotmail.com,5
+NXV-000094,2024-01-13,RetailMax Corp,BILLING,Dispute over pro-rata charge for partial month,AGT-09,DISCARDED,james.lee83@icloud.com,
+NXV-000095,2024-01-07,Logify GmbH,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-08,OPEN,carlos.smith67@outlook.com,
+NXV-000096,2024-01-26,Logify GmbH,ACCESS,Password reset email not arriving in inbox,AGT-02,OPEN,carlos.smith41@icloud.com,
+NXV-000097,2024-01-15,RetailMax Corp,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-09,DISCARDED,carlos.johnson57@yahoo.com,
+NXV-000098,2024-01-13,PharmaCore SL,BILLING,Client requesting VAT breakdown on recent invoice,AGT-11,CLOSED,james.brown92@yahoo.com,2
+NXV-000099,2024-01-03,Logify GmbH,ACCESS,New team member cannot access the admin panel,AGT-09,CLOSED,tom.johnson42@icloud.com,4
+NXV-000100,2024-01-28,InsureNow Group,TECHNICAL,Mobile app crashes on iOS 17 after update,AGT-14,OPEN,carlos.johnson20@hotmail.com,

@@ -9,6 +9,22 @@ _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 
 ---
 
+## 📦 Delivery: performance audit (Lighthouse)
+
+Everything of the audit is in this repository, on `main`:
+
+| What | Where |
+|---|---|
+| **Audit**: baseline scores, root cause of every problem, duplication cases, what the agent skills identify | [`AUDIT.md`](./AUDIT.md) |
+| **Report**: every improvement, before/after scores, impact of each commit, INP, what had most impact | [`REPORT.md`](./REPORT.md) |
+| **Lighthouse screenshots** | [`audit/before/`](./audit/before/) · [`audit/after/`](./audit/after/) |
+| Raw evidence (Lighthouse JSON, per-commit results, INP, A/B runs) | [`docs/performance/`](./docs/performance/) |
+| Study notes (how it was done, decisions, mistakes) | [`aprendiendo con la ia - PERF-AUDIT.md`](./aprendiendo%20con%20la%20ia%20-%20PERF-AUDIT.md) |
+
+In one line: all four Lighthouse categories went to 100 on the website (mobile and desktop) and on the backoffice, the backoffice's layout shifts (CLS 0.255 and 0.351) were fixed (Performance 87 and 83 → 100), and every commit fixes one problem and was measured. How to reproduce it: [`REPORT.md` §8](./REPORT.md#8-cómo-reproducir).
+
+---
+
 ## Purpose
 
 This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).

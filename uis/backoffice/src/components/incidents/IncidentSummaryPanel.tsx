@@ -1,0 +1,106 @@
+import {
+  CATEGORY_LABELS,
+  INCIDENT_CATEGORIES,
+  INCIDENT_ORIGINS,
+  ORIGIN_LABELS,
+  type IncidentSummary,
+} from "@repo/shared-types";
+import { BreakdownBar, StatCard } from "./stats";
+
+/**
+ * Stand-in for the panel while the summary loads. The real panel is ~480 px tall and sits above the filters and the
+ * table: without a placeholder of the same size, its arrival pushes everything below it down (the main layout shift
+ * measured on /incidents). The heights mirror the real cards at each breakpoint (stat 106/126 px, breakdown 290/330 px);
+ * if those cards change size, update them here. Hidden from assistive technology: it carries no information.
+ */
+export function IncidentSummarySkeleton() {
+  return (
+    <div aria-hidden="true" className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="h-[106px] rounded-2xl border border-slate-800 bg-slate-900 lg:h-[126px]" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-[290px] rounded-2xl border border-slate-800 bg-slate-900 xl:h-[330px]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function IncidentSummaryPanel({ summary }: { summary: IncidentSummary }) {
+  const average = summary.satisfaction_average;
+  const counts = summary.status_counts;
+  return (
+    <section aria-label="Resumen de incidencias" className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+        <StatCard label="Total" value={summary.total} />
+        <StatCard label="Abiertas" value={counts.open} tone={counts.open > 0 ? "warn" : "default"} />
+        <StatCard label="En curso" value={counts.in_progress} />
+        <StatCard label="Resueltas" value={counts.resolved} tone="good" />
+        <StatCard label="Descartadas" value={counts.discarded} />
+        <StatCard label="Satisfacción media" value={average !== null ? `${average.toFixed(2)} / 5` : "—"} />
+      </div>
+
+      {summary.total === 0 ? (
+        <p className="text-sm text-slate-400">Sin datos para estos filtros.</p>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h2 className="font-semibold text-white">Por categoría</h2>
+            <div className="mt-4 space-y-3">
+              {INCIDENT_CATEGORIES.map((c) => (
+                <BreakdownBar
+                  key={c}
+                  label={`${CATEGORY_LABELS[c]} · ${summary.active_by_category[c]} activas`}
+                  count={summary.category_counts[c]}
+                  percentage={summary.category_percentages[c]}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h2 className="font-semibold text-white">Por origen</h2>
+            <div className="mt-4 space-y-3">
+              {INCIDENT_ORIGINS.map((o) => (
+                <BreakdownBar
+                  key={o}
+                  label={ORIGIN_LABELS[o]}
+                  count={summary.origin_counts[o]}
+                  percentage={summary.total ? Math.round((summary.origin_counts[o] / summary.total) * 1000) / 10 : 0}
+                />
+              ))}
+            </div>
+          </div>
+          <RankCard title="Sucursales con más incidencias" items={summary.top_branches} />
+          <RankCard title="Clientes con más incidencias" items={summary.top_clients} empty="Ninguna incidencia indica cliente." />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RankCard({ title, items, empty }: { title: string; items: { name: string; count: number }[]; empty?: string }) {
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+      <h2 className="font-semibold text-white">{title}</h2>
+      {items.length === 0 && empty && <p className="mt-4 text-sm text-slate-400">{empty}</p>}
+      <ol className="mt-4 space-y-3">
+        {items.map((item) => (
+          <li key={item.name}>
+            <div className="flex justify-between text-sm">
+              <span className="truncate pr-2 text-slate-200">{item.name}</span>
+              <span className="text-slate-400">{item.count}</span>
+            </div>
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-800">
+              <div className="h-full rounded-full bg-cyan-400" style={{ width: `${(item.count / max) * 100}%` }} />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}

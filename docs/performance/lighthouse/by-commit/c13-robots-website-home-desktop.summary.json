@@ -1,0 +1,32 @@
+{
+  "url": "http://127.0.0.1:4174/",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcpMs": 348,
+      "lcpMs": 348,
+      "tbtMs": 0,
+      "cls": 0,
+      "speedIndexMs": 388,
+      "ttfbMs": 2,
+      "transferKB": 78
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 96,
+    "seo": 100,
+    "fcpMs": 348,
+    "lcpMs": 348,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 388,
+    "ttfbMs": 2,
+    "transferKB": 78
+  }
+}

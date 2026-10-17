@@ -1,0 +1,58 @@
+{
+  "url": "http://127.0.0.1:4174/",
+  "preset": "desktop",
+  "runs": [
+    {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 308,
+      "lcpMs": 348,
+      "tbtMs": 0,
+      "cls": 0,
+      "speedIndexMs": 364,
+      "ttfbMs": 5,
+      "transferKB": 81
+    },
+    {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 315,
+      "lcpMs": 355,
+      "tbtMs": 0,
+      "cls": 0,
+      "speedIndexMs": 366,
+      "ttfbMs": 7,
+      "transferKB": 81
+    },
+    {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 311,
+      "lcpMs": 351,
+      "tbtMs": 0,
+      "cls": 0,
+      "speedIndexMs": 375,
+      "ttfbMs": 4,
+      "transferKB": 81
+    }
+  ],
+  "median": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 315,
+    "lcpMs": 355,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 366,
+    "ttfbMs": 7,
+    "transferKB": 81
+  }
+}
