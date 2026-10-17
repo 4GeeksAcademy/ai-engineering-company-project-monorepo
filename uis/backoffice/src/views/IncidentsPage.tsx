@@ -12,7 +12,7 @@ import {
 } from "@repo/shared-types";
 import IncidentFiltersBar from "../components/incidents/IncidentFilters";
 import IncidentForm from "../components/incidents/IncidentForm";
-import IncidentSummaryPanel from "../components/incidents/IncidentSummaryPanel";
+import IncidentSummaryPanel, { IncidentSummarySkeleton } from "../components/incidents/IncidentSummaryPanel";
 import IncidentTable from "../components/incidents/IncidentTable";
 import { ErrorBanner } from "../components/incidents/Field";
 import {
@@ -127,7 +127,7 @@ export default function IncidentsPage() {
         </div>
       )}
 
-      <div className="mt-8">{summary ? <IncidentSummaryPanel summary={summary} /> : null}</div>
+      <div className="mt-8">{summary ? <IncidentSummaryPanel summary={summary} /> : <IncidentSummarySkeleton />}</div>
 
       <div className="mt-8">
         <IncidentFiltersBar filters={filters} facets={facets} onChange={changeFilters} />

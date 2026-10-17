@@ -7,6 +7,29 @@ import {
 } from "@repo/shared-types";
 import { BreakdownBar, StatCard } from "./stats";
 
+/**
+ * Stand-in for the panel while the summary loads. The real panel is ~480 px tall and sits above the filters and the
+ * table: without a placeholder of the same size, its arrival pushes everything below it down (the main layout shift
+ * measured on /incidents). The heights mirror the real cards at each breakpoint (stat 106/126 px, breakdown 290/330 px);
+ * if those cards change size, update them here. Hidden from assistive technology: it carries no information.
+ */
+export function IncidentSummarySkeleton() {
+  return (
+    <div aria-hidden="true" className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="h-[106px] rounded-2xl border border-slate-800 bg-slate-900 lg:h-[126px]" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-[290px] rounded-2xl border border-slate-800 bg-slate-900 xl:h-[330px]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function IncidentSummaryPanel({ summary }: { summary: IncidentSummary }) {
   const average = summary.satisfaction_average;
   const counts = summary.status_counts;
