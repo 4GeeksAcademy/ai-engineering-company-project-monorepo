@@ -266,7 +266,7 @@ Tras cambiar `slate-500` por `slate-400`, `/suppliers` seguía fallando contrast
 | Backoffice (nuevo) | `components/ui/LoadingState.tsx`, `lib/useAsyncResource.ts` (+ test), `app/icon.svg`, `IncidentSummarySkeleton` |
 | Backoffice (movido) | `components/incidents/Field.tsx` → `components/ui/Field.tsx` |
 | Backoffice (editado) | las vistas con tablas, `Layout.tsx`, `SupplierRow.tsx`, `IncidentTable.tsx`, `jest.config.mjs` y ~15 archivos de estilos |
-| Website (nuevo) | `content.ts`, `components.tsx`, `seo.ts`, `TalentForm.tsx`, `public/{robots.txt,sitemap.xml,favicon.svg}`, `entry-server.tsx`, `scripts/prerender.mjs`, `e2e/website.e2e.mjs` |
+| Website (nuevo) | `content.ts`, `components.tsx`, `seo.ts`, `TalentForm.tsx`, `public/{robots.txt,sitemap.xml,favicon.svg}`, `entry-server.tsx`, `uis/website/scripts/prerender.mjs`, `e2e/website.e2e.mjs` |
 | Website (reescrito) | `App.tsx` (y unas líneas en `main.tsx`) |
 
 ---
@@ -388,7 +388,7 @@ El website es una **SPA**: el navegador recibe `<div id="root"></div>` y *despu�
 
 1. `App` acepta una prop `initialPath` (en el servidor no existe `window`, así que no puede leer la URL).
 2. `entry-server.tsx` exporta `render(ruta)` con `renderToString`.
-3. `scripts/prerender.mjs` renderiza `/` y `/talento` y escribe `dist/index.html` y `dist/talento/index.html`, cada uno con **su** título, descripción y canonical.
+3. `uis/website/scripts/prerender.mjs` renderiza `/` y `/talento` y escribe `dist/index.html` y `dist/talento/index.html`, cada uno con **su** título, descripción y canonical.
 4. `main.tsx` hidrata el HTML existente.
 5. `npm run build` hace ahora tres pasos: cliente → servidor → prerender.
 
