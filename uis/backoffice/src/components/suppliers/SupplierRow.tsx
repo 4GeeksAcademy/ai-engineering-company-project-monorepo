@@ -114,7 +114,8 @@ export default function SupplierRow({ supplier, onRateChange, onToggleStatus }: 
         <button
           onClick={toggle}
           disabled={busy}
-          aria-label={suspended ? `Activar ${supplier.name}` : `Suspender ${supplier.name}`}
+          // WCAG 2.5.3 (label in name): the accessible name starts with the visible text ("Activo"/"Suspendido").
+          aria-label={suspended ? `Suspendido: activar ${supplier.name}` : `Activo: suspender ${supplier.name}`}
           className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold transition disabled:opacity-60 ${
             suspended
               ? "bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
