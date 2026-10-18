@@ -1,0 +1,4 @@
+# Dependencias para Servidor MCP de TrackFlow (Herramientas de la Empresa)
+mcp<2
+httpx>=0.28.0
+pydantic>=2.10.0
