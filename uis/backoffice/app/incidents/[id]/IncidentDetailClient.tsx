@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-const API_URL = "http://127.0.0.1:8000";
+import { api } from "../../../lib/api";
 
 type Incident = {
   id: number;
@@ -35,27 +34,26 @@ export default function IncidentDetailClient({
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_URL}/api/incidents/${incidentId}`
+        const response = await api(
+          /api/incidents/
         );
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("El incidente no existe.");
-          }
+        const data = await response.json();
 
-          throw new Error("No se pudo cargar el incidente.");
+        if (!data || typeof data !== "object") {
+          throw new Error("La API devolvió datos inválidos.");
         }
 
-        const data = await response.json();
         setIncident(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error cargando incidente:", err);
 
         if (err instanceof Error) {
-          setError(err.message);
+          setError(
+            err.message || "No se pudo cargar el incidente."
+          );
         } else {
-          setError("No se pudo conectar con la API.");
+          setError("No se pudo cargar el incidente.");
         }
       } finally {
         setLoading(false);
@@ -75,30 +73,12 @@ export default function IncidentDetailClient({
       setError("");
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/api/incidents/${incident.id}/status?status=${encodeURIComponent(
-          newStatus
-        )}`,
+      const response = await api(
+        /api/incidents//status?status=,
         {
           method: "PATCH",
         }
       );
-
-      if (!response.ok) {
-        let detail = "No se pudo actualizar el estado.";
-
-        try {
-          const data = await response.json();
-
-          if (data?.detail) {
-            detail = data.detail;
-          }
-        } catch {
-          // La respuesta puede no ser JSON.
-        }
-
-        throw new Error(detail);
-      }
 
       const data = await response.json();
 
@@ -113,10 +93,12 @@ export default function IncidentDetailClient({
 
       setMessage("Estado actualizado correctamente.");
     } catch (err) {
-      console.error(err);
+      console.error("Error actualizando incidente:", err);
 
       if (err instanceof Error) {
-        setError(err.message);
+        setError(
+          err.message || "No se pudo actualizar el estado."
+        );
       } else {
         setError("No se pudo actualizar el estado.");
       }
@@ -185,12 +167,10 @@ export default function IncidentDetailClient({
   if (loading) {
     return (
       <main className="min-h-screen bg-zinc-100 p-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="rounded-xl border bg-white p-8 shadow-sm">
-            <p className="text-zinc-600">
-              Cargando incidente...
-            </p>
-          </div>
+        <div className="mx-auto max-w-4xl rounded-xl border bg-white p-8 shadow-sm">
+          <p className="text-zinc-600">
+            Cargando incidente...
+          </p>
         </div>
       </main>
     );
@@ -199,16 +179,29 @@ export default function IncidentDetailClient({
   if (error && !incident) {
     return (
       <main className="min-h-screen bg-zinc-100 p-8">
-        <div className="mx-auto max-w-4xl">
-          <Link
-            href="/incidents"
-            className="mb-6 inline-flex rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
-          >
-            ← Volver a incidentes
-          </Link>
+        <div className="mx-auto max-w-4xl rounded-xl border border-red-200 bg-red-50 p-8">
+          <h1 className="text-lg font-semibold text-red-800">
+            No se pudo cargar el incidente
+          </h1>
 
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
+          <p className="mt-2 text-sm text-red-700">
             {error}
+          </p>
+
+          <div className="mt-5 flex gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
+            >
+              Reintentar
+            </button>
+
+            <Link
+              href="/incidents"
+              className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-800"
+            >
+              Volver a incidentes
+            </Link>
           </div>
         </div>
       </main>
@@ -216,186 +209,139 @@ export default function IncidentDetailClient({
   }
 
   if (!incident) {
-    return (
-      <main className="min-h-screen bg-zinc-100 p-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="rounded-xl border bg-white p-8 shadow-sm">
-            No se encontró el incidente.
-          </div>
-        </div>
-      </main>
-    );
+    return null;
   }
 
   return (
     <main className="min-h-screen bg-zinc-100 p-8">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-8">
+        <div className="mb-6 flex items-center justify-between">
           <Link
             href="/incidents"
-            className="mb-6 inline-flex rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
           >
             ← Volver a incidentes
           </Link>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <Link
+            href="/"
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+          >
+            Inicio
+          </Link>
+        </div>
+
+        <section className="rounded-xl border bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-zinc-500">
-                BRASALAND
-              </p>
-
-              <h1 className="mt-1 text-3xl font-bold text-zinc-900">
+              <p className="text-sm text-zinc-500">
                 Incidente #{incident.id}
-              </h1>
-
-              <p className="mt-1 text-zinc-600">
-                Detalle del incidente registrado.
               </p>
+
+              <h1 className="mt-1 text-2xl font-bold text-zinc-900">
+                {getCategoryLabel(incident.category)}
+              </h1>
             </div>
 
             <span
-              className={`inline-flex w-fit rounded-full px-3 py-1.5 text-sm font-medium ${getStatusClasses(
-                incident.status
-              )}`}
+              className={ounded-full px-3 py-1 text-sm font-medium }
             >
               {getStatusLabel(incident.status)}
             </span>
           </div>
-        </header>
 
-        {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-            {message}
-          </div>
-        )}
-
-        <section className="rounded-xl border bg-white shadow-sm">
-          <div className="border-b px-6 py-5">
-            <h2 className="text-lg font-semibold text-zinc-900">
-              Información del incidente
-            </h2>
-          </div>
-
-          <div className="grid gap-6 p-6 sm:grid-cols-2">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <div>
-              <p className="text-sm text-zinc-500">ID</p>
-              <p className="mt-1 font-semibold text-zinc-900">
-                #{incident.id}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-zinc-500">
+              <p className="text-xs font-medium uppercase text-zinc-400">
                 Ubicación
               </p>
-              <p className="mt-1 font-semibold text-zinc-900">
+              <p className="mt-1 text-zinc-800">
                 {incident.location_id}
               </p>
             </div>
 
             <div>
-              <p className="text-sm text-zinc-500">
-                Categoría
+              <p className="text-xs font-medium uppercase text-zinc-400">
+                Reportado por
               </p>
-              <p className="mt-1 font-semibold text-zinc-900">
-                {getCategoryLabel(incident.category)}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-zinc-500">
-                Reportante
-              </p>
-              <p className="mt-1 font-semibold text-zinc-900">
+              <p className="mt-1 text-zinc-800">
                 {incident.reporter_id}
               </p>
             </div>
 
             <div>
-              <p className="text-sm text-zinc-500">
-                Satisfacción
+              <p className="text-xs font-medium uppercase text-zinc-400">
+                Fecha
               </p>
-              <p className="mt-1 font-semibold text-zinc-900">
-                {incident.satisfaction_score ?? "-"}
+              <p className="mt-1 text-zinc-800">
+                {formatDate(incident.created_at)}
               </p>
             </div>
 
             <div>
-              <p className="text-sm text-zinc-500">
-                Fecha de creación
+              <p className="text-xs font-medium uppercase text-zinc-400">
+                Satisfacción
               </p>
-              <p className="mt-1 font-semibold text-zinc-900">
-                {formatDate(incident.created_at)}
+              <p className="mt-1 text-zinc-800">
+                {incident.satisfaction_score ?? "-"}
               </p>
             </div>
           </div>
 
-          <div className="border-t px-6 py-5">
-            <p className="text-sm text-zinc-500">
+          <div className="mt-6 border-t pt-6">
+            <p className="text-xs font-medium uppercase text-zinc-400">
               Descripción
             </p>
 
-            <p className="mt-2 leading-7 text-zinc-700">
+            <p className="mt-2 whitespace-pre-wrap text-zinc-700">
               {incident.description}
             </p>
           </div>
-        </section>
 
-        <section className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
-            Cambiar estado
-          </h2>
+          {error && (
+            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-sm font-medium text-red-800">
+                No se pudo actualizar el incidente.
+              </p>
+              <p className="mt-1 text-sm text-red-700">
+                {error}
+              </p>
+            </div>
+          )}
 
-          <p className="mt-1 text-sm text-zinc-500">
-            Actualiza el estado del incidente.
-          </p>
+          {message && (
+            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              {message}
+            </div>
+          )}
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => updateStatus("OPEN")}
-              disabled={updating || incident.status === "OPEN"}
-              className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm font-medium text-yellow-800 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Marcar como abierto
-            </button>
+          <div className="mt-6 border-t pt-6">
+            <p className="mb-3 text-sm font-medium text-zinc-700">
+              Cambiar estado
+            </p>
 
-            <button
-              type="button"
-              onClick={() => updateStatus("CLOSED")}
-              disabled={updating || incident.status === "CLOSED"}
-              className="rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-800 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Marcar como cerrado
-            </button>
-
-            <button
-              type="button"
-              onClick={() => updateStatus("DISCARDED")}
-              disabled={
-                updating || incident.status === "DISCARDED"
-              }
-              className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Descartar incidente
-            </button>
+            <div className="flex flex-wrap gap-3">
+              {["OPEN", "CLOSED", "DISCARDED"].map(
+                (newStatus) => (
+                  <button
+                    key={newStatus}
+                    onClick={() => updateStatus(newStatus)}
+                    disabled={
+                      updating ||
+                      incident.status === newStatus
+                    }
+                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updating &&
+                    incident.status !== newStatus
+                      ? "Actualizando..."
+                      : getStatusLabel(newStatus)}
+                  </button>
+                )
+              )}
+            </div>
           </div>
         </section>
-
-        <div className="mt-6">
-          <Link
-            href="/incidents"
-            className="inline-flex rounded-lg bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
-          >
-            Volver al listado
-          </Link>
-        </div>
       </div>
     </main>
   );

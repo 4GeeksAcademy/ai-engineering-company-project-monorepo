@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_URL = "http://127.0.0.1:8000";
+import { api } from "../../../lib/api";
 
 type Incident = {
   id: number;
@@ -47,31 +46,27 @@ export default function IncidentDetailPage({
           throw new Error("No se indicó un incidente.");
         }
 
-        const response = await fetch(
-          `${API_URL}/api/incidents/${incidentId}`
+        const response = await api(
+          `/api/incidents/${incidentId}`
         );
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("El incidente no existe.");
-          }
-
-          throw new Error(
-            "No se pudo cargar el incidente."
-          );
-        }
 
         const data = await response.json();
 
+        if (!data || typeof data !== "object") {
+          throw new Error(
+            "La API devolvió datos inválidos."
+          );
+        }
+
         setIncident(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error cargando incidente:", err);
 
         if (err instanceof Error) {
           setError(err.message);
         } else {
           setError(
-            "No se pudo conectar con la API."
+            "No se pudo cargar el incidente."
           );
         }
       } finally {
@@ -83,7 +78,7 @@ export default function IncidentDetailPage({
   }, [params]);
 
   async function updateStatus(newStatus: string) {
-    if (!incident) {
+    if (!incident || updating) {
       return;
     }
 
@@ -92,8 +87,8 @@ export default function IncidentDetailPage({
       setError("");
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/api/incidents/${incident.id}/status?status=${encodeURIComponent(
+      const response = await api(
+        `/api/incidents/${incident.id}/status?status=${encodeURIComponent(
           newStatus
         )}`,
         {
@@ -101,24 +96,13 @@ export default function IncidentDetailPage({
         }
       );
 
-      if (!response.ok) {
-        let detail =
-          "No se pudo actualizar el estado.";
-
-        try {
-          const data = await response.json();
-
-          if (data?.detail) {
-            detail = data.detail;
-          }
-        } catch {
-          // La API puede devolver una respuesta que no sea JSON.
-        }
-
-        throw new Error(detail);
-      }
-
       const data = await response.json();
+
+      if (!data || typeof data !== "object") {
+        throw new Error(
+          "La API devolvió datos inválidos."
+        );
+      }
 
       setIncident((current) =>
         current
@@ -133,7 +117,10 @@ export default function IncidentDetailPage({
         "Estado actualizado correctamente."
       );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Error actualizando estado:",
+        err
+      );
 
       if (err instanceof Error) {
         setError(err.message);
@@ -215,236 +202,213 @@ export default function IncidentDetailPage({
     return parsedDate.toLocaleString("es-ES");
   }
 
-  return (
-    <main className="min-h-screen bg-zinc-100 p-8">
-      <div className="mx-auto max-w-4xl">
-
-        <header className="mb-8">
-          <Link
-            href="/incidents"
-            className="mb-4 inline-flex rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
-          >
-            ← Volver a incidentes
-          </Link>
-
-          <div className="mt-4">
-            <p className="text-sm font-medium text-zinc-500">
-              BRASALAND
-            </p>
-
-            <h1 className="text-3xl font-bold text-zinc-900">
-              Detalle del incidente
-            </h1>
-
-            <p className="mt-1 text-zinc-600">
-              Consulta y gestión del incidente.
-            </p>
-          </div>
-        </header>
-
-        {loading && (
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-zinc-100 p-8">
+        <div className="mx-auto max-w-4xl">
           <div className="rounded-xl border bg-white p-6 shadow-sm">
             Cargando incidente...
           </div>
-        )}
+        </div>
+      </main>
+    );
+  }
 
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-            <p className="font-medium">
+  if (error && !incident) {
+    return (
+      <main className="min-h-screen bg-zinc-100 p-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+            <h1 className="text-lg font-semibold text-red-800">
+              No se pudo cargar el incidente
+            </h1>
+
+            <p className="mt-2 text-sm text-red-700">
               {error}
             </p>
 
-            <button
-              type="button"
-              onClick={() => router.push("/incidents")}
-              className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50"
+            <Link
+              href="/incidents"
+              className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
             >
               Volver a incidentes
-            </button>
+            </Link>
           </div>
-        )}
+        </div>
+      </main>
+    );
+  }
 
-        {!loading && !error && incident && (
-          <div className="space-y-6">
+  if (!incident) {
+    return null;
+  }
 
-            <section className="rounded-xl border bg-white p-6 shadow-sm">
+  return (
+    <main className="min-h-screen bg-zinc-100 p-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6">
+          <Link
+            href="/incidents"
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+          >
+            ← Volver a incidentes
+          </Link>
+        </div>
 
-              <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Incidente
-                  </p>
-
-                  <h2 className="mt-1 text-2xl font-bold text-zinc-900">
-                    #{incident.id}
-                  </h2>
-                </div>
-
-                <span
-                  className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${getStatusClasses(
-                    incident.status
-                  )}`}
-                >
-                  {getStatusLabel(
-                    incident.status
-                  )}
-                </span>
-
-              </div>
-
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Ubicación
-                  </p>
-
-                  <p className="mt-1 font-medium text-zinc-900">
-                    {incident.location_id}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Categoría
-                  </p>
-
-                  <p className="mt-1 font-medium text-zinc-900">
-                    {getCategoryLabel(
-                      incident.category
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Reportante
-                  </p>
-
-                  <p className="mt-1 font-medium text-zinc-900">
-                    {incident.reporter_id}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Satisfacción
-                  </p>
-
-                  <p className="mt-1 font-medium text-zinc-900">
-                    {incident.satisfaction_score ??
-                      "-"}
-                  </p>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <p className="text-sm text-zinc-500">
-                    Fecha de creación
-                  </p>
-
-                  <p className="mt-1 font-medium text-zinc-900">
-                    {formatDate(
-                      incident.created_at
-                    )}
-                  </p>
-                </div>
-
-              </div>
-
-              <div className="mt-6">
-
-                <p className="text-sm text-zinc-500">
-                  Descripción
-                </p>
-
-                <div className="mt-2 rounded-lg bg-zinc-50 p-4 text-zinc-800">
-                  {incident.description}
-                </div>
-
-              </div>
-
-            </section>
-
-            <section className="rounded-xl border bg-white p-6 shadow-sm">
-
-              <h2 className="text-lg font-semibold text-zinc-900">
-                Gestionar estado
-              </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                Cambia el estado del incidente.
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm text-zinc-500">
+                Incidente #{incident.id}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-3">
+              <h1 className="mt-1 text-2xl font-bold text-zinc-900">
+                Detalle del incidente
+              </h1>
+            </div>
 
-                <button
-                  type="button"
-                  disabled={
-                    updating ||
-                    incident.status === "OPEN"
-                  }
-                  onClick={() =>
-                    updateStatus("OPEN")
-                  }
-                  className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm font-medium text-yellow-800 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Marcar como abierto
-                </button>
-
-                <button
-                  type="button"
-                  disabled={
-                    updating ||
-                    incident.status === "CLOSED"
-                  }
-                  onClick={() =>
-                    updateStatus("CLOSED")
-                  }
-                  className="rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-800 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Marcar como cerrado
-                </button>
-
-                <button
-                  type="button"
-                  disabled={
-                    updating ||
-                    incident.status === "DISCARDED"
-                  }
-                  onClick={() =>
-                    updateStatus("DISCARDED")
-                  }
-                  className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Descartar incidente
-                </button>
-
-              </div>
-
-              {updating && (
-                <p className="mt-4 text-sm text-zinc-500">
-                  Actualizando estado...
-                </p>
-              )}
-
-              {message && (
-                <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-                  {message}
-                </div>
-              )}
-
-              {error && (
-                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-            </section>
-
+            <span
+              className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${getStatusClasses(
+                incident.status
+              )}`}
+            >
+              {getStatusLabel(incident.status)}
+            </span>
           </div>
-        )}
 
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            <div>
+              <p className="text-sm text-zinc-500">
+                Categoría
+              </p>
+
+              <p className="mt-1 font-medium text-zinc-900">
+                {getCategoryLabel(
+                  incident.category
+                )}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">
+                Ubicación
+              </p>
+
+              <p className="mt-1 font-medium text-zinc-900">
+                {incident.location_id}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">
+                Reportado por
+              </p>
+
+              <p className="mt-1 font-medium text-zinc-900">
+                {incident.reporter_id}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">
+                Fecha
+              </p>
+
+              <p className="mt-1 font-medium text-zinc-900">
+                {formatDate(incident.created_at)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-zinc-500">
+                Satisfacción
+              </p>
+
+              <p className="mt-1 font-medium text-zinc-900">
+                {incident.satisfaction_score ??
+                  "-"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm text-zinc-500">
+              Descripción
+            </p>
+
+            <p className="mt-2 rounded-lg bg-zinc-50 p-4 text-zinc-800">
+              {incident.description}
+            </p>
+          </div>
+
+          {error && (
+            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              {message}
+            </div>
+          )}
+
+          <div className="mt-6 border-t pt-6">
+            <h2 className="text-lg font-semibold text-zinc-900">
+              Cambiar estado
+            </h2>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={
+                  updating ||
+                  incident.status === "OPEN"
+                }
+                onClick={() =>
+                  updateStatus("OPEN")
+                }
+                className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm font-medium text-yellow-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Marcar abierto
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  updating ||
+                  incident.status === "CLOSED"
+                }
+                onClick={() =>
+                  updateStatus("CLOSED")
+                }
+                className="rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Marcar cerrado
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  updating ||
+                  incident.status === "DISCARDED"
+                }
+                onClick={() =>
+                  updateStatus("DISCARDED")
+                }
+                className="rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Descartar
+              </button>
+            </div>
+
+            {updating && (
+              <p className="mt-3 text-sm text-zinc-500">
+                Actualizando estado...
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

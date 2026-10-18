@@ -2,12 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "../../lib/api";
 import { setToken } from "../../lib/auth";
-
-const API_URL = "http://127.0.0.1:8000";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,28 +15,35 @@ export default function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await api("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      if (!response.ok) {
-        setError("Email or password incorrect.");
-        return;
+      const data = await response.json();
+
+      if (!data?.access_token) {
+        throw new Error("La API no devolvió un token válido.");
       }
 
-      const data = await response.json();
       setToken(data.access_token);
       router.push("/account/profile");
-    } catch {
-      setError("Could not connect to the server.");
+    } catch (err) {
+      console.error("Error iniciando sesión:", err);
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("No se pudo iniciar sesión.");
+      }
     } finally {
       setLoading(false);
     }
@@ -54,6 +61,7 @@ export default function LoginPage() {
           <label htmlFor="email" className="mb-1 block">
             Email
           </label>
+
           <input
             id="email"
             type="email"
@@ -68,6 +76,7 @@ export default function LoginPage() {
           <label htmlFor="password" className="mb-1 block">
             Password
           </label>
+
           <input
             id="password"
             type="password"

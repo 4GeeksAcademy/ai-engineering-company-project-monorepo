@@ -2,9 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "../../../lib/api";
 import { clearToken, getToken } from "../../../lib/auth";
-
-const API_URL = "http://127.0.0.1:8000";
 
 type User = {
   id?: number;
@@ -44,47 +43,18 @@ export default function ProfilePage() {
       }
 
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
+        setLoading(true);
+        setError("");
 
-        const userResponse = await fetch(`${API_URL}/auth/me`, {
-          method: "GET",
-          headers,
-        });
-
-        if (userResponse.status === 401) {
-          clearToken();
-          router.replace("/login");
-          return;
-        }
-
-        if (!userResponse.ok) {
-          setError("Could not load your account.");
-          return;
-        }
+        const userResponse = await api("/auth/me");
 
         const userData = await userResponse.json();
         setUser(userData);
 
-        const profileResponse = await fetch(`${API_URL}/profiles/me`, {
-          method: "GET",
-          headers,
-        });
-
-        if (profileResponse.status === 401) {
-          clearToken();
-          router.replace("/login");
-          return;
-        }
+        const profileResponse = await api("/profiles/me");
 
         if (profileResponse.status === 404) {
           setProfile(null);
-          return;
-        }
-
-        if (!profileResponse.ok) {
-          setError("Could not load your profile.");
           return;
         }
 
@@ -94,8 +64,14 @@ export default function ProfilePage() {
         setName(profileData.name ?? "");
         setPhone(profileData.phone ?? "");
         setAddress(profileData.address ?? "");
-      } catch {
-        setError("Could not connect to the server.");
+      } catch (err) {
+        console.error("Error cargando perfil:", err);
+
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("No se pudo conectar con el servidor.");
+        }
       } finally {
         setLoading(false);
       }
@@ -119,12 +95,8 @@ export default function ProfilePage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`${API_URL}/profiles/me`, {
+      const response = await api("/profiles/me", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           name,
           phone: phone || null,
@@ -132,23 +104,21 @@ export default function ProfilePage() {
         }),
       });
 
-      if (response.status === 401) {
-        clearToken();
-        router.replace("/login");
-        return;
-      }
-
-      if (!response.ok) { const text = await response.text(); console.log("PROFILE PUT ERROR:", response.status, text); setError(`Error ${response.status}: ${text}`); return; }
-
       const data = await response.json();
 
       setProfile(data);
       setName(data.name ?? "");
       setPhone(data.phone ?? "");
       setAddress(data.address ?? "");
-      setSuccess("Profile saved successfully.");
-    } catch {
-      setError("Could not connect to the server.");
+      setSuccess("Perfil guardado correctamente.");
+    } catch (err) {
+      console.error("Error guardando perfil:", err);
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("No se pudo guardar el perfil.");
+      }
     } finally {
       setSaving(false);
     }
@@ -162,7 +132,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
-        <p>Loading profile...</p>
+        <p>Cargando perfil...</p>
       </main>
     );
   }
@@ -170,7 +140,7 @@ export default function ProfilePage() {
   if (error && !user) {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-xl border p-6 shadow">
+        <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow">
           <p className="text-sm text-red-600">{error}</p>
 
           <button
@@ -178,7 +148,7 @@ export default function ProfilePage() {
             onClick={handleLogout}
             className="mt-4 rounded bg-black px-4 py-2 text-white"
           >
-            Back to login
+            Volver al login
           </button>
         </div>
       </main>
@@ -186,72 +156,57 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My profile</h1>
+    <main className="min-h-screen bg-zinc-100 p-8">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-zinc-500">BRASALAND</p>
+
+            <h1 className="text-3xl font-bold text-zinc-900">
+              Mi perfil
+            </h1>
+
+            {user?.email && (
+              <p className="mt-1 text-sm text-zinc-600">
+                {user.email}
+              </p>
+            )}
+          </div>
 
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded border px-4 py-2"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
           >
-            Sign out
+            Cerrar sesión
           </button>
         </div>
 
-        <section className="rounded-xl border p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">
-            Account information
-          </h2>
-
-          <div className="space-y-3">
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <form onSubmit={handleSave} className="space-y-5">
             <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <p>{user?.email ?? "-"}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Name</p>
-              <p>{profile?.name ?? "-"}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Phone</p>
-              <p>{profile?.phone ?? "-"}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Address</p>
-              <p>{profile?.address ?? "-"}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-xl border p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">
-            Edit profile
-          </h2>
-
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="mb-1 block">
-                Name
+              <label
+                htmlFor="name"
+                className="mb-1 block text-sm font-medium text-zinc-700"
+              >
+                Nombre
               </label>
 
               <input
                 id="name"
                 type="text"
-                required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded border p-2"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-500"
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="mb-1 block">
-                Phone
+              <label
+                htmlFor="phone"
+                className="mb-1 block text-sm font-medium text-zinc-700"
+              >
+                Teléfono
               </label>
 
               <input
@@ -259,45 +214,48 @@ export default function ProfilePage() {
                 type="tel"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                className="w-full rounded border p-2"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-500"
               />
             </div>
 
             <div>
-              <label htmlFor="address" className="mb-1 block">
-                Address
+              <label
+                htmlFor="address"
+                className="mb-1 block text-sm font-medium text-zinc-700"
+              >
+                Dirección
               </label>
 
-              <input
+              <textarea
                 id="address"
-                type="text"
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
-                className="w-full rounded border p-2"
+                rows={3}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-500"
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600" role="alert">
-                {error}
-              </p>
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
             )}
 
             {success && (
-              <p className="text-sm text-green-600" role="status">
-                {success}
-              </p>
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={saving}
-              className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+              className="rounded-lg bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save profile"}
+              {saving ? "Guardando..." : "Guardar cambios"}
             </button>
           </form>
-        </section>
+        </div>
       </div>
     </main>
   );

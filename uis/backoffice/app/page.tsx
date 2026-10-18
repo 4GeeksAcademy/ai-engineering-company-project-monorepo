@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getToken, clearToken } from "../lib/auth";
-
-const API_URL = "http://127.0.0.1:8000";
+import { api } from "../lib/api";
+import { clearToken, getToken } from "../lib/auth";
 
 type Summary = {
   total_records: number;
@@ -35,35 +34,24 @@ export default function Home() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_URL}/api/incidents/summary`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.status === 401 || response.status === 403) {
-          clearToken();
-          router.replace("/login");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(
-            "No se pudo cargar el resumen."
-          );
-        }
-
+        const response = await api("/api/incidents/summary");
         const data = await response.json();
+
+        if (!data || typeof data !== "object") {
+          throw new Error("La API devolvió datos inválidos.");
+        }
+
         setSummary(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error cargando resumen:", err);
 
-        setError(
-          "No se pudo conectar con la API."
-        );
+        if (err instanceof Error) {
+          setError(
+            err.message || "No se pudo cargar el resumen."
+          );
+        } else {
+          setError("No se pudo cargar el resumen.");
+        }
       } finally {
         setLoading(false);
       }
@@ -81,19 +69,14 @@ export default function Home() {
     switch (value) {
       case "CUSTOMER_COMPLAINT":
         return "Queja de cliente";
-
       case "FOOD_QUALITY":
         return "Calidad de alimentos";
-
       case "EQUIPMENT":
         return "Equipamiento";
-
       case "SUPPLY":
         return "Suministros";
-
       case "STAFF":
         return "Personal";
-
       default:
         return value;
     }
@@ -103,13 +86,10 @@ export default function Home() {
     switch (value) {
       case "OPEN":
         return "Abiertos";
-
       case "CLOSED":
         return "Cerrados";
-
       case "DISCARDED":
         return "Descartados";
-
       default:
         return value;
     }
@@ -118,10 +98,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-zinc-100 p-8">
       <div className="mx-auto max-w-6xl">
-
         <header className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
             <div>
               <p className="text-sm font-medium text-zinc-500">
                 BRASALAND
@@ -137,7 +115,6 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-
               <Link
                 href="/incidents"
                 className="rounded-lg bg-black px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-zinc-800"
@@ -159,7 +136,6 @@ export default function Home() {
               >
                 Cerrar sesión
               </button>
-
             </div>
           </div>
         </header>
@@ -170,17 +146,29 @@ export default function Home() {
           </div>
         )}
 
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-            {error}
+        {!loading && error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+            <p className="font-medium text-red-800">
+              No se pudo cargar el resumen
+            </p>
+
+            <p className="mt-1 text-sm text-red-700">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
+            >
+              Reintentar
+            </button>
           </div>
         )}
 
-        {summary && (
+        {!loading && !error && summary && (
           <>
-
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
               <div className="rounded-xl border bg-white p-5 shadow-sm">
                 <p className="text-sm text-zinc-500">
                   Total incidentes
@@ -197,7 +185,7 @@ export default function Home() {
                 </p>
 
                 <p className="mt-2 text-3xl font-bold text-zinc-900">
-                  {summary.by_status.OPEN ?? 0}
+                  {summary.by_status?.OPEN ?? 0}
                 </p>
               </div>
 
@@ -220,28 +208,22 @@ export default function Home() {
                   {summary.average_satisfaction ?? "-"}
                 </p>
               </div>
-
             </section>
 
             <section className="mt-8 grid gap-6 lg:grid-cols-2">
-
               <div className="rounded-xl border bg-white p-6 shadow-sm">
-
                 <h2 className="text-lg font-semibold text-zinc-900">
                   Incidentes por categoría
                 </h2>
 
                 <div className="mt-4 space-y-3">
-
                   {Object.entries(
-                    summary.by_category
+                    summary.by_category ?? {}
                   ).map(([category, count]) => (
-
                     <div
                       key={category}
                       className="flex items-center justify-between border-b pb-2 last:border-0"
                     >
-
                       <span className="text-sm text-zinc-600">
                         {getCategoryLabel(category)}
                       </span>
@@ -249,31 +231,24 @@ export default function Home() {
                       <span className="font-semibold text-zinc-900">
                         {count}
                       </span>
-
                     </div>
-
                   ))}
-
                 </div>
               </div>
 
               <div className="rounded-xl border bg-white p-6 shadow-sm">
-
                 <h2 className="text-lg font-semibold text-zinc-900">
                   Incidentes por estado
                 </h2>
 
                 <div className="mt-4 space-y-3">
-
                   {Object.entries(
-                    summary.by_status
+                    summary.by_status ?? {}
                   ).map(([status, count]) => (
-
                     <div
                       key={status}
                       className="flex items-center justify-between border-b pb-2 last:border-0"
                     >
-
                       <span className="text-sm text-zinc-600">
                         {getStatusLabel(status)}
                       </span>
@@ -281,19 +256,13 @@ export default function Home() {
                       <span className="font-semibold text-zinc-900">
                         {count}
                       </span>
-
                     </div>
-
                   ))}
-
                 </div>
               </div>
-
             </section>
-
           </>
         )}
-
       </div>
     </main>
   );

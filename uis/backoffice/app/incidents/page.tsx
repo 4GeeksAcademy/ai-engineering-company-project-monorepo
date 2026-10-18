@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-const API_URL = "http://127.0.0.1:8000";
+import { api } from "../../lib/api";
 
 type Incident = {
   id: number;
@@ -39,46 +38,38 @@ export default function IncidentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadIncidents() {
-      try {
-        setLoading(true);
-        setError("");
+  async function loadIncidents() {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(
-          `${API_URL}/api/incidents`
+      const response = await api("/api/incidents");
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error(
+          "La API no devolvió una lista de incidentes."
         );
-
-        if (!response.ok) {
-          throw new Error(
-            `Error de la API: ${response.status}`
-          );
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error(
-            "La API no devolvió una lista de incidentes."
-          );
-        }
-
-        setIncidents(data);
-      } catch (err) {
-        console.error("Error cargando incidentes:", err);
-
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError(
-            "No se pudo conectar con la API."
-          );
-        }
-      } finally {
-        setLoading(false);
       }
-    }
 
+      setIncidents(data);
+    } catch (err) {
+      console.error("Error cargando incidentes:", err);
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(
+          "No se pudieron cargar los incidentes."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
     loadIncidents();
   }, []);
 
@@ -126,9 +117,9 @@ export default function IncidentsPage() {
   function getCategoryLabel(value: string) {
     switch (value) {
       case "CUSTOMER_COMPLAINT":
-        return "Queja cliente";
+        return "Queja de cliente";
       case "FOOD_QUALITY":
-        return "Calidad alimentos";
+        return "Calidad de alimentos";
       case "EQUIPMENT":
         return "Equipamiento";
       case "SUPPLY":
@@ -154,44 +145,33 @@ export default function IncidentsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-100 p-8">
+    <main className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-zinc-900">
+              Incidentes
+            </h1>
 
-        <header className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            <div>
-              <p className="text-sm font-medium text-zinc-500">
-                BRASALAND
-              </p>
-
-              <h1 className="text-3xl font-bold text-zinc-900">
-                Incidentes
-              </h1>
-
-              <p className="mt-1 text-zinc-600">
-                Consulta y filtra los incidentes registrados.
-              </p>
-            </div>
-
-            <Link
-              href="/"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-center text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
-            >
-              Volver al dashboard
-            </Link>
-
+            <p className="mt-2 text-zinc-600">
+              Gestiona y consulta los incidentes registrados.
+            </p>
           </div>
-        </header>
+
+          <Link
+            href="/"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          >
+            Volver al inicio
+          </Link>
+        </div>
 
         <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
             <div>
               <label
                 htmlFor="category"
-                className="mb-1 block text-sm font-medium text-zinc-700"
+                className="mb-2 block text-sm font-medium text-zinc-700"
               >
                 Categoría
               </label>
@@ -202,13 +182,10 @@ export default function IncidentsPage() {
                 onChange={(event) =>
                   setCategory(event.target.value)
                 }
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
               >
                 {categories.map((item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
+                  <option key={item} value={item}>
                     {item === "ALL"
                       ? "Todas"
                       : getCategoryLabel(item)}
@@ -220,7 +197,7 @@ export default function IncidentsPage() {
             <div>
               <label
                 htmlFor="status"
-                className="mb-1 block text-sm font-medium text-zinc-700"
+                className="mb-2 block text-sm font-medium text-zinc-700"
               >
                 Estado
               </label>
@@ -231,13 +208,10 @@ export default function IncidentsPage() {
                 onChange={(event) =>
                   setStatus(event.target.value)
                 }
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
               >
                 {statuses.map((item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
+                  <option key={item} value={item}>
                     {item === "ALL"
                       ? "Todos"
                       : getStatusLabel(item)}
@@ -246,7 +220,7 @@ export default function IncidentsPage() {
               </select>
             </div>
 
-            <div className="rounded-lg bg-zinc-100 px-4 py-2 text-sm text-zinc-600">
+            <div className="text-sm text-zinc-500">
               Mostrando{" "}
               <span className="font-semibold text-zinc-900">
                 {filteredIncidents.length}
@@ -254,112 +228,128 @@ export default function IncidentsPage() {
               de{" "}
               <span className="font-semibold text-zinc-900">
                 {incidents.length}
-              </span>
+              </span>{" "}
+              incidentes
             </div>
-
           </div>
         </section>
 
         {loading && (
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            Cargando incidentes...
-          </div>
+          <section className="rounded-xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-800" />
+
+            <p className="text-zinc-600">
+              Cargando incidentes...
+            </p>
+          </section>
         )}
 
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-            <p className="font-semibold">
-              No se pudieron cargar los incidentes.
-            </p>
+        {!loading && error && (
+          <section className="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
+            <h2 className="font-semibold text-red-800">
+              No se pudieron cargar los incidentes
+            </h2>
 
-            <p className="mt-1 text-sm">
+            <p className="mt-2 text-sm text-red-700">
               {error}
             </p>
-          </div>
+
+            <button
+              type="button"
+              onClick={loadIncidents}
+              className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
+            >
+              Reintentar
+            </button>
+
+            <div className="mt-3">
+              <Link
+                href="/"
+                className="text-sm font-medium text-red-700 underline"
+              >
+                Volver al inicio
+              </Link>
+            </div>
+          </section>
         )}
 
         {!loading && !error && (
           <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+            {filteredIncidents.length === 0 ? (
+              <div className="p-8 text-center">
+                <h2 className="font-semibold text-zinc-900">
+                  No hay incidentes
+                </h2>
 
-            <div className="overflow-x-auto">
+                <p className="mt-2 text-sm text-zinc-500">
+                  No se encontraron incidentes con los filtros
+                  seleccionados.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-zinc-200 bg-zinc-50">
+                    <tr>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        ID
+                      </th>
 
-              <table className="w-full text-left text-sm">
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Categoría
+                      </th>
 
-                <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
-                  <tr>
-                    <th className="px-4 py-3">
-                      ID
-                    </th>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Descripción
+                      </th>
 
-                    <th className="px-4 py-3">
-                      Ubicación
-                    </th>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Ubicación
+                      </th>
 
-                    <th className="px-4 py-3">
-                      Categoría
-                    </th>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Estado
+                      </th>
 
-                    <th className="px-4 py-3">
-                      Descripción
-                    </th>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Fecha
+                      </th>
 
-                    <th className="px-4 py-3">
-                      Reportante
-                    </th>
+                      <th className="px-5 py-4 font-semibold text-zinc-700">
+                        Acción
+                      </th>
+                    </tr>
+                  </thead>
 
-                    <th className="px-4 py-3">
-                      Estado
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Satisfacción
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Fecha
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-zinc-100">
-
-                  {filteredIncidents.map(
-                    (incident) => (
+                  <tbody>
+                    {filteredIncidents.map((incident) => (
                       <tr
                         key={incident.id}
-                        className="transition hover:bg-zinc-50"
+                        className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50"
                       >
-
-                        <td className="px-4 py-4">
-                          <Link
-                            href={`/incidents/${incident.id}`}
-                            className="font-semibold text-blue-600 underline-offset-2 hover:underline"
-                          >
-                            #{incident.id}
-                          </Link>
+                        <td className="px-5 py-4 font-medium text-zinc-900">
+                          #{incident.id}
                         </td>
 
-                        <td className="px-4 py-4 text-zinc-600">
-                          {incident.location_id}
-                        </td>
-
-                        <td className="px-4 py-4 text-zinc-600">
+                        <td className="px-5 py-4 text-zinc-700">
                           {getCategoryLabel(
                             incident.category
                           )}
                         </td>
 
-                        <td className="max-w-md px-4 py-4 text-zinc-600">
-                          {incident.description}
+                        <td className="max-w-md px-5 py-4 text-zinc-700">
+                          <p className="line-clamp-2">
+                            {incident.description}
+                          </p>
                         </td>
 
-                        <td className="px-4 py-4 text-zinc-600">
-                          {incident.reporter_id}
+                        <td className="px-5 py-4 text-zinc-700">
+                          {incident.location_id}
                         </td>
 
-                        <td className="px-4 py-4">
+                        <td className="px-5 py-4">
                           <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClasses(
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClasses(
                               incident.status
                             )}`}
                           >
@@ -369,36 +359,28 @@ export default function IncidentsPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-4 text-zinc-600">
-                          {incident.satisfaction_score ??
-                            "-"}
-                        </td>
-
-                        <td className="whitespace-nowrap px-4 py-4 text-zinc-500">
+                        <td className="whitespace-nowrap px-5 py-4 text-zinc-600">
                           {formatDate(
                             incident.created_at
                           )}
                         </td>
 
+                        <td className="px-5 py-4">
+                          <Link
+                            href={`/incidents/${incident.id}`}
+                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            Ver detalle
+                          </Link>
+                        </td>
                       </tr>
-                    )
-                  )}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-            {filteredIncidents.length === 0 && (
-              <div className="p-8 text-center text-zinc-500">
-                No hay incidentes que coincidan con los filtros.
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-
           </section>
         )}
-
       </div>
     </main>
   );

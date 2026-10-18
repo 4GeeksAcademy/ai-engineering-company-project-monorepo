@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "../../lib/api";
 import { setToken } from "../../lib/auth";
-
-const API_URL = "http://127.0.0.1:8000";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,49 +20,38 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const registerResponse = await fetch(`${API_URL}/auth/register`, {
+      await api("/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           email,
           password,
         }),
       });
 
-      if (!registerResponse.ok) {
-        if (registerResponse.status === 409) {
-          setError("This email is already registered.");
-        } else {
-          setError("Could not create the account.");
-        }
-        return;
-      }
-
-      const loginResponse = await fetch(`${API_URL}/auth/login`, {
+      const loginResponse = await api("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           email,
           password,
         }),
       });
-
-      if (!loginResponse.ok) {
-        setError("Account created, but automatic login failed.");
-        return;
-      }
 
       const data = await loginResponse.json();
 
-      setToken(data.access_token);
+      if (!data?.access_token) {
+        throw new Error("La API no devolvió un token válido.");
+      }
 
+      setToken(data.access_token);
       router.push("/account/profile");
-    } catch {
-      setError("Could not connect to the server.");
+    } catch (err) {
+      console.error("Error registrando usuario:", err);
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("No se pudo completar el registro.");
+      }
     } finally {
       setLoading(false);
     }
