@@ -71,3 +71,19 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Hito 8 — Aseguramiento de Agentes: Harness y Guardrails (Parte 2 de 2)**:
+  - [x] Rama `feature/agent-harness` creada desde `main`
+  - [x] Configuración y documentación: `agents/secured-agent/requirements.txt` y `README.md`
+  - [x] Guardrails multicapa (`agents/secured-agent/guardrails.py`):
+    - [x] `SecurityInputGuardrail`: Detección y bloqueo de inyecciones de prompt y jailbreaks (patrones adversarial directos e indirectos)
+    - [x] `PrivacyGuardrail`: Sanitización y ofuscación de PII sensible (tarjetas de crédito, emails, teléfonos y credenciales/tokens)
+    - [x] `StructuralOutputGuardrail`: Validación de formato y esquema de salida
+  - [x] Arnés defensivo de ejecución (`agents/secured-agent/harness.py`):
+    - [x] Tool Whitelist estricto (solo herramientas autorizadas)
+    - [x] Prevención de bucles infinitos con tope de iteraciones (`max_iterations = 3`)
+    - [x] Puerta Human-in-the-Loop (HITL) para operaciones irreversibles (`delete_inventory`, etc.)
+    - [x] Manejo de fallos con degradación elegante (Fallback seguro sin fuga de trazas internas)
+    - [x] Sistema de observabilidad y auditoría de seguridad (`audit_log` estructurado)
+  - [x] Suite de Red Teaming y Resiliencia (`agents/secured-agent/test_harness.py`): 7 vectores de ataque y resiliencia validados al 100%
+  - [x] Integridad de tipos validada con `tsc --noEmit` en los proyectos TypeScript (0 errores)
+

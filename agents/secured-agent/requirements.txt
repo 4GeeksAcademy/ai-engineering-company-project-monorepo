@@ -1,0 +1,2 @@
+# Dependencias para Agente Asegurado con Harness y Guardrails (Hito 8)
+pydantic>=2.10.0
