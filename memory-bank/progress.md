@@ -83,4 +83,15 @@
   - [x] Integración de router en `services/api/main.py` y catálogo de endpoints en `/`
   - [x] Suite de pruebas automatizadas en `services/api/tests/test_sse_notifications.py` (10/10 pruebas pasadas en pytest cubriendo formato, bus, replay, endpoints y streaming)
   - [x] Verificación de tipos TypeScript (`tsc -p uis/backoffice/tsconfig.json --noEmit` sin errores)
+- [x] **Real-Time Communication — Sistemas en Tiempo Real: Streaming de Chat por WebSocket (Parte 2 de 2)**:
+  - [x] Rama `feature/websocket-chat` creada
+  - [x] Especificación técnica completa documentada en `services/api/docs/WEBSOCKET_CHAT.md`
+  - [x] Modelos de datos Pydantic v2 en `services/api/models/chat_models.py` (`ChatMessage`, `ClientWSMessage`, `ConnectionAckPayload`, `ChatStartPayload`, `ChatChunkPayload`, `ChatCompletePayload`, `PongPayload`, `ErrorPayload`, `ChatSessionHistoryResponse`)
+  - [x] Gestor centralizado de conexiones en `services/api/services/websocket_manager.py` (`ConnectionManager` con aislamiento por sesión, concurrencia protegida con `asyncio.Lock`, broadcast multi-cliente y limpieza determinista de sockets)
+  - [x] Motor conversacional en `services/api/services/chat_stream_service.py` (`ChatStreamService` con memoria de historial de sesión, respuestas contextualizadas para TrackFlow y generador asíncrono token por token)
+  - [x] Router FastAPI WebSocket y REST en `services/api/routes/chat_ws.py` (`WEBSOCKET /ws/chat/{session_id}`, `GET /api/chat/sessions/{session_id}/history`, `DELETE /api/chat/sessions/{session_id}`, `GET /api/chat/stats`)
+  - [x] Actualización de `TimingMiddleware` a middleware ASGI puro en `services/api/main.py` para permitir paso transparente de WebSocket Upgrades y streaming
+  - [x] Suite de pruebas automatizadas en `services/api/tests/test_websocket_chat.py` (15/15 pruebas pasadas en pytest cubriendo handshake, heartbeat, streaming, errores y multi-cliente)
+  - [x] Verificación de tipos TypeScript (`tsc -p uis/backoffice/tsconfig.json --noEmit` sin errores)
+
 
