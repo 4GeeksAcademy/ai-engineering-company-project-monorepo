@@ -45,5 +45,6 @@ export default function NewIncidentPage() {
         <IncidentForm />
       </div>
     </main>
+    </>
   );
 }

@@ -71,3 +71,13 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Servidor MCP: Herramientas de la Empresa (rama `feature/mcp-server`)**:
+  - [x] Rama `feature/mcp-server` creada e inicializada desde `main` limpia
+  - [x] Estructura creada en `mcps/company-tools/` (`README.md`, `requirements.txt`, `data.py`)
+  - [x] Implementación del servidor en `mcps/company-tools/server.py` con FastMCP (`mcp<2`)
+  - [x] Herramientas de lectura expuestas: `get_inventory_status`, `get_product_by_sku`, `list_company_suppliers`
+  - [x] Recurso de contexto de almacenes expuesto: `trackflow://warehouses/overview`
+  - [x] Prompt reusable expuesto: `inventory-audit-report`
+  - [x] Guardarraíles de seguridad y mutación segura: validación Pydantic, límite blast radius (máx 200), dry-run previo y confirmación explícita en `create_restock_order`, log de auditoría
+  - [x] Tests unitarios superados al 100% en `mcps/company-tools/test_server.py`
+  - [x] Simulación E2E de cliente/agente MCP sobre protocolo stdio exitosa en `mcps/company-tools/agent_simulator.py`
