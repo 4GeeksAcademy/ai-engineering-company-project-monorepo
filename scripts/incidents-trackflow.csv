@@ -1,0 +1,101 @@
+incident_id,date,country,customer_type,tracking_number,carrier,category,description,status,customer_email,satisfaction_score
+TRF-000001,2024-01-08,ES,B2C,2YKCCPRHVLZ0,LOCAL_ES,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",OPEN,george.martin57@icloud.com,
+TRF-000002,2024-01-11,ES,B2C,IEQFB85P8637,MRW,DAMAGE,"Outer box crushed, inner product compromised",CLOSED,diana.martin73@icloud.com,2
+TRF-000003,2024-01-27,US,B2C,SHORT,UPS,DELAYED_DELIVERY,Parcel delayed for five days with no update,OPEN,charlie.white22@hotmail.com,
+TRF-000004,2024-01-16,US,B2C,5RDOQIVBKV4Y,FEDEX,DELAYED_DELIVERY,Package held at sorting facility for unknown reason,CLOSED,alice.jones65@yahoo.com,3
+TRF-000005,2024-01-24,US,B2C,NOBBUNKNQT3W,FEDEX,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,CLOSED,bob.martin22@hotmail.com,1
+TRF-000006,2024-01-26,US,B2C,9UNFVOBBZ2SF,FEDEX,WRONG_ADDRESS,Customer address was truncated in carrier system,CLOSED,fiona.clark50@yahoo.com,4
+TRF-000007,2024-01-20,US,B2B,0KM3TZK3NY9V,FEDEX,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,CLOSED,alice.clark70@outlook.com,2
+TRF-000008,2024-01-24,ES,B2B,BRSZ1N3IUZGP,SEUR,DELAYED_DELIVERY,Customer reports delivery window passed with no contact,OPEN,charlie.hall98@yahoo.com,
+TRF-000009,2024-01-17,US,B2C,1750CEHLXSLG,FEDEX,WRONG_ADDRESS,Delivery attempted at old address not updated in system,DISCARDED,fiona.lewis97@live.com,
+TRF-000010,2024-01-20,ES,B2B,R8KK791ZYRRU,DHL_ES,DAMAGE,"Outer box crushed, inner product compromised",CLOSED,evan.jones83@live.com,3
+TRF-000011,2024-01-13,US,B2C,6OM1FB8C7X0H,DHL_US,LOST_PARCEL,Shipment marked delivered but customer has not received it,CLOSED,evan.martin23@icloud.com,2
+TRF-000012,2024-01-08,ES,B2C,B6IIDLRYE89F,SEUR,WRONG_ADDRESS,Wrong postcode assigned during label generation,OPEN,helen.lewis35@outlook.com,
+TRF-000013,2024-01-10,ES,B2C,X6DUT076G5G7,DHL_ES,WRONG_ADDRESS,Wrong postcode assigned during label generation,CLOSED,helen.martin47@gmail.com,2
+TRF-000014,2024-01-10,US,B2C,UD9K9TR74QGE,UPS,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,OPEN,helen.lewis42@live.com,
+TRF-000015,2024-01-01,US,B2C,02U1G463SDYG,UPS,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,CLOSED,helen.white41@gmail.com,5
+TRF-000016,2024-01-13,US,B2B,I18K0AXYCELO,FEDEX,WRONG_ADDRESS,Delivery attempted at old address not updated in system,OPEN,bob.lewis47@outlook.com,
+TRF-000017,2024-01-08,US,B2B,HEF0VOTQTXHI,DHL_US,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,DISCARDED,bob.clark67@icloud.com,
+TRF-000018,2024-01-03,ES,B2B,7E36HTF4PYZR,DHL_ES,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,DISCARDED,helen.jones68@yahoo.com,
+TRF-000019,2024-01-14,US,B2B,QCQ30O30UBMC,DHL_US,LOST_PARCEL,Parcel not delivered and carrier shows no tracking updates,OPEN,bob.hall14@outlook.com,
+TRF-000020,2024-01-06,ES,B2B,119XP9N56NYX,LOCAL_ES,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,OPEN,charlie.lewis54@gmail.com,
+TRF-000021,2024-01-18,ES,B2B,OE9419QZPNIQ,SEUR,RETURN_REQUEST,Client initiating bulk return of unsold season stock,OPEN,evan.martin24@gmail.com,
+TRF-000022,2024-01-14,US,B2C,W76ICVQY5IBP,DHL_US,RETURN_REQUEST,Return label sent but customer has not dropped off yet,CLOSED,diana.jones27@icloud.com,1
+TRF-000023,2024-01-08,ES,B2C,30LVYLKFXHKC,DHL_ES,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,DISCARDED,charlie.lewis96@hotmail.com,
+TRF-000024,2024-01-16,US,B2C,BMXNSZOKGTII,DHL_US,RETURN_REQUEST,Client initiating bulk return of unsold season stock,OPEN,helen.jones81@hotmail.com,
+TRF-000025,2024-01-05,ES,B2B,00U686XII5P5,FEDEX,LOST_PARCEL,"Carrier not found, investigation opened",OPEN,fiona.white84@outlook.com,
+TRF-000026,2024-01-18,US,B2B,TNJLCQNT3BNV,FEDEX,WRONG_ADDRESS,"Parcel delivered to wrong address, neighbour received it",CLOSED,bob.martin85@live.com,4
+TRF-000027,2024-01-16,ES,B2C,H6K6HG0016ZZ,SEUR,RETURN_REQUEST,Customer wants exchange but return not yet processed,CLOSED,diana.clark51@outlook.com,4
+TRF-000028,2024-01-15,US,B2B,TMJSRD9Q46NO,FEDEX,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,CLOSED,diana.lewis28@gmail.com,4
+TRF-000029,2024-01-18,US,B2C,7UPFLN4RXYJ3,FEDEX,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,OPEN,helen.hall31@live.com,
+TRF-000030,2024-01-06,US,B2C,FTG698S4C3BA,FEDEX,DAMAGE,"Liquid product leaked during transit, contents damaged",CLOSED,diana.jones29@gmail.com,3
+TRF-000031,2024-01-17,US,B2C,QCW76XATOAZT,UPS,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",CLOSED,alice.clark99@live.com,4
+TRF-000032,2024-01-26,US,B2C,7G7SIWJM2C8Q,FEDEX,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,OPEN,diana.white97@gmail.com,
+TRF-000033,2024-01-03,ES,B2C,ONRWZC4XL996,MRW,DAMAGE,Product arrived with broken packaging and cracked screen,OPEN,diana.martin98@icloud.com,
+TRF-000034,2024-01-09,ES,B2C,BC76UB7L8V1Z,LOCAL_ES,WRONG_ADDRESS,Wrong postcode assigned during label generation,OPEN,bob.white30@icloud.com,
+TRF-000035,2024-01-19,ES,B2C,4O6L1F90S9BP,SEUR,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,CLOSED,bob.white87@icloud.com,1
+TRF-000036,2024-01-13,US,B2C,8LW2QITNGVN1,DHL_US,LOST_PARCEL,Shipment marked delivered but customer has not received it,DISCARDED,diana.lewis19@gmail.com,
+TRF-000037,2024-01-05,US,B2C,N2FOMD7Q1DDP,FEDEX,LOST_PARCEL,Investigation opened with carrier for missing parcel,OPEN,bob.jones21@outlook.com,
+TRF-000038,2024-01-20,ES,B2C,VLNKND669UGN,MRW,RETURN_REQUEST,Client initiating bulk return of unsold season stock,CLOSED,evan.white44@hotmail.com,4
+TRF-000039,2024-01-03,US,B2B,GJK2N7ZRWQEA,UPS,DELAYED_DELIVERY,Customer reports delivery window passed with no contact,CLOSED,fiona.clark58@outlook.com,4
+TRF-000040,2024-01-11,ES,B2C,P3XVKVZRGOL0,LOCAL_ES,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,CLOSED,helen.clark41@outlook.com,3
+TRF-000041,2024-01-09,ES,B2B,3OEUVTYT8QZP,LOCAL_ES,DELAYED_DELIVERY,Package held at sorting facility for unknown reason,CLOSED,bob.hall96@hotmail.com,5
+TRF-000042,2024-01-15,US,B2C,4Q5V7C6S5NKB,DHL_US,,Parcel issue reported by end customer,OPEN,charlie.martin35@outlook.com,
+TRF-000043,2024-01-21,US,B2B,KJFPNQVUT75P,UPS,RETURN_REQUEST,Customer requesting return label for damaged product,OPEN,fiona.lewis78@icloud.com,
+TRF-000044,2024-01-04,ES,B2C,1XMXB9YO18PA,MRW,WRONG_ADDRESS,Delivery attempted at old address not updated in system,OPEN,diana.clark76@icloud.com,
+TRF-000045,2024-01-15,ES,B2B,NQYYF9RK7D30,SEUR,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",CLOSED,evan.white68@yahoo.com,5
+TRF-000046,2024-01-16,US,B2B,MDZQCBZAMD27,DHL_US,LOST_PARCEL,"Customer confirms parcel never arrived, tracking stuck in transit",CLOSED,charlie.clark30@outlook.com,3
+TRF-000047,2024-01-14,US,B2B,8IOGXPBWHVNZ,DHL_US,WRONG_ADDRESS,Customer address was truncated in carrier system,CLOSED,evan.lewis18@icloud.com,2
+TRF-000048,2024-01-26,US,B2C,5GLQJ5SXVWVM,UPS,WRONG_ADDRESS,Wrong postcode assigned during label generation,CLOSED,charlie.lewis48@icloud.com,2
+TRF-000049,2024-01-03,US,B2B,YLIENFNVUPRT,DHL_US,WRONG_ADDRESS,Customer address was truncated in carrier system,CLOSED,charlie.hall46@yahoo.com,3
+TRF-000050,2024-01-11,ES,B2B,4W58RHNUXORZ,SEUR,WRONG_ADDRESS,Wrong postcode assigned during label generation,OPEN,helen.martin20@icloud.com,
+TRF-000051,2024-01-26,ES,B2C,1KJTGQ01TEE1,MRW,LOST_PARCEL,Shipment marked delivered but customer has not received it,CLOSED,alice.lewis66@icloud.com,3
+TRF-000052,2024-01-14,US,B2C,D31K9QM3P91I,UPS,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,DISCARDED,fiona.lewis88@live.com,
+TRF-000053,2024-01-06,ES,B2B,W232UTVG9KU8,LOCAL_ES,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,DISCARDED,bob.martin62@gmail.com,
+TRF-000054,2024-01-28,ES,B2C,XZEFLI4OFWWN,DHL_ES,DELAYED_DELIVERY,"Parcel expected 3 days ago, no update from carrier",CLOSED,bob.hall75@live.com,4
+TRF-000055,2024-01-23,ES,B2C,7N8LA100QXMC,DHL_ES,RETURN_REQUEST,Return label sent but customer has not dropped off yet,DISCARDED,george.martin64@yahoo.com,
+TRF-000056,2024-01-09,US,B2B,LKTE4261BW4A,FEDEX,RETURN_REQUEST,Client initiating bulk return of unsold season stock,CLOSED,helen.hall10@hotmail.com,4
+TRF-000057,2024-01-23,ES,B2C,65K55DMCXXBW,SEUR,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,CLOSED,diana.hall93@gmail.com,1
+TRF-000058,2024-01-01,ES,B2C,HCVSQAME4YRI,MRW,DELAYED_DELIVERY,"Parcel expected 3 days ago, no update from carrier",CLOSED,bob.jones50@outlook.com,4
+TRF-000059,2024-01-05,ES,B2C,N35XYCUVFMH0,DHL_ES,DAMAGE,Customer sent photo evidence of damage on arrival,OPEN,helen.martin21@gmail.com,
+TRF-000060,2024-01-25,US,B2C,E0MP2IXIVZK7,UPS,RETURN_REQUEST,Customer requesting return label for damaged product,OPEN,evan.martin76@icloud.com,
+TRF-000061,2024-01-24,ES,B2C,OX22INIWC5AM,SEUR,DELAYED_DELIVERY,Package held at sorting facility for unknown reason,CLOSED,charlie.hall82@hotmail.com,3
+TRF-000062,2024-01-18,ES,B2C,Y181ACJBC2SW,DHL_ES,WRONG_ADDRESS,Wrong postcode assigned during label generation,CLOSED,george.lewis61@gmail.com,3
+TRF-000063,2024-01-18,US,B2C,TFDC79FLV1XX,DHL_US,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",OPEN,george.lewis40@gmail.com,
+TRF-000064,2024-01-03,US,B2C,7EWBXXGAEARM,UPS,LOST_PARCEL,Shipment marked delivered but customer has not received it,CLOSED,charlie.white26@live.com,3
+TRF-000065,2024-01-24,ES,B2C,51B3JCZUCQMR,DHL_ES,WRONG_ADDRESS,Customer address was truncated in carrier system,DISCARDED,fiona.martin42@gmail.com,
+TRF-000066,2024-01-08,ES,B2C,0A4ABN7G8B2Z,MRW,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,CLOSED,george.martin51@yahoo.com,2
+TRF-000067,2024-01-30,US,B2C,ZJCNS6G298CQ,FEDEX,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",CLOSED,evan.white21@icloud.com,1
+TRF-000068,2024-01-14,ES,B2C,969F5GCL9LCQ,MRW,RETURN_REQUEST,Return label requested by customer,OPEN,bad-email-here,
+TRF-000069,2024-01-01,ES,B2C,NK20IN8910T2,LOCAL_ES,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,CLOSED,alice.hall13@yahoo.com,2
+TRF-000070,2024-01-12,US,B2C,WYAM1N0LH9P8,DHL_US,WRONG_ADDRESS,Customer address was truncated in carrier system,OPEN,evan.jones15@yahoo.com,
+TRF-000071,2024-01-14,US,B2C,ZN9DDE3CUP8I,DHL_US,DELAYED_DELIVERY,Package held at sorting facility for unknown reason,CLOSED,fiona.hall99@live.com,2
+TRF-000072,2024-01-11,ES,B2C,QI7E1DDQLEM1,DHL_ES,DELAYED_DELIVERY,Customer reports delivery window passed with no contact,CLOSED,evan.hall43@gmail.com,3
+TRF-000073,2024-01-06,US,B2C,3KZVH4FZ8OBK,UPS,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,OPEN,charlie.jones61@hotmail.com,
+TRF-000074,2024-01-04,ES,B2B,Q2FA39E3NWXU,SEUR,LOST_PARCEL,Shipment marked delivered but customer has not received it,CLOSED,bob.jones18@yahoo.com,3
+TRF-000075,2024-01-26,ES,B2C,E63LBQGU3OBY,LOCAL_ES,RETURN_REQUEST,Client initiating bulk return of unsold season stock,CLOSED,fiona.martin33@outlook.com,3
+TRF-000076,2024-01-15,ES,B2C,5BWIKOTCKEH5,DHL_ES,LOST_PARCEL,"Customer confirms parcel never arrived, tracking stuck in transit",OPEN,alice.hall55@hotmail.com,
+TRF-000077,2024-01-26,US,B2C,R6SNGLH62C9T,DHL_US,WRONG_ADDRESS,Customer address was truncated in carrier system,DISCARDED,charlie.jones41@live.com,
+TRF-000078,2024-01-09,US,B2C,T2018U9N79GI,UPS,RETURN_REQUEST,"Return requested within 14-day window, awaiting approval",CLOSED,fiona.clark13@live.com,5
+TRF-000079,2024-01-12,US,B2C,8UUG95RLRDIH,DHL_US,RETURN_REQUEST,Return label sent but customer has not dropped off yet,CLOSED,helen.jones52@icloud.com,4
+TRF-000080,2024-01-26,US,B2C,EZ74LAV71448,UPS,WRONG_ADDRESS,Delivery attempted at old address not updated in system,CLOSED,george.clark22@outlook.com,2
+TRF-000081,2024-01-11,US,B2B,EF828XG8Y72I,FEDEX,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,CLOSED,charlie.hall49@live.com,4
+TRF-000082,2024-01-10,US,B2B,E088O98BV78H,DHL_US,LOST_PARCEL,Parcel not delivered and carrier shows no tracking updates,CLOSED,helen.martin52@live.com,1
+TRF-000083,2024-01-08,US,B2C,MLW83Y0MAHYM,UPS,DELAYED_DELIVERY,Estimated delivery date changed three times by carrier,CLOSED,bob.lewis10@gmail.com,5
+TRF-000084,2024-01-15,ES,B2B,085RNTDR5XYF,LOCAL_ES,DELAYED_DELIVERY,"Parcel expected 3 days ago, no update from carrier",CLOSED,alice.white12@outlook.com,5
+TRF-000085,2024-01-31,US,B2C,DM5FC79M96ZP,FEDEX,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,DISCARDED,charlie.clark65@yahoo.com,
+TRF-000086,2024-01-04,US,B2C,L9OT7TXKDOTR,UPS,LOST_PARCEL,Parcel not delivered and carrier shows no tracking updates,DISCARDED,fiona.jones64@gmail.com,
+TRF-000087,2024-01-27,US,B2C,XVHAGKC4LORX,FEDEX,DELAYED_DELIVERY,"Parcel expected 3 days ago, no update from carrier",OPEN,george.martin57@hotmail.com,
+TRF-000088,2024-01-06,US,B2C,QJQIJC1YDMT8,FEDEX,DAMAGE,"Liquid product leaked during transit, contents damaged",OPEN,alice.hall76@hotmail.com,
+TRF-000089,2024-01-19,ES,B2C,5RC6ZS62YWE1,LOCAL_ES,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,CLOSED,charlie.martin34@yahoo.com,3
+TRF-000090,2024-01-14,US,B2C,CYH3FVL03DUT,UPS,DAMAGE,"Outer box crushed, inner product compromised",OPEN,helen.jones99@icloud.com,
+TRF-000091,2024-01-17,US,B2B,2EFUU8DD2255,DHL_US,LOST_PARCEL,Investigation opened with carrier for missing parcel,CLOSED,evan.hall93@hotmail.com,3
+TRF-000092,2024-01-02,ES,B2C,GOWYOO5YBRJN,LOCAL_ES,DELAYED_DELIVERY,Package held at sorting facility for unknown reason,OPEN,evan.white45@hotmail.com,
+TRF-000093,2024-01-28,ES,B2C,IK01L0VDP6OR,MRW,DELAYED_DELIVERY,Carrier attempted delivery but customer was not notified,OPEN,fiona.jones75@yahoo.com,
+TRF-000094,2024-01-10,ES,B2B,ZO2SUG5HCBBM,MRW,DELAYED_DELIVERY,Delivery delayed due to weather conditions per carrier,OPEN,evan.white69@icloud.com,
+TRF-000095,2024-01-21,ES,B2B,7YIRQ8RTM4J3,LOCAL_ES,WRONG_ADDRESS,"Parcel delivered to wrong address, neighbour received it",CLOSED,evan.jones59@gmail.com,4
+TRF-000096,2024-01-28,US,B2B,U84XYJOA21A6,UPS,DELAYED_DELIVERY,Shipment stuck in customs clearance longer than expected,CLOSED,charlie.clark11@yahoo.com,2
+TRF-000097,2024-01-07,US,B2B,1G1R1DWWO8NB,UPS,WRONG_ADDRESS,Parcel rerouted and delivered successfully,CLOSED,diana.lewis57@gmail.com,
+TRF-000098,2024-01-20,ES,B2B,2K8XPNMJQY3O,DHL_ES,LOST_PARCEL,Parcel not delivered and carrier shows no tracking updates,DISCARDED,alice.clark94@outlook.com,
+TRF-000099,2024-01-10,ES,B2C,YRMJLJX8XGSI,DHL_ES,WRONG_ADDRESS,"Parcel delivered to wrong address, neighbour received it",CLOSED,george.lewis50@live.com,4
+TRF-000100,2024-01-24,ES,B2C,ARK6O0U93MZY,SEUR,LOST_PARCEL,Investigation opened with carrier for missing parcel,DISCARDED,fiona.clark48@yahoo.com,
