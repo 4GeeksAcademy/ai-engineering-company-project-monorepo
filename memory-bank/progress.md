@@ -71,3 +71,16 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Real-Time Communication — Sistemas en Tiempo Real: Notificaciones SSE (Parte 1 de 2)**:
+  - [x] Rama `feature/sse-notifications` creada desde `main`
+  - [x] Especificación técnica completa documentada en `services/api/docs/SSE_NOTIFICATIONS.md`
+  - [x] Modelos de datos SSE en `services/api/models/notification_models.py` (`SSEEventPayload`, `NotificationPublishRequest`, `NotificationChannel`, `NotificationSeverity`, `format_sse()`)
+  - [x] Bus de eventos en tiempo real en `services/api/services/sse_service.py` (`SSENotificationBus` con cola `asyncio.Queue` por suscriptor, filtrado por tópicos, buffer circular para reconexión con `Last-Event-ID` y comentarios heartbeat `: ping - keep-alive\n\n`)
+  - [x] Router FastAPI en `services/api/routes/notifications.py`:
+    - [x] `GET /api/notifications/stream` (stream unidireccional `text/event-stream`, `no-cache`, `X-Accel-Buffering: no`, evento inicial `connected`, control de desconexión y liberación de recursos)
+    - [x] `POST /api/notifications/publish` (publicación interna y broadcast concurrent a suscriptores)
+    - [x] `GET /api/notifications/stats` (métricas de conexiones activas, eventos emitidos y distribución por canal)
+  - [x] Integración de router en `services/api/main.py` y catálogo de endpoints en `/`
+  - [x] Suite de pruebas automatizadas en `services/api/tests/test_sse_notifications.py` (10/10 pruebas pasadas en pytest cubriendo formato, bus, replay, endpoints y streaming)
+  - [x] Verificación de tipos TypeScript (`tsc -p uis/backoffice/tsconfig.json --noEmit` sin errores)
+

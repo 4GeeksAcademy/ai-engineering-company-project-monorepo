@@ -21,6 +21,7 @@ from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
+from routes.notifications import router as notifications_router
 
 
 
@@ -112,6 +113,9 @@ app.include_router(incidents_router)
 # POST /telemetry/events — Stub endpoint para recepción de eventos
 app.include_router(telemetry_router)
 
+# Registrar router de notificaciones en tiempo real (Server-Sent Events)
+app.include_router(notifications_router)
+
 
 _last_analysis: dict | None = None
 
@@ -127,6 +131,8 @@ def root() -> dict:
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_export": "/api/incidents/results/export",
             "telemetry_events": "/telemetry/events",
+            "notifications_stream": "/api/notifications/stream",
+            "notifications_publish": "/api/notifications/publish",
         },
     }
 
