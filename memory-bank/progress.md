@@ -87,4 +87,19 @@
     - [x] Compuerta Human-in-the-Loop para licitaciones críticas (>= $100k USD)
   - [x] Suite de pruebas integral (`agents/rfp-workflow/test_router.py`): 7/7 tests superados al 100%
   - [x] Verificación de tipos TypeScript (`tsc --noEmit` en `uis/backoffice` y `uis/website`) con 0 errores
+- [x] **Hito — Flujo Agéntico de RFPs: Generación de Respuestas (Parte 2 de 3)**:
+  - [x] Rama `feature/rfp-generation` creada desde `feature/rfp-routing`
+  - [x] Documentación de arquitectura: `agents/rfp-workflow/README.md`
+  - [x] Modelos de datos del Evaluator-Optimizer (`agents/rfp-workflow/evaluator_schemas.py`):
+    - [x] `RFPProposalDraft` con versionado e historial de iteración
+    - [x] `EvaluationCriterion` y `EvaluationFeedback` con veredicto PASS/FAIL, rúbrica ponderada y crítica accionable
+    - [x] `ProposalIterationState` con transiciones de estado (`IN_PROGRESS`, `APPROVED`, `ESCALATED_HUMAN_REVIEW`)
+  - [x] Motor del bucle de automejora (`agents/rfp-workflow/evaluator_optimizer.py`):
+    - [x] `ProposalGenerator`: Redacción del borrador inicial desde el handoff estructurado
+    - [x] `ProposalEvaluator`: Rúbrica objetiva de 4 criterios (cobertura de requisitos 35%, presupuesto 30%, SLAs 20%, estructura 15%)
+    - [x] `ProposalOptimizer`: Refinamiento iterativo incorporando las directivas del feedback
+    - [x] `RFPEvaluatorOptimizerLoop`: Orquestación `generate -> evaluate -> revise` con límite de parada (`max_iterations = 3`)
+  - [x] Suite de pruebas integral (`agents/rfp-workflow/test_evaluator_optimizer.py`): 5/5 tests superados al 100%
+  - [x] Verificación de tipos TypeScript (`tsc --noEmit` en `uis/backoffice` y `uis/website`) con 0 errores
+
 

@@ -1,44 +1,50 @@
-# Hito — Flujo Agéntico de RFPs: Recepción y Enrutamiento (Parte 1 de 3)
+# Flujo Agéntico de RFPs en TrackFlow (Sistema Multiagente)
 
-## 🎯 Objetivo del Proyecto
-Implementar la primera etapa de una arquitectura multiagente para **TrackFlow**, orientada al procesamiento inteligente de **RFPs** (*Request for Proposal* / Solicitudes de Propuesta y Cotización).
-
-Siguiendo el **Patrón de Enrutamiento (*Router Pattern*)**, el sistema clasifica las solicitudes entrantes mediante esquemas tipados y ejecuta un **Handoff Estructurado (*Structured Handoff*)** con **Contexto Acotado (*Scoped Context*)** hacia los agentes especialistas correspondientes, evitando la sobrecarga de contexto o la dependencia de un agente monolítico "todólogo".
+Este directorio implementa el flujo agéntico multiagente para la gestión inteligente de **RFPs** (*Request for Proposal* / Solicitudes de Propuesta y Cotización) en TrackFlow.
 
 ---
 
-## 🏗️ Arquitectura de la Solución
+## 📌 Hito — Flujo Agéntico de RFPs: Recepción y Enrutamiento (Parte 1 de 3)
+- **Patrón:** *Router Pattern* & *Structured Handoff* con *Scoped Context*.
+- **Módulos:** [`schemas.py`](./schemas.py), [`router.py`](./router.py), [`test_router.py`](./test_router.py).
+- **Función:** Clasificación tipada de la RFP (`warehouse_fulfillment`, `freight_transport`, `api_integration`, `out_of_scope`) y transferencia con contexto acotado al especialista.
+
+---
+
+## 📌 Hito — Flujo Agéntico de RFPs: Generación de Respuestas (Parte 2 de 3)
+- **Patrón:** *Evaluator-Optimizer Pattern* (`generate -> critique/evaluate -> revise`).
+- **Módulos:** [`evaluator_schemas.py`](./evaluator_schemas.py), [`evaluator_optimizer.py`](./evaluator_optimizer.py), [`test_evaluator_optimizer.py`](./test_evaluator_optimizer.py).
+- **Función:** Generación de la propuesta técnica formal completa mediante un bucle de automejora iterativo:
+  1. **Proposal Generator:** Genera el borrador inicial de la propuesta a partir del handoff.
+  2. **Proposal Evaluator:** Evalúa el borrador con una rúbrica objetiva (cobertura de requisitos, límites de presupuesto, viabilidad de SLAs y estructura comercial).
+  3. **Feedback Estructurado:** Si la evaluación resulta en `FAIL`, devuelve crítica cuantitativa y cualitativa accionable.
+  4. **Proposal Optimizer:** Reescribe y perfecciona el borrador incorporando las correcciones.
+  5. **Condición de Parada:** Cierre al obtener `PASS` o al alcanzar el límite seguro de iteraciones (`max_iterations = 3`).
 
 ```
-       [ Solicitud RFP del Cliente ]
-                    │
-                    ▼
-       ┌──────────────────────────┐
-       │   RFP Ingestion Node     │ ──> Valida esquema inicial (RFPRequest)
-       └──────────────────────────┘
-                    │
-                    ▼
-       ┌──────────────────────────┐
-       │     RFP Router Node      │ ──> Clasificación tipada (Literal[...])
-       └──────────────────────────┘
-                    │ (Conditional Edges)
-       ┌────────────┼────────────┬─────────────┐
-       ▼            ▼            ▼             ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│  Warehouse   │ │   Freight    │ │   Tech API   │ │ Out of Scope │
-│  Specialist  │ │  Specialist  │ │  Specialist  │ │  Rejection   │
-└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
+  [ RFPTaskHandoff ] ──> ┌────────────────────────┐
+                         │   Proposal Generator   │
+                         └────────────────────────┘
+                                     │ (Borrador de Propuesta)
+                                     ▼
+                         ┌────────────────────────┐
+                         │   Proposal Evaluator   │ <── [ Rúbrica de Calidad ]
+                         └────────────────────────┘
+                                     │
+                    ┌────────────────┴────────────────┐
+          (FAIL / Score < 80)               (PASS / Score >= 80)
+                    ▼                                 ▼
+       ┌────────────────────────┐       ┌────────────────────────┐
+       │   Feedback Accionable  │       │   Propuesta Aprobada   │
+       └────────────────────────┘       └────────────────────────┘
+                    │                                 │
+                    ▼                                 ▼
+       ┌────────────────────────┐             [ Cierre Exitoso ]
+       │   Proposal Optimizer   │
+       └────────────────────────┘
+                    │ (Borrador Revisado)
+                    └───> [ Re-evaluar ]
 ```
-
-### Componentes Clave:
-1. **Esquema de Entrada (`RFPRequest`):** Normaliza cliente, presupuesto, descripción, plazos y requerimientos técnicos.
-2. **Clasificador Tipado (`RFPClassification`):** Determina la categoría (`warehouse_logistics`, `freight_transport`, `api_integration`, `out_of_scope`), nivel de confianza y razonamiento.
-3. **Contrato de Handoff Estructurado (`RFPTaskHandoff`):**
-   - `task_id`: Identificador unívoco del traspaso.
-   - `target_agent`: Agente receptor asignado.
-   - `scoped_inputs`: Subconjunto estricto de datos necesarios para el especialista.
-   - `expected_output_schema`: Esquema tipado que el especialista debe producir.
-4. **Grafo de Estado Acotado (`RFPWorkflowState`):** Mantiene la trazabilidad y garantiza que los agentes receptores no reciban información ajena a su función.
 
 ---
 
@@ -48,6 +54,9 @@ Siguiendo el **Patrón de Enrutamiento (*Router Pattern*)**, el sistema clasific
 # 1. Instalar dependencias
 pip install -r requirements.txt
 
-# 2. Ejecutar suite de pruebas de enrutamiento
+# 2. Ejecutar suite de pruebas de la Parte 1 (Enrutamiento)
 python3 test_router.py
+
+# 3. Ejecutar suite de pruebas de la Parte 2 (Evaluator-Optimizer)
+python3 test_evaluator_optimizer.py
 ```
