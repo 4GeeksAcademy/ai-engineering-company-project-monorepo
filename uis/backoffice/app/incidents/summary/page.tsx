@@ -43,5 +43,6 @@ export default function IncidentsSummaryPage() {
 
       <IncidentSummary />
     </main>
+    </>
   );
 }
