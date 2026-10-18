@@ -1,22 +1,33 @@
 # Testing
 
-## Automated tests
+## Pruebas automatizadas
 
-The project uses `pytest` for automated API testing.
+El proyecto utiliza `pytest` para realizar pruebas automatizadas de la API.
 
-The current test suite covers:
+La suite actual cubre los endpoints:
 
-- API health check
-- Incident analysis validation
-- Authentication validation
-- Protected profile endpoints
-- Protected user endpoints
-- User registration validation
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+- `GET /users/me`
+- `GET /users/`
+- `GET /profiles/me`
+- `PUT /profiles/me`
 
-## Running the tests
+Actualmente se prueban principalmente casos de validacion, errores y acceso no autorizado.
 
-From the project root:
+Tambien se incluyen pruebas de:
+
+- Comprobacion de salud de la API
+- Validacion del analisis de incidentes
+- Validacion de autenticacion
+- Proteccion de endpoints mediante token
+- Registro de usuarios
+- Gestion de usuarios y perfiles
+
+## Ejecutar las pruebas
+
+Desde la raiz del proyecto:
 
 ```powershell
-$env:PYTHONPATH="services/api"
-python -m pytest -v
+uv run pytest -v
