@@ -1,0 +1,2 @@
+# Dependencias para Flujo Agéntico de RFPs: Recepción y Enrutamiento (Parte 1 de 3)
+pydantic>=2.10.0
