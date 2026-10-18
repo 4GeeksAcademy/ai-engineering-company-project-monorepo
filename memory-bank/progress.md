@@ -101,5 +101,21 @@
     - [x] `RFPEvaluatorOptimizerLoop`: Orquestación `generate -> evaluate -> revise` con límite de parada (`max_iterations = 3`)
   - [x] Suite de pruebas integral (`agents/rfp-workflow/test_evaluator_optimizer.py`): 5/5 tests superados al 100%
   - [x] Verificación de tipos TypeScript (`tsc --noEmit` en `uis/backoffice` y `uis/website`) con 0 errores
+- [x] **Hito — Flujo Agéntico de RFPs: Aprobación y Cierre (Parte 3 de 3)**:
+  - [x] Rama `feature/rfp-approval` creada desde `feature/rfp-generation`
+  - [x] Documentación global completa en `agents/rfp-workflow/README.md`
+  - [x] Modelos de control y supervisión (`agents/rfp-workflow/approval_schemas.py`):
+    - [x] `HumanApprovalDecision` con acciones tipadas (`APPROVE`, `REQUEST_CHANGES`, `REJECT`)
+    - [x] `WorkflowCheckpoint` con serialización completa de snapshot de estado
+    - [x] `FinalRFPContract` con hash de firma digital SHA-256 y estados (`CLOSED_WON`, `CLOSED_REJECTED`)
+    - [x] `ApprovalWorkflowState` para gestión de interrupciones y eventos de auditoría
+  - [x] Motor de control y reanudación (`agents/rfp-workflow/approval_controller.py`):
+    - [x] `FileCheckpointer`: Persistencia de snapshots en disco (`.checkpoints/`)
+    - [x] `ApprovalGateNode`: Interrupción automática (*interrupt*) antes de acciones irreversibles
+    - [x] `WorkflowResumeEngine`: Reanudación del grafo a partir del checkpoint con inyección de decisión humana
+    - [x] `EndToEndRFPOrchestrator`: Pipeline integral que conecta las 3 partes (Router -> Evaluator-Optimizer -> Approval Gate & Closing)
+  - [x] Suite de pruebas integral (`agents/rfp-workflow/test_approval_workflow.py`): 6/6 tests superados al 100%
+  - [x] Verificación de tipos TypeScript (`tsc --noEmit` en `uis/backoffice` y `uis/website`) con 0 errores
+
 
 
