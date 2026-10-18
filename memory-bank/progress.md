@@ -103,3 +103,9 @@
     - [x] Verificación completa de suite `pytest` (22 passed).
     - [x] Sincronización de memoria en `memory-bank/progress.md`.
     - [x] Subida a repositorio remoto (`feature/secure-ai-integration`).
+- [x] **Proyecto Final & Capstone — Consolidación y Cierre de Plataforma**:
+  - [x] Lección *"Has terminado el curso, ¿y ahora qué?"* analizada a fondo.
+  - [x] Plan de consolidación, merges y navegación del monorepo redactado en [`docs/CAPSTONE_CONSOLIDATION_PLAN.md`](docs/CAPSTONE_CONSOLIDATION_PLAN.md).
+  - [ ] Ejecución de merges en rama integradora (esperando feedback/aprobación de PRs de hitos previos).
+  - [ ] Conexión y diseño del Hub navegable de UI en Backoffice (navegación 100% interactiva por clics).
+  - [ ] Grabación del vídeo pitch de 5 minutos y entrega final.
