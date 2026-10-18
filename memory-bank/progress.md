@@ -71,3 +71,20 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Hito — Flujo Agéntico de RFPs: Recepción y Enrutamiento (Parte 1 de 3)**:
+  - [x] Rama `feature/rfp-routing` creada desde `main`
+  - [x] Configuración y documentación: `agents/rfp-workflow/requirements.txt` y `README.md`
+  - [x] Modelos de datos y contratos de handoff (`agents/rfp-workflow/schemas.py`):
+    - [x] `RFPRequest` y `RFPRequirement` para ingesta y normalización de RFPs
+    - [x] `RFPClassification`: Enrutamiento tipado (`Literal`), cálculo de confianza y prioridad
+    - [x] `RFPTaskHandoff`: Contrato estructurado de traspaso con Scoped Context y esquema esperado
+    - [x] Esquemas de propuesta para especialistas (`WarehouseProposalOutput`, `FreightProposalOutput`, `TechAPIProposalOutput`, `RejectionProposalOutput`)
+    - [x] `RFPWorkflowState` con pista de auditoría secuencial
+  - [x] Motor de enrutamiento y orquestación (`agents/rfp-workflow/router.py`):
+    - [x] `RFPClassifier`: Clasificador semántico tipado con umbrales de fiabilidad
+    - [x] `RFPTaskHandoffFactory`: Generador de handoffs acotados
+    - [x] Aristas condicionales (`conditional edges`) hacia especialistas o gestor de rechazo
+    - [x] Compuerta Human-in-the-Loop para licitaciones críticas (>= $100k USD)
+  - [x] Suite de pruebas integral (`agents/rfp-workflow/test_router.py`): 7/7 tests superados al 100%
+  - [x] Verificación de tipos TypeScript (`tsc --noEmit` en `uis/backoffice` y `uis/website`) con 0 errores
+
