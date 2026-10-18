@@ -1,3 +1,11 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Local API files
+.coverage
+services/api/.coverage
+services/api/.env
+services/api/brasaland.db
+services/api/auth/auth.json
+services/api/auth/profiles.json
