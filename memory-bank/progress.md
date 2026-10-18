@@ -71,3 +71,22 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Secure AI Applications — Prácticas Seguras en la Integración de IA en Sistemas (rama `feature/secure-ai-integration`)**:
+  - [x] **Fase 1: Análisis y Especificación Técnica**:
+    - [x] `services/api/docs/SECURE_AI_GOVERNANCE_NIST.md` redactado.
+    - [x] Inventario de agentes y sistemas de IA clasificados bajo EU AI Act (Art. 50) y GDPR.
+    - [x] Matriz de riesgos mapeada a OWASP LLM Top 10 (LLM01, LLM02, LLM06, LLM09, LLM10).
+    - [x] Hoja de ruta de gobernanza alineada a las 6 funciones de NIST CSF 2.0 (Govern, Identify, Protect, Detect, Respond, Recover).
+  - [x] **Fase 2: Implementación de Guardrails Deterministas y Endpoints**:
+    - [x] Módulo central `services/api/core/ai_guardrails.py`:
+      - `PromptInjectionGuard` (detección heurística pre-flight y sandboxing XML).
+      - `SensitiveDataRedactor` (anonimización de PII: tarjetas, emails, teléfonos, DNI y secretos/tokens).
+      - `HumanInTheLoopGate` (HITL para acciones destructivas y mitigación de Excessive Agency LLM06).
+      - `ModelOutputValidator` (bloqueo de payloads destructivos SQL/Shell/XSS en tool calls).
+      - `TokenBudgetRateLimiter` (cuotas por sesión y circuit breaker contra loops de recursión).
+      - `AIGovernanceRegistry` (registro de modelos y herramientas según NIST e inventario auditable).
+    - [x] Router FastAPI `services/api/routes/ai_security.py` con 6 endpoints protegidos y de gobernanza.
+    - [x] Integración en `services/api/main.py`.
+    - [x] Configuración de testing con `services/api/pytest.ini`.
+    - [x] Suite de 22 pruebas automatizadas en `services/api/tests/test_ai_security.py` (100% passed).
+    - [x] Verificación de salud TypeScript en frontends (`backoffice` y `website`).

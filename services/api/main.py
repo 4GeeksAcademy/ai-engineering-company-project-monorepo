@@ -21,6 +21,7 @@ from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
+from routes.ai_security import router as ai_security_router
 
 
 
@@ -112,6 +113,9 @@ app.include_router(incidents_router)
 # POST /telemetry/events — Stub endpoint para recepción de eventos
 app.include_router(telemetry_router)
 
+# Registrar router de seguridad y gobernanza de IA (Secure AI Applications)
+app.include_router(ai_security_router)
+
 
 _last_analysis: dict | None = None
 
@@ -127,6 +131,7 @@ def root() -> dict:
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_export": "/api/incidents/results/export",
             "telemetry_events": "/telemetry/events",
+            "ai_security": "/api/ai-security",
         },
     }
 
