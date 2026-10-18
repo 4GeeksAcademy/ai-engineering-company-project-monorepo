@@ -27,7 +27,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 
 from database import suppliers_table, Supplier as SupplierQuery
-from dependencies.auth_deps import get_current_user
+from dependencies.auth_deps import get_current_user, get_admin_user
 from models import Supplier, SupplierCreate, RateUpdate, StatusUpdate
 from core.cache import cache_get, cache_set, cache_invalidate_prefix
 
@@ -259,7 +259,7 @@ def update_status(
 @router.delete("/{supplier_id}", status_code=200)
 def delete_supplier(
     supplier_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_admin_user),
 ) -> dict:
     """
     Elimina un proveedor del directorio.

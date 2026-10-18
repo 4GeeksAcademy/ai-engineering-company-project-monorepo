@@ -71,3 +71,15 @@
   - [ ] Paso 8: Validación manual (2 GET seguidos, invalidación tras escritura, Swagger)
   - [ ] Paso 9: CACHING_REPORT.md con mediciones reales
   - [ ] Paso 10: Commit final y PR hacia main
+- [x] **Secure AI Applications — Auditoría y Corrección de Vulnerabilidades Web (OWASP Top 10)**:
+  - [x] Rama `feature/owasp-security-audit` creada desde `main`
+  - [x] Corrección JSX de etiquetas en `uis/backoffice` (`tsc --noEmit` con 0 errores)
+  - [x] `services/api/docs/OWASP_SECURITY_AUDIT.md`: Especificación técnica y matriz de remediación para 11 vulnerabilidades
+  - [x] `services/api/core/security.py`: Sanitización XSS, prevención CWE-1236 fórmulas CSV, RateLimiter deslizante en memoria, SecurityHeadersMiddleware ASGI, logger estructurado `security.audit`
+  - [x] A01 Broken Access Control: Forzado de `role='user'` en registro público, `GET /users/` restringido a admin, IDOR eliminado en `GET /users/{id}`, bloqueo de escalada en `PUT /users/{id}`, `DELETE /suppliers/{id}` restringido a admin
+  - [x] A07 Password Policy: Longitud mínima >=8 caracteres y complejidad obligatoria alfanumérica
+  - [x] A03 Inyección & XSS: Sanitización de título/descripción en incidencias y escape de fórmulas en exportación CSV
+  - [x] A04 & A07 Anti-Brute Force: Límite de 5 req/min en login y 3 req/5min en recuperación de contraseña con cabecera `Retry-After`
+  - [x] A05 Security Misconfiguration: Inyección de cabeceras de seguridad (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP`, `HSTS`, `Referrer-Policy`, etc.)
+  - [x] A09 Security Logging: Registro auditado estructurado con IPs, identificadores y resultado
+  - [x] Suite de Pruebas Automatizadas: `services/api/tests/test_owasp_security.py` con 13 tests pasando exitosamente (13/13)

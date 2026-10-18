@@ -21,6 +21,7 @@ from routes.profiles import router as profiles_router
 from routes.auth import router as auth_router
 from routes.incidents import router as incidents_router
 from routes.telemetry import router as telemetry_router
+from core.security import SecurityHeadersMiddleware
 
 
 
@@ -56,6 +57,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware de Cabeceras de Seguridad HTTP (OWASP A05)
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 # ─────────────────────────────────────────────────────────────
 # Manejador global de excepciones
@@ -78,10 +82,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    """Re-lanza HTTPException tal cual (son intencionales)."""
+    """Re-lanza HTTPException tal cual (son intencionales), preservando cabeceras personalizadas."""
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
+        headers=exc.headers,
     )
 
 

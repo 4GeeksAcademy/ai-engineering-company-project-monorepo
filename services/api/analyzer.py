@@ -263,4 +263,5 @@ def build_export_rows(result: dict[str, Any]) -> list[tuple[str, str]]:
     for score in ["1", "2", "3", "4", "5"]:
         rows.append((f"score_{score}", str(satisfaction["distribution"][score])))
 
-    return rows
+    from core.security import sanitize_csv_cell
+    return [(sanitize_csv_cell(k), sanitize_csv_cell(v)) for k, v in rows]

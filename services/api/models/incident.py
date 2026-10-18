@@ -10,6 +10,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
+from core.security import sanitize_html
 
 # --- Constantes del CONTEXT-trackflow (NO MODIFICAR) ----------
 
@@ -42,6 +43,11 @@ class IncidentCreate(BaseModel):
     origin: str = Field(...)
     branch: str = Field(...)
     status: str = Field(default="open")
+
+    @field_validator("title", "description")
+    @classmethod
+    def sanitize_text_inputs(cls, v: str) -> str:
+        return sanitize_html(v)
 
     @field_validator("category")
     @classmethod

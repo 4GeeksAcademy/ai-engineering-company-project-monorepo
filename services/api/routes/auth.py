@@ -23,8 +23,9 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
+from core.security import check_rate_limit, log_security_event
 
 from dependencies.auth_deps import get_current_user
 from services.auth_service import (
@@ -100,24 +101,20 @@ class ChangePasswordRequest(BaseModel):
 # ─────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=LoginResponse)
-def login(credentials: LoginRequest):
+def login(credentials: LoginRequest, request: Request):
     """
     Inicia sesión y obtiene un token JWT.
-
-    Endpoint PÚBLICO — no requiere autenticación previa.
-
-    Args:
-        credentials: email y password.
-
-    Retorna:
-        access_token (JWT) y token_type.
-
-    Raises:
-        401: Si el email no existe o la contraseña es incorrecta.
+    HARDENING: Rate limiting activo contra fuerza bruta y registro de auditoría.
     """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    # Rate limiting: máx 5 intentos por minuto por IP (mitiga VULN-08)
+    check_rate_limit(request, "auth_login", max_requests=5, window_seconds=60)
+
     # Buscar usuario por email
     user = get_user_by_email(credentials.email)
     if user is None:
+        log_security_event("LOGIN_FAILED_UNKNOWN_EMAIL", client_ip, f"Email inexistente: {credentials.email}", user_identifier=credentials.email, success=False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas.",
@@ -126,6 +123,7 @@ def login(credentials: LoginRequest):
 
     # Verificar contraseña
     if not verify_password(credentials.password, user["hashed_password"]):
+        log_security_event("LOGIN_FAILED_BAD_PASSWORD", client_ip, f"Contraseña errónea para email: {credentials.email}", user_identifier=credentials.email, success=False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas.",
@@ -134,6 +132,7 @@ def login(credentials: LoginRequest):
 
     # Verificar si el usuario está activo
     if not user.get("is_active", True):
+        log_security_event("LOGIN_FAILED_DEACTIVATED", client_ip, f"Cuenta desactivada: {credentials.email}", user_identifier=credentials.email, success=False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario desactivado.",
@@ -145,6 +144,7 @@ def login(credentials: LoginRequest):
         data={"sub": str(user["id"]), "role": user["role"]}
     )
 
+    log_security_event("LOGIN_SUCCESS", client_ip, f"Login exitoso usuario id={user['id']}", user_identifier=credentials.email, success=True)
     return LoginResponse(access_token=token)
 
 
@@ -179,23 +179,14 @@ def get_auth_me(current_user: dict = Depends(get_current_user)):
 # ════════════════════════════════════════════════════════════════
 
 @router.post("/forgot-password", status_code=200)
-def forgot_password(request: ForgotPasswordRequest):
+def forgot_password(request_body: ForgotPasswordRequest, request: Request):
     """
-    Solicita restablecimiento de contraseña.
-
-    Si el email existe:
-      1. Genera token JWT con expiración (30 min por defecto)
-      2. Envía email con enlace: /reset-password?token=<token>
-
-    SIEMPRE devuelve 200, incluso si el email no existe.
-    Esto previene enumeración de usuarios (un atacante no puede
-    saber qué emails están registrados).
-
-    Request:  POST /auth/forgot-password
-    Body:     { "email": "usuario@ejemplo.com" }
-    Response: 200 { "message": "Si esa dirección está registrada..." }
+    Solicita restablecimiento de contraseña con protección contra abuso.
     """
-    email = request.email.strip().lower()
+    # Rate limiting: máx 3 peticiones cada 5 minutos por IP
+    check_rate_limit(request, "auth_forgot_password", max_requests=3, window_seconds=300)
+
+    email = request_body.email.strip().lower()
 
     # Buscar usuario por email
     user = get_user_by_email(email)
