@@ -162,6 +162,7 @@ export default function ProfilePage() {
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>
       </form>
+      <p><a href="/account/change-password">Cambiar contraseña</a></p>
 
       <button
         type="button"

@@ -82,6 +82,7 @@ export default function LoginPage() {
           {loading ? "Entrando..." : "Iniciar sesión"}
         </button>
       </form>
+      <p><Link href="/forgot-password">¿Olvidaste tu contraseña?</Link></p>
 
       <p>
         ¿No tienes cuenta? <Link href="/register">Regístrate</Link>

@@ -56,3 +56,88 @@ def get_me(current_user=Depends(get_current_user)):
         "role": current_user["role"],
         "profile": profile,
     }
+
+
+# AUTH-03: Recuperacion y cambio de contrasena
+
+import logging
+from pydantic import EmailStr, Field
+from services.api.auth.password_reset import (
+    create_reset_token,
+    reset_user_password,
+    send_reset_email,
+)
+from services.api.auth.security import hash_password
+
+logger = logging.getLogger(__name__)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest):
+    user = storage.get_user_by_email(payload.email)
+
+    if user and user["is_active"]:
+        try:
+            token = create_reset_token(user["id"])
+            send_reset_email(user["email"], token)
+        except Exception:
+            logger.exception("Error al enviar correo de recuperacion")
+
+    return {
+        "message": (
+            "Si esa direccion esta registrada, "
+            "recibiras un enlace de recuperacion."
+        )
+    }
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest):
+    success = reset_user_password(
+        payload.token,
+        payload.new_password,
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=400,
+            detail="Token invalido, expirado o utilizado",
+        )
+
+    return {"message": "Contrasena actualizada correctamente"}
+
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordRequest,
+    current_user=Depends(get_current_user),
+):
+    if not verify_password(
+        payload.current_password,
+        current_user["hashed_password"],
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="La contrasena actual es incorrecta",
+        )
+
+    storage.update_user(
+        current_user["id"],
+        {"hashed_password": hash_password(payload.new_password)},
+    )
+
+    return {"message": "Contrasena cambiada correctamente"}
