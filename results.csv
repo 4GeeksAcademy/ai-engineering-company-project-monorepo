@@ -1,0 +1,33 @@
+metric,value
+Total records,100
+Valid records,95
+Invalid records,5
+Invalid - Invalid incident ID,0
+Invalid - Invalid or missing date,0
+Invalid - Invalid or missing country,0
+Invalid - Invalid or missing customer type,0
+Invalid - Invalid tracking number,1
+Invalid - Carrier/country mismatch,1
+Invalid - Invalid or missing category,1
+Invalid - Invalid or missing description,0
+Invalid - Invalid or missing status,0
+Invalid - Invalid or missing email,1
+"Invalid - Closed incident, no score",1
+Invalid - Invalid satisfaction score,0
+Category - LOST_PARCEL,14
+Category - DELAYED_DELIVERY,38
+Category - WRONG_ADDRESS,19
+Category - RETURN_REQUEST,17
+Category - DAMAGE,7
+Status - OPEN,29
+Status - CLOSED,52
+Status - DISCARDED,14
+Country - US,50
+Country - ES,45
+Scored closed incidents,52
+Average satisfaction,3.06
+Satisfaction score - 1,6
+Satisfaction score - 2,11
+Satisfaction score - 3,15
+Satisfaction score - 4,14
+Satisfaction score - 5,6
