@@ -4,9 +4,11 @@ domain (see docs/ARCHITECTURE_PROPOSAL.md for the reasoning).
 
 from __future__ import annotations
 
+import logging
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,6 +41,36 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Nexova API", lifespan=lifespan)
+
+# One line per request ("GET /api/incidents/summary → 200 | 41.2ms"): the evidence the caching decisions in
+# CACHING_REPORT.md are based on. uvicorn only configures its own loggers, so this one gets its own handler.
+timing_logger = logging.getLogger("api.timing")
+timing_logger.setLevel(logging.INFO)
+if not timing_logger.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+    timing_logger.addHandler(_handler)
+    timing_logger.propagate = False
+
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = (time.perf_counter() - start) * 1000  # ms
+    query = f"?{request.url.query}" if request.url.query else ""
+    cache = response.headers.get("X-Cache")  # set by core.cache.cached_json on the cached reads
+    timing_logger.info(
+        "%s %s%s → %s | %.1fms%s",
+        request.method,
+        request.url.path,
+        query,
+        response.status_code,
+        duration,
+        f" | cache {cache}" if cache else "",
+    )
+    return response
+
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 
 app.add_middleware(

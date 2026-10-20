@@ -15,6 +15,7 @@ from jose import jwt
 from tinydb import TinyDB
 
 from auth.security import create_access_token, hash_password
+from core import cache as response_cache
 from core.config import JWT_ALGORITHM, get_jwt_secret
 from profiles import service as profiles_service
 from profiles.schemas import Profile
@@ -27,6 +28,14 @@ UUIDS = {email: uuid4() for email in (ALICE, BOB, CAROL)}
 
 # bcrypt is deliberately slow: hash once per session, reuse in every test.
 _PASSWORD_HASH = hash_password(PASSWORD)
+
+
+@pytest.fixture(autouse=True)
+def empty_caches():
+    """The read caches are process-wide, the databases of each test are not: never let one test see another's data."""
+    response_cache.clear_all()
+    yield
+    response_cache.clear_all()
 
 
 @pytest.fixture(autouse=True)

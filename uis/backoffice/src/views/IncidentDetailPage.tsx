@@ -1,19 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { CATEGORY_LABELS, ORIGIN_LABELS, SCORE_LABELS, type Incident, type IncidentFacets } from "@repo/shared-types";
 import { ErrorBanner } from "../components/ui/Field";
 import HistoryTimeline from "../components/incidents/HistoryTimeline";
-import IncidentForm from "../components/incidents/IncidentForm";
 import StatusActions from "../components/incidents/StatusActions";
 import StatusBadge from "../components/incidents/StatusBadge";
 import LoadingState from "../components/ui/LoadingState";
 import { getIncident, getIncidentFacets } from "../lib/api";
 import { describeError, isNotFound } from "../lib/errors";
 import { formatDateTime } from "../lib/format";
+
+// The edit form only exists while "Editar" is active; the detail view itself (read-only) does not need its code.
+const preloadForm = () => import("../components/incidents/IncidentForm");
+const IncidentForm = dynamic(preloadForm, { loading: () => <LoadingState label="Cargando formulario…" /> });
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -106,7 +110,7 @@ export default function IncidentDetailPage() {
           <p className="mt-2 text-lg text-slate-300">{incident.title}</p>
         </div>
         {incident.editable && !editing && (
-          <button type="button" onClick={() => setEditing(true)} className="flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:text-white">
+          <button type="button" onPointerEnter={preloadForm} onFocus={preloadForm} onClick={() => setEditing(true)} className="flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:text-white">
             <Pencil size={14} />
             Editar
           </button>

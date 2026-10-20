@@ -25,6 +25,18 @@ In one line: all four Lighthouse categories went to 100 on the website (mobile a
 
 ---
 
+## 📦 Delivery: caching optimisation
+
+| What | Where |
+|---|---|
+| **Technical report**: evidence, frontend and backend decisions, TTLs and invalidation, trade-offs, what was not cached and why | [`CACHING_REPORT.md`](./CACHING_REPORT.md) |
+| Raw measurements (before/after benchmarks, small vs large volume, bundle sizes) | [`docs/caching/`](./docs/caching/) |
+| Tools to reproduce it (load seeder, endpoint benchmark, bundle size) | [`scripts/seed_load.py`](./scripts/seed_load.py) · [`scripts/bench_endpoints.py`](./scripts/bench_endpoints.py) · [`scripts/bundle-size.mjs`](./scripts/bundle-size.mjs) |
+
+In one line: five read endpoints are cached in process with a TTL and explicit invalidation (`GET /inventory/orders` 914 ms → 20 ms), three on-demand components are lazy loaded and the order history sorts once per load instead of on every filter change. How to reproduce it: [`CACHING_REPORT.md` §8](./CACHING_REPORT.md#8-cómo-reproducir).
+
+---
+
 ## Purpose
 
 This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).

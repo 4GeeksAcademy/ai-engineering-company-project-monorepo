@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
-import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierRow from "../components/suppliers/SupplierRow";
 import { ErrorBanner, selectClass } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
@@ -11,6 +11,10 @@ import { ApiError, listSuppliers, setSupplierStatus, updateSupplierRate } from "
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Country, type Supplier } from "../types/suppliers";
 
 const NO_SUPPLIERS: Supplier[] = [];
+
+// The creation form only appears after "Nuevo proveedor"; its code (and validation) is fetched on demand.
+const preloadForm = () => import("../components/suppliers/SupplierForm");
+const SupplierForm = dynamic(preloadForm, { loading: () => <LoadingState label="Cargando formulario…" /> });
 const describeLoadError = (err: unknown) => (err instanceof ApiError ? err.message : "No se pudo cargar el directorio.");
 
 export default function SuppliersPage() {
@@ -57,6 +61,8 @@ export default function SuppliersPage() {
           <p className="mt-2 text-slate-400">Registro único de servicios externos contratados por Nexova.</p>
         </div>
         <button
+          onPointerEnter={preloadForm}
+          onFocus={preloadForm}
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-300"
         >

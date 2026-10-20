@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import {
   EMPTY_FILTERS,
@@ -11,7 +12,6 @@ import {
   type IncidentSummary,
 } from "@repo/shared-types";
 import IncidentFiltersBar from "../components/incidents/IncidentFilters";
-import IncidentForm from "../components/incidents/IncidentForm";
 import IncidentSummaryPanel, { IncidentSummarySkeleton } from "../components/incidents/IncidentSummaryPanel";
 import IncidentTable from "../components/incidents/IncidentTable";
 import { ErrorBanner } from "../components/ui/Field";
@@ -27,6 +27,11 @@ import { describeError } from "../lib/errors";
 import { useDebounced } from "../lib/useDebounced";
 
 const PAGE_SIZE = 15;
+
+// The creation form is only needed after "Nueva incidencia" is pressed: it stays out of the first bundle of the list.
+// `preloadForm` (hover/focus on the button) starts the download before the click, so it rarely has to wait.
+const preloadForm = () => import("../components/incidents/IncidentForm");
+const IncidentForm = dynamic(preloadForm, { loading: () => <LoadingState label="Cargando formulario…" /> });
 
 export default function IncidentsPage() {
   const [filters, setFilters] = useState<IncidentFilters>(EMPTY_FILTERS);
@@ -105,6 +110,8 @@ export default function IncidentsPage() {
         </div>
         <button
           type="button"
+          onPointerEnter={preloadForm}
+          onFocus={preloadForm}
           onClick={() => {
             setShowForm((v) => !v);
             setNotice(null);

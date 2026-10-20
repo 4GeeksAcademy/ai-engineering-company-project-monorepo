@@ -1,0 +1,4 @@
+/incidents                11 chunks     603.4 KB raw    187.5 KB gzip
+/incidents/analysis       11 chunks     588.1 KB raw    183.4 KB gzip
+/inventory/products       11 chunks     594.5 KB raw    185.6 KB gzip
+/suppliers                11 chunks     593.6 KB raw    185.0 KB gzip

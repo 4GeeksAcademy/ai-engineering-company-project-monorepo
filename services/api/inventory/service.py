@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from sqlmodel import Session, col, func, select
 
+from core.cache import invalidate
+
 from .models import Asset, AssetEntry, AssetExit
 from .schemas import (
     AssetBrief,
@@ -24,6 +26,11 @@ from .schemas import (
     AssetOut,
     OrderOut,
 )
+
+# Group of the cached reads of routers/inventory.py. A committed write (new asset, inbound or outbound order) drops
+# them, because it changes what the product and order lists show. The write path itself never reads from the cache:
+# the stock check of an outbound order is always made against the database, under the row lock.
+CACHE_GROUP = "inventory"
 
 # Correlated scalar subqueries: one SELECT returns every asset with its net stock. The sums
 # are bounded by the partition key of the CONTEXT, ``office``: an asset's stock only counts
@@ -105,6 +112,7 @@ def create_asset(session: Session, payload: AssetCreate) -> AssetOut:
             raise DuplicateSkuError(payload.sku) from exc
         raise
     session.refresh(asset)
+    invalidate(CACHE_GROUP)
     return _asset_out(asset, 0)
 
 
@@ -161,6 +169,7 @@ def register_inbound(session: Session, payload: AssetEntryCreate, user_uuid: str
     session.add(entry)
     session.commit()
     session.refresh(entry)
+    invalidate(CACHE_GROUP)
     return _inbound_out(entry, asset)
 
 
@@ -191,6 +200,7 @@ def register_outbound(session: Session, payload: AssetExitCreate, user_uuid: str
     session.add(exit_)
     session.commit()
     session.refresh(exit_)
+    invalidate(CACHE_GROUP)
     return _outbound_out(exit_, asset)
 
 

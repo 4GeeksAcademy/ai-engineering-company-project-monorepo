@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Download, Loader2 } from "lucide-react";
 import CsvUploader from "../components/incidents/CsvUploader";
-import MetricsSummary from "../components/incidents/MetricsSummary";
 import { ErrorBanner } from "../components/ui/Field";
 import LoadingState from "../components/ui/LoadingState";
 import { analyzeIncidentsFile, downloadResultsCsv, ApiError } from "../lib/api";
 import type { AnalyzeResponse } from "../types/incidents";
+
+// The results panel is only drawn once a CSV has been analysed; before that (the page's whole first visit) it is dead code.
+const MetricsSummary = dynamic(() => import("../components/incidents/MetricsSummary"), {
+  loading: () => <LoadingState label="Preparando resultados…" />,
+});
 
 export default function IncidentsAnalysisPage() {
   const [fileName, setFileName] = useState<string | null>(null);

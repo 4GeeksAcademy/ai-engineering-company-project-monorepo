@@ -4,6 +4,10 @@ Documents are the JSON dump of ``IncidentRecord`` and are keyed by ``id``.
 A process-wide lock serialises writes so two requests cannot be given the same
 incident id. It is a single-process guarantee (as is TinyDB itself); a second API
 worker would need a real database.
+
+Every write goes through this module, so it is also the one place that drops the cached
+reads (``core.cache``, group ``"incidents"``): summary, facets and list can never outlive
+a change made in this process.
 """
 
 from __future__ import annotations
@@ -12,8 +16,10 @@ import threading
 
 from tinydb import Query, TinyDB
 
+from core.cache import invalidate
 from core.config import get_incidents_db_path
 
+CACHE_GROUP = "incidents"
 _db: TinyDB | None = None
 lock = threading.RLock()
 
@@ -39,12 +45,14 @@ def get(incident_id: str) -> dict | None:
 def insert(doc: dict) -> None:
     with lock:
         get_db().insert(doc)
+        invalidate(CACHE_GROUP)
 
 
 def replace(incident_id: str, doc: dict) -> None:
     with lock:
         # Every key is present in ``doc``, so TinyDB's merge-update is a full replacement.
         get_db().update(doc, Query().id == incident_id)
+        invalidate(CACHE_GROUP)
 
 
 def next_incident_id() -> str:
@@ -57,8 +65,10 @@ def next_incident_id() -> str:
 def truncate() -> None:
     with lock:
         get_db().truncate()
+        invalidate(CACHE_GROUP)
 
 
 def insert_many(docs: list[dict]) -> None:
     with lock:
         get_db().insert_multiple(docs)
+        invalidate(CACHE_GROUP)
