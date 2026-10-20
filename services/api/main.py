@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
@@ -8,6 +9,7 @@ from services.api.routes.auth import router as auth_router
 from services.api.routes.users import router as users_router
 from services.api.routes.profiles import router as profiles_router
 from services.api.routes.suppliers import router as suppliers_router
+from services.api.routes.incidents import router as incidents_router
 
 
 @asynccontextmanager
@@ -17,14 +19,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Brasaland Suppliers API",
+    title="Brasaland API - Gestor de Incidencias",
     lifespan=lifespan,
 )
+
 
 # Autenticacion y usuarios
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(profiles_router)
+
 
 # Proveedores protegidos con JWT
 app.include_router(
@@ -32,6 +36,7 @@ app.include_router(
     prefix="/suppliers",
     dependencies=[Depends(get_current_user)],
 )
+
 
 # Rutas compatibles con el frontend
 app.include_router(
@@ -42,10 +47,18 @@ app.include_router(
 )
 
 
+# Gestor de incidencias de Brasaland
+app.include_router(
+    incidents_router,
+    prefix="/api/incidents",
+)
+
+
 @app.get("/")
 def root():
     return {
-        "message": "Brasaland Suppliers API",
+        "message": "Brasaland API",
         "suppliers": "/suppliers",
+        "incidents": "/api/incidents",
         "docs": "/docs",
     }
