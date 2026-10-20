@@ -1,112 +1,146 @@
-# Hito — Mejora del Pipeline: Subflows y Tests (Parte 3 de 3)
-
-**Antes de empezar:** Asegúrate de haber completado la **Parte 2 de este Hito** — este proyecto se construye directamente sobre `data/pipelines/pipeline.py` implementado en la sesión anterior. Mantén abierto tu `CONTEXT-empresa.md` — nombres de KPIs, esquema y audiencia de stakeholders vienen de ahí.
-
----
+# Procesos en Segundo Plano
 
 ## 🎯 Tu reto
 
-> 📌 Estás construyendo sobre **tu propia copia del monorepo** de la compañía seleccionada al inicio del curso — no en un repositorio nuevo.
+> 📌 **Estás construyendo sobre tu copia del monorepo** de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-Esta es la **Parte 3 de este Hito — Telemetría y Data Pipelines**. Tu pipeline de desempeño de negocio ya funciona: lee de `telemetry_events` y produce los KPIs que pidió el liderazgo — los nombrados en tu `CONTEXT-company.md` — sin tocar el sistema técnico de telemetría existente. Hoy lo llevas a nivel de producción: refactorizas el flow principal en subflows reutilizables, agregas tests unitarios que validan el comportamiento de las tasks de transformación, aseguras que el pipeline corra directamente desde la línea de comandos, y — la parte que realmente le importa al liderazgo — pones esos KPIs frente a un dashboard que alguien pueda leer.
-
----
-
-### Ticket de Mejora — Pipeline a Producción
-
-El pipeline básico está listo. Antes de la entrega final al equipo de operaciones, necesito cuatro cosas más:
-
-1. **El flow principal está creciendo** — refactorízalo en subflows para que cada fase sea independiente, testeable, y reutilizable.
-2. **Necesito tests unitarios para las tasks de transformación.** Si un test falla, quiero saberlo antes de que el pipeline llegue a producción, no después.
-3. **Tras el refactor a subflows, el pipeline debe seguir pudiendo correrse como script:** `python data/pipelines/pipeline.py` completa sin errores (conserva el entrypoint de la Parte 2).
-4. **Necesito un dashboard.** Nadie en el equipo de liderazgo va a consultar un endpoint — pon los KPIs en algún lugar donde realmente puedan mirarlos.
-
-**Punto de partida:** `data/pipelines/pipeline.py` de la sesión anterior.
+Tu empresa tiene un pipeline de datos y una API con telemetría instrumentada. El problema es que alguien tiene que ejecutar el pipeline cada noche. Tu tech lead ha registrado el siguiente ticket:
 
 ---
 
-### Por qué subflows
+### Ticket #DEV-53 — Script nocturno de telemetría
 
-Las Partes 1-2 pedían **un flow principal** con al menos tres tasks. **Esta parte sube ese listón:** divides esas etapas en **al menos tres subflows** (`@flow`) coordinados por el flow principal — esa topología es nueva en la Parte 3 y es lo que evaluamos aquí.
+Necesitamos un script que se ejecute cada noche de forma automática, sin intervención manual. El script debe exportar los datos de telemetría del día anterior a CSV (si aún no se ha hecho), lanzar el pipeline de datos, y dejar constancia en base de datos de qué pasó y cuándo.
 
-Un flow que crece sin estructura acaba siendo tan difícil de mantener como el script que reemplazó. Los subflows aplican el principio DRY a nivel de orquestación: cada fase del pipeline (extracción, transformación, carga) se convierte en un flow independiente que se puede ejecutar, monitorear y reutilizar por separado. El flow principal los coordina pero no contiene su lógica.
+#### Criterios de aceptación:
+- **El script es un proceso completamente independiente de la API** — no puede bloquear ningún endpoint ni ejecutarse en el mismo hilo de FastAPI.
+- **Si el script ya está corriendo cuando el siguiente ciclo lo dispara, la segunda instancia debe abortar silenciosamente.** No dos ejecuciones en paralelo.
+- **Si el script falla, el estado de ese registro en base de datos debe quedar en `failed`, no en `processing`.** Ningún registro puede quedarse zombi.
+- **El script debe ser idempotente:** si se ejecuta dos veces sobre el mismo día, el resultado debe ser el mismo que si se hubiera ejecutado una sola vez.
+- **Cada ejecución queda registrada con timestamp, estado (`pending` → `processing` → `completed` | `failed`) y, en caso de error, el mensaje de la excepción.**
 
----
-
-## 🌱 Cómo Empezar
-
-1. Corre `git pull` en tu copia del monorepo.
-2. Abre `data/pipelines/pipeline.py` — ese es tu punto de partida.
-3. Ten a mano tu `CONTEXT-company.md`: los nombres de subflows, tasks, y tests deben reflejar los nombres de KPI de su sección "KPIs a medir" y el esquema que implementaste — no etiquetas genéricas.
-4. Mantén la estructura de carpetas existente: `data/pipelines/` para flows y subflows, `data/process/` para lógica de transformación, `data/raw/` para datos de entrada, `data/eval/` para salidas de validación.
-5. Los tests unitarios van en `tests/pipelines/` en la raíz del monorepo.
-6. La página del dashboard va en `uis/backoffice/`, consumiendo el endpoint de **consulta de KPIs** de `services/reporting/` que construiste en la Parte 2.
-7. Asegúrate de que Prefect 3 esté instalado desde la Parte 2: `uv add "prefect>=3"`.
+Pon el script en `scripts/` y la lógica de estado en `services/`. El disparador queda en crontab o en el scheduler del framework — la decisión es tuya, justifícala en el PR.
 
 ---
 
-## 💻 Qué Necesitas Hacer
+## 📖 Conocimiento complementario — Ciclo de vida de una tarea en segundo plano
 
-### Fase 1 — Refactorización en subflows
-- [x] Divide el flow principal en al menos tres subflows (`@flow`) que correspondan a las etapas de tu diseño: uno para extracción (desde `telemetry_events` y cualquier otra tabla de dominio), uno para transformación, y uno para carga (en la tabla de destino nombrada en tu `CONTEXT-company.md`). El flow principal los invoca en secuencia.
-- [x] Cada subflow debe tener inputs y outputs explícitos — no dependas de variables globales entre subflows.
-- [x] Si tienes pasos opcionales (notificaciones, exportaciones secundarias), extráelos también como subflows e invócalos con `return_state=True` desde el flow principal.
+Antes de escribir una línea de código, hay un concepto arquitectónico que debes interiorizar: **en procesamiento en segundo plano, un dato no existe solo como "dato" — existe como un estado.**
 
-### Fase 2 — Tests unitarios
-- [x] Crea el archivo `tests/pipelines/test_pipeline.py` con tests unitarios para al menos tres tasks de transformación — las que calculan los KPIs de tu `CONTEXT-company.md`.
-- [x] Cada test debe verificar el comportamiento de la task de forma aislada: no debe depender de una base de datos ni de APIs externas. Usa datos de prueba en memoria con la forma de tus eventos de telemetría (según tu `CONTEXT-company.md`).
-- [x] Incluye al menos un test que verifique el comportamiento defensivo de una task ante un input inválido o malformado (por ejemplo, un campo nulo donde no se espera ninguno, o un tipo incorrecto).
-- [x] Incluye al menos un test que confirme que el valor calculado de un KPI coincide con la definición de tu `CONTEXT-company.md` para un input conocido, calculado a mano.
-- [x] Los tests deben pasar con `python -m pytest tests/pipelines/test_pipeline.py` sin errores.
+La máquina de estados canónica para este tipo de tarea es:
 
-### Fase 3 — El CLI sigue funcionando tras el refactor
-- [x] Tras dividir en subflows, `python data/pipelines/pipeline.py` sigue corriendo el ETL completo sin errores (el entrypoint `__main__` y la documentación del comando de la Parte 2 deben seguir válidos — no los reconstruyas desde cero).
+```text
+pending -> processing -> completed
+       \-> failed
+```
 
-### Fase 4 — Dashboard de negocio (obligatorio)
+Cada transición importa:
 
-Tu pipeline produce KPIs — pero una tabla que nadie mira no es un entregable. Esta fase no es opcional: el liderazgo necesita *ver* los números de verdad, no consultar un endpoint con curl.
+- `pending` — la tarea está esperando ser ejecutada. Se crea el registro antes de empezar.
+- `processing` — se actualiza al inicio de la ejecución, antes de hacer ningún trabajo. Esto es lo que impide que otro proceso tome la misma tarea.
+- `completed` — se actualiza solo si todo terminó bien.
+- `failed` — se actualiza si se captura cualquier excepción. Nunca debe quedarse en `processing`.
 
-- [x] Construye una página en `uis/backoffice/` (ej. `/reporting`) que consuma tu endpoint de `services/reporting/` y muestre cada KPI de la sección "KPIs a medir" de tu `CONTEXT-company.md` — un gráfico o una tabla por KPI es suficiente.
-- [x] Etiqueta cada KPI claramente con el mismo nombre que tiene en tu `CONTEXT-company.md`, y muestra el período (semana o mes, según tu frecuencia) que cubren los datos.
-- [x] Este dashboard es de cara al negocio, no una herramienta de desarrollador: debe ser legible para el stakeholder nombrado en tu `CONTEXT-company.md` (ej. el CEO o el gerente de departamento) sin que nada necesite traducción ni explicación.
-- [x] No necesitas pulirlo visualmente — el objetivo es una vista funcional y correctamente etiquetada de datos reales desde la tabla de destino de tu CONTEXT.
+El **distributed lock es el estado `processing` mismo** — no una tabla, columna o flag aparte. Al iniciar, el script pasa un registro de `job_runs` a `processing`. Si otra instancia encuentra una fila `processing` para `nightly_export`, aborta silenciosamente. Al terminar —bien o mal— el registro pasa a `completed` o `failed`, lo que libera el lock. No implementes un segundo mecanismo de bloqueo.
 
-> ⚠️ **IMPORTANTE:** Los nombres de subflows, tasks, y tests deben seguir el mismo vocabulario de dominio definido en `data/pipelines/PIPELINE_DESIGN.md` y tu `CONTEXT-company.md`. Un subflow llamado `extract_data` no es aceptable si tu compañía tiene entidades concretas y nombres de KPI — nómbralo según la métrica de negocio real que produce este pipeline.
+Un script que implementa esta máquina de estados puede fallar, reiniciarse o ejecutarse fuera de horario y siempre dejará el sistema en un estado conocido y recuperable.
 
 ---
 
-### 🔵 Actividad adicional — Mejoras adicionales de tus preguntas de diseño
+## 📖 Conocimiento complementario — Cómo encaja en el monorepo
 
-- [ ] Vuelve a la sección "Preguntas para Ayudarte a Diseñar el Pipeline" de la Parte 1. Si, al responderlas, identificaste mejoras de resiliencia u observabilidad más allá de lo que ya cubren las Fases 1–3 (por ejemplo, un heartbeat más alerta de silencio, un lock de concurrencia para corridas que se solapan, o un patrón `Idempotency-Key` para reintentos) y todavía no las implementaste, este es el lugar para hacerlo.
-- [ ] Por cada mejora que agregues, anota en `data/pipelines/PIPELINE_DESIGN.md` qué pregunta responde y por qué la priorizaste.
-- [ ] Esto es opcional — solo tómalo si tu propio documento de diseño realmente señaló algo que valía la pena construir. No inventes una mejora solo para marcar una casilla.
+`job_runs` ≠ `pipeline_runs` — no son duplicados:
+
+| Tabla | Capa | Qué registra |
+| :--- | :--- | :--- |
+| `job_runs` | Orquestación nocturna (este proyecto) | Export CSV, trigger del subprocess del pipeline, lock e idempotencia del script |
+| `pipeline_runs` | ETL interno (Hito 6) | Fases extract/transform/load, watermark, filas procesadas |
+
+El script nocturno escribe en `job_runs`. El subprocess del pipeline escribe en `pipeline_runs` durante su propia ejecución.
+
+**El CSV es backup, no input del pipeline.** El script exporta `telemetry_events` desde la base de datos a `data/raw/telemetry_YYYY-MM-DD.csv` para auditoría y recuperación. El pipeline que construiste en el Hito 6 lee desde `telemetry_events` en BD (vía SQL/watermark) — **no** lee el archivo CSV. No conectes el pipeline para consumir el archivo de exportación.
+
+### Convenciones de fecha y subprocess:
+
+- **"Ayer"** = día calendario anterior en **UTC** (`datetime.now(timezone.utc).date() - timedelta(days=1)`).
+- `TARGET_DATE=YYYY-MM-DD` sobrescribe la fecha objetivo para pruebas sin cambiar código.
+- **Subprocess del pipeline** (referencia — ajusta al entry point de tu Hito 6 si difiere):
+  ```bash
+  python -m data.pipelines.telemetry_kpi_daily.run --no-prefect
+  ```
 
 ---
 
-## ✅ Qué Vamos a Evaluar
+## 🌱 Cómo Empezar el Proyecto
 
-- [x] El flow principal en `data/pipelines/pipeline.py` invoca al menos tres subflows (`@flow`) en lugar de contener toda la lógica directamente.
-- [x] Cada subflow tiene inputs y outputs explícitos y puede ejecutarse de forma independiente.
-- [x] El archivo `tests/pipelines/test_pipeline.py` existe y contiene al menos tres tests unitarios para tasks de transformación.
-- [x] Los tests unitarios corren en aislamiento: fixtures in-memory con forma de telemetría del CONTEXT — sin base de datos en vivo ni APIs externas.
-- [x] Al menos un test verifica el comportamiento defensivo de una task ante un input inválido.
-- [x] Al menos un test valida el valor calculado de un KPI contra su definición en `CONTEXT-company.md`.
-- [x] `python -m pytest tests/pipelines/test_pipeline.py` pasa sin errores.
-- [x] Tras el refactor a subflows, `python data/pipelines/pipeline.py` sigue corriendo el flujo ETL completo sin errores (entrypoint CLI de la Parte 2 preservado).
-- [x] Los nombres de subflows, tasks, y tests reflejan el vocabulario de dominio y los nombres de KPI de `CONTEXT-company.md`.
-- [x] `telemetry_events` y `services/telemetry/analysis.py` permanecen sin modificar durante toda la refactorización.
-- [x] Existe un dashboard en `uis/backoffice/` que muestra cada KPI de la sección "KPIs a medir" de `CONTEXT-company.md`, correctamente etiquetado, alimentado desde tu endpoint `services/reporting/`.
-- [x] El dashboard es legible para un stakeholder de negocio no técnico, no solo para otro ingeniero.
+1. Revisa tu monorepo: identifica las tablas de telemetría existentes y las convenciones de nomenclatura que ya has usado para rutas y campos.
+2. Crea la tabla de control de ejecuciones en base de datos (puedes añadirla al schema existente o crear una migración nueva).
+3. Implementa el script en `scripts/nightly_export.py` y el servicio de control de estado en `services/`.
+4. Configura el disparador en crontab o en el scheduler de tu framework y documenta la expresión cron en el PR.
+
+---
+
+## 💻 Qué Debes Hacer
+
+### Modelo de datos
+- [ ] Crear una tabla `job_runs` con al menos los campos: `id`, `job_name`, `target_date` (fecha — obligatorio para idempotencia por día), `status` (`pending` | `processing` | `completed` | `failed`), `started_at`, `finished_at`, `error_message`, `created_at`.
+- [ ] Añadir un índice en `(job_name, target_date)` para consultas de idempotencia eficientes.
+- [ ] Añadir la migración o instrucción SQL necesaria para crear la tabla en el esquema del monorepo.
+- [ ] No fusionar `job_runs` con `pipeline_runs` del Hito 6 — capas distintas (ver nota de arquitectura arriba).
+
+### Script principal (`scripts/nightly_export.py`)
+- [ ] Resolver `target_date` desde env `TARGET_DATE` o por defecto **ayer en UTC**.
+- [ ] El script exporta filas de `telemetry_events` para `target_date` a un CSV en `data/raw/` (p. ej. `telemetry_2025-01-15.csv`), solo si el archivo no existe. El CSV es snapshot de backup/auditoría — el pipeline lee desde BD, no este archivo.
+- [ ] El script lanza el pipeline de datos como subproceso tras la exportación (comando de referencia: `python -m data.pipelines.telemetry_kpi_daily.run --no-prefect`, o tu entry point CLI del Hito 6).
+- [ ] El script escribe en `job_runs` el resultado (estado final + `target_date` + timestamp + error si lo hay).
+- [ ] El script es ejecutable desde línea de comandos: `python scripts/nightly_export.py`.
+
+### Idempotencia y bloqueo
+- [ ] **Lock vía `processing`:** si ya existe un registro `job_runs` con `status = 'processing'` para `nightly_export`, el script aborta silenciosamente y registra la cancelación. Sin tabla o columna lock aparte.
+- [ ] **Idempotencia vía `target_date`:** si ya existe un registro `completed` para `(job_name='nightly_export', target_date)`, el script no vuelve a exportar el CSV ni relanza el pipeline. Registra omisión por duplicado. Solo `job_name` sin `target_date` no basta.
+
+### Control de estado (`services/`)
+- [ ] Implementar módulo `job_runner` en `services/` con funciones para crear, actualizar y consultar `job_runs` (incl. `has_processing_lock` y `has_completed_for_date`).
+- [ ] Cualquier excepción no controlada debe capturarse, actualizar el estado a `failed` con el mensaje de error, y propagar el error al log.
+- [ ] Ningún registro puede quedar en estado `processing` tras una ejecución fallida.
+
+### Disparador
+- [ ] Configurar el cronjob con `crontab` del SO o un **contenedor scheduler dedicado** — recomendado en producción.
+- [ ] **No ejecutar el script nocturno dentro del proceso FastAPI** (sin `APScheduler`, `@repeat_every` ni hooks lifespan en el servidor API). Un worker separado solo es aceptable si no comparte el hilo principal de la API.
+- [ ] Documentar la expresión cron y la decisión de implementación en el cuerpo del PR.
+- [ ] Añadir variable de entorno `TARGET_DATE` opcional (`YYYY-MM-DD`) para sobrescribir la fecha objetivo en pruebas sin modificar código.
+
+### Observabilidad
+- [ ] Generar logs de ejecución con nivel `INFO` para los eventos normales (inicio, fin, omisión por duplicado) y `ERROR` para excepciones.
+- [ ] Cada línea de log incluye timestamp, nombre del job y estado resultante.
+
+---
+
+## ✅ Qué Evaluaremos
+
+- [ ] **El script es un proceso independiente:** no importa ni ejecuta código de FastAPI en el hilo principal de la aplicación.
+- [ ] **La máquina de estados `pending` → `processing` → `completed` | `failed` está implementada** y los registros en `job_runs` reflejan el estado real de cada ejecución, incluyendo `target_date`.
+- [ ] **El estado `processing` actúa como distributed lock (sin mecanismo lock aparte):** demostrable lanzando dos instancias del script al mismo tiempo.
+- [ ] **El script es idempotente por `target_date`:** ejecutarlo dos veces el mismo día produce el mismo resultado que una vez, sin duplicar CSV ni ejecuciones del pipeline.
+- [ ] **Ningún registro queda en estado `processing` tras un fallo:** el bloque `try/except/finally` garantiza la transición a `failed`.
+- [ ] **El CSV existe en `data/raw/` con nombre correcto y datos exportados desde `telemetry_events`** para la fecha objetivo (solo backup — el pipeline lee desde BD).
+- [ ] **`job_runs` y `pipeline_runs` coexisten** sin duplicar responsabilidades.
+- [ ] **Los logs incluyen timestamp, nombre del job y estado** en cada evento relevante.
+- [ ] **El disparador está configurado y la expresión cron documentada en el PR.**
+- [ ] **`TARGET_DATE` permite ejecutar el script sobre fechas arbitrarias** sin modificar el código.
 
 ---
 
 ## 📦 Cómo Entregar
 
-1. Asegúrate de que `data/pipelines/pipeline.py`, `tests/pipelines/test_pipeline.py`, y la página del dashboard en `uis/backoffice/` estén commiteados en tu copia del monorepo.
-2. Haz commit con el mensaje: `feat: refactor business performance pipeline into subflows, add unit tests, and add reporting dashboard`.
-3. Abre un Pull Request con estos cambios — puede construirse sobre el PR de la Parte 2 o ser uno nuevo. En la descripción del PR, menciona si implementaste alguna mejora adicional de las preguntas de diseño, y cuál. Comparte la URL con tu tech lead.
-
-
+1. Asegúrate de que todos los ítems del checklist estén completados.
+2. Haz push de tu rama al repositorio.
+3. Abre un **Pull Request** desde tu rama hacia `main`.
+4. En el cuerpo del PR incluye:
+   - La expresión cron configurada y el método elegido (crontab vs. scheduler de framework), con una breve justificación.
+   - Un ejemplo del log de una ejecución exitosa y uno de una ejecución fallida o bloqueada.
+   - Captura o fragmento del CSV generado (primeras filas).
+5. Añade la etiqueta `cronjob` al PR antes de enviarlo a revisión.
 
 
 
