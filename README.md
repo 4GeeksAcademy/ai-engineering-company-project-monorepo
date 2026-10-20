@@ -292,7 +292,37 @@ ai-engineering-company-project-monorepo/
 
 ---
 
+## Celery Worker & Asynchronous Tasks (Ticket #DEV-55)
+
+This monorepo supports asynchronous background jobs using **Celery** and **Redis**.
+
+### 1. Start Redis & Flower via Docker Compose
+```bash
+docker compose up -d redis flower
+```
+- **Redis Broker:** `localhost:6379` (with `noeviction` policy)
+- **Flower Dashboard:** [http://localhost:5555](http://localhost:5555)
+
+### 2. Run the Celery Worker
+The worker runs as an independent process decoupled from FastAPI:
+```bash
+uv run celery -A services.celery_app worker --loglevel=info
+```
+
+### 3. Stop the Celery Worker
+Press `Ctrl+C` in the terminal where the worker is running, or:
+```bash
+pkill -f "celery -A services.celery_app worker"
+```
+
+### 4. Asynchronous Endpoints
+- **Trigger Pipeline (Async):** `POST /reporting/trigger` (returns `202 Accepted` with `task_id` in < 200ms)
+- **Check Task Status:** `GET /tasks/{task_id}` (returns states: `pending`, `started`, `success`, `failure`)
+
+---
+
 ## Links
+
 
 - [4Geeks Academy — AI Engineering](https://4geeksacademy.com/es/programas-de-carrera/ingenieria-ia)
 - [How to start a coding project](https://4geeks.com/lesson/how-to-start-a-project)
