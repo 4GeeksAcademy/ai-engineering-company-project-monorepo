@@ -93,6 +93,12 @@ npm run dev -- --hostname 0.0.0.0
 
 Open `/incidents-analysis`, upload the fixture, and select **Analizar archivo**. Delivery screenshots are [the CLI report](docs/screenshots/console-output.png) and [the web analysis](docs/screenshots/incidents-analysis.png).
 
+## Supplier directory
+
+The TrackFlow supplier directory follows the [official supplier briefing](https://github.com/4GeeksAcademy/ai-engineering-syllabus/blob/main/content/contexts/supplier-directory/trackflow-BRIEFING.es.md). It includes a TinyDB seeder, country/category filters, rate and status updates, and currency validation. Run `uv sync --group dev`, `uv run seed`, and `uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000` from `services/api`, then open `/suppliers` in the backoffice. Run `uv run pytest tests` in the API directory to verify the acceptance tests.
+
+Delivery evidence: [seeder output](docs/screenshots/supplier-seed.png), [filtered API response](docs/screenshots/supplier-api-filter.png), and [filtered supplier directory](docs/screenshots/supplier-directory-filter.png).
+
 ---
 
 ## How to start

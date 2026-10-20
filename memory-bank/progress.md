@@ -10,6 +10,9 @@
 - API de análisis/exportación añadida en `services/api`; el backoffice incluye carga CSV, resultados agregados y descarga.
 - Capturas de consola y web guardadas en `docs/screenshots/` y enlazadas desde los README.
 - Verificados 100 registros, 95 válidos, 5 inválidos y satisfacción media 3.06; `npm run lint` y `npm run build` pasan en backoffice.
+- Directorio de proveedores TrackFlow implementado según el briefing oficial: API TinyDB, validación de moneda por país, 15 registros idempotentes, filtros, CRUD e historial de cambios de estado.
+- Backoffice de proveedores conectado a la API; pruebas `pytest` pasan y `npm run lint` / `npm run build` pasan.
+- Evidencias del seeder, filtro API y directorio filtrado guardadas en `docs/screenshots/` y enlazadas desde los README.
 
 ## Siguiente
 - Conectar formularios a un servicio bajo `services/`.
