@@ -70,6 +70,7 @@ export default function SuppliersPage() {
             {suppliers.length - activeCount} suspendidos
           </p>
         </div>
+        <a href="/account/profile" className={styles.secondary} style={{ display: "inline-block", textDecoration: "none" }}>Mi perfil</a>
         {!showForm && (
           <button
             type="button"
