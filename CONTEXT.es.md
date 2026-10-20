@@ -1,13 +1,13 @@
 # Contexto de tu empresa
 
-**Sustituye este archivo** por el CONTEXT de la empresa que te hayan asignado:
+**Reemplaza este contenido** por el contexto de la empresa que te hayan asignado:
 
-- **Brasaland** — `CONTEXT-brasaland-briefing.md` (cadena de restaurantes de comida a la parrilla, Colombia + Florida)
-- **TrackFlow** — `CONTEXT-trackflow-briefing.md` (última milla y almacén, México + España)
-- **Nexova** — `CONTEXT-nexova-briefing.md` (consultoría de RR. HH. y adquisición de talento, Chile + Argentina)
-- **HealthCore** — `CONTEXT-healthcore-briefing.md` (red de clínicas ambulatorias, EE.UU. + Reino Unido)
+- **Brasaland** — `brasaland-BRIEFING.md` (cadena de restaurantes de comida a la parrilla, Colombia + EEUU)
+- **TrackFlow** — `trackflow-BRIEFING.md` (última milla y almacén, EEUU + España)
+- **Nexova** — `nexova-BRIEFING.md` (consultoría de RR. HH. y adquisición de talento, España + EEUU)
+- **HealthCore** — `healthcore-BRIEFING.md` (red de clínicas ambulatorias, EE.UU. + Reino Unido)
 
-Tu instructor o los materiales del hito te indicarán el archivo CONTEXT correcto. Copia aquí su contenido para que todo el trabajo del proyecto y la asistencia de IA usen los mismos datos de dominio, nombres de campos y restricciones.
+Cada proyecto te indicará el archivo de contexto correcto. Usa su contenido para crear el contexto de tu proyecto y que todo el trabajo del proyecto y tus agentes de código de IA usen los mismos datos de dominio, nombres de campos y restricciones. No copies y pegues sus contenidos; procésalos primero con tus agentes.
 
 ---
 
