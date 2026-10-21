@@ -44,20 +44,25 @@ def get_pipeline_status(current_user: dict= Depends(get_current_user)) -> Dict[s
         "error_message": row[6]
     }
 
+from services.celery_app import run_business_performance_pipeline
+
 @router.post("/trigger", status_code=202)
 def trigger_pipeline_run(
-    background_tasks: BackgroundTasks,
     payload: Optional[TriggerRequest] = None,
     current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     target_date = payload.window_date if payload and payload.window_date else datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    background_tasks.add_task(business_performance_flow, target_date=target_date)
+    
+    # Encolar en Celery desacoplado de la API
+    task = run_business_performance_pipeline.delay(target_date)
 
     return {
-        "message": f"Corrida manual del pipeline disparada exitosamente para la fecha {target_date}.",
-        "target_date": target_date,
-        "status": "QUEUED"
+        "task_id": str(task.id),
+        "status": "pending",
+        "message": f"Corrida del pipeline encolada exitosamente para la fecha {target_date}.",
+        "target_date": target_date
     }
+
 
 @router.get("/kpis")
 def get_business_kpis(

@@ -32,8 +32,30 @@ services:
       - .env
     depends_on:
       - backend
+      - redis
     networks:
       - nexova-network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory-policy noeviction
+    ports:
+      - "6379:6379"
+    networks:
+      - nexova-network
+
+  flower:
+    image: mher/flower:latest
+    command: celery --broker=redis://redis:6379/0 flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - nexova-network
+
 networks:
   nexova-network:
     name: nexova-network
