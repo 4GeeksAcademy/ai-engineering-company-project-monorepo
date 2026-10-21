@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from packages.shared.incidents_analysis import validate_record
 from services.api import database, incident_database
-from services.api.incident_models import IncidentCreate
+from packages.shared.incident_validation import IncidentCreate
 
 
 CSV_PATH = ROOT / "scripts" / "incidents-brasaland.csv"

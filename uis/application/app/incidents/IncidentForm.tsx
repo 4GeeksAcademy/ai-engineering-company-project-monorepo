@@ -181,6 +181,11 @@ export default function IncidentForm({ onCreated }: Props) {
                 </option>
               ))}
             </select>
+            {fieldErrors.category && (
+              <p role="alert" style={{ color: "#b42318" }}>
+                {fieldErrors.category}
+              </p>
+            )}
           </label>
 
           <label>
@@ -198,6 +203,11 @@ export default function IncidentForm({ onCreated }: Props) {
                 </option>
               ))}
             </select>
+            {fieldErrors.origin && (
+              <p role="alert" style={{ color: "#b42318" }}>
+                {fieldErrors.origin}
+              </p>
+            )}
           </label>
 
           <label>
@@ -254,6 +264,11 @@ export default function IncidentForm({ onCreated }: Props) {
                 </option>
               ))}
             </select>
+            {fieldErrors.status && (
+              <p role="alert" style={{ color: "#b42318" }}>
+                {fieldErrors.status}
+              </p>
+            )}
           </label>
 
           {error && (
