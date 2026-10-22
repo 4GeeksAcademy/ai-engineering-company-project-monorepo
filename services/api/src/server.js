@@ -106,7 +106,7 @@ async function handleIncidentAnalysis(req, res) {
     latestExport = result.results_csv
     sendJson(res, 200, result.report)
   } catch (error) {
-    sendJson(res, error.statusCode ?? 500, { error: error.message })
+    sendJson(res, error.statusCode ?? 500, { error: error.statusCode ? error.message : 'Error interno del servidor.' })
   }
 }
 
@@ -115,13 +115,15 @@ const server = http.createServer((req, res) => {
     res.writeHead(204, {
       'access-control-allow-origin': '*',
       'access-control-allow-methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-      'access-control-allow-headers': 'content-type',
+      'access-control-allow-headers': 'content-type, authorization',
     })
     res.end()
     return
   }
 
-  if (/^\/suppliers(?:\/|\?|$)/.test(req.url)) {
+  const incidentManagement = /^\/api\/incidents(?:\/|\?|$)/.test(req.url)
+    && !/^\/api\/incidents\/(?:analyze|results\/export)(?:\?|$)/.test(req.url)
+  if (/^\/suppliers(?:\/|\?|$)/.test(req.url) || incidentManagement) {
     const upstream = http.request({
       hostname: '127.0.0.1',
       port: Number(process.env.SUPPLIERS_PORT ?? 8081),
@@ -136,7 +138,7 @@ const server = http.createServer((req, res) => {
       response.pipe(res)
     })
     upstream.on('error', () => {
-      if (!res.headersSent) sendJson(res, 503, { error: 'El directorio de proveedores no está disponible.' })
+      if (!res.headersSent) sendJson(res, 503, { error: incidentManagement ? 'El gestor de incidencias no está disponible.' : 'El directorio de proveedores no está disponible.' })
       else res.destroy()
     })
     req.on('aborted', () => upstream.destroy())

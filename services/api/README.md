@@ -97,6 +97,37 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8081
 
 La comprobacion local de AUTH-03 usa una base temporal y un transporte simulado: no acredita entrega real de correos. Para la aceptacion final, registra una cuenta con un email permitido en Resend, solicita el enlace desde el frontend, abre el correo, cambia la contrasena e intenta reutilizar el mismo enlace (debe fallar).
 
+## Gestion de incidencias
+
+Los cinco endpoints requieren `Authorization: Bearer <token>`. Usan la tabla TinyDB `incidents`, compartida con el seed historico, bajo el bloqueo de la API; no modifican proveedores, usuarios ni perfiles.
+
+| Metodo y ruta | Comportamiento |
+| --- | --- |
+| `POST /api/incidents` | Crea una incidencia y devuelve 201 con UUID, fechas UTC y estado `open` por defecto. Requiere `title`, `description`, `category`, `origin` y `branch`. No acepta ID ni fechas del cliente. |
+| `GET /api/incidents` | Lista completa o filtrada por `status`, `origin`, `branch` y `category`; los filtros se combinan mediante AND. |
+| `GET /api/incidents/summary` | Devuelve `total`, `by_status`, `by_category`, `by_origin` y `by_branch`, con todos los valores del catalogo, incluidos los que tengan cero incidencias. |
+| `GET /api/incidents/{id}` | Detalle por UUID, o 404 si no existe. |
+| `PATCH /api/incidents/{id}/status` | Solo admite `{"status":"in_progress"}` (o el estado de destino). Actualiza estado y `updated_at` sin alterar otros campos. |
+
+Transiciones permitidas: `open -> in_progress`, `open -> discarded`, `in_progress -> resolved` e `in_progress -> discarded`. No se permiten cambios desde `resolved` o `discarded`, ni reenviar el mismo estado. Una transicion invalida devuelve 400 con `detail.field="status"` y un mensaje descriptivo; una incidencia inexistente devuelve 404.
+
+Los errores de entrada del gestor (cuerpo, UUID o filtros) devuelven 400, sin incluir los valores enviados:
+
+```json
+{
+	"detail": "Revisa los campos de la incidencia.",
+	"errors": [{"field": "branch", "message": "Este campo es obligatorio."}]
+}
+```
+
+Sin credenciales validas se devuelve 401. El contrato de validacion 422 de las rutas anteriores se conserva. Las excepciones no controladas de FastAPI devuelven 500 con un mensaje generico, nunca el stack trace ni detalles internos.
+
+Con base vacia, el listado devuelve `[]` y el resumen devuelve `total=0` y todos los contadores en cero. Los conteos incluyen todas las incidencias; los cuatro filtros corresponden al listado. El orden de registro reserva `/summary` antes de `/{id}`.
+
+Las rutas funcionan directamente en FastAPI (8081) y a traves del gateway Node (8080), que conserva `/api/incidents/analyze` y `/api/incidents/results/export`. El proxy reenvia la cabecera Bearer y devuelve 503 generico si FastAPI no esta disponible. Para ejecutar ambos servicios, usa `npm run dev` desde esta carpeta; para ejecutar solo FastAPI, usa el comando Uvicorn documentado arriba.
+
+Verificado con bases temporales: cinco rutas protegidas, base vacia, creacion/detalle, filtros individuales y combinados, 16 combinaciones de transicion, 400 por campo, 404, 500 simulado sin informacion interna y resumen con las 95 incidencias del seed. Tambien se verifico gateway Node real -> Uvicorn y la compatibilidad del analizador/exportacion/health. No se modifico la base real ni el frontend.
+
 ## Pruebas
 ```bash
 cd services/api

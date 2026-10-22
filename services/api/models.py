@@ -1,8 +1,74 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated, Literal
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+
+class IncidentStatus(str, Enum):
+    open = "open"
+    in_progress = "in_progress"
+    resolved = "resolved"
+    discarded = "discarded"
+
+
+IncidentCategory = Literal[
+    "lost_parcel",
+    "delivery_failure",
+    "inventory_discrepancy",
+    "carrier_issue",
+    "returns_issue",
+    "warehouse_incident",
+    "system_failure",
+    "client_complaint",
+    "other",
+]
+IncidentOrigin = Literal["customer", "branch", "internal"]
+IncidentBranch = Literal[
+    "central",
+    "la_warehouse",
+    "la_office",
+    "zaragoza_warehouse",
+    "zaragoza_office",
+]
+
+
+class IncidentCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    category: IncidentCategory
+    status: IncidentStatus = IncidentStatus.open
+    origin: IncidentOrigin
+    branch: IncidentBranch
+
+    @field_validator("title", "description")
+    @classmethod
+    def validate_incident_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("El texto no puede estar vacio ni contener solo espacios.")
+        return value
+
+
+class IncidentStatusUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: IncidentStatus
+
+
+class Incident(IncidentCreate):
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+
+    id: UUID = Field(default_factory=uuid4, frozen=True)
+    created_at: AwareDatetime = Field(default_factory=lambda: datetime.now(timezone.utc), frozen=True)
+    updated_at: AwareDatetime = Field(default_factory=lambda data: data["created_at"])
+
+    def __setattr__(self, name: str, value: object) -> None:
+        super().__setattr__(name, value)
+        if name in IncidentCreate.model_fields:
+            super().__setattr__("updated_at", datetime.now(timezone.utc))
 
 
 class SupplierStatus(str, Enum):
