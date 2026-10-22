@@ -1,5 +1,19 @@
 # Progress Log — TrackFlow
 
+## AUTH-03 — 2026-10-22
+- Implementados `POST /auth/forgot-password`, `/auth/reset-password` y `/auth/change-password` sobre FastAPI/TinyDB, conforme al `CONTEXT.md` actualizado (Resend).
+- Recuperacion con respuesta 200 uniforme para emails validos existentes o desconocidos, envio en segundo plano por API HTTPS de Resend, plantilla HTML movil y texto plano. Los errores del proveedor no revelan la existencia de cuentas.
+- JWT de recuperacion con proposito separado y expiracion de 30 minutos; solo el SHA-256 pendiente se persiste en el usuario. Escritura de contrasena bcrypt y consumo del token bajo bloqueo, en una unica actualizacion. Emitir otro token o cambiar la contrasena invalida el anterior; no se revocan los JWT de sesion previos.
+- Frontend React/Vite: login minimo (no existia), enlace de recuperacion, `/forgot-password`, `/reset-password` y `/account/change-password`. Incluye confirmacion, bloqueo de duplicados, errores accesibles, verificacion de sesion y redireccion con exito. Bearer en proveedores, sesion por pestana y cierre de sesion.
+- Documentadas `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `PASSWORD_RESET_URL`, restricciones del proveedor, proxy `/auth` y comandos Codespaces. `.gitignore` ahora excluye `.env` y `.env.*` en cualquier carpeta; no se leyo ni modifico el `.env` del usuario.
+- Validaciones ejecutadas: `uv run --directory services/api pytest -q tests/test_auth.py`: 6 correctas (advertencia Starlette/httpx preexistente). Comprobacion HTTP aislada con TestClient/base temporal y correo simulado: respuesta uniforme, reset correcto, segundo uso 400, token invalido/expirado 400, token de recuperacion rechazado como sesion, sesion rechazada como recuperacion, cambio sin sesion 401, contrasena actual incorrecta 400 y login con nueva contrasena correcto. Payload Resend con HTML/texto verificado mediante transporte simulado. Comprobacion adicional: token vacio 400 y texto uniforme exacto.
+- Frontend: `npm --prefix uis/backoffice run build` y `npm --prefix uis/backoffice run lint`: correctos. Diagnosticos del editor sin errores en los archivos nuevos y modelos/rutas tocados. No se crearon archivos nuevos de pruebas ni se ejecuto la suite completa.
+- Entorno: se instalaron `uv`, dependencias Python/frontend y Chromium para poder verificar. Primera compilacion bloqueada por dependencias ausentes; correcta tras `npm install`.
+- Bloqueos: Chromium no arranca por falta de `libatk-1.0.so.0`; no se ejecutaron las interacciones, capturas ni la comprobacion responsive visual. Falta entrega real de correo con clave/remitente Resend validos y URL publica configurada. PageSpeed no medido sin URL publica. No se accedio a secretos ni se cambiaron rutas protegidas fuera del progreso y del nuevo archivo historico autorizado.
+- Frontend local iniciado en `http://localhost:5174`; requiere la API FastAPI en 8081 y configuracion de correo para el flujo real. No se creo commit.
+- Contexto activo archivado integro en `memory-bank/history/AUTH03-CONTEXT.md`; se conserva el contexto raiz modificado por el usuario y el historico AUTH-01.
+- Siguiente paso: configurar variables privadamente, iniciar FastAPI, instalar dependencias Linux de Chromium con permisos adecuados y validar recepcion real del correo, flujo de navegador y responsive. Rate limiting y auditoria opcionales no implementados.
+
 ## Estado general
 - Actualizacion 2026-10-15: implementado AUTH-01 (Hito 10) sobre la API FastAPI/TinyDB; suite backend completa con 35 pruebas correctas.
 - El `CONTEXT.md` AUTH-01 activo se archivo integro en `memory-bank/history/HITO10-CONTEXT.md`; no se modifico el contexto de raiz.

@@ -25,3 +25,9 @@ Objetivo: Mitigar y prevenir futuras alucinaciones garantizando la persistencia 
 📌 Próximos Pasos
 
 Una vez verificado y estabilizado el comportamiento del agente con el nuevo sistema de historial, mantener el desarrollo habitual del proyecto.
+
+Actualización 22/10 Flujo reestablecimiento contraseña.
+
+Aquí aprendí la importancia de donde van las keys y sus archivos.
+La semana pasada intenté abordar este proyecto sin conseguir que funcionara y el problema fue poner el archivo
+.env en raiz en vez de en la carpeta API para que esta reconociera los keys.

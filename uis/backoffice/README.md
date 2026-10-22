@@ -32,6 +32,27 @@ npm run dev
 
 Vite redirige `/suppliers` a la misma API Node (8080), que conserva las rutas de incidencias y se comunica con FastAPI (8081). Para usar otros puertos, ejecuta por ejemplo `API_PROXY_TARGET=http://localhost:8082 npm run dev -- --host 0.0.0.0 --port 5175`; el backend correspondiente debe estar iniciado. En Codespaces basta publicar el puerto del frontend para este flujo por proxy.
 
+## Acceso y contrasenas (AUTH-03)
+
+- `/login`: inicio de sesion y enlace a «¿Olvidaste tu contraseña?».
+- `/forgot-password`: solicitud por email con confirmacion identica para cuentas existentes o no. El formulario queda desactivado al completar el envio.
+- `/reset-password?token=...`: nueva contrasena y confirmacion. Tras el exito vuelve a `/login` con un mensaje; un enlace invalido permite solicitar otro.
+- `/account/change-password`: verifica la sesion con `/auth/me`, solicita la contrasena actual y valida la confirmacion antes de enviar. Sin sesion redirige a `/login`.
+
+La sesion se guarda en `sessionStorage` (solo la pestana actual); nunca se guardan contrasenas. El menu permite cambiar la contrasena y cerrar sesion. Las peticiones de proveedores incorporan el Bearer existente. Los mensajes se anuncian con `role="status"` o `role="alert"`, y los campos tienen etiquetas y foco visible. La politica `no-referrer` evita enviar la URL con el token a sitios externos.
+
+El proxy `/auth` va directamente a FastAPI en `http://127.0.0.1:8081`; `AUTH_PROXY_TARGET` permite cambiar ese destino. El backend debe estar iniciado y configurado con las variables Resend descritas en su README. La clave de correo nunca se incluye en el frontend. Para un despliegue independiente, `VITE_API_URL` debe apuntar a FastAPI (o un gateway que exponga `/auth` y `/suppliers`); autoriza el origen publico en `CORS_ORIGINS` y configura fallback SPA para estas rutas en el servidor web.
+
+Comando local explicito para Codespaces:
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev -- --host 0.0.0.0 --port 5174
+```
+
+Verificacion AUTH-03: build y lint correctos. La prueba de interacciones y capturas con Chromium esta pendiente: el contenedor no dispone de `libatk-1.0.so.0`. Instala las dependencias con `npx playwright install-deps chromium` desde una terminal con permisos adecuados antes de verificar en navegador. El envio real requiere credenciales y remitente Resend validos. No se ha medido PageSpeed por no disponer de una URL publica de entrega.
+
 ## Build
 ```bash
 npm run build

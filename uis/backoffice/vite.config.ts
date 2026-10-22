@@ -9,6 +9,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5174,
     proxy: {
+      '/auth': {
+        target: process.env.AUTH_PROXY_TARGET ?? 'http://127.0.0.1:8081',
+        changeOrigin: true,
+      },
       '/suppliers': {
         target: process.env.API_PROXY_TARGET ?? 'http://localhost:8080',
         changeOrigin: true,

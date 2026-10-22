@@ -1,3 +1,5 @@
+import { getSessionToken } from './auth'
+
 export const categories = [
   'carrier_last_mile', 'carrier_international', 'warehouse_supplies',
   'packaging_materials', 'reverse_logistics', 'fleet_maintenance',
@@ -46,7 +48,7 @@ export async function supplierRequest<Result>(path = '', options: RequestInit = 
   const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
   const response = await fetch(`${base}/suppliers${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { 'Content-Type': 'application/json', ...(getSessionToken() ? { Authorization: `Bearer ${getSessionToken()}` } : {}), ...options.headers },
   })
   const payload = await response.json().catch(() => null)
   if (!response.ok) {

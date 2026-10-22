@@ -58,9 +58,44 @@ La persistencia por defecto es `services/api/data/suppliers.json` (excluida de G
 
 Pydantic rechaza entradas invalidas con 422 antes de persistir: tarifa no positiva o no finita, nombre vacio, categorias vacias/desconocidas, estados distintos de `active`/`suspended`, y combinaciones distintas de USA/USD o Spain/EUR. Campos opcionales: `service_zone`, `contact_email` (email valido), `notes`. El cliente no puede enviar `id` ni `updated_at`.
 
-Users y Profiles se guardan exclusivamente en tablas TinyDB (`users` y `profiles`), nunca en SQL/Supabase. Todas las rutas de proveedores requieren JWT; `/users` solo deja público el registro y `/auth/login`.
+Users y Profiles se guardan exclusivamente en tablas TinyDB (`users` y `profiles`), nunca en SQL/Supabase. Todas las rutas de proveedores requieren JWT. Son públicos el registro `POST /users`, el login y la recuperación/restablecimiento de contraseña; el cambio de contraseña exige sesión.
 
 TinyDB usa un bloqueo para lecturas/escrituras dentro del proceso. Ejecutar **una sola instancia/worker** y no ejecutar el seeder mientras la API esta activa; TinyDB no es adecuado para escrituras multiproceso. `updated_at` registra la ultima tarifa, no un historial completo de tarifas o suspensiones.
+
+## AUTH-03: recuperacion y cambio de contrasena
+
+- `POST /auth/forgot-password`: recibe `{"email":"persona@example.com"}`. Para cualquier email valido devuelve 200 y el mismo mensaje, exista o no la cuenta, incluso si falla el proveedor de correo. El envio se procesa despues de responder y los fallos dejan un mensaje operativo sin direcciones, tokens ni credenciales en los logs. Un cuerpo o email invalido devuelve 422.
+- `POST /auth/reset-password`: recibe `{"token":"...","new_password":"..."}`. Valida firma, proposito, expiracion y hash persistido en TinyDB. Devuelve 200 o 400 si el token no es valido, esta caducado o ya se utilizo.
+- `POST /auth/change-password`: recibe `{"current_password":"...","new_password":"..."}` y `Authorization: Bearer <sesion>`. Devuelve 200, 400 si la contrasena actual es incorrecta, o 401 sin sesion valida.
+
+Las nuevas contrasenas requieren al menos 8 caracteres y un maximo de 72 bytes UTF-8 (limite de bcrypt); no se recortan. Las entradas invalidas devuelven 422.
+
+### Configuracion de Resend
+
+Define estas variables en el entorno del proceso o en `services/api/.env`, sin versionar valores reales:
+
+| Variable | Valor / funcion |
+| --- | --- |
+| `RESEND_API_KEY` | API key privada de Resend con permiso de envio. Obligatoria para enviar correos. |
+| `RESEND_FROM_EMAIL` | Remitente permitido por Resend, por ejemplo `TrackFlow <acceso@tu-dominio-verificado.com>`. Verifica tu dominio en Resend; las cuentas de prueba restringen los destinatarios. |
+| `PASSWORD_RESET_URL` | URL absoluta del frontend, sin query ni fragmento. Por defecto `http://localhost:5174/reset-password`. En Codespaces usa la URL HTTPS publicada del puerto 5174 y en produccion la URL HTTPS definitiva. |
+| `SECRET_KEY` | Clave de firma JWT existente, al menos 32 caracteres. |
+
+No se carga automaticamente el `.env` de la raiz: la carga existente apunta al de `services/api`. Los archivos `.env` y `.env.*` estan ignorados en todo el repositorio. Nunca uses variables `VITE_` para una API key, porque el navegador podria leerla.
+
+Se usa la API HTTPS oficial de Resend (`POST https://api.resend.com/emails`), con tiempo limite de 15 segundos, enviando texto plano y HTML adaptable a movil. El enlace dura **30 minutos**. Solo se guarda su SHA-256 en el registro del usuario; emitir otro reemplaza el anterior. La actualizacion bcrypt y el borrado del hash pendiente ocurren en una misma escritura bajo el bloqueo existente de TinyDB. Cualquier cambio de contrasena, incluido el CRUD de usuarios, invalida los enlaces pendientes. Un token de recuperacion no sirve como sesion ni viceversa.
+
+Los JWT de sesion previamente emitidos conservan su caducidad original: este cambio no implementa revocacion de sesiones, rate limiting ni auditoria. Los trabajos de correo en segundo plano no son una cola persistente; revisa los logs si un proveedor falla y solicita un nuevo enlace tras corregirlo.
+
+Para ejecutar solo esta API en Codespaces despues de configurar las variables:
+
+```bash
+cd services/api
+uv sync
+uv run uvicorn main:app --host 0.0.0.0 --port 8081
+```
+
+La comprobacion local de AUTH-03 usa una base temporal y un transporte simulado: no acredita entrega real de correos. Para la aceptacion final, registra una cuenta con un email permitido en Resend, solicita el enlace desde el frontend, abre el correo, cambia la contrasena e intenta reutilizar el mismo enlace (debe fallar).
 
 ## Pruebas
 ```bash

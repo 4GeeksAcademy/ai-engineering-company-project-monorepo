@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class SupplierStatus(str, Enum):
@@ -84,6 +84,33 @@ class LoginRequest(BaseModel):
 
     email: EmailStr
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: EmailStr
+
+
+class NewPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    new_password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_bytes(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("La contrasena no puede superar 72 bytes UTF-8.")
+        return value
+
+
+class ResetPasswordRequest(NewPasswordRequest):
+    token: str
+
+
+class ChangePasswordRequest(NewPasswordRequest):
+    current_password: str
 
 
 class UserUpdate(BaseModel):
