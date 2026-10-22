@@ -10,10 +10,11 @@
     <meta name="theme-color" content="#0b172a" />
     <title>Registro de talento | Nexova</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="validation.js" defer></script>
   </head>
   <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
     <a
-      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-slate-950 focus:shadow-lg"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-slate-950 focus:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-600"
       href="#contenido"
     >
       Saltar al contenido principal
@@ -24,14 +25,14 @@
         class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12"
       >
         <a
-          class="text-2xl font-semibold tracking-tight"
+          class="rounded-sm text-2xl font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-300"
           href="index.html"
           aria-label="Nexova, volver al inicio"
         >
           Nexova<span class="text-teal-400">.</span>
         </a>
         <a
-          class="text-sm font-medium text-slate-300 transition-colors hover:text-teal-300 focus-visible:text-teal-300"
+          class="inline-flex min-h-11 items-center rounded-sm px-2 text-sm font-medium text-slate-300 transition-colors hover:text-teal-300 focus-visible:text-teal-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 motion-reduce:transition-none"
           href="index.html"
         >
           Volver al inicio
@@ -39,30 +40,179 @@
       </div>
     </header>
 
-    <main
-      id="contenido"
-      class="mx-auto flex min-h-[70vh] max-w-3xl items-center px-5 py-16 sm:px-8"
-    >
-      <section
-        class="w-full rounded-3xl border border-slate-200 bg-white p-7 shadow-sm sm:p-10"
-        aria-labelledby="application-title"
-      >
-        <p
-          class="text-sm font-semibold uppercase tracking-[0.16em] text-teal-700"
-        >
-          Nexova · Talento
-        </p>
-        <h1
-          id="application-title"
-          class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl"
-        >
-          Registro de talento
-        </h1>
-        <p class="mt-4 max-w-xl leading-7 text-slate-600">
-          Esta página está preparada para el formulario de registro. El
-          formulario se incorporará en una siguiente etapa.
-        </p>
+    <main id="contenido">
+      <section class="bg-slate-950 text-white" aria-labelledby="application-title">
+        <div class="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-teal-300">
+            Nexova · Talento
+          </p>
+          <h1 id="application-title" class="mt-4 max-w-3xl text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+            Tu próximo paso profesional empieza aquí
+          </h1>
+          <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+            Comparte tu experiencia y tus intereses con nuestro equipo de selección. Queremos conocerte y tener en cuenta tu perfil para oportunidades actuales o futuras.
+          </p>
+        </div>
+      </section>
+
+      <section class="bg-slate-50 px-5 py-12 sm:px-8 sm:py-16 lg:px-12" aria-labelledby="form-title">
+        <div class="mx-auto max-w-5xl">
+          <div class="mb-8 max-w-2xl">
+            <h2 id="form-title" class="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+              Registro de talento
+            </h2>
+            <p class="mt-3 leading-7 text-slate-600">
+              Completa tus datos para que podamos conocer mejor tu perfil. Los campos marcados como obligatorios son necesarios.
+            </p>
+          </div>
+
+          <form id="talent-registration" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10" novalidate>
+            <div id="form-status" class="mb-7 hidden rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></div>
+            <div class="grid grid-cols-1 gap-x-8 gap-y-7 md:grid-cols-2">
+              <div>
+                <label for="full-name" class="block text-sm font-semibold text-slate-800">Nombre completo <span class="text-teal-800">(obligatorio)</span></label>
+                <input id="full-name" name="fullName" type="text" autocomplete="name" required minlength="3" placeholder="Nombre y apellido" aria-describedby="full-name-help full-name-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                <p id="full-name-help" class="mt-2 text-sm leading-6 text-slate-500">Escribe al menos tu nombre y un apellido.</p>
+                <p id="full-name-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="email" class="block text-sm font-semibold text-slate-800">Email <span class="text-teal-800">(obligatorio)</span></label>
+                <input id="email" name="email" type="email" autocomplete="email" required placeholder="nombre@empresa.com" aria-describedby="email-help email-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                <p id="email-help" class="mt-2 text-sm leading-6 text-slate-500">Usaremos este correo como vía de contacto.</p>
+                <p id="email-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="phone" class="block text-sm font-semibold text-slate-800">Teléfono <span class="text-teal-800">(obligatorio)</span></label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required pattern="\+[0-9]{1,3}(?:[ .-]?[0-9]){7,14}" placeholder="+34 612 345 678" aria-describedby="phone-help phone-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                <p id="phone-help" class="mt-2 text-sm leading-6 text-slate-500">Incluye el signo +, el código de país y tu número.</p>
+                <p id="phone-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="country" class="block text-sm font-semibold text-slate-800">País de residencia <span class="text-teal-800">(obligatorio)</span></label>
+                <select id="country" name="country" required aria-describedby="country-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                  <option value="" selected disabled>Selecciona una opción</option>
+                  <option value="spain">España</option>
+                  <option value="united-states">Estados Unidos</option>
+                  <option value="other">Otro</option>
+                </select>
+                <p id="country-error" class="mt-2 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="experience" class="block text-sm font-semibold text-slate-800">Años de experiencia <span class="text-teal-800">(obligatorio)</span></label>
+                <input id="experience" name="experienceYears" type="number" required min="0" max="50" step="1" inputmode="numeric" placeholder="0–50" aria-describedby="experience-help experience-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                <p id="experience-help" class="mt-2 text-sm leading-6 text-slate-500">Indica un número entero entre 0 y 50.</p>
+                <p id="experience-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="sector" class="block text-sm font-semibold text-slate-800">Sector de interés <span class="text-teal-800">(obligatorio)</span></label>
+                <select id="sector" name="sector" required aria-describedby="sector-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                  <option value="" selected disabled>Selecciona un sector</option>
+                  <option value="technology">Tecnología</option>
+                  <option value="retail">Retail</option>
+                  <option value="financial-services">Servicios Financieros</option>
+                  <option value="consulting">Consultoría</option>
+                  <option value="other">Otro</option>
+                </select>
+                <p id="sector-error" class="mt-2 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <label for="english-level" class="block text-sm font-semibold text-slate-800">Nivel de inglés <span class="text-teal-800">(obligatorio)</span></label>
+                <select id="english-level" name="englishLevel" required aria-describedby="english-level-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                  <option value="" selected disabled>Selecciona tu nivel</option>
+                  <option value="basic">Básico</option>
+                  <option value="intermediate">Intermedio</option>
+                  <option value="advanced">Avanzado</option>
+                  <option value="native">Nativo</option>
+                </select>
+                <p id="english-level-error" class="mt-2 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <fieldset class="md:col-span-2" aria-describedby="availability-help availability-error">
+                <legend class="text-sm font-semibold text-slate-800">Disponibilidad <span class="text-teal-800">(obligatorio)</span></legend>
+                <p id="availability-help" class="mt-2 text-sm leading-6 text-slate-500">Selecciona la opción que mejor describa tu disponibilidad.</p>
+                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <label for="availability-immediate" class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-700/20">
+                    <input id="availability-immediate" name="availability" type="radio" value="immediate" required aria-describedby="availability-help availability-error" class="size-4 accent-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                    Inmediata
+                  </label>
+                  <label for="availability-one-month" class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-700/20">
+                    <input id="availability-one-month" name="availability" type="radio" value="one-month" required aria-describedby="availability-help availability-error" class="size-4 accent-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                    1 mes
+                  </label>
+                  <label for="availability-two-three-months" class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-700/20">
+                    <input id="availability-two-three-months" name="availability" type="radio" value="two-three-months" required aria-describedby="availability-help availability-error" class="size-4 accent-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                    2-3 meses
+                  </label>
+                  <label for="availability-exploring" class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-700/20">
+                    <input id="availability-exploring" name="availability" type="radio" value="exploring" required aria-describedby="availability-help availability-error" class="size-4 accent-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                    Solo explorando
+                  </label>
+                </div>
+                <p id="availability-error" class="mt-2 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </fieldset>
+
+              <div>
+                <label for="linkedin" class="block text-sm font-semibold text-slate-800">LinkedIn <span class="font-normal text-slate-500">(opcional)</span></label>
+                <input id="linkedin" name="linkedinUrl" type="url" autocomplete="url" placeholder="https://www.linkedin.com/in/tu-perfil" aria-describedby="linkedin-help linkedin-error" class="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                <p id="linkedin-help" class="mt-2 text-sm leading-6 text-slate-500">Comparte la URL de tu perfil si quieres.</p>
+                <p id="linkedin-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div class="md:col-span-2">
+                <label for="comments" class="block text-sm font-semibold text-slate-800">Comentarios adicionales <span class="font-normal text-slate-500">(opcional)</span></label>
+                <textarea id="comments" name="comments" rows="5" maxlength="500" aria-describedby="comments-help comments-counter comments-error" placeholder="Cuéntanos algo más sobre tu perfil o tus intereses." class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base leading-7 text-slate-950 placeholder:text-slate-400 focus-visible:border-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"></textarea>
+                <p id="comments-help" class="mt-2 text-sm leading-6 text-slate-500">Máximo 500 caracteres.</p>
+                <p id="comments-counter" class="mt-1 text-right text-sm text-slate-500">0/500 caracteres</p>
+                <p id="comments-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div class="md:col-span-2">
+                <div class="flex items-start gap-3">
+                  <input id="data-policy" name="dataPolicyAccepted" type="checkbox" required aria-describedby="data-policy-help data-policy-error" class="mt-1 size-5 shrink-0 rounded border-slate-300 accent-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" />
+                  <label for="data-policy" class="text-sm leading-6 text-slate-700">Acepto la política de tratamiento de datos <span class="font-semibold text-teal-800">(obligatorio)</span></label>
+                </div>
+                <p id="data-policy-help" class="mt-2 text-sm leading-6 text-slate-500">Esta demostración académica no envía ni almacena información. Antes de publicar un formulario real, Nexova debe definir y presentar su política de privacidad y tratamiento de datos.</p>
+                <p id="data-policy-error" class="mt-1 hidden text-sm font-medium text-red-700" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="mt-9 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+              <button type="reset" class="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 motion-reduce:transition-none">
+                Limpiar formulario
+              </button>
+              <button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-full bg-teal-300 px-6 py-3 text-sm font-semibold text-slate-950 shadow-sm transition-colors hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 motion-reduce:transition-none">
+                Enviar mi registro
+              </button>
+            </div>
+          </form>
+
+          <aside class="mt-8 rounded-2xl border border-teal-900/10 bg-white p-6 sm:p-7" aria-labelledby="company-contact-title">
+            <h2 id="company-contact-title" class="text-lg font-semibold text-slate-950">¿Eres una empresa buscando talento?</h2>
+            <p class="mt-2 leading-7 text-slate-600">Este formulario es para profesionales que buscan oportunidades laborales. Si representas a una empresa, escríbenos a <a class="rounded-sm font-medium text-teal-900 underline underline-offset-4 hover:text-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" href="mailto:contacto@nexova.com">contacto@nexova.com</a>.</p>
+          </aside>
+        </div>
       </section>
     </main>
+
+    <footer class="bg-slate-950 text-white">
+      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+        <a class="w-fit rounded-sm text-xl font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-300" href="index.html" aria-label="Nexova, volver al inicio">
+          Nexova<span class="text-teal-400">.</span>
+        </a>
+        <p class="text-sm text-slate-400">© 2025 Nexova. Todos los derechos reservados.</p>
+        <nav aria-label="Redes sociales">
+          <ul class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <li><a class="inline-flex min-h-11 items-center rounded-sm text-slate-300 underline decoration-white/30 underline-offset-4 hover:text-teal-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 motion-reduce:transition-none" href="https://linkedin.com/company/nexova" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+            <li><a class="inline-flex min-h-11 items-center rounded-sm text-slate-300 underline decoration-white/30 underline-offset-4 hover:text-teal-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 motion-reduce:transition-none" href="https://instagram.com/nexova" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>
