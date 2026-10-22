@@ -35,7 +35,7 @@ def create_access_token(user: User) -> tuple[str, int]:
     secret_key, expires_minutes = auth_settings()
     now = datetime.now(timezone.utc)
     token = jwt.encode(
-        {"sub": str(user.id), "role": user.role.value, "iat": now, "exp": now + timedelta(minutes=expires_minutes)},
+        {"sub": str(user.id), "role": user.role.value, "purpose": "access", "iat": now, "exp": now + timedelta(minutes=expires_minutes)},
         secret_key,
         algorithm=ALGORITHM,
     )
@@ -58,6 +58,8 @@ def get_current_user(
             raise unauthorized
         secret_key, _ = auth_settings()
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM], options={"require_sub": True, "require_exp": True})
+        if payload.get("purpose", "access") != "access":
+            raise unauthorized
         user_id = int(payload["sub"])
         with request.app.state.lock:
             user = get_user_by_id(request.app.state.db, user_id)

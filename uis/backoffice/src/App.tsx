@@ -1,6 +1,9 @@
 import { MetricCard } from './components/MetricCard'
 import { IncidentAnalysis } from './components/IncidentAnalysis'
 import { SupplierDirectory } from './app/suppliers/SupplierDirectory'
+import { AuthPage } from './components/AuthPage'
+import { clearSession, getSessionToken } from './utils/auth'
+import { LogOut } from 'lucide-react'
 import { useState } from 'react'
 
 const kpis = [
@@ -23,6 +26,11 @@ const alerts = [
 
 function App() {
   const [activeView, setActiveView] = useState<'overview' | 'incidents' | 'suppliers'>('overview')
+  const path = window.location.pathname.replace(/\/$/, '') || '/'
+
+  if (path === '/login' || path === '/forgot-password' || path === '/reset-password' || path === '/account/change-password') {
+    return <AuthPage path={path} />
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -33,6 +41,8 @@ function App() {
             <p className="mt-1 text-sm font-medium text-slate-600">Dashboard de operaciones internas</p>
           </div>
           <nav aria-label="Navegación principal" className="flex flex-wrap gap-2">
+            <a href={getSessionToken() ? '/account/change-password' : '/login'} className="rounded-md px-3 py-2 text-sm font-semibold text-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800">{getSessionToken() ? 'Cambiar contraseña' : 'Iniciar sesión'}</a>
+            {getSessionToken() && <button type="button" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={() => { clearSession(); window.location.assign('/login') }} className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800"><LogOut size={18} aria-hidden="true" /></button>}
             <button
               type="button"
               aria-current={activeView === 'overview' ? 'page' : undefined}

@@ -70,6 +70,7 @@ def update_user(database: TinyDB, lock: RLock, user_id: int, changes: dict) -> U
             changes["email"] = normalized_email
         if "password" in changes:
             changes["hashed_password"] = bcrypt.hash(changes.pop("password"))
+            changes["password_reset_hash"] = None
         if isinstance(changes.get("role"), UserRole):
             changes["role"] = changes["role"].value
         users.update(changes, doc_ids=[user_id])
