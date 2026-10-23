@@ -1,26 +1,26 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+import os
 
+from dotenv import load_dotenv
+from sqlmodel import Session, create_engine
 
-DATABASE_URL = "sqlite:///./brasaland.db"
+load_dotenv(
+    os.path.join(
+        os.path.dirname(__file__),
+        ".env",
+    )
+)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL no está configurada.")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    echo=True,
 )
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
-
-Base = declarative_base()
 
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    with Session(engine) as session:
+        yield session

@@ -2,3 +2,5 @@ fastapi
 uvicorn[standard]
 python-multipart
 pandas
+sqlmodel
+psycopg[binary]

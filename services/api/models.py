@@ -1,52 +1,100 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-
-from database import Base
+from sqlmodel import Field, SQLModel
 
 
-class Incident(Base):
+class Incident(SQLModel, table=True):
     __tablename__ = "incidents"
 
-    id: Mapped[int] = mapped_column(
-        Integer,
+    id: int | None = Field(
+        default=None,
         primary_key=True,
+    )
+
+    location_id: str
+
+    category: str
+
+    description: str
+
+    reporter_id: str
+
+    status: str
+
+    satisfaction_score: float | None = None
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+    )
+
+
+class Ingredient(SQLModel, table=True):
+    __tablename__ = "ingredients"
+
+    id: int | None = Field(
+        default=None,
+        primary_key=True,
+    )
+
+    name: str
+
+    sku: str = Field(
+        unique=True,
         index=True,
     )
 
-    location_id: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
+    unit: str
+
+    category: str
+
+    country: str
+
+
+class IngredientEntry(SQLModel, table=True):
+    __tablename__ = "ingredient_entries"
+
+    id: int | None = Field(
+        default=None,
+        primary_key=True,
     )
 
-    category: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
+    ingredient_id: int = Field(
+        foreign_key="ingredients.id",
     )
 
-    description: Mapped[str] = mapped_column(
-        Text,
-        nullable=False,
+    quantity: float
+
+    supplier_name: str
+
+    location_id: int
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
     )
 
-    reporter_id: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
+    user_uuid: str
+
+
+class IngredientExit(SQLModel, table=True):
+    __tablename__ = "ingredient_exits"
+
+    id: int | None = Field(
+        default=None,
+        primary_key=True,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(30),
-        nullable=False,
+    ingredient_id: int = Field(
+        foreign_key="ingredients.id",
     )
 
-    satisfaction_score: Mapped[float | None] = mapped_column(
-        Float,
-        nullable=True,
+    quantity: float
+
+    reason: str
+
+    location_id: int
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    user_uuid: str

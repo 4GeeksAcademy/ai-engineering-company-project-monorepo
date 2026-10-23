@@ -1,11 +1,18 @@
-﻿from io import BytesIO
+﻿
+from io import BytesIO
 
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
+from sqlmodel import Session, select
 
 from services.api.auth.profiles_routes import router as profiles_router
 from services.api.auth.routes import router as auth_router
 from services.api.auth.users_routes import router as users_router
+from services.api.database import engine
+from services.api.models import Incident
+from services.api.routers.inventory import router as inventory_router
 
 
 app = FastAPI(
@@ -14,6 +21,26 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+# ============================================================
+# CORS
+# ============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============================================================
+# VALIDACIONES DE INCIDENTES
+# ============================================================
 
 VALID_LOCATIONS = {
     "COL-01",
@@ -59,6 +86,10 @@ REQUIRED_COLUMNS = {
 }
 
 
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
 @app.get("/api/health")
 def health_check():
     return {
@@ -67,8 +98,81 @@ def health_check():
     }
 
 
+# ============================================================
+# INCIDENTS SUMMARY
+# ============================================================
+
+@app.get("/api/incidents/summary")
+def incidents_summary():
+    """
+    Devuelve el resumen de incidentes utilizado por el dashboard.
+    """
+
+    with Session(engine) as db:
+        incidents = db.exec(
+            select(Incident)
+        ).all()
+
+    total_records = len(incidents)
+
+    by_category = {}
+
+    for incident in incidents:
+        category = incident.category
+
+        if category not in by_category:
+            by_category[category] = 0
+
+        by_category[category] += 1
+
+    by_status = {}
+
+    for incident in incidents:
+        status = incident.status
+
+        if status not in by_status:
+            by_status[status] = 0
+
+        by_status[status] += 1
+
+    closed_incidents = [
+        incident
+        for incident in incidents
+        if incident.status == "CLOSED"
+    ]
+
+    closed_scores = [
+        incident.satisfaction_score
+        for incident in closed_incidents
+        if incident.satisfaction_score is not None
+    ]
+
+    average_satisfaction = (
+        round(
+            sum(closed_scores) / len(closed_scores),
+            2,
+        )
+        if closed_scores
+        else None
+    )
+
+    return {
+        "total_records": total_records,
+        "by_category": by_category,
+        "by_status": by_status,
+        "closed_incidents": len(closed_incidents),
+        "average_satisfaction": average_satisfaction,
+    }
+
+
+# ============================================================
+# INCIDENTS ANALYSIS
+# ============================================================
+
 @app.post("/api/incidents/analyze")
-async def analyze_incidents(file: UploadFile = File(...)):
+async def analyze_incidents(
+    file: UploadFile = File(...),
+):
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(
             status_code=400,
@@ -189,7 +293,10 @@ async def analyze_incidents(file: UploadFile = File(...)):
     )
 
     average_satisfaction = (
-        round(float(closed_scores.mean()), 2)
+        round(
+            float(closed_scores.mean()),
+            2,
+        )
         if not closed_scores.empty
         else None
     )
@@ -197,7 +304,9 @@ async def analyze_incidents(file: UploadFile = File(...)):
     return {
         "total_records": len(df),
         "valid_records": len(valid_df),
-        "invalid_records": int(invalid_any.sum()),
+        "invalid_records": int(
+            invalid_any.sum()
+        ),
         "invalid_breakdown": {
             "invalid_location": int(
                 invalid_location.sum()
@@ -236,6 +345,17 @@ async def analyze_incidents(file: UploadFile = File(...)):
     }
 
 
+# ============================================================
+# ROUTERS DE AUTENTICACIÓN
+# ============================================================
+
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(profiles_router)
+
+
+# ============================================================
+# ROUTER DE INVENTARIO
+# ============================================================
+
+app.include_router(inventory_router)

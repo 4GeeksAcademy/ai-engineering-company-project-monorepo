@@ -1,4 +1,5 @@
-﻿"use client";
+﻿
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -35,7 +36,7 @@ export default function IncidentDetailClient({
         setError("");
 
         const response = await api(
-          /api/incidents/
+          `/api/incidents/${incidentId}`
         );
 
         const data = await response.json();
@@ -74,7 +75,7 @@ export default function IncidentDetailClient({
       setMessage("");
 
       const response = await api(
-        /api/incidents//status?status=,
+        `/api/incidents/${incidentId}/status?status=${newStatus}`,
         {
           method: "PATCH",
         }
@@ -140,13 +141,16 @@ export default function IncidentDetailClient({
   function getStatusClasses(value: string) {
     switch (value) {
       case "OPEN":
-        return "bg-yellow-50 text-yellow-700";
+        return "rounded-full bg-yellow-50 px-3 py-1 text-sm font-medium text-yellow-700";
+
       case "CLOSED":
-        return "bg-green-50 text-green-700";
+        return "rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700";
+
       case "DISCARDED":
-        return "bg-zinc-100 text-zinc-600";
+        return "rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600";
+
       default:
-        return "bg-zinc-100 text-zinc-700";
+        return "rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-700";
     }
   }
 
@@ -190,6 +194,7 @@ export default function IncidentDetailClient({
 
           <div className="mt-5 flex gap-3">
             <button
+              type="button"
               onClick={() => window.location.reload()}
               className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
             >
@@ -244,7 +249,7 @@ export default function IncidentDetailClient({
             </div>
 
             <span
-              className={ounded-full px-3 py-1 text-sm font-medium }
+              className={getStatusClasses(incident.status)}
             >
               {getStatusLabel(incident.status)}
             </span>
@@ -255,6 +260,7 @@ export default function IncidentDetailClient({
               <p className="text-xs font-medium uppercase text-zinc-400">
                 Ubicación
               </p>
+
               <p className="mt-1 text-zinc-800">
                 {incident.location_id}
               </p>
@@ -264,6 +270,7 @@ export default function IncidentDetailClient({
               <p className="text-xs font-medium uppercase text-zinc-400">
                 Reportado por
               </p>
+
               <p className="mt-1 text-zinc-800">
                 {incident.reporter_id}
               </p>
@@ -273,6 +280,7 @@ export default function IncidentDetailClient({
               <p className="text-xs font-medium uppercase text-zinc-400">
                 Fecha
               </p>
+
               <p className="mt-1 text-zinc-800">
                 {formatDate(incident.created_at)}
               </p>
@@ -282,6 +290,7 @@ export default function IncidentDetailClient({
               <p className="text-xs font-medium uppercase text-zinc-400">
                 Satisfacción
               </p>
+
               <p className="mt-1 text-zinc-800">
                 {incident.satisfaction_score ?? "-"}
               </p>
@@ -303,6 +312,7 @@ export default function IncidentDetailClient({
               <p className="text-sm font-medium text-red-800">
                 No se pudo actualizar el incidente.
               </p>
+
               <p className="mt-1 text-sm text-red-700">
                 {error}
               </p>
@@ -324,6 +334,7 @@ export default function IncidentDetailClient({
               {["OPEN", "CLOSED", "DISCARDED"].map(
                 (newStatus) => (
                   <button
+                    type="button"
                     key={newStatus}
                     onClick={() => updateStatus(newStatus)}
                     disabled={
