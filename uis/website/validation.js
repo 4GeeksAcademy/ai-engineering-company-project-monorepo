@@ -14,7 +14,9 @@ if (form) {
   const comments = form.querySelector("#comments");
   const dataPolicy = form.querySelector("#data-policy");
   const commentsCounter = form.querySelector("#comments-counter");
-  const statusMessage = form.querySelector("#form-status");
+  const confirmationDialog = document.querySelector("#confirmation-dialog");
+  const confirmationAccept = document.querySelector("#confirmation-accept");
+  const submitButton = form.querySelector('button[type="submit"]');
 
   const errorMessages = {
     fullName: "El nombre debe contener al menos nombre y apellido",
@@ -161,19 +163,40 @@ if (form) {
     commentsCounter.classList.toggle("text-slate-500", remaining >= 0);
   }
 
-  function showSimulationSuccess() {
-    statusMessage.innerHTML = "<strong class=\"block text-base font-semibold\">¡Gracias por tu interés en Nexova!</strong><span class=\"mt-2 block\">Esta es una simulación académica: tus datos no se han enviado ni recibido por un servidor y no se han almacenado.</span><span class=\"mt-2 block\">Nuestro equipo de selección la revisaría y te contactaría en caso de que tu perfil encajara con alguna de nuestras oportunidades actuales o futuras.</span><span class=\"mt-2 block\">Mientras tanto, síguenos en LinkedIn para estar al día de nuestras vacantes y contenido sobre desarrollo profesional.</span>";
-    statusMessage.classList.remove("hidden");
-    statusMessage.focus();
-  }
-
-  function hideSimulationSuccess() {
-    statusMessage.classList.add("hidden");
-  }
-
   function handleFieldChange(key) {
-    hideSimulationSuccess();
     checkField(key);
+  }
+
+  function clearValidationState() {
+    const controlsByKey = {
+      fullName: [fullName],
+      email: [email],
+      phone: [phone],
+      country: [country],
+      experience: [experience],
+      sector: [sector],
+      englishLevel: [englishLevel],
+      availability: availabilityRadios,
+      linkedin: [linkedin],
+      comments: [comments],
+      dataPolicy: [dataPolicy],
+    };
+
+    Object.keys(errorElements).forEach((key) => {
+      setFieldError(key, "", controlsByKey[key]);
+    });
+    Object.values(controlsByKey).flat().forEach((control) => {
+      delete control.dataset.touched;
+      control.classList.remove("border-red-600", "focus-visible:border-red-700", "border-teal-700", "focus-visible:border-teal-700");
+      control.removeAttribute("aria-invalid");
+    });
+    updateCommentsCounter();
+  }
+
+  function resetAfterConfirmation() {
+    confirmationDialog.close("accepted");
+    form.reset();
+    fullName.focus();
   }
 
   const fieldEvents = [
@@ -190,8 +213,6 @@ if (form) {
       // Solo valida mientras el usuario ya haya salido del campo o exista un error.
       if (field.dataset.touched === "true" || field.getAttribute("aria-invalid") === "true") {
         handleFieldChange(key);
-      } else {
-        hideSimulationSuccess();
       }
       if (key === "comments") updateCommentsCounter();
     });
@@ -218,7 +239,7 @@ if (form) {
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    hideSimulationSuccess();
+    if (confirmationDialog.open) return;
 
     const fieldsInOrder = [
       "fullName", "email", "phone", "country", "experience", "sector",
@@ -232,36 +253,22 @@ if (form) {
       return;
     }
 
-    showSimulationSuccess();
+    confirmationDialog.returnValue = "";
+    confirmationDialog.showModal();
   });
+
+  confirmationAccept.addEventListener("click", resetAfterConfirmation);
 
   form.addEventListener("reset", () => {
     // El evento reset se dispara antes de que el navegador vacíe los controles.
     window.setTimeout(() => {
-      const controlsByKey = {
-        fullName: [fullName],
-        email: [email],
-        phone: [phone],
-        country: [country],
-        experience: [experience],
-        sector: [sector],
-        englishLevel: [englishLevel],
-        availability: availabilityRadios,
-        linkedin: [linkedin],
-        comments: [comments],
-        dataPolicy: [dataPolicy],
-      };
-
-      Object.keys(errorElements).forEach((key) => {
-        setFieldError(key, "", controlsByKey[key]);
-      });
-      [fullName, email, phone, country, experience, sector, englishLevel, ...availabilityRadios, linkedin, comments, dataPolicy].forEach((field) => {
-        delete field.dataset.touched;
-      });
-      updateCommentsCounter();
-      statusMessage.textContent = "";
-      statusMessage.classList.add("hidden");
+      clearValidationState();
     }, 0);
+  });
+
+  confirmationDialog.addEventListener("close", () => {
+    // El cierre con Escape conserva los datos; el foco regresa al botón de envío.
+    if (confirmationDialog.returnValue !== "accepted") submitButton.focus();
   });
 
   updateCommentsCounter();

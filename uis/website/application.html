@@ -67,7 +67,6 @@
           </div>
 
           <form id="talent-registration" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10" novalidate>
-            <div id="form-status" class="mb-7 hidden rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></div>
             <div class="grid grid-cols-1 gap-x-8 gap-y-7 md:grid-cols-2">
               <div>
                 <label for="full-name" class="block text-sm font-semibold text-slate-800">Nombre completo <span class="text-teal-800">(obligatorio)</span></label>
@@ -191,6 +190,32 @@
               </button>
             </div>
           </form>
+
+          <dialog id="confirmation-dialog" class="m-auto max-h-[calc(100vh_-_2rem)] w-[calc(100%_-_2rem)] max-w-xl overflow-y-auto rounded-3xl border-0 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/60 backdrop:backdrop-blur-sm" aria-labelledby="confirmation-title" aria-describedby="confirmation-description confirmation-disclaimer">
+            <div class="p-6 sm:p-9">
+              <div class="mx-auto flex size-16 items-center justify-center rounded-full bg-teal-100 text-teal-800" aria-hidden="true">
+                <svg class="size-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                  <path d="M20 11.1V12a8 8 0 1 1-4.75-7.32" />
+                  <path d="m8.5 11.5 3 3L21 5" />
+                </svg>
+              </div>
+              <h2 id="confirmation-title" class="mt-5 text-center text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                ¡Gracias por tu interés en Nexova!
+              </h2>
+              <div id="confirmation-description" class="mt-5 space-y-4 text-left text-sm leading-7 text-slate-700 sm:text-base">
+                <p>Hemos recibido tu información. Nuestro equipo de selección la revisará y te contactaremos en caso de que tu perfil encaje con alguna de nuestras oportunidades actuales o futuras.</p>
+                <p>Mientras tanto, síguenos en LinkedIn para estar al día de nuestras vacantes y contenido sobre desarrollo profesional.</p>
+              </div>
+              <p id="confirmation-disclaimer" class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-center text-xs leading-5 text-slate-600 sm:text-sm">
+                Demostración académica: no se han enviado ni almacenado datos.
+              </p>
+              <div class="mt-7 flex justify-center">
+                <button id="confirmation-accept" type="button" autofocus class="inline-flex min-h-12 min-w-32 items-center justify-center rounded-full bg-teal-300 px-7 py-3 text-sm font-semibold text-slate-950 shadow-sm transition-colors hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 motion-reduce:transition-none">
+                  Aceptar
+                </button>
+              </div>
+            </div>
+          </dialog>
 
           <aside class="mt-8 rounded-2xl border border-teal-900/10 bg-white p-6 sm:p-7" aria-labelledby="company-contact-title">
             <h2 id="company-contact-title" class="text-lg font-semibold text-slate-950">¿Eres una empresa buscando talento?</h2>
