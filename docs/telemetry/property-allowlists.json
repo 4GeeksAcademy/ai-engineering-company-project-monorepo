@@ -1,0 +1,2841 @@
+{
+  "title": "Brasaland telemetry property allowlists",
+  "rule": "Only listed keys may appear in properties. additionalProperties is false. Forbidden PII keys cause omit.",
+  "events": [
+    {
+      "event_type": "product_created",
+      "description": "POST /inventory after create_product writes products.csv. Map CSV name to product_name.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "enum: \"chain\", \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Quantity in `unit`.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": false,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": false,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": false,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": false,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "stock_count_adjusted",
+      "description": "PATCH /inventory/{product_id} after apply_delta commits. reason is count_correction.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "delta",
+          "type": "integer",
+          "required": true,
+          "description": "Signed integer change applied (never 0 on a successful adjust).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "enum: \"chain\", \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity_after",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity after the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity_before",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity before the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "const \"count_correction\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": false,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": false,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": false,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": false,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "stock_threshold_crossed",
+      "description": "Chain CSV edge: quantity_before >= 10 and quantity_after < 10. The weekly pipeline ignores this type.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"chain\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity_after",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity after the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity_before",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity before the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "threshold",
+          "type": "const 10",
+          "required": true,
+          "description": "Alert threshold (API default 10).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "stock_threshold_cleared",
+      "description": "Chain CSV edge: quantity_before < 10 and quantity_after >= 10.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"chain\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity_after",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity after the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity_before",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity before the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "threshold",
+          "type": "const 10",
+          "required": true,
+          "description": "Alert threshold (API default 10).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "inventory_validation_failed",
+      "description": "422 on an inventory or order body. loc and pydantic type only. IP-3.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "fields",
+          "type": "array (minItems 1; maxItems 20; items: object (nested allowlist))",
+          "required": true,
+          "description": "Validation error locations (no submitted values).",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Array of `{loc, error_type}`. Submitted values stripped. If a value cannot be stripped, omit the event.",
+          "item_properties": [
+            {
+              "name": "error_type",
+              "type": "string (minLength 1; maxLength 64)",
+              "required": true,
+              "description": "Pydantic / validator error type.",
+              "sensitive_or_pii": "No",
+              "handling": "Pydantic error type string."
+            },
+            {
+              "name": "loc",
+              "type": "string (pattern `^[A-Za-z0-9_.]+$`)",
+              "required": true,
+              "description": "Dotted location in the request schema.",
+              "sensitive_or_pii": "Sanitized",
+              "handling": "Dotted schema location (`body.quantity`). Never the rejected value."
+            }
+          ]
+        },
+        {
+          "name": "http_status",
+          "type": "const 422",
+          "required": true,
+          "description": "HTTP status, or 0 on network failure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "method",
+          "type": "enum: \"GET\", \"POST\", \"PATCH\"",
+          "required": true,
+          "description": "HTTP method.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route_template",
+          "type": "enum: \"/inventory\", \"/inventory/{product_id}\", \"/inventory/alerts\", \"/orders\"",
+          "required": true,
+          "description": "Matched API route template.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Matched route pattern. Never the raw URL with query or a concrete email."
+        }
+      ]
+    },
+    {
+      "event_type": "direct_stock_edit_rejected",
+      "description": "Direct stock change or alert threshold the API refuses. CSV is unchanged. IP-4.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "http_status",
+          "type": "const 400",
+          "required": true,
+          "description": "HTTP status, or 0 on network failure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"chain\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"below_zero\", \"product_not_found\", \"negative_alert_threshold\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "attempted_threshold",
+          "type": "integer",
+          "required": false,
+          "description": "Rejected negative alert threshold.",
+          "sensitive_or_pii": "No",
+          "handling": "Rejected negative alert threshold."
+        },
+        {
+          "name": "delta",
+          "type": "integer",
+          "required": false,
+          "description": "Signed integer change applied (never 0 on a successful adjust).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": false,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": false,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity_before",
+          "type": "integer (minimum 0)",
+          "required": false,
+          "description": "On-hand quantity before the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "inbound_order_created",
+      "description": "One event per inbound line. Pipeline sums payload.cost into total_purchase_cost.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "approval_required",
+          "type": "const false",
+          "required": true,
+          "description": "Whether Procurement approval was required.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "approval_state",
+          "type": "const \"not_required\"",
+          "required": true,
+          "description": "Approval workflow state.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "category",
+          "type": "enum: \"proteins\", \"vegetables_fruit\", \"beverages_packaging\", \"imported_sauces\", \"cleaning\", \"other\"",
+          "required": true,
+          "description": "Procurement category for the line.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "cost",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Money amount in the location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "fx_status",
+          "type": "enum: \"recorded\", \"missing\"",
+          "required": true,
+          "description": "Whether a USD conversion was recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "line_index",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Zero-based line number inside the order.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "list_cost",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "List cost before surcharge, in location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "order_id",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Inbound or outbound order identifier.",
+          "sensitive_or_pii": "No",
+          "handling": "Internal order id."
+        },
+        {
+          "name": "order_kind",
+          "type": "enum: \"scheduled\", \"emergency\"",
+          "required": true,
+          "description": "Order class (scheduled, emergency, \u2026).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Quantity in `unit`.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "supplier_id",
+          "type": "string (pattern `^sup_[a-z0-9_]{2,64}$`)",
+          "required": true,
+          "description": "Opaque supplier id (`sup_\u2026`).",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `sup_\u2026` business id."
+        },
+        {
+          "name": "surcharge_rate",
+          "type": "const 0",
+          "required": true,
+          "description": "Emergency surcharge rate applied.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit_price",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Unit price in the location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "amount_usd",
+          "type": "number (minimum 0)",
+          "required": false,
+          "description": "Converted USD amount when fx was recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "fx_rate_usd_per_local",
+          "type": "number",
+          "required": false,
+          "description": "USD per local currency unit when recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "outbound_order_created",
+      "description": "One event per outbound line. Guest tickets use sale_completed.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "cost",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Money amount in the location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "line_index",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Zero-based line number inside the order.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "order_id",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Inbound or outbound order identifier.",
+          "sensitive_or_pii": "No",
+          "handling": "Internal order id."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "protein_class",
+          "type": "enum: \"main_protein\", \"premium_protein\", \"none\"",
+          "required": true,
+          "description": "Protein class enum for cover and waste rules.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Quantity in `unit`.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"kitchen_consumption\", \"transfer\", \"other\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "destination_location_id",
+          "type": "string (roster location_id)",
+          "required": false,
+          "description": "Roster id of the receiving location on a transfer outbound.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "stock_waste_registered",
+      "description": "Shift-close waste log. Pipeline sums payload.cost into total_waste_cost.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "cost",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Money amount in the location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "protein_class",
+          "type": "enum: \"main_protein\", \"premium_protein\", \"none\"",
+          "required": true,
+          "description": "Protein class enum for cover and waste rules.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "required": true,
+          "description": "Quantity in `unit`.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "shift_code",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Shift identifier for the waste log (not a person name).",
+          "sensitive_or_pii": "No",
+          "handling": "Shift code from the roster system. Not a person name."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "training_waste",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the waste was recorded as training waste.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "waste_category",
+          "type": "enum: \"expiration\", \"kitchen_error\", \"unexplained_shrinkage\"",
+          "required": true,
+          "description": "Waste classification enum.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "note",
+          "type": "string (minLength 1)",
+          "required": false,
+          "description": "Optional operational waste code. Free-text person names are stripped before emit.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Operational code only. Strip free-text that could name a person. If the note cannot be reduced to a non-PII code, omit `note` or omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "stock_threshold_triggered",
+      "description": "Location-scoped downward crossing, or protein cover under 3 days. Pipeline counts rows.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "edge",
+          "type": "const \"crossed_below\"",
+          "required": true,
+          "description": "Threshold edge that fired (`crossed_below`).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "quantity_after",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity after the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "quantity_before",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "On-hand quantity before the change.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"quantity_below_api_threshold\", \"protein_cover_below_3_days\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "threshold",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Alert threshold (API default 10).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Unit of measure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "cover_days_remaining",
+          "type": "number (minimum 0)",
+          "required": false,
+          "description": "Days of protein cover remaining when the monitor fired.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "ingredient_price_variance_detected",
+      "description": "Previous unit price for product_id + supplier_id + currency moved by at least 1 percent. Pipeline counts rows.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "order_id",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Inbound or outbound order identifier.",
+          "sensitive_or_pii": "No",
+          "handling": "Internal order id."
+        },
+        {
+          "name": "previous_unit_price",
+          "type": "number",
+          "required": true,
+          "description": "Prior unit price for variance detection.",
+          "sensitive_or_pii": "No",
+          "handling": "Prior unit price."
+        },
+        {
+          "name": "product_id",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Inventory product primary key.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer inventory id."
+        },
+        {
+          "name": "product_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Catalogue name of the ingredient or SKU.",
+          "sensitive_or_pii": "No",
+          "handling": "Ingredient / SKU catalogue label. Not a person name."
+        },
+        {
+          "name": "supplier_id",
+          "type": "string (pattern `^sup_[a-z0-9_]{2,64}$`)",
+          "required": true,
+          "description": "Opaque supplier id (`sup_\u2026`).",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `sup_\u2026` business id."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "unit_price",
+          "type": "number (minimum 0)",
+          "required": true,
+          "description": "Unit price in the location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "variance_pct",
+          "type": "number",
+          "required": true,
+          "description": "Percent change in unit price.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "sale_completed",
+      "description": "One closed ticket. points_earned is floor(amount/10000) for COP and floor(amount/10) for USD.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "description": "Ticket total in location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "business_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Local business date for the sale.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "channel",
+          "type": "enum: \"in_store\", \"delivery\", \"digital_app\"",
+          "required": true,
+          "description": "Sales or report channel.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "covers",
+          "type": "const 1",
+          "required": true,
+          "description": "Guest covers on the ticket.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "covers_source",
+          "type": "enum: \"pos\", \"defaulted_to_one\"",
+          "required": true,
+          "description": "Whether covers came from the POS or were defaulted to one.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "fx_status",
+          "type": "enum: \"recorded\", \"missing\"",
+          "required": true,
+          "description": "Whether a USD conversion was recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "lines",
+          "type": "array (minItems 1; items: object (nested allowlist))",
+          "required": true,
+          "description": "Array of menu lines on the ticket.",
+          "sensitive_or_pii": "No",
+          "handling": "Catalogue lines only. No guest identity inside a line. Nested allowlist below.",
+          "item_properties": [
+            {
+              "name": "line_amount",
+              "type": "number (minimum 0)",
+              "required": true,
+              "description": "Line total in location currency.",
+              "sensitive_or_pii": "No",
+              "handling": "Line total in location currency."
+            },
+            {
+              "name": "menu_item_name",
+              "type": "string (minLength 1)",
+              "required": true,
+              "description": "Menu item catalogue name.",
+              "sensitive_or_pii": "No",
+              "handling": "Menu catalogue label. Not a guest name."
+            },
+            {
+              "name": "quantity",
+              "type": "integer (minimum 1)",
+              "required": true,
+              "description": "Quantity in `unit`.",
+              "sensitive_or_pii": "No",
+              "handling": "Business / operational field. Not personal data under this plan."
+            },
+            {
+              "name": "menu_item_id",
+              "type": "string (minLength 1)",
+              "required": false,
+              "description": "Menu catalogue id for the line.",
+              "sensitive_or_pii": "No",
+              "handling": "Menu catalogue id."
+            }
+          ]
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "loyalty_attached",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether Brasa Points was attached on the ticket.",
+          "sensitive_or_pii": "No",
+          "handling": "Whether Brasa Points was attached."
+        },
+        {
+          "name": "points_earned",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Points computed on the ticket.",
+          "sensitive_or_pii": "No",
+          "handling": "Points computed on the ticket."
+        },
+        {
+          "name": "ticket_id",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Opaque POS / digital ticket id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque ticket id. Not a guest identity."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "amount_usd",
+          "type": "number (minimum 0)",
+          "required": false,
+          "description": "Converted USD amount when fx was recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "customer_id",
+          "type": "string (pattern `^cus_[A-Za-z0-9]{8,}$`)",
+          "required": false,
+          "description": "Opaque guest account id when identified.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `cus_\u2026` token only. Never email, phone, or guest name. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "fx_rate_usd_per_local",
+          "type": "number",
+          "required": false,
+          "description": "USD per local currency unit when recorded.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "loyalty_account_id",
+          "type": "string (pattern `^loy_[A-Za-z0-9]{8,}$`)",
+          "required": false,
+          "description": "Opaque digital loyalty account id.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `loy_\u2026` account id only. Never stamp-card holder name or phone. If only a real-world identity is available, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "location_sales_silence_detected",
+      "description": "Open location with no sale_completed for 45 minutes. Reuse id for the episode.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "business_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Local business date for the sale.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "evaluated_at",
+          "type": "string (ISO 8601 UTC)",
+          "required": true,
+          "description": "When the monitor evaluated (UTC).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "open_local_end",
+          "type": "const \"22:00\"",
+          "required": true,
+          "description": "Local close time.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "open_local_start",
+          "type": "const \"11:00\"",
+          "required": true,
+          "description": "Local open time.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "opening_hours_source",
+          "type": "const \"telemetry-plan.v1\"",
+          "required": true,
+          "description": "Binding that defines open hours.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "sale_count",
+          "type": "const 0",
+          "required": true,
+          "description": "Always 0 on a silence episode.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "silence_started_at",
+          "type": "string (ISO 8601 UTC)",
+          "required": true,
+          "description": "When the no-sales episode began (UTC).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "threshold_minutes",
+          "type": "const 45",
+          "required": true,
+          "description": "Silence gap threshold in minutes (45).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "loyalty_points_redeemed",
+      "description": "Redemption in multiples of 5 points once balance_before is at least 15. 5 points discount 20000 COP or 20 USD.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "balance_before",
+          "type": "integer (minimum 15)",
+          "required": true,
+          "description": "Point balance before redemption.",
+          "sensitive_or_pii": "No",
+          "handling": "Balance before redemption."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "discount_amount",
+          "type": "number",
+          "required": true,
+          "description": "Discount in location currency.",
+          "sensitive_or_pii": "No",
+          "handling": "Discount in location currency."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "loyalty_account_id",
+          "type": "string (pattern `^loy_[A-Za-z0-9]{8,}$`)",
+          "required": true,
+          "description": "Opaque digital loyalty account id.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `loy_\u2026` account id only. Never stamp-card holder name or phone. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "points",
+          "type": "integer (minimum 5)",
+          "required": true,
+          "description": "Loyalty points redeemed.",
+          "sensitive_or_pii": "No",
+          "handling": "Loyalty points redeemed."
+        },
+        {
+          "name": "ticket_id",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Opaque POS / digital ticket id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque ticket id. Not a guest identity."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "loyalty_card_transferred",
+      "description": "One-time physical stamp card transfer onto an app account, at a location.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "from_medium",
+          "type": "const \"physical_card\"",
+          "required": true,
+          "description": "Source medium of the transfer.",
+          "sensitive_or_pii": "No",
+          "handling": "Always `physical_card` for this transfer event."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "loyalty_account_id",
+          "type": "string (pattern `^loy_[A-Za-z0-9]{8,}$`)",
+          "required": true,
+          "description": "Opaque digital loyalty account id.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `loy_\u2026` account id only. Never stamp-card holder name or phone. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "points_balance",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Points balance moved onto the app account.",
+          "sensitive_or_pii": "No",
+          "handling": "Integer point balance moved onto the app account."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "to_medium",
+          "type": "const \"app\"",
+          "required": true,
+          "description": "Destination medium of the transfer.",
+          "sensitive_or_pii": "No",
+          "handling": "Always `app` for this transfer event."
+        }
+      ]
+    },
+    {
+      "event_type": "user_login_succeeded",
+      "description": "POST /auth/login or POST /auth/token after authenticate_user succeeds. UserID is users.id.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "method",
+          "type": "enum: \"json\", \"oauth2_form\"",
+          "required": true,
+          "description": "HTTP method.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route",
+          "type": "const \"/auth/token\"",
+          "required": true,
+          "description": "Auth route that handled the credential (`/auth/login` or `/auth/token`).",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Auth route template/path without query. Never the email used to sign in."
+        }
+      ]
+    },
+    {
+      "event_type": "user_login_failed",
+      "description": "401 branch of the login handlers. No email or password.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "failure_reason",
+          "type": "enum: \"invalid_credentials\", \"inactive_user\"",
+          "required": true,
+          "description": "Login failure class.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Enum `invalid_credentials` or `inactive_user` only. Never the password or email attempted."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "method",
+          "type": "enum: \"json\", \"oauth2_form\"",
+          "required": true,
+          "description": "HTTP method.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route",
+          "type": "const \"/auth/token\"",
+          "required": true,
+          "description": "Auth route that handled the credential (`/auth/login` or `/auth/token`).",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Auth route template/path without query. Never the email used to sign in."
+        }
+      ]
+    },
+    {
+      "event_type": "api_error_raised",
+      "description": "500 from handle_unhandled_error or 503 from handle_external_service_error.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "code",
+          "type": "const \"service_unavailable\"",
+          "required": true,
+          "description": "Stable error code.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "http_status",
+          "type": "enum: 500, 503",
+          "required": true,
+          "description": "HTTP status, or 0 on network failure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "message",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Public error message only.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Only the public `error_body` text. Never `str(exc)`, host, key, or query. If a public string is unavailable, omit the event."
+        },
+        {
+          "name": "method",
+          "type": "enum: \"GET\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\"",
+          "required": true,
+          "description": "HTTP method.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route_template",
+          "type": "string (pattern `^(/[A-Za-z0-9_./{}-]*|unmatched)$`)",
+          "required": true,
+          "description": "Matched API route template.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Matched route pattern. Never the raw URL with query or a concrete email."
+        }
+      ]
+    },
+    {
+      "event_type": "page_viewed",
+      "description": "Public corporate home mount. path is /.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "app",
+          "type": "const \"website\"",
+          "required": true,
+          "description": "Client app id (`website` or `backoffice`).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "path",
+          "type": "const \"/\"",
+          "required": true,
+          "description": "URL pathname without query or fragment.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Pathname without query or fragment. If a token or email would appear in the path, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "auth_form_rejected",
+      "description": "Staff form blocked a submit, or the matching HTTP 422 was shown. No email or password. The server does not emit a second copy.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "field",
+          "type": "enum: \"password\", \"confirm_password\", \"form\"",
+          "required": true,
+          "description": "Which form field failed validation.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Form field name only. Never the submitted value."
+        },
+        {
+          "name": "form",
+          "type": "const \"password_change\"",
+          "required": true,
+          "description": "Which staff form rejected the submit.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"validation\", \"mismatch\", \"too_short\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "session_expired",
+      "description": "JWT past exp. Emitted on ExpiredSignatureError before decode_access_token collapses the error. Distinct from user_login_failed.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route_template",
+          "type": "string (pattern `^/[A-Za-z0-9_./{}-]+$`)",
+          "required": true,
+          "description": "Matched API route template.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Matched route pattern. Never the raw URL with query or a concrete email."
+        }
+      ]
+    },
+    {
+      "event_type": "session_rejected",
+      "description": "Invalid JWT, inactive subject, or a protected route opened with no token. Distinct from session_expired and user_login_failed.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"invalid_token\", \"inactive_user\", \"missing_token\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "path",
+          "type": "string (pattern `^/[^?#]*$`)",
+          "required": false,
+          "description": "URL pathname without query or fragment.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Pathname without query or fragment. If a token or email would appear in the path, omit the event."
+        },
+        {
+          "name": "route_template",
+          "type": "string (pattern `^/[A-Za-z0-9_./{}-]+$`)",
+          "required": false,
+          "description": "Matched API route template.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Matched route pattern. Never the raw URL with query or a concrete email."
+        }
+      ]
+    },
+    {
+      "event_type": "session_ended",
+      "description": "Logout, or a later 401 cleared the stored token. Does not restate expired versus invalid.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"logout\", \"rejected_session\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "account_updated",
+      "description": "Register, profile save, or password change finished or was refused. No contact fields.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "action",
+          "type": "const \"register\"",
+          "required": true,
+          "description": "Account update action.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "outcome",
+          "type": "enum: \"completed\", \"rejected\"",
+          "required": true,
+          "description": "Success or failure outcome.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "reason",
+          "type": "enum: \"validation\", \"duplicate_email\", \"unauthorized\", \"api_error\"",
+          "required": true,
+          "description": "Closed-enum reason for this event.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "api_latency_recorded",
+      "description": "One apiRequest, including network failure. route_template has no query string.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "duration_ms",
+          "type": "integer (minimum 0; maximum 3600000)",
+          "required": true,
+          "description": "Elapsed milliseconds.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "http_status",
+          "type": "const 0",
+          "required": true,
+          "description": "HTTP status, or 0 on network failure.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "method",
+          "type": "enum: \"GET\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\"",
+          "required": true,
+          "description": "HTTP method.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "outcome",
+          "type": "enum: \"ok\", \"http_error\", \"network\", \"parse_error\"",
+          "required": true,
+          "description": "Success or failure outcome.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "route_template",
+          "type": "enum: \"/auth/login\", \"/auth/token\", \"/auth/register\", \"/auth/me\", \"/users\", \"/users/{id}\", \"/profiles/me\", \"/locations/overview\", \"/inventory\"",
+          "required": true,
+          "description": "Matched API route template.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Matched route pattern. Never the raw URL with query or a concrete email."
+        }
+      ]
+    },
+    {
+      "event_type": "ui_latency_recorded",
+      "description": "Session, panel, or form clock until success, error, or the effect was cancelled.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "duration_ms",
+          "type": "integer (minimum 0; maximum 3600000)",
+          "required": true,
+          "description": "Elapsed milliseconds.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "kind",
+          "type": "enum: \"session_check\", \"panel\", \"form\"",
+          "required": true,
+          "description": "UI timing clock kind.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "name",
+          "type": "enum: \"login_form\", \"register_form\", \"password_form\"",
+          "required": true,
+          "description": "UI timing clock name.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "outcome",
+          "type": "enum: \"success\", \"error\", \"cancelled\"",
+          "required": true,
+          "description": "Success or failure outcome.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "client_exception_caught",
+      "description": "Error boundary, window error, or unhandled rejection. error_name only. No message and no stack.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "app",
+          "type": "enum: \"backoffice\", \"website\"",
+          "required": true,
+          "description": "Client app id (`website` or `backoffice`).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "catch_site",
+          "type": "enum: \"error_boundary\", \"window_error\", \"unhandled_rejection\"",
+          "required": true,
+          "description": "Where the client exception was caught.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "error_name",
+          "type": "string (pattern `^[A-Za-z][A-Za-z0-9_]{0,63}$`)",
+          "required": true,
+          "description": "JavaScript `Error.name` only.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "`Error.name` only. Message, component stack, and rejection value are dropped. If only free-text exists, omit the event."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "path",
+          "type": "string (pattern `^/[^?#]*$`)",
+          "required": true,
+          "description": "URL pathname without query or fragment.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Pathname without query or fragment. If a token or email would appear in the path, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "section_viewed",
+      "description": "Operator surface actually shown. required and ready are fixed per section id.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "app",
+          "type": "const \"backoffice\"",
+          "required": true,
+          "description": "Client app id (`website` or `backoffice`).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "path",
+          "type": "const \"/account/change-password\"",
+          "required": true,
+          "description": "URL pathname without query or fragment.",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Pathname without query or fragment. If a token or email would appear in the path, omit the event."
+        },
+        {
+          "name": "ready",
+          "type": "const true",
+          "required": true,
+          "description": "Whether the section UI is fully implemented.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "required",
+          "type": "const false",
+          "required": true,
+          "description": "Whether operators must visit this section.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "section",
+          "type": "enum: \"login\", \"register\", \"accessible_entry\", \"location_roster\", \"kitchen_inventory\", \"executive_sales\", \"account_profile\", \"account_password\"",
+          "required": true,
+          "description": "Backoffice section id.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "flow_step_recorded",
+      "description": "One step of a staff flow. Abandoned and completed both close the flow_instance.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "flow_id",
+          "type": "enum: \"staff_sign_in\", \"staff_register\", \"session_restore\", \"profile_edit\", \"password_change\", \"operations_review\"",
+          "required": true,
+          "description": "Staff flow identifier.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "flow_instance",
+          "type": "string (format uuid)",
+          "required": true,
+          "description": "UUID for one attempt of the flow.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "outcome",
+          "type": "enum: \"started\", \"advanced\", \"completed\", \"abandoned\"",
+          "required": true,
+          "description": "Success or failure outcome.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "step",
+          "type": "string (pattern `^[a-z0-9_]{1,64}$`)",
+          "required": true,
+          "description": "Step name inside the flow.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "employee_hired",
+      "description": "Hire fact for country headcount. employee_id is opaque. No name.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "effective_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Hire or separation effective date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "employee_id",
+          "type": "string (pattern `^emp_[A-Za-z0-9]{6,}$`)",
+          "required": true,
+          "description": "Opaque employee id (`emp_\u2026`).",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `emp_\u2026` token only. Never legal name, national id, or email. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "employment_basis",
+          "type": "enum: \"kitchen\", \"floor\", \"management\", \"support\"",
+          "required": true,
+          "description": "Employment basis (kitchen, floor, \u2026).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "employee_separated",
+      "description": "Leaver fact for people.turnover, segmented by country.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "effective_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Hire or separation effective date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "employee_id",
+          "type": "string (pattern `^emp_[A-Za-z0-9]{6,}$`)",
+          "required": true,
+          "description": "Opaque employee id (`emp_\u2026`).",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `emp_\u2026` token only. Never legal name, national id, or email. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "separation_kind",
+          "type": "enum: \"resignation\", \"dismissal\", \"end_of_contract\", \"other\"",
+          "required": true,
+          "description": "How the employment ended.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "absence_recorded",
+      "description": "Absence day or fraction for people.absenteeism. Holiday taken is absence_kind holiday.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "absence_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Date of the absence.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "absence_kind",
+          "type": "enum: \"holiday\", \"sick\", \"unpaid\", \"other\"",
+          "required": true,
+          "description": "Absence kind (sick, holiday, \u2026).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "day_fraction",
+          "type": "number (maximum 1)",
+          "required": true,
+          "description": "Fraction of a roster day absent.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "employee_id",
+          "type": "string (pattern `^emp_[A-Za-z0-9]{6,}$`)",
+          "required": true,
+          "description": "Opaque employee id (`emp_\u2026`).",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `emp_\u2026` token only. Never legal name, national id, or email. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "roster_day_scheduled",
+      "description": "Denominator day for absenteeism. One row per employee per scheduled day.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "employee_id",
+          "type": "string (pattern `^emp_[A-Za-z0-9]{6,}$`)",
+          "required": true,
+          "description": "Opaque employee id (`emp_\u2026`).",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `emp_\u2026` token only. Never legal name, national id, or email. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "roster_date",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Scheduled roster day.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "scheduled",
+          "type": "const true",
+          "required": true,
+          "description": "Always true for a roster day row.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "vacancy_opened",
+      "description": "Vacancy open date. Paired with vacancy_filled for time to fill.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "employment_basis",
+          "type": "enum: \"kitchen\", \"floor\", \"management\", \"support\"",
+          "required": true,
+          "description": "Employment basis (kitchen, floor, \u2026).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "opened_on",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Vacancy open date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "vacancy_id",
+          "type": "string (pattern `^vac_[A-Za-z0-9]{4,}$`)",
+          "required": true,
+          "description": "Opaque vacancy id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `vac_\u2026` id. Never a candidate name."
+        }
+      ]
+    },
+    {
+      "event_type": "vacancy_filled",
+      "description": "days_to_fill is filled_on minus opened_on in calendar days.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "days_to_fill",
+          "type": "integer (minimum 0)",
+          "required": true,
+          "description": "Calendar days from open to fill.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "filled_on",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Vacancy fill date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "opened_on",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Vacancy open date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "vacancy_id",
+          "type": "string (pattern `^vac_[A-Za-z0-9]{4,}$`)",
+          "required": true,
+          "description": "Opaque vacancy id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `vac_\u2026` id. Never a candidate name."
+        }
+      ]
+    },
+    {
+      "event_type": "customer_preference_recorded",
+      "description": "CRM preference. No free-text personal data.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "customer_id",
+          "type": "string (pattern `^cus_[A-Za-z0-9]{8,}$`)",
+          "required": true,
+          "description": "Opaque guest account id when identified.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `cus_\u2026` token only. Never email, phone, or guest name. If only a real-world identity is available, omit the event."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "preference_code",
+          "type": "enum: \"diet\", \"favorite_menu_item\", \"preferred_channel\", \"preferred_language\"",
+          "required": true,
+          "description": "Which preference dimension was stored.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "preference_value",
+          "type": "enum: \"in_store\", \"delivery\", \"digital_app\"",
+          "required": true,
+          "description": "Closed vocabulary value for that preference (max 80 chars).",
+          "sensitive_or_pii": "Sanitized",
+          "handling": "Catalogue or closed vocabulary only (diet code, menu item id, channel, language). Never a free-text guest biography. If only free text is available, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "recommendation_shown",
+      "description": "Personalisation impression. customer_id is optional when the guest is anonymous.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "menu_item_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Menu item catalogue name.",
+          "sensitive_or_pii": "No",
+          "handling": "Menu catalogue label. Not a guest name."
+        },
+        {
+          "name": "recommendation_id",
+          "type": "string (pattern `^recm_[A-Za-z0-9]{8,}$`)",
+          "required": true,
+          "description": "Opaque recommendation id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `recm_\u2026` id. Not personal data."
+        },
+        {
+          "name": "surface",
+          "type": "enum: \"checkout\", \"kiosk\", \"app_home\"",
+          "required": true,
+          "description": "Where the recommendation was shown.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "customer_id",
+          "type": "string (pattern `^cus_[A-Za-z0-9]{8,}$`)",
+          "required": false,
+          "description": "Opaque guest account id when identified.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `cus_\u2026` token only. Never email, phone, or guest name. If only a real-world identity is available, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "recommendation_accepted",
+      "description": "Guest accepted the suggested menu item. recommendation_id matches the impression.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "accepted",
+          "type": "const true",
+          "required": true,
+          "description": "Whether the guest accepted the suggestion.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "menu_item_name",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Menu item catalogue name.",
+          "sensitive_or_pii": "No",
+          "handling": "Menu catalogue label. Not a guest name."
+        },
+        {
+          "name": "recommendation_id",
+          "type": "string (pattern `^recm_[A-Za-z0-9]{8,}$`)",
+          "required": true,
+          "description": "Opaque recommendation id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `recm_\u2026` id. Not personal data."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "customer_id",
+          "type": "string (pattern `^cus_[A-Za-z0-9]{8,}$`)",
+          "required": false,
+          "description": "Opaque guest account id when identified.",
+          "sensitive_or_pii": "Pseudonymous",
+          "handling": "Opaque `cus_\u2026` token only. Never email, phone, or guest name. If only a real-world identity is available, omit the event."
+        }
+      ]
+    },
+    {
+      "event_type": "recipe_update_published",
+      "description": "Recipe push. locale es is the base language. en is an additional publish.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "locale",
+          "type": "enum: \"es\", \"en\"",
+          "required": true,
+          "description": "Content locale.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "recipe_id",
+          "type": "string (pattern `^rec_[a-z0-9_]{2,64}$`)",
+          "required": true,
+          "description": "Opaque recipe id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `rec_\u2026` catalogue id."
+        },
+        {
+          "name": "title",
+          "type": "string (minLength 1)",
+          "required": true,
+          "description": "Recipe title.",
+          "sensitive_or_pii": "No",
+          "handling": "Recipe title in the training catalogue."
+        },
+        {
+          "name": "version",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Recipe version integer.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "recipe_update_acknowledged",
+      "description": "One location confirms it has the recipe version. Coverage denominator is 14.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "country",
+          "type": "enum: \"Colombia\", \"United States\"",
+          "required": true,
+          "description": "Colombia or United States, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "currency",
+          "type": "enum: \"COP\", \"USD\"",
+          "required": true,
+          "description": "COP or USD, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_id",
+          "type": "string (roster location_id)",
+          "required": true,
+          "description": "Roster id for one of the 14 restaurants.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"location\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "recipe_id",
+          "type": "string (pattern `^rec_[a-z0-9_]{2,64}$`)",
+          "required": true,
+          "description": "Opaque recipe id.",
+          "sensitive_or_pii": "No",
+          "handling": "Opaque `rec_\u2026` catalogue id."
+        },
+        {
+          "name": "timezone",
+          "type": "enum: \"America/Bogota\", \"America/New_York\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "version",
+          "type": "integer (minimum 1)",
+          "required": true,
+          "description": "Recipe version integer.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    },
+    {
+      "event_type": "weekly_report_dispatched",
+      "description": "Monday executive report send. floor_metric_ids must list every Phase 1 floor id.",
+      "additionalProperties": false,
+      "properties": [
+        {
+          "name": "audience",
+          "type": "const \"executive\"",
+          "required": true,
+          "description": "Report audience.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "channel",
+          "type": "const \"email\"",
+          "required": true,
+          "description": "Sales or report channel.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "deadline_local",
+          "type": "const \"07:00\"",
+          "required": true,
+          "description": "Local deadline clock time.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "dispatched_at",
+          "type": "string (ISO 8601 UTC)",
+          "required": true,
+          "description": "When the report was sent (UTC).",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "floor_metric_ids",
+          "type": "array (uniqueItems; items: enum (34 values))",
+          "required": true,
+          "description": "Every CONTEXT.md mandatory metric id.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "location_scope",
+          "type": "const \"none\"",
+          "required": true,
+          "description": "Whether the fact is chain-wide, location-scoped, or none.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "on_time",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether dispatch beat Monday 07:00 America/Bogota.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "timezone",
+          "type": "const \"America/Bogota\"",
+          "required": true,
+          "description": "America/Bogota or America/New_York, matching the location.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        },
+        {
+          "name": "week_start",
+          "type": "string (pattern `^\\d{4}-\\d{2}-\\d{2}$`)",
+          "required": true,
+          "description": "Chain-week Monday date.",
+          "sensitive_or_pii": "No",
+          "handling": "Business / operational field. Not personal data under this plan."
+        }
+      ]
+    }
+  ]
+}
