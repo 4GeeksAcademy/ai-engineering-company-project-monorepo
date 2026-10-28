@@ -3,17 +3,44 @@ const assert = require("node:assert/strict");
 const {
   CLINICS,
   SERVICE_TYPES,
+  APPOINTMENT_STATUSES,
   averageBy,
   binarySearch,
+  binarySearchClaimById,
+  calculateDenialRate,
+  calculateNoShowCost,
   countBy,
   createEnquiryReport,
+  denialRateByLocation,
+  denialRateByPayer,
+  filterAppointmentsByStatus,
+  filterClaims,
   filterItems,
+  findClaimById,
+  findClinicianById,
+  flagHighDenialPayers,
+  flagHighNoShowLocations,
+  generateCMEReport,
   groupBy,
+  groupClaimsBy,
+  getCliniciansAtRisk,
+  getCliniciansWithExpiringLicences,
+  isDenialRateAboveThreshold,
+  isNoShowRateAboveThreshold,
   linearSearch,
   maximumBy,
   minimumBy,
+  noShowRateByLocation,
+  sampleAppointments,
+  sampleClaims,
+  sampleClinicians,
+  sampleLocations,
+  sortAppointmentsByDate,
+  sortClaimsById,
   sortItems,
   sumBy,
+  validateClaim,
+  validateClinician,
   validatePatientEnquiry
 } = require("../dist/test/index.js");
 
@@ -428,4 +455,95 @@ test("health concern, consent and Spanish messages are validated", () => {
     TODAY
   );
   assert.equal(tooLong.errors.health_concern, "Please keep your health concern to 500 characters or fewer");
+});
+
+test("operational claim collections filter, sort and group without mutating inputs", () => {
+  const claims = [...sampleClaims].reverse();
+  assert.deepEqual(filterClaims(claims, { status: "denied", locationId: "us-tx-001" }).map((item) => item.claimId), ["CLM-000004"]);
+  assert.deepEqual(filterClaims(claims, {}).length, 5);
+  assert.deepEqual(sortClaimsById(claims).map((item) => item.claimId), sampleClaims.map((item) => item.claimId));
+  assert.deepEqual(sortClaimsById(sampleClaims, "desc").map((item) => item.claimId), [...sampleClaims].reverse().map((item) => item.claimId));
+  assert.deepEqual(claims, [...sampleClaims].reverse());
+  assert.deepEqual(Object.keys(groupClaimsBy(sampleClaims, "payerName")).sort(), ["Aetna", "BlueCross", "Cigna", "Medicare"].sort());
+  assert.equal(groupClaimsBy(sampleClaims, "payerName").BlueCross.length, 2);
+  assert.deepEqual(filterClaims([], { status: "denied" }), []);
+});
+
+test("operational appointment operations sort by date and match any status", () => {
+  const source = [...sampleAppointments].reverse();
+  assert.deepEqual(filterAppointmentsByStatus(source, ["no_show", "cancelled"]).map((item) => item.appointmentId), ["APT-000005", "APT-000003", "APT-000002"]);
+  assert.deepEqual(sortAppointmentsByDate(source).map((item) => item.appointmentId), sampleAppointments.map((item) => item.appointmentId));
+  assert.deepEqual(sortAppointmentsByDate(sampleAppointments, "desc").map((item) => item.appointmentId), [...sampleAppointments].reverse().map((item) => item.appointmentId));
+  assert.deepEqual(source, [...sampleAppointments].reverse());
+  assert.deepEqual(filterAppointmentsByStatus([], APPOINTMENT_STATUSES), []);
+});
+
+test("operational searches locate IDs and binary search returns the sorted index", () => {
+  assert.equal(findClaimById(sampleClaims, "CLM-000003").payerName, "Medicare");
+  assert.equal(findClaimById(sampleClaims, "missing"), null);
+  assert.equal(findClinicianById(sampleClinicians, "CLN-000002").firstName, "Sandra");
+  assert.equal(findClinicianById(sampleClinicians, "missing"), null);
+  assert.equal(binarySearchClaimById(sortClaimsById(sampleClaims), "CLM-000004"), 3);
+  assert.equal(binarySearchClaimById(sortClaimsById(sampleClaims), "CLM-999999"), -1);
+});
+
+test("denial metrics use denied claims only, round to two decimals, and honor thresholds", () => {
+  assert.equal(calculateDenialRate(sampleClaims), 40);
+  assert.deepEqual(denialRateByPayer(sampleClaims), { BlueCross: 50, Aetna: 100, Medicare: 0, Cigna: 0 });
+  assert.deepEqual(denialRateByLocation(sampleClaims), { "us-tx-001": 50, "us-fl-001": 50, "us-ga-001": 0 });
+  assert.deepEqual(flagHighDenialPayers(sampleClaims), ["BlueCross", "Aetna"]);
+  assert.deepEqual(flagHighDenialPayers(sampleClaims, 50), ["Aetna"]);
+  assert.deepEqual(flagHighDenialPayers([]), []);
+  assert.throws(() => calculateDenialRate([]), RangeError);
+  assert.equal(isDenialRateAboveThreshold(8), false);
+  assert.equal(isDenialRateAboveThreshold(8.01), true);
+});
+
+test("no-show metrics include only the seven-day inclusive week and fee by service", () => {
+  const austin = sampleLocations.find((location) => location.locationId === "us-tx-001");
+  const miami = sampleLocations.find((location) => location.locationId === "us-fl-001");
+  assert.equal(calculateNoShowCost(sampleAppointments, austin, "2025-03-16"), 220);
+  assert.equal(calculateNoShowCost(sampleAppointments, miami, "2025-03-16"), 555);
+  assert.equal(calculateNoShowCost(sampleAppointments, miami, "2025-03-09"), 0);
+  assert.deepEqual(noShowRateByLocation(sampleAppointments), { "us-tx-001": 50, "us-fl-001": 100, "us-ga-001": 0 });
+  assert.deepEqual(flagHighNoShowLocations(sampleAppointments), ["us-tx-001", "us-fl-001"]);
+  assert.deepEqual(flagHighNoShowLocations(sampleAppointments, 50), ["us-fl-001"]);
+  assert.equal(isNoShowRateAboveThreshold(20), false);
+  assert.equal(isNoShowRateAboveThreshold(20.01), true);
+  assert.throws(() => calculateNoShowCost(sampleAppointments, miami, "2025-02-30"), RangeError);
+});
+
+test("CME report classifies progress and license alerts using calendar days", () => {
+  const report = generateCMEReport(sampleClinicians, "2025-07-01");
+  assert.equal(report.length, 3);
+  assert.equal(report[0].fullName, "Marcus Reid");
+  assert.equal(report[0].percentComplete, 70);
+  assert.equal(report[0].complianceStatus, "on_track");
+  assert.equal(report[1].complianceStatus, "at_risk");
+  assert.equal(report[2].complianceStatus, "complete");
+  assert.deepEqual(getCliniciansAtRisk(sampleClinicians, "2025-07-01").map((item) => item.clinicianId), ["CLN-000002"]);
+  assert.deepEqual(getCliniciansWithExpiringLicences(sampleClinicians, "2025-04-01").map((item) => item.clinicianId), ["CLN-000002"]);
+  assert.deepEqual(getCliniciansWithExpiringLicences(sampleClinicians, "2025-04-01", 30), []);
+  assert.throws(() => getCliniciansWithExpiringLicences(sampleClinicians, "2025-04-01", -1), RangeError);
+});
+
+test("claim and clinician business validators accept fixtures and report invalid rules", () => {
+  for (const claim of sampleClaims) assert.deepEqual(validateClaim(claim, sampleLocations.map((item) => item.locationId), "2025-03-14"), { valid: true, errors: [] });
+  for (const clinician of sampleClinicians) assert.deepEqual(validateClinician(clinician, sampleLocations.map((item) => item.locationId), "2025-03-14"), { valid: true, errors: [] });
+
+  const invalidClaim = {
+    ...sampleClaims[0], claimId: "bad", patientId: "wrong", locationId: "unknown", claimAmount: 0,
+    submissionDate: "2025-03-15", status: "denied", denialReason: undefined
+  };
+  const claimResult = validateClaim(invalidClaim, ["us-tx-001"], "2025-03-14");
+  assert.equal(claimResult.valid, false);
+  assert.ok(claimResult.errors.length >= 6);
+
+  const invalidClinician = {
+    ...sampleClinicians[0], role: "other", locationId: "unknown", licenceExpiryDate: "2025-03-13",
+    cmeHoursRequired: -1, cmeHoursLogged: -2
+  };
+  const clinicianResult = validateClinician(invalidClinician, ["us-tx-001"], "2025-03-14");
+  assert.equal(clinicianResult.valid, false);
+  assert.ok(clinicianResult.errors.length >= 5);
 });
