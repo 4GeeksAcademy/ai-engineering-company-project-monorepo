@@ -1,10 +1,13 @@
 # CONTEXT.md — HealthCore
 
-## Milestone 1: Public Website and Patient Enquiry
+**Replace this content** with the CONTEXT for your assigned company:
 
-Canonical source: [HealthCore Web Fundamentals context](https://github.com/4GeeksAcademy/ai-engineering-syllabus/blob/main/content/contexts/01-web-fundamentals/CONTEXT-healthcore.en.md). Use this brief as the source of truth for all copy, services, clinic details, form fields, validations, and structured data. Do not invent clinic names, phone numbers, addresses, or services.
+- **Brasaland** — `brasaland-BRIEFING.md` (grilled food restaurant chain, Colombia + Florida)
+- **TrackFlow** — `trackflow-BRIEFING.md` (last-mile delivery and warehouse, US + Spain)
+- **Nexova** — `nexova-BRIEFING.md` (HR consulting and talent acquisition, Spain + US)
+- **HealthCore** — `healthcore-BRIEFING.md` (outpatient healthcare clinic network, US + UK)
 
-## Company
+Project statements will point you to the correct context file. Use its contents to build your project context here so that all project work and AI coding agents use the same domain data, field names, and constraints. Avoid copying and pasting the content; use your agents first.
 
 HealthCore is an outpatient healthcare services company founded in 2011 in Austin, Texas. It operates 12 outpatient clinics: nine in the United States (Texas, Florida, and Georgia) and three in the United Kingdom (London and Manchester). It offers primary care, specialist consultations, chronic disease management, and preventive health programmes; employs approximately 200 people; and generates around $28 million in annual revenue. Its competitive strengths are same-day appointments, extended hours, and bilingual staff at US locations.
 
