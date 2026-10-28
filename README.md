@@ -27,6 +27,10 @@ Open `http://localhost:8080`. The enquiry form is a local demo and does not tran
 
 This repository is based on the **starter template** for transversal projects. This workspace contains the HealthCore Milestone 1 public website and patient enquiry form, alongside the reusable monorepo structure for future course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
 
+### HealthCore TypeScript utilities
+
+The reusable HealthCore clinic, patient-enquiry, collection, search, aggregation, and validation modules are in `src/`. Run `npm run typecheck` to check the code and `npm test` to execute its tests. `npm run build` also emits browser-compatible ES modules under `dist/types/`; see [`src/README.md`](./src/README.md) for a browser import example.
+
 - Create a template from this repository.
 - Replace the placeholder `CONTEXT.md` with your assigned company context.
 - Use `skills/` and the directory-level `README.md` files as working guidance.
