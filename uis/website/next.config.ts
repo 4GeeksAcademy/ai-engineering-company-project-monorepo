@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
         __dirname,
         "../../src/trackflow-website/content",
       ),
+      "@trackflow-components": path.resolve(
+        __dirname,
+        "../../src/components",
+      ),
     };
 
     return config;
