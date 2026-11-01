@@ -1,7 +1,41 @@
+
+# Python
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
 
-services/api/.env
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+!.env.sample
 services/api/auth/auth.json
 services/api/auth/profiles.json
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+**/.next/
+out/
+**/out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/

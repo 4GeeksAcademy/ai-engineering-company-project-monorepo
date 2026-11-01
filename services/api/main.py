@@ -1,4 +1,5 @@
-﻿from io import BytesIO
+﻿
+from io import BytesIO
 
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -172,23 +173,20 @@ async def analyze_incidents(file: UploadFile = File(...)):
         "by_category": valid_df["category"].value_counts().to_dict(),
         "by_status": valid_df["status"].value_counts().to_dict(),
         "closed_incidents": len(closed_df),
-        "average_satisfaction": round(
-            float(closed_scores.mean()),
-            2,
+        "average_satisfaction": (
+            round(float(closed_scores.mean()), 2)
+            if not closed_scores.empty
+            else None
         ),
     }
 
 
-from services.api.auth.routes import router as auth_router
+# Importaciones de autenticación
+from auth.routes import router as auth_router
+from auth.users_routes import router as users_router
+from auth.profiles_routes import router as profiles_router
+
 
 app.include_router(auth_router)
-
-
-from services.api.auth.users_routes import router as users_router
-
 app.include_router(users_router)
-
-
-from services.api.auth.profiles_routes import router as profiles_router
-
 app.include_router(profiles_router)

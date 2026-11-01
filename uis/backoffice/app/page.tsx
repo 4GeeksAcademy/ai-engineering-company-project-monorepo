@@ -1,69 +1,126 @@
-import Image from "next/image";
+﻿
+
+import Link from "next/link";
+
+const sections = [
+  {
+    title: "Iniciar sesión",
+    description: "Accede a tu cuenta de Brasaland.",
+    href: "/login",
+    label: "Acceder",
+  },
+  {
+    title: "Crear cuenta",
+    description: "Registra un nuevo usuario.",
+    href: "/register",
+    label: "Registrarse",
+  },
+  {
+    title: "Mi perfil",
+    description: "Consulta y actualiza tus datos personales.",
+    href: "/account/profile",
+    label: "Ver perfil",
+  },
+  {
+    title: "Recuperar contraseña",
+    description: "Restablece el acceso a tu cuenta.",
+    href: "/reset-password",
+    label: "Recuperar acceso",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+      <header className="bg-slate-900 text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Brasaland</h1>
+            <p className="mt-1 text-sm text-slate-300">
+              Backoffice de administración
+            </p>
+          </div>
+
+          <Link
+            href="/login"
+            className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-200"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="mb-10">
+          <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
+            Panel principal
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold">
+            Bienvenido a Brasaland
+          </h2>
+
+          <p className="mt-3 max-w-2xl text-slate-600">
+            Desde aquí puedes acceder a las funciones de cuenta y
+            administración disponibles en la aplicación.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          {sections.map((section) => (
+            <article
+              key={section.href}
+              className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <h3 className="text-xl font-semibold">{section.title}</h3>
+
+              <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600">
+                {section.description}
+              </p>
+
+              <Link
+                href={section.href}
+                className="mt-5 inline-flex rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+              >
+                {section.label}
+              </Link>
+            </article>
+          ))}
         </div>
-      </main>
-    </div>
+
+        <section className="mt-10 rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="text-lg font-semibold">Estado de la API</h3>
+
+          <p className="mt-2 text-sm text-slate-600">
+            Consulta la documentación y los endpoints disponibles.
+          </p>
+
+          <a
+            href="http://localhost:8000/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+          >
+            Abrir documentación API
+          </a>
+        </section>
+
+        <section className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
+          <p className="font-semibold text-green-800">
+            ✓ Backoffice funcionando en Docker
+          </p>
+          <p className="mt-1 text-sm text-green-700">
+            Next.js 16 · Docker · Modo desarrollo · Puerto 3001
+          </p>
+          <p className="mt-2 text-sm text-green-700">
+            Prueba de volúmenes y recarga automática.
+          </p>
+        </section>
+      </section>
+
+      <footer className="border-t border-slate-200 py-6 text-center text-sm text-slate-500">
+        Brasaland Backoffice
+      </footer>
+    </main>
   );
 }

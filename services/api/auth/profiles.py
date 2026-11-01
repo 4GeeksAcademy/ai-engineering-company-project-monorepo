@@ -1,8 +1,11 @@
+
 from pathlib import Path
+
 from tinydb import TinyDB, Query
 
-BASE_DIR = Path(__file__).resolve().parents[3]
-DB_FILE = BASE_DIR / "services" / "api" / "auth" / "profiles.json"
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_FILE = BASE_DIR / "auth" / "profiles.json"
 
 
 def get_profiles_db():
@@ -17,7 +20,12 @@ def get_profile_by_user_id(user_id: int):
     return profile
 
 
-def create_profile(user_id: int, name: str, phone: str | None = None, address: str | None = None):
+def create_profile(
+    user_id: int,
+    name: str,
+    phone: str | None = None,
+    address: str | None = None,
+):
     db = get_profiles_db()
 
     profile = {
