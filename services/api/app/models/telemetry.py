@@ -33,7 +33,7 @@ a *generic* (non-discriminated) model:
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, StringConstraints
@@ -71,12 +71,34 @@ class TelemetryEvent(BaseModel):
 
 
 class TelemetryEventBatch(BaseModel):
-    """Request body for POST /telemetry/events: `{"events": [...]}`.
-
-    ``events`` is a required key (an empty list is valid and represents an
-    empty batch; an entirely missing ``events`` key is a validation error).
+    """Strict shape of `{"events": [...]}` where every element is already
+    known to be a valid TelemetryEvent. Not used as the router's request
+    model (see RawTelemetryEventBatch) — FastAPI would reject the *entire*
+    request if even one element failed Pydantic validation against
+    `list[TelemetryEvent]`, which contradicts the per-event validation
+    this endpoint performs. Kept for any caller that already has a batch
+    of validated events and wants the shape for its own use (e.g. tests
+    building a known-valid payload).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     events: list[TelemetryEvent]
+
+
+class RawTelemetryEventBatch(BaseModel):
+    """The router's actual request model for POST /telemetry/events.
+
+    Validates only the outer envelope — `events` must be a JSON array, but
+    each element is `Any` so a malformed element never fails the request
+    at FastAPI's parsing layer. Each element is validated individually via
+    `TelemetryEvent.model_validate(raw_event)` inside the handler, so one
+    bad event is rejected and counted without affecting the rest of the
+    batch. `events` is still a required key — a missing key, a non-array
+    `events` value, or malformed JSON all still fail at this layer with
+    the project's standard request-validation response (422).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    events: list[Any]
