@@ -5,14 +5,12 @@ from typing import List
 # Importamos la conexión a Supabase y la seguridad de TinyDB
 from services.api.database import get_db
 from services.api.routes.auth import get_current_user
+from services.api.cache import cache
 
 # Importamos Modelos (Tablas) y Schemas (Validadores)
 from services.api.models import Asset, AssetAcquisition, AssetAssignment
-from services.api.schemas import (
-    AssetCreate, AssetRead,
-    AssetAcquisitionCreate, AssetAcquisitionRead,
-    AssetAssignmentCreate, AssetAssignmentRead
-)
+from services.api.schemas import (AssetCreate, AssetRead,AssetAcquisitionCreate, AssetAcquisitionRead,
+    AssetAssignmentCreate, AssetAssignmentRead,OrdersAuditResponse)
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
@@ -31,13 +29,21 @@ def calculate_stock(session: Session, asset_id: int) -> int:
 # -----------------------------------
 @router.get("/products", response_model=List[AssetRead])
 def get_assets(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    cache_key = "inventory:products:all"
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        return cached_data
+    
     assets = db.exec(select(Asset)).all()
-    return [
+    result = [
         AssetRead(
             id=a.id, name=a.name, sku=a.sku, department=a.department, 
             current_stock=calculate_stock(db, a.id)
         ) for a in assets
     ]
+    cache.set(cache_key, result, ttl_seconds=60, tag="inventory")
+    return result
+
 
 @router.post("/products", response_model=AssetRead, status_code=201)
 def create_asset(asset_in: AssetCreate, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -48,11 +54,13 @@ def create_asset(asset_in: AssetCreate, current_user: dict = Depends(get_current
     db.add(db_asset)
     db.commit()
     db.refresh(db_asset)
+    cache.invalidate_tag("inventory") # 👈 Invalida catálogo de productos
     
     return AssetRead(
         id=db_asset.id, name=db_asset.name, sku=db_asset.sku, department=db_asset.department, 
         current_stock=0
     )
+
 
 @router.get("/products/{id}", response_model=AssetRead)
 def get_asset(id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -78,7 +86,9 @@ def create_inbound_order(order_in: AssetAcquisitionCreate, current_user: dict = 
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
+    cache.invalidate_tag("inventory") # 👈 Invalida porque el stock aumentó
     return db_order
+
 
 @router.post("/orders/outbound", response_model=AssetAssignmentRead, status_code=201)
 def create_outbound_order(order_in: AssetAssignmentCreate, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -97,9 +107,11 @@ def create_outbound_order(order_in: AssetAssignmentCreate, current_user: dict = 
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
+    cache.invalidate_tag("inventory") # 👈 Invalida porque el stock disminuyó
     return db_order
 
-@router.get("/orders")
+
+@router.get("/orders", response_model=OrdersAuditResponse)
 def get_all_orders(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna todas las órdenes para auditoría general"""
     return {

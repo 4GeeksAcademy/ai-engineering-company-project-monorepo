@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import timedelta
 from tinydb import Query
-from services.api.models import Token, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
+from services.api.models import Token, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest, MessageResponse
 from services.api.database import get_user_by_email, get_user_by_id, get_tinydb, save_reset_token, get_reset_token, mark_token_used
 from services.api.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
 from services.api.email_utils import send_reset_email
@@ -73,7 +73,8 @@ def read_users_me(current_user: dict = Depends(get_current_user)):
     
     return response_user
 
-@router.post("/forgot-password")
+    
+@router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(request: ForgotPasswordRequest):
     # Verificamos silenciosamente
     user = get_user_by_email(request.email)
@@ -92,7 +93,7 @@ def forgot_password(request: ForgotPasswordRequest):
     # SIEMPRE devuelve 200, independientemente de si el usuario existe o no
     return {"message": "Si la dirección de correo está en nuestro sistema, recibirás un enlace de restablecimiento en breve."}
 
-@router.post("/reset-password")
+@router.post("/reset-password", response_model=MessageResponse)
 def reset_password(request: ResetPasswordRequest):
     token_record = get_reset_token(request.token)
     
@@ -122,9 +123,8 @@ def reset_password(request: ResetPasswordRequest):
     
     return {"message": "Contraseña actualizada exitosamente."}
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=MessageResponse)
 def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
-    # Verificar la contraseña actual
     is_valid = verify_password(request.current_password, current_user['hashed_password'])
     if not is_valid:
         raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta.")

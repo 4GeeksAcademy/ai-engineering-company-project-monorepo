@@ -41,6 +41,9 @@ class Profile(ProfileBase):
     id: str
     user_id: str
 
+class ProfileResponse(ProfileBase):
+    id: str
+
 class ProfileUpdate(ProfileBase):
     pass
 
@@ -49,14 +52,27 @@ class UserBase(BaseModel):
     is_active: bool = True
     role: UserRole = UserRole.user
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    email: str
     password: str
     profile: Optional[ProfileBase] = None
+
+class UserCreateResponse(BaseModel):
+    id: str
+    created_at: datetime
+    profile: Optional[ProfileResponse] = None
 
 class UserResponse(UserBase):
     id: str
     created_at: datetime
-    profile: Optional[Profile] = None
+    profile: Optional[ProfileResponse] = None
+
+class UserListItem(BaseModel):
+    id: str
+    email: str
+    role: UserRole
+    is_active: bool
+    created_at: datetime
 
 class UserInDB(UserBase):
     id: str
@@ -81,10 +97,32 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
+class MessageResponse(BaseModel):
+    message: str
 
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
+# pyrefly: ignore [missing-import]
+from sqlmodel import SQLModel, Field
+from typing import Optional, List, Dict
 import datetime
+
+class IncidentSummaryResponse(BaseModel):
+    status: Dict[str, int]
+    category: Dict[str, int]
+    origin: Dict[str, int]
+    branch: Dict[str, int]
+
+class IncidentMetrics(BaseModel):
+    total_procesados: int
+    total_validos: int
+    total_invalidos: int
+    conteo_categorias: Dict[str, int]
+    conteo_estados: Dict[str, int]
+    satisfaccion_media: float
+
+class IncidentAnalysisResponse(BaseModel):
+    success: bool
+    metrics: IncidentMetrics
+    errores_encontrados: int
 
 class AssetAcquisition(SQLModel, table=True):
     __tablename__='asset_acquisitions'
@@ -165,3 +203,36 @@ class CandidateNoteResponse(CandidateNoteBase):
     candidate_id: int
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+
+
+# --- Modelos de Dominio para Reporting y Business Performance ---
+from sqlmodel import SQLModel, Field
+import uuid
+
+class ExecutiveKpiDB(SQLModel, table=True):
+    __tablename__ = "reporting_executive_kpis"
+    __table_args__ = {"extend_existing": True}
+
+    kpi_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    window_date: str = Field(nullable=False, index=True)
+    window_granularity: str = Field(default="daily", nullable=False)
+    department: str = Field(nullable=False, index=True)
+    metric_name: str = Field(nullable=False, index=True)
+    metric_value: float = Field(nullable=False)
+    target_value: float = Field(nullable=False)
+    sla_status: str = Field(nullable=False)
+    calculated_at: str = Field(nullable=False)
+    run_id: str = Field(nullable=False)
+
+
+class PipelineRunDB(SQLModel, table=True):
+    __tablename__ = "reporting_pipeline_runs"
+    __table_args__ = {"extend_existing": True}
+
+    run_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    flow_name: str = Field(nullable=False)
+    started_at: str = Field(nullable=False)
+    finished_at: Optional[str] = Field(default=None, nullable=True)
+    status: str = Field(nullable=False)
+    records_processed: int = Field(default=0, nullable=False)
+    error_message: Optional[str] = Field(default=None, nullable=True)

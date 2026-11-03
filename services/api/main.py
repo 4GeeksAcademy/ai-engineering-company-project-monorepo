@@ -1,17 +1,16 @@
 import sys
 import os
-
-# Asegurar que los paquetes compartidos y scripts del monorepo estén en el PYTHONPATH
+import logging
+import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts')))
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException,Request
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 from fastapi.responses import FileResponse
 from services.api.routes import users, profiles, auth, inventory
 import csv
-from services.api.routes import suppliers, incidents, candidates
-
+from services.api.routes import suppliers, incidents, candidates, telemetry, tasks
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from services.api.database import engine
@@ -22,8 +21,9 @@ from datetime import datetime
 from tinydb import Query
 from services.api.database import get_tinydb
 from services.api.security import get_password_hash
-
+from services.api.models import IncidentAnalysisResponse
 from analyzer_core import process_incidents, calculate_metrics
+from services.reporting import router as reporting_router
 
 def ensure_admin_user():
     admin_email= os.getenv('ADMIN_EMAIL')
@@ -71,10 +71,6 @@ def ensure_admin_user():
         print(f"🎉 Administrador creado exitosamente: {admin_email}")
 
 
-
-
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Iniciando aplicación: Verificando tablas de base de datos...")
@@ -89,6 +85,19 @@ async def lifespan(app: FastAPI):
     print("🛑 Cerrando aplicación...")
 
 app = FastAPI(title="Nexova Incidents API", lifespan=lifespan)
+
+logger = logging.getLogger("api.timing")
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = (time.perf_counter() - start) * 1000
+    # Imprime en consola para telemetría en vivo
+    print(f"⏱️  [{request.method}] {request.url.path} -> {response.status_code} | {duration:.2f}ms")
+    logger.info(f"{request.method} {request.url.path} -> {response.status_code} | {duration:.2f}ms")
+    
+    return response
 
 app.add_middleware(
     CORSMiddleware,
@@ -105,11 +114,15 @@ app.include_router(auth.router)
 app.include_router(inventory.router)
 app.include_router(incidents.router)
 app.include_router(candidates.router)
+app.include_router(telemetry.router)
+app.include_router(reporting_router)
+app.include_router(tasks.router)
 
 latest_metrics = None
 
 
-@app.post("/api/incidents/analyze")
+
+@app.post("/api/incidents/analyze", response_model=IncidentAnalysisResponse)
 async def analyze_csv(file: UploadFile = File(...)):
     """
     Recibe un archivo CSV, lo analiza y devuelve las métricas.

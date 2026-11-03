@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from tinydb import Query as TinyQuery
 from datetime import datetime
 
 from services.api.models import SupplierCreate, SupplierResponse, SupplierUpdateRate, SupplierUpdateStatus
 from services.api.database import get_tinydb
-
-from fastapi import Depends
 from services.api.routes.auth import get_current_user
+from services.api.cache import cache
 
 
 router = APIRouter(prefix="/suppliers", tags=["suppliers"])
@@ -20,9 +19,12 @@ def create_supplier(supplier: SupplierCreate, current_user: dict = Depends(get_c
     supplier_dict["updated_at"] = now.isoformat()
     
     doc_id = db.insert(supplier_dict)
+    cache.invalidate_tag("suppliers")  # 👈 Invalida lista de proveedores
     
     response_data = {**supplier_dict, "id": doc_id}
     return SupplierResponse(**response_data)
+
+
 
 @router.get("", response_model=List[SupplierResponse])
 def get_suppliers(
@@ -30,6 +32,12 @@ def get_suppliers(
     category: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+
+    cache_key = f"suppliers:list:{country or 'all'}:{category or 'all'}"
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        return cached_data
+
     db = get_tinydb()
     SupplierQuery = TinyQuery()
     
@@ -47,8 +55,11 @@ def get_suppliers(
         data = dict(r)
         data["id"] = r.doc_id
         response.append(SupplierResponse(**data))
-        
+
+    cache.set(cache_key, response, ttl_seconds=120, tag="suppliers")   
     return response
+
+
 
 @router.get("/{id}", response_model=SupplierResponse)
 def get_supplier(id: int, current_user: dict = Depends(get_current_user)):
@@ -60,6 +71,8 @@ def get_supplier(id: int, current_user: dict = Depends(get_current_user)):
     data["id"] = record.doc_id
     return SupplierResponse(**data)
 
+
+
 @router.patch("/{id}/rate", response_model=SupplierResponse)
 def update_supplier_rate(id: int, rate_update: SupplierUpdateRate, current_user: dict = Depends(get_current_user)):
     db = get_tinydb()
@@ -69,11 +82,13 @@ def update_supplier_rate(id: int, rate_update: SupplierUpdateRate, current_user:
         
     now = datetime.utcnow().isoformat()
     db.update({"hourly_rate": rate_update.hourly_rate, "updated_at": now}, doc_ids=[id])
+    cache.invalidate_tag("suppliers")  # 👈 Invalida lista de proveedores
     
     updated_record = db.get(doc_id=id)
     data = dict(updated_record)
     data["id"] = updated_record.doc_id
     return SupplierResponse(**data)
+
 
 @router.patch("/{id}/status", response_model=SupplierResponse)
 def update_supplier_status(id: int, status_update: SupplierUpdateStatus, current_user: dict = Depends(get_current_user)):
@@ -84,6 +99,7 @@ def update_supplier_status(id: int, status_update: SupplierUpdateStatus, current
         
     now = datetime.utcnow().isoformat()
     db.update({"status": status_update.status, "updated_at": now}, doc_ids=[id])
+    cache.invalidate_tag("suppliers")  # 👈 Invalida lista de proveedores
     
     updated_record = db.get(doc_id=id)
     data = dict(updated_record)
@@ -98,4 +114,5 @@ def delete_supplier(id: int, current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Supplier not found")
         
     db.remove(doc_ids=[id])
+    cache.invalidate_tag("suppliers")  # 👈 Invalida lista de proveedores
     return

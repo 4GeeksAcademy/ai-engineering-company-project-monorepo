@@ -1,107 +1,107 @@
-# Performance measurement workflow
+# Flujo de trabajo de medición de rendimiento
 
-Use this workflow when a runnable URL is available, the user asks for measured performance, or a change needs before/after verification.
+Utiliza este flujo de trabajo cuando haya una URL ejecutable disponible, el usuario solicite medir el rendimiento o un cambio requiera verificación antes/después.
 
-## Keep the evidence types separate
+## Mantener separados los tipos de evidencia
 
-| Evidence | What it represents | Best use |
-|----------|--------------------|----------|
-| CrUX field data | Aggregated experiences from eligible real Chrome users, normally a rolling 28-day window | Decide whether users have a Core Web Vitals problem |
-| First-party RUM | Measurements collected and reported from the site's own user sessions | Segment and diagnose current production experience |
-| DevTools performance trace | One observed browser session under stated local or emulated conditions | Find LCP, INP, CLS, network, and main-thread causes |
-| Lighthouse lab run | A controlled synthetic navigation | Reproduce load problems and prevent regressions |
-| Static code inspection | Potential issues inferred from source | Form hypotheses when no page can run |
+| Evidencia | Qué representa | Mejor uso |
+|---|---|---|
+| Datos de campo de CrUX | Experiencias agregadas de usuarios reales elegibles de Chrome, normalmente en una ventana móvil de 28 días | Decidir si los usuarios tienen un problema con los Core Web Vitals |
+| RUM propio (First-party RUM) | Mediciones recopiladas y reportadas desde las sesiones de los propios usuarios del sitio | Segmentar y diagnosticar la experiencia de producción actual |
+| Traza de rendimiento de DevTools | Una sesión de navegador observada bajo condiciones locales o emuladas específicas | Encontrar causas de LCP, INP, CLS, red y bloqueo del hilo principal |
+| Ejecución de laboratorio en Lighthouse | Una navegación sintética controlada | Reproducir problemas de carga y prevenir regresiones |
+| Inspección estática de código | Problemas potenciales deducidos del código fuente | Plantear hipótesis cuando no se puede ejecutar ninguna página |
 
-A `PerformanceObserver` result injected into one browser page is a **single-session lab observation**, not field data. It becomes RUM only when measurements from actual users are reported and aggregated.
+El resultado de un `PerformanceObserver` inyectado en una página del navegador es una **observación de laboratorio de una sola sesión**, no un dato de campo. Solo se convierte en RUM cuando las mediciones de usuarios reales se envían y agregan.
 
-## Preferred low-friction route
+## Ruta preferida de baja fricción
 
-When browser tooling can record a performance trace and run Lighthouse audits, prefer this route. With Chrome DevTools MCP:
+Cuando las herramientas del navegador puedan registrar una traza de rendimiento y ejecutar auditorías de Lighthouse, da prioridad a esta vía. Con Chrome DevTools MCP:
 
-1. Navigate to the exact route and state being audited. Record whether it is public, authenticated, local, or staging.
-2. Record a reload trace with auto-stop for page-load performance (`performance_start_trace`). Current trace summaries can include both observed lab metrics and CrUX field metrics when CrUX has eligible data. Record whether field scope is URL or origin.
-3. Analyze only the relevant failing or suspicious insights (`performance_analyze_insight`). Common examples are `LCPBreakdown`, `LCPDiscovery`, `DocumentLatency`, `RenderBlocking`, and `ThirdParties`.
-4. Run the Lighthouse audit capability (`lighthouse_audit`) for Accessibility, SEO, Best Practices, and Agentic Browsing. It deliberately excludes performance; do not treat it as the performance path.
-5. Re-run the same lab measurement after a fix. Field data will not reflect a new deployment immediately.
+1. Navega a la ruta y estado exactos que se van a auditar. Registra si es pública, autenticada, local o de staging.
+2. Registra una traza de recarga con parada automática para el rendimiento de carga de página (`performance_start_trace`). Los resúmenes de trazas actuales pueden incluir tanto métricas de laboratorio observadas como métricas de campo de CrUX si este tiene datos elegibles. Registra si el alcance de campo es a nivel de URL o de origen.
+3. Analiza únicamente los análisis (*insights*) sospechosos o con fallos relevantes (`performance_analyze_insight`). Ejemplos comunes: `LCPBreakdown`, `LCPDiscovery`, `DocumentLatency`, `RenderBlocking` y `ThirdParties`.
+4. Ejecuta la auditoría de Lighthouse (`lighthouse_audit`) para Accesibilidad, SEO, Buenas Prácticas y Navegación Agéntica. Se excluye deliberadamente el rendimiento; no trates esta herramienta como la ruta de rendimiento.
+5. Vuelve a ejecutar la misma medición de laboratorio tras aplicar una solución. Los datos de campo no reflejarán un nuevo despliegue de inmediato.
 
-Use mobile conditions by default for a general public-site audit. Add desktop when the user asks for it, desktop traffic matters, or the product is desktop-oriented. Test authenticated and unauthenticated states separately when they render different pages.
+Usa condiciones móviles de forma predeterminada para auditorías de sitios públicos generales. Añade escritorio cuando el usuario lo solicite, el tráfico de escritorio sea significativo o el producto esté orientado a escritorio. Prueba los estados autenticados y no autenticados por separado si renderizan páginas distintas.
 
-When using emulation, set the viewport, network conditions, and CPU rate explicitly before the trace, confirm the reported conditions, and reset them before testing another profile.
+Al utilizar emulación, configura explícitamente el viewport, las condiciones de red y la limitación de CPU antes de la traza, confirma las condiciones reportadas y restablécelas antes de probar otro perfil.
 
-Chrome DevTools MCP's Lighthouse navigation mode reloads the page. Use snapshot mode for the current state when a reload would lose an authenticated or user-created state. Do not run a navigation audit on an unsaved form or destructive workflow.
+El modo de navegación de Lighthouse en Chrome DevTools MCP recarga la página. Utiliza el modo instantánea (*snapshot mode*) para el estado actual cuando una recarga perdería un estado autenticado o creado por el usuario. No ejecutes una auditoría de navegación sobre un formulario sin guardar o un flujo de trabajo destructivo.
 
-### Token-efficient tool use
+### Uso eficiente de herramientas (ahorro de tokens)
 
-* Start with one trace and one Lighthouse audit rather than broad DOM, network, console, and source dumps.
-* Preserve large reports or traces to temporary files when the tool supports `filePath` or `outputDirPath`; summarize only actionable failures.
-* Drill into the few insights tied to a poor field metric or a reproducible lab bottleneck.
-* Filter and paginate network or console requests. Fetch individual request details only when they support a finding.
-* Take a text snapshot before a screenshot unless visual inspection is necessary.
+* Comienza con una sola traza y una auditoría de Lighthouse en lugar de volcados exhaustivos del DOM, red, consola y código fuente.
+* Guarda informes o trazas grandes en archivos temporales si la herramienta admite `filePath` o `outputDirPath`; resume solo los fallos accionables.
+* Profundiza en los pocos diagnósticos vinculados a una métrica de campo deficiente o a un cuello de botella de laboratorio reproducible.
+* Filtra y pagina peticiones de red o mensajes de consola. Consulta detalles de peticiones individuales solo cuando respalden un hallazgo.
+* Toma una instantánea de texto antes de una captura de pantalla a menos que la inspección visual sea imprescindible.
 
-## Fallbacks when DevTools tools are unavailable
+## Alternativas cuando no hay herramientas de DevTools disponibles
 
-Use the first available option; do not block the audit on optional setup.
+Utiliza la primera opción disponible; no bloquees la auditoría esperando configuraciones opcionales.
 
-1. **Lighthouse CLI for lab data:** run the project's compatible Lighthouse version against the runnable URL. Keep JSON for comparison and avoid installing a permanent dependency unless the user wants one.
-2. **PageSpeed Insights web UI for a public URL:** it provides a zero-setup view of Lighthouse lab diagnostics and available CrUX field data.
-3. **CrUX Vis for history:** use it when trend data matters and the URL or origin is eligible.
-4. **CrUX API or History API for automation:** both are free to use but require a Google Cloud API key. Do not make a key a prerequisite for an ordinary audit.
-5. **Static inspection:** if nothing can run, label every performance finding as a hypothesis and provide the exact measurement needed to verify it.
+1. **Lighthouse CLI para datos de laboratorio:** ejecuta la versión de Lighthouse compatible del proyecto contra la URL ejecutable. Conserva el JSON para comparaciones y evita instalar dependencias permanentes a menos que el usuario lo solicite.
+2. **Interfaz web de PageSpeed Insights para URLs públicas:** proporciona un análisis sin configuración previa de diagnósticos de laboratorio de Lighthouse y datos de campo de CrUX disponibles.
+3. **CrUX Vis para historial:** úsalo cuando los datos de tendencias sean relevantes y la URL u origen califiquen.
+4. **API de CrUX o API de Historial para automatización:** ambas son de uso gratuito pero requieren una clave de API de Google Cloud. No conviertas una clave en un requisito obligatorio para una auditoría común.
+5. **Inspección estática:** si nada puede ejecutarse, califica cada hallazgo de rendimiento como una hipótesis y proporciona la medición exacta necesaria para verificarlo.
 
-The PageSpeed Insights API may be called without a key for occasional use, but a key is recommended for repeated automation. Google has announced that CrUX field data will be removed from that API, so new integrations should query the CrUX API directly.
+La API de PageSpeed Insights se puede consultar sin clave para uso ocasional, pero se recomienda una clave para automatización repetitiva. Google ha anunciado que los datos de campo de CrUX se retirarán de dicha API, por lo que las nuevas integraciones deben consultar directamente la API de CrUX.
 
-## Reading CrUX correctly
+## Cómo interpretar CrUX correctamente
 
-* Prefer page-level data for the audited URL. If only origin data exists, label it as origin scope; it is context, not proof for that route.
-* Compare the p75 value with the Core Web Vitals threshold and include the percentage of good experiences when available.
-* Keep phone and desktop data separate. Do not combine form factors to answer a device-specific question.
-* Treat missing CrUX data as **unavailable**, never as passing. Localhost, staging, new, private, and low-traffic pages commonly have no CrUX record.
-* CrUX is aggregated and delayed. Use it to prioritize user outcomes, not to verify a change deployed minutes ago.
+* Prioriza los datos a nivel de página para la URL auditada. Si solo existen datos de origen, etiquétalos con alcance de origen; aportan contexto, no una prueba directa de esa ruta.
+* Compara el valor p75 con el umbral de Core Web Vitals e incluye el porcentaje de buenas experiencias cuando esté disponible.
+* Mantén separados los datos móviles y de escritorio. No mezcles formatos de dispositivos para responder una pregunta específica de un tipo de dispositivo.
+* Considera los datos ausentes de CrUX como **no disponibles**, nunca como aprobados. Localhost, entornos de staging, páginas nuevas, privadas o de bajo tráfico a menudo no tienen registro en CrUX.
+* CrUX es información agregada y diferida. Úsala para priorizar el impacto en usuarios, no para verificar un cambio desplegado hace unos minutos.
 
-## Repeatable lab comparisons
+## Comparaciones de laboratorio reproducibles
 
-Record these conditions with the result:
+Registra estas condiciones junto con el resultado:
 
-* final URL and page state
-* browser and Lighthouse/tool version
-* viewport or form factor
-* CPU and network throttling
-* cold or warm cache
-* authentication, consent, and experiment state
+* URL final y estado de la página
+* Navegador y versión de Lighthouse/herramienta
+* Viewport o formato de dispositivo
+* Limitación de CPU y emulación de red (*throttling*)
+* Caché fría o caliente
+* Estado de autenticación, consentimiento y experimentos
 
-For a decision based on a headline lab metric, run at least three equivalent navigations and report the median plus range. Do not compare a single local trace directly with the CrUX p75 or claim that the two should match.
+Para tomar una decisión basada en una métrica principal de laboratorio, ejecuta al menos tres navegaciones equivalentes y reporta la mediana junto con el rango. No compares una sola traza local directamente con el p75 de CrUX ni asumas que ambos deben coincidir.
 
-Use metric values as the evidence. A Lighthouse score is a diagnostic summary whose weighting and implementation can change between versions.
+Usa los valores de las métricas como evidencia. La puntuación global de Lighthouse es un resumen diagnóstico cuya ponderación e implementación pueden variar entre versiones.
 
-## Reconciling lab and field
+## Conciliación entre laboratorio y campo
 
-| Field | Lab | Interpretation |
-|-------|-----|----------------|
-| Poor | Poor | Reproducible user problem; trace and fix the dominant bottleneck |
-| Poor | Good | Local run missed real-user conditions; segment first-party RUM or test representative devices, routes, cache states, and interactions |
-| Good | Poor | The synthetic cold/throttled case is fragile, but do not claim users are currently failing |
-| Unavailable | Any | Use lab data for diagnosis and recommend RUM if production impact matters |
+| Campo | Laboratorio | Interpretación |
+|---|---|---|
+| Deficiente | Deficiente | Problema de usuario reproducible; rastrea y soluciona el cuello de botella predominante |
+| Deficiente | Bueno | La prueba local no reflejó las condiciones reales; segmenta el RUM propio o prueba dispositivos, rutas, estados de caché e interacciones representativas |
+| Bueno | Deficiente | El caso sintético frío o con emulación es exigente, pero no indica que los usuarios reales estén experimentando fallos |
+| No disponible | Cualquiera | Utiliza datos de laboratorio para el diagnóstico y recomienda RUM si el impacto en producción es crítico |
 
-## Compact audit output
+## Formato compacto de salida de auditoría
 
-Start reports with an evidence table:
+Inicia los informes con una tabla de evidencias:
 
-| Signal | Scope and conditions | Baseline | After | Source |
-|--------|----------------------|----------|-------|--------|
-| LCP | URL, phone, p75/28 days | 3.1s | Pending field window | CrUX |
-| LCP | URL, mobile lab, cold cache, median of 3 | 3.8s | 2.6s | DevTools trace |
+| Señal | Alcance y condiciones | Línea base | Después | Fuente |
+|---|---|---|---|---|
+| LCP | URL, móvil, p75 / 28 días | 3.1s | Ventana de campo pendiente | CrUX |
+| LCP | URL, laboratorio móvil, caché fría, mediana de 3 | 3.8s | 2.6s | Traza DevTools |
 
-Then separate:
+Luego separa:
 
-1. measured failures
-2. trace-backed causes
-3. source-code hypotheses
-4. fixes made or recommended
-5. verification status and remaining uncertainty
+1. fallos medidos
+2. causas respaldadas por trazas
+3. hipótesis del código fuente
+4. soluciones aplicadas o recomendadas
+5. estado de verificación e incertidumbre restante
 
-## Sources
+## Fuentes
 
-* [Chrome DevTools MCP tool reference](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/tool-reference.md)
-* [Chrome UX Report API](https://developer.chrome.com/docs/crux/api)
-* [Getting started with measuring Web Vitals](https://web.dev/articles/vitals-measurement-getting-started)
-* [PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started)
+* [Referencia de herramientas de Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/tool-reference.md)
+* [API de Chrome UX Report](https://developer.chrome.com/docs/crux/api)
+* [Introducción a la medición de Web Vitals](https://web.dev/articles/vitals-measurement-getting-started)
+* [API de PageSpeed Insights](https://developers.google.com/speed/docs/insights/v5/get-started)

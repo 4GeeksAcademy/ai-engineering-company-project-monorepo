@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional,List, Any, Dict
 from datetime import datetime
 
 # SCHEMAS PARA ACTIVOS (ASSETS)
@@ -39,3 +39,20 @@ class AssetAssignmentRead(BaseModel):
     created_at: datetime
     user_uuid: str
 
+class OrdersAuditResponse(BaseModel):
+    inbound: List[AssetAcquisitionRead]
+    outbound: List[AssetAssignmentRead]
+
+# SCHEMAS PARA TELEMETRÍA
+class TelemetryEvent(BaseModel):
+    eventId: str
+    timestamp: str
+    sessionId: Optional[str] = None
+    userId: Optional[str] = None 
+    event_type: str
+    schemaVersion: str
+    requestId: str
+    properties: Dict[str, Any]
+
+class TelemetryBatch(BaseModel):
+    events: List[TelemetryEvent]
