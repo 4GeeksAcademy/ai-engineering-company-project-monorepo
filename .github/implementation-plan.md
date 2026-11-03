@@ -82,20 +82,20 @@ flowchart LR
 ---
 
 ### ⚡ Fase 3: Optimización Dirigida y Refactorización Incremental
-> **Estado:** `[Pendiente]`
+> **Estado:** `[Completado]`
 
-- [ ] **Paso 3.1:** Activar y seguir las directrices de las skills de optimización (`core-web-vitals`, `performance`, `web-perf`).
-- [ ] **Paso 3.2:** Aplicar correcciones de **LCP y carga de recursos**:
+- [x] **Paso 3.1:** Activar y seguir las directrices de las skills de optimización (`core-web-vitals`, `performance`, `web-perf`).
+- [x] **Paso 3.2:** Aplicar correcciones de **LCP y carga de recursos**:
   - Implementar `next/image` con tamaños responsivos (`sizes`), formatos modernos y `priority` sólo en imágenes hero.
   - Optimizar fuentes web (`font-display: swap`).
   - *Commit dedicado:* `git commit -m "perf: optimizacion de imagenes y carga de fuentes para LCP"`.
-- [ ] **Paso 3.3:** Aplicar correcciones de **CLS (Cumulative Layout Shift)**:
+- [x] **Paso 3.3:** Aplicar correcciones de **CLS (Cumulative Layout Shift)**:
   - Reservar espacio para elementos dinámicos e imágenes con aspect-ratio y dimensiones explícitas.
   - *Commit dedicado:* `git commit -m "perf: eliminacion de layout shifts mediante dimensiones explicitas"`.
-- [ ] **Paso 3.4:** Aplicar correcciones de **JavaScript y Reducción de Bundle**:
+- [x] **Paso 3.4:** Aplicar correcciones de **JavaScript y Reducción de Bundle**:
   - Implementar imports dinámicos (`next/dynamic`) en componentes pesados fuera del viewport o modales diferidos.
   - *Commit dedicado:* `git commit -m "perf: code splitting y carga diferida de componentes pesados"`.
-- [ ] **Paso 3.5:** Implementar la refactorización de código duplicado:
+- [x] **Paso 3.5:** Implementar la refactorización de código duplicado:
   - Extraer al menos un componente reutilizable o Custom Hook compartido.
   - Integrar la abstracción en ambos lugares correspondientes y verificar que la funcionalidad se mantenga al 100% intacta.
   - *Commit dedicado:* `git commit -m "refactor: extraccion e integracion de custom hook/componente reutilizable"`.
@@ -103,18 +103,18 @@ flowchart LR
 ---
 
 ### 📈 Fase 4: Medición Final (After), `REPORT.md` y Validación Pre-Push
-> **Estado:** `[Pendiente]`
+> **Estado:** `[Completado]`
 
-- [ ] **Paso 4.1:** Ejecutar nuevamente Lighthouse bajo las mismas condiciones (mismas URLs, dispositivos Móvil y Escritorio).
-- [ ] **Paso 4.2:** Guardar las nuevas capturas de pantalla con los resultados optimizados en `audit/after/`.
-- [ ] **Paso 4.3:** Redactar el archivo `REPORT.md` en la raíz conteniendo:
+- [x] **Paso 4.1:** Ejecutar nuevamente Lighthouse bajo las mismas condiciones (mismas URLs, dispositivos Móvil y Escritorio).
+- [x] **Paso 4.2:** Guardar las nuevas capturas de pantalla con los resultados optimizados en `audit/after/`.
+- [x] **Paso 4.3:** Redactar el archivo `REPORT.md` en la raíz conteniendo:
   - Tabla comparativa de métricas Antes vs. Después (Performance, LCP, CLS, FID/INP, TTFB).
   - Resumen de cada optimización aplicada y análisis fáctico de cuál tuvo mayor impacto positivo.
   - Conclusiones y recomendaciones para mantener el rendimiento a futuro.
-- [ ] **Paso 4.4:** Auditoría de calidad de código y ausencia de regresiones:
+- [x] **Paso 4.4:** Auditoría de calidad de código y ausencia de regresiones:
   - Ejecutar verificación de tipos (`npx tsc --noEmit`) y linting en ambos frontends.
   - Comprobar que no existan errores en la consola del navegador ni funcionalidades rotas.
-- [ ] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y solicitar confirmación explícita al usuario antes de cualquier `git push`.
+- [x] **Paso 4.5 (Regla Inviolable de Git):** Detener ejecución y solicitar confirmación explícita al usuario antes de cualquier `git push`.
 
 ---
 
