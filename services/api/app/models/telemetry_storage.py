@@ -35,10 +35,12 @@ leaves unresolved.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, TypedDict
 from uuid import UUID
 
-from sqlalchemy import Column, MetaData, String, Table, insert
+import pandas as pd
+from sqlalchemy import Column, MetaData, String, Table, insert, select
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.sql.sqltypes import DateTime
 from sqlmodel import Session
@@ -113,3 +115,52 @@ def insert_telemetry_event_rows(db: Session, rows: list[TelemetryEventRow]) -> N
         raise ValueError("insert_telemetry_event_rows called with no rows — caller should have skipped it")
     db.execute(insert(telemetry_events_table), rows)
     db.commit()
+
+
+# Rows per `fetchmany()` call in `fetch_telemetry_events_dataframe` — bounds
+# how much of a large period's result set the Python process holds at once.
+TELEMETRY_REPORT_FETCH_CHUNK_SIZE = 5000
+
+
+def fetch_telemetry_events_dataframe(
+    db: Session, start_date: datetime, end_date: datetime
+) -> pd.DataFrame:
+    """Fetch every telemetry_events row with start_date <= timestamp < end_date,
+    as a DataFrame with one column per table column (event_id, timestamp,
+    session_id, user_id, event_type, schema_version, request_id, tags).
+
+    `start_date`/`end_date` must already be resolved, UTC, tz-aware
+    datetimes — the caller (the report endpoint) is responsible for
+    resolving defaults and validating/normalizing them; this function does
+    not apply its own window or read the clock.
+
+    Uses a server-side cursor (`execution_options(stream_results=True)`)
+    and reads results in `TELEMETRY_REPORT_FETCH_CHUNK_SIZE`-row chunks via
+    repeated `fetchmany()` calls rather than one `.all()`/`fetchall()`, so a
+    report spanning a large period is read incrementally instead of forcing
+    the whole matching result set into the driver's memory in one shot, and
+    nothing is silently dropped the way a fixed page-size API (e.g.
+    PostgREST's default row cap) could: every matching row is read, chunk
+    by chunk, until the cursor is exhausted.
+    """
+    statement = (
+        select(telemetry_events_table)
+        .where(telemetry_events_table.c.timestamp >= start_date)
+        .where(telemetry_events_table.c.timestamp < end_date)
+        .order_by(telemetry_events_table.c.timestamp)
+        .execution_options(stream_results=True)
+    )
+    columns = [column.name for column in telemetry_events_table.columns]
+
+    rows: list[tuple[Any, ...]] = []
+    result = db.execute(statement)
+    try:
+        while True:
+            chunk = result.fetchmany(TELEMETRY_REPORT_FETCH_CHUNK_SIZE)
+            if not chunk:
+                break
+            rows.extend(chunk)
+    finally:
+        result.close()
+
+    return pd.DataFrame(rows, columns=columns)
