@@ -37,10 +37,14 @@ const browser = await puppeteer.connect({ browserURL: `http://localhost:${chrome
 const summary = [];
 for (const t of TARGETS) {
   if (filter && !`${t.app}-${t.name}`.includes(filter)) continue;
-  if (t.token) {
+  // Seed the session for protected pages, and make sure public pages (login) start signed out.
+  if (new URL(t.url).port === '3001') {
     const page = await browser.newPage();
     await page.goto(new URL(t.url).origin + '/login', { waitUntil: 'load' });
-    await page.evaluate((jwt) => localStorage.setItem('nexova.accessToken', jwt), FAKE_JWT);
+    await page.evaluate(
+      (jwt) => (jwt ? localStorage.setItem('nexova.accessToken', jwt) : localStorage.clear()),
+      t.token ? FAKE_JWT : null,
+    );
     await page.close();
   }
   for (const mode of ['mobile', 'desktop']) {
@@ -52,7 +56,7 @@ for (const t of TARGETS) {
           port: chrome.port,
           output: ['json', 'html'],
           logLevel: 'error',
-          disableStorageReset: Boolean(t.token),
+          disableStorageReset: true,
           onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
         },
         mode === 'desktop' ? desktopConfig : undefined,

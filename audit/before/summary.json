@@ -154,20 +154,20 @@
   {
     "page": "backoffice/login",
     "mode": "mobile",
-    "perf": 95,
-    "a11y": 96,
+    "perf": 100,
+    "a11y": 100,
     "bp": 100,
     "seo": 100,
-    "fcp": "0.8 s",
-    "lcp": "2.6 s",
-    "tbt": "150 ms",
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "30 ms",
     "cls": "0",
-    "si": "0.8 s",
+    "si": "0.6 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
-      93,
-      95,
-      97
+      99,
+      100,
+      100
     ]
   },
   {
@@ -178,10 +178,10 @@
     "bp": 100,
     "seo": 100,
     "fcp": "0.2 s",
-    "lcp": "0.6 s",
-    "tbt": "0 ms",
+    "lcp": "0.3 s",
+    "tbt": "10 ms",
     "cls": "0",
-    "si": "0.3 s",
+    "si": "0.2 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
       100,
