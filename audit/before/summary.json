@@ -1,0 +1,192 @@
+[
+  {
+    "page": "website/home",
+    "mode": "mobile",
+    "perf": 98,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.8 s",
+    "lcp": "2.2 s",
+    "tbt": "130 ms",
+    "cls": "0",
+    "si": "0.8 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      79,
+      98,
+      98
+    ]
+  },
+  {
+    "page": "website/home",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.5 s",
+    "tbt": "0 ms",
+    "cls": "0.005",
+    "si": "0.3 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "website/new-candidate",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 86,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.8 s",
+    "lcp": "0.8 s",
+    "tbt": "50 ms",
+    "cls": "0",
+    "si": "0.8 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      99,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "website/new-candidate",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 86,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.2 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/dashboard",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "1.0 s",
+    "tbt": "30 ms",
+    "cls": "0",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      97,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/dashboard",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-form",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "1.0 s",
+    "tbt": "40 ms",
+    "cls": "0",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-form",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/login",
+    "mode": "mobile",
+    "perf": 95,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.8 s",
+    "lcp": "2.6 s",
+    "tbt": "150 ms",
+    "cls": "0",
+    "si": "0.8 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      93,
+      95,
+      97
+    ]
+  },
+  {
+    "page": "backoffice/login",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.6 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.3 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+]
