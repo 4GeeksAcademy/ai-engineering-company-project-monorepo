@@ -47,10 +47,10 @@ async function fetchJson<T>(url: string, action: string, options?: RequestInit):
 /**
  * Obtener listado completo de candidaturas (GET /records)
  */
-export async function getCandidates(): Promise<Candidate[]> {
+export async function getCandidates(options?: RequestInit): Promise<Candidate[]> {
   const data = await fetchJson<
     Candidate[] | { data: Candidate[] } | { records: Candidate[] }
-  >(`${API_BASE_URL}/records`, 'No se pudieron cargar las candidaturas');
+  >(`${API_BASE_URL}/records`, 'No se pudieron cargar las candidaturas', options);
 
   if (Array.isArray(data)) {
     return data;
