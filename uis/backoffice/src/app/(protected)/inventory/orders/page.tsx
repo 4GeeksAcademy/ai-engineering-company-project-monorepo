@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { LoadError } from "@/components/LoadError";
-import { getUserMessage } from "@/lib/errors";
+import { useLoader } from "@/lib/useLoader";
 import { EXIT_TYPE_LABELS, getOrders, type Order } from "@/lib/inventory";
 import { formatDateTime } from "@/lib/suppliersApi";
 
@@ -11,29 +10,11 @@ function newestFirst(orders: Order[]): Order[] {
   return [...orders].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 }
 
+const NO_ORDERS: Order[] = [];
+const loadOrders = async () => newestFirst(await getOrders());
+
 export default function OrderHistoryPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setOrders(newestFirst(await getOrders()));
-    } catch (reason) {
-      setOrders([]);
-      setError(getUserMessage(reason));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Fetching on mount is the point of this effect; load() flags "loading" first.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-  }, [load]);
+  const { data: orders, loading, error, reload: load } = useLoader(loadOrders, NO_ORDERS);
 
   return (
     <main className="wide">

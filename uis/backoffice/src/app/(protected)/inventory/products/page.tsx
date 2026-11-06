@@ -1,35 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 import { LoadError } from "@/components/LoadError";
 import { StockBadge } from "@/components/StockBadge";
-import { getUserMessage } from "@/lib/errors";
+import { useLoader } from "@/lib/useLoader";
 import { CATEGORY_LABELS, getProducts, type Asset } from "@/lib/inventory";
 
+const NO_ASSETS: Asset[] = [];
+
 export default function InventoryProductsPage() {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setAssets(await getProducts());
-    } catch (reason) {
-      setAssets([]);
-      setError(getUserMessage(reason));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Fetching on mount is the point of this effect; load() flags "loading" first.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-  }, [load]);
+  const { data: assets, loading, error, reload: load } = useLoader(getProducts, NO_ASSETS);
 
   return (
     <main className="wide">
