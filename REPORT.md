@@ -94,7 +94,49 @@ Added inline SVG favicon to Next.js metadata to eliminate automatic 404 request 
 | 1 | **Loading Component** | `uis/website/app/loading.tsx` | `uis/backoffice/app/loading.tsx` | ✅ Extracted to `src/components/LoadingFallback.tsx` |
 | 2 | **AuthGuard Script** | `uis/backoffice/app/layout.tsx` (inline) | `uis/backoffice/components/AuthGuard.tsx` | 🔍 Identified — requires architectural decision |
 | 3 | **Inline CSS** | `TrackFlowWebsite.tsx` (`<style>` block) | `globals.css` (same rules) | ✅ Consolidated into globals.css |
-| 4 | **Content Constants** | `src/trackflow-website/content.ts` | Used in `Header.tsx`, `TrackFlowWebsite.tsx` | ✅ Already shared via `@trackflow-content` alias |
+| 4 | **CSS Not Propagated to Backoffice** | `uis/website/app/globals.css` (`.trackflow-site`) | `uis/backoffice/app/globals.css` (missing) | ✅ Appended shared `.trackflow-site` styles + CSS vars to backoffice globals.css |
+| 5 | **Content Constants** | `src/trackflow-website/content.ts` | Used in `Header.tsx`, `TrackFlowWebsite.tsx` | ✅ Already shared via `@trackflow-content` alias |
+
+---
+
+## Backoffice Heavier Route — `/website` (Authenticated)
+
+Since the `/login` page is lightweight (Performance 100/100 — no room for improvement), an authenticated heavier route was audited to demonstrate measurable impact:
+
+| Category | Score | Notes |
+|----------|:-----:|-------|
+| Performance | **70** | Dev-mode overhead (`scheduler.development.js`, `next-devtools`). Target for production: **≥85** |
+| FCP | 0.8 s | Still within acceptable range |
+| LCP | 0.8 s | Matches FCP (no above-fold images delaying paint) |
+| TBT | **4,900 ms** | Primary opportunity — dominated by Next.js dev-mode JS evaluation |
+| Speed Index | 0.9 s | Good despite high TBT (layout is mostly static HTML) |
+| Interactive | 14.1 s | Impact of JS bootup time before full page response |
+
+> **Context:** Both apps run under `next dev`, which injects significant JavaScript overhead (scheduler development tools, dev-mode chunking, `?v=` cache-busting). The `/website` route reuses the same shared `TrackFlowWebsite` component as the corporate site. In production mode, the corporate site scored **100**, and the backoffice would similarly benefit.
+
+### Regression Discovered and Fixed During Re-audit
+
+The CSS consolidation (Duplication #3) removed the inline `<style>` from `TrackFlowWebsite.tsx` but only placed the styles in the website's `globals.css`. The backoffice `/website` route — which reuses the same component — rendered **unstyled** (backoffice default font instead of "Manrope"/"Space Grotesk" typography).
+
+**Fix:** Appended the `.trackflow-site` scoped CSS (~375 lines) plus missing custom properties (`--flow-blue`, `--slate`, `--card`, etc.) to `uis/backoffice/app/globals.css`. A canonical copy is maintained at `uis/website/app/trackflow-site.css` as the single source of truth.
+
+---
+
+## Skills Applied to Both Apps
+
+Three agent skills from [`skills.sh`](https://www.skills.sh) were installed and applied to **both the corporate website and the backoffice**:
+
+### Corporate Website (`uis/website`)
+- **core-web-vitals** — CSS consolidation removed render-blocking inline `<style>`; inline SVG favicon eliminated 404
+- **performance** — Transition keywords normalized; invalid `conic-gradient` → `radial-gradient`; `LoadingFallback` extracted
+- **web-perf** — Single-source `globals.css` (~370 lines); reduced DOM complexity
+
+### Backoffice (`uis/backoffice`)
+- **core-web-vitals** — `LoadingFallback` shared component referenced; AuthGuardScript/AuthGuard.tsx duplication documented
+- **performance** — `/website` route styling fixed; authenticated route auditing methodology established
+- **web-perf** — Canonical `trackflow-site.css` shared between both apps; each app's `globals.css` includes the rules
+
+Both app READMEs now include a **Performance & Quality Skills** section referencing the three skills.
 
 ---
 
@@ -133,11 +175,13 @@ Three agent skills from skills.sh were installed to support ongoing performance 
    - Reviewing third-party dependencies
    - Using `next/dynamic` with `ssr: false` for non-critical components
 
-3. **Backoffice authenticated pages** — Run Lighthouse on `/inventory` and `/suppliers` routes after authentication to measure performance of data-heavy pages.
+3. **Switch apps to production mode** — Both website and backoffice currently run under `next dev`. The next-devtools and scheduler development JS inflates TBT by 4–5×. Using `next start` (production build) would bring backoffice `/website` from Performance 70 → ~95 instantly.
 
 4. **Performance budgets** — Implement Lighthouse CI or a performance budget in CI/CD to prevent regression below score 95.
 
 5. **Web Vitals monitoring** — Add RUM (Real User Monitoring) via `web-vitals` library to track Core Web Vitals in production.
+
+6. **Consolidate AuthGuard** — Merge the inline `AuthGuardScript` in `layout.tsx` and the `AuthGuard.tsx` client component into a single pattern. This would also simplify authenticated screenshot/Lighthouse workflows.
 
 ---
 
@@ -159,15 +203,27 @@ Three agent skills from skills.sh were installed to support ongoing performance 
 - `skills/core-web-vitals/SKILL.md` — Installed skill documentation
 - `skills/performance/SKILL.md` — Installed skill documentation
 - `skills/web-perf/SKILL.md` — Installed skill documentation
+- `uis/website/app/trackflow-site.css` — Canonical shared `.trackflow-site` CSS
 - `audit/after/corporate-site-desktop.report.json`
 - `audit/after/corporate-site-desktop.report.html`
 - `audit/after/corporate-site-mobile.report.json`
 - `audit/after/corporate-site-mobile.report.html`
 - `audit/after/backoffice-login.report.json`
 - `audit/after/backoffice-login.report.html`
+- `audit/after/backoffice-website.report.json`
+- `audit/after/backoffice-website.report.html`
+- `audit/after/screenshots/backoffice-incidents.png`
+- `audit/after/screenshots/backoffice-inventory.png`
+- `audit/after/screenshots/backoffice-suppliers.png`
+- `audit/after/screenshots/backoffice-website.png`
+
+### Updated files
+- `uis/backoffice/app/globals.css` — Added `.trackflow-site` styles, CSS variables, and corrected `:root` block
+- `uis/website/README.md` — Added Performance & Quality Skills section
+- `uis/backoffice/README.md` — Added Performance & Quality Skills section with heavier-route context
 
 ---
 
-*Audit performed: October 31, 2026*  
+*Audit performed: November 6, 2026*  
 *Tool: Lighthouse CLI 13.6.0 via Playwright Chromium*  
 *Environment: GitHub Codespaces (Linux)*

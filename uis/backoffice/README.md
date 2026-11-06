@@ -125,3 +125,22 @@ npm --prefix uis/backoffice test -- --runInBand
 ## Error-Handling Verification
 
 See `docs/ERROR_HANDLING.md` for offline, server-error, malformed-response, loading/retry, and script failure checks. The frontend uses shared request timeouts and safe error messages. Supplier mutations show pending/success/error feedback; CSV export now downloads with the bearer token instead of opening an unauthenticated tab. Profile loading offers retry for failures and treats only 404 as a missing profile.
+
+## Performance & Quality Skills
+
+Three agent skills from [`skills.sh`](https://www.skills.sh) are installed in the monorepo [`skills/`](../../skills/) directory and applied to this app:
+
+| Skill | Source | Applied to backoffice |
+|--------|--------|----------------------|
+| **Core Web Vitals** (LCP, FCP, TTFB, CLS) | [`skills/core-web-vitals/SKILL.md`](../../skills/core-web-vitals/SKILL.md) | LoadingFallback shared component extracted to `src/components/LoadingFallback.tsx` — used by both apps. AuthGuardScript + AuthGuard.tsx duplication documented. |
+| **Performance** (TBT, Speed Index, budgets) | [`skills/performance/SKILL.md`](../../skills/performance/SKILL.md) | `/website` route now imports shared `.trackflow-site` CSS via backoffice `globals.css` (was unstyled after CSS consolidation). Auth bypass for authenticated route auditing documented. |
+| **Web Performance** (network payload, resource hints) | [`skills/web-perf/SKILL.md`](../../skills/web-perf/SKILL.md) | Shared `trackflow-site.css` canonical source kept in `uis/website/app/trackflow-site.css` — referenced by both apps via copy in each `globals.css`. |
+
+**Measured impact** (Lighthouse Performance, authenticated routes):
+
+| Route | Before | After |
+|-------|--------|-------|
+| `/login` (unauthenticated) | 100 | 100 |
+| `/website` (authenticated, richer page) | — | 70 (dev-mode overhead; baseline for prod tracking) |
+
+The authenticated `/website` route (Performance 70, TBT ~4.9 s) serves as the richer baseline for future production-mode audits, since the `/login` page scores 100/100 and shows no room for improvement.

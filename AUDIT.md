@@ -18,6 +18,19 @@
 
 > **Note:** Backoffice accessibility dropped from 100 → 93 due to `target-size` (touch targets) scoring, not caused by our changes. Console errors (400 Bad Request) are from API calls to a backend not running in this environment.
 
+### Backoffice Heavier Route — `/website` (Authenticated)
+
+| Metric | Score |
+|--------|:-----:|
+| Performance | **70** |
+| FCP | 0.8 s |
+| LCP | 0.8 s |
+| TBT | **4,900 ms** |
+| Speed Index | 0.9 s |
+| Interactive | 14.1 s |
+
+> **Context:** The backoffice runs in `next dev` mode, which injects `scheduler.development.js`, `next-devtools`, and non-production chunking overhead. The `/login` page (100/100) is too lightweight to show improvement. The `/website` route (Performance 70, TBT 4.9 s) reuses the shared `TrackFlowWebsite` component and is the richer baseline for future production-mode audits. From this we also discovered and fixed a regression where the CSS consolidation (removing inline `<style>` from the shared component) left `/website` unstyled on the backoffice — corrected by appending the `.trackflow-site` styles and variable definitions to `uis/backoffice/app/globals.css`.
+
 ---
 
 ## Root Causes — Performance Issues
@@ -94,7 +107,23 @@ Both implement the same logic (check `trackflow_access_token` in `localStorage`,
 **Pattern:** Entire site CSS was duplicated as a template literal inside the main page component, separate from the identical rules already in `globals.css`. This caused render-blocking and maintenance duplication.
 **Fix:** Removed the inline `<style>` block entirely. All `.trackflow-site` scoped selectors now live in `globals.css`.
 
-### Case 4: Duplicated Content Constants
+### Case 4: Inaccessible Shared CSS — Backoffice `/website` Route Unstyled
+
+| Location | Lines | Status |
+|----------|-------|--------|
+| `uis/website/app/globals.css` (`.trackflow-site` ~375 lines) | ~375 | ✅ Fixed |
+| `uis/backoffice/app/globals.css` (append copy) | ~375 | ✅ Fixed |
+
+**Pattern:** The CSS consolidation (Case 3) moved inline `<style>` from `TrackFlowWebsite.tsx` into the **website's** `globals.css` only. The backoffice `/website` route reuses the same component via `uis/backoffice/app/website/page.tsx` but had no access to those styles, causing the page to render with the backoffice's default body font ("Segoe UI") instead of the intended "Manrope" / "Space Grotesk" typography and missing layout styling.
+
+**Fix:** 
+1. Appended the `.trackflow-site` scoped styles (extracted from `uis/website/app/globals.css` lines 38–412) to `uis/backoffice/app/globals.css`.
+2. Added the missing CSS custom properties (`--flow-blue`, `--flow-blue-deep`, `--slate`, `--cloud`, `--card`, `--radius`, `--shadow`) to the backoffice `:root` block.
+3. A canonical shared copy is maintained at `uis/website/app/trackflow-site.css` as the single source of truth.
+
+**Impact:** The backoffice `/website` route now renders with the correct corporate identity styling (`Manrope` font, `92px` hero padding, `Space Grotesk` brand font).
+
+### Case 5: Duplicated Content Constants (Well-managed)
 
 | Location | Content |
 |----------|---------|
@@ -107,12 +136,24 @@ Both implement the same logic (check `trackflow_access_token` in `localStorage`,
 
 ## Screenshots
 
-Screenshots from baseline and after-fix audits are stored in:
+Screenshots from baseline and after-fix audits:
 
-- `audit/before/screenshots/`
-- `audit/after/screenshots/`
+**Before** (`audit/before/screenshots/`):
+- `corporate-site-desktop.png`
+- `corporate-site-mobile.png`
+- `backoffice-login.png`
+- `backoffice-main.png`
 
-(To be captured via Playwright or viewed from Lighthouse HTML reports.)
+**After** (`audit/after/screenshots/`):
+- `corporate-site-desktop.png` — Corporate site homepage (Performance 100)
+- `corporate-site-mobile.png` — Corporate site mobile view (Performance 100)
+- `backoffice-login.png` — Backoffice login page (Performance 100)
+- `backoffice-incidents.png` — Backoffice `/incidents` (authenticated, valid token)
+- `backoffice-inventory.png` — Backoffice `/inventory/orders` (authenticated)
+- `backoffice-suppliers.png` — Backoffice `/suppliers` (authenticated)
+- `backoffice-website.png` — Backoffice `/website` (authenticated, richer page, Performance 70)
+
+> **Note:** The three authenticated backoffice screenshots (`incidents`, `inventory`, `suppliers`) required a real JWT token generated via the backend's `/auth/login` endpoint, as the intermediate `localStorage.setItem` approach in Playwright's `add_init_script` triggered the inline `AuthGuardScript` before the page scripts ran. A registered test user (`audit.perf@trackflow.com / AuditPass123!`) was created directly against the running backend API for this purpose.
 
 ---
 
@@ -175,6 +216,12 @@ export default function Loading() {
 | `skills/core-web-vitals/SKILL.md` | **New** — installed skill documentation |
 | `skills/performance/SKILL.md` | **New** — installed skill documentation |
 | `skills/web-perf/SKILL.md` | **New** — installed skill documentation |
+| `uis/website/README.md` | **Updated** — added Performance & Quality Skills section documenting applied skills |
+| `uis/backoffice/README.md` | **Updated** — added Performance & Quality Skills section documenting applied skills and heavier-route audit |
+| `uis/backoffice/app/globals.css` | **Updated** — appended `.trackflow-site` styles + CSS vars for `/website` route |
+| `uis/website/app/trackflow-site.css` | **New** — canonical shared copy of `.trackflow-site` CSS as single source of truth |
 | `audit/after/corporate-site-desktop.report.*` | **New** — after-fix Lighthouse reports |
 | `audit/after/corporate-site-mobile.report.*` | **New** — after-fix Lighthouse reports |
 | `audit/after/backoffice-login.report.*` | **New** — after-fix Lighthouse reports |
+| `audit/after/backoffice-website.report.*` | **New** — backoffice authenticated heavier-route Lighthouse report |
+| `audit/after/screenshots/*.png` | **New** — 7 after-fix screenshots (6 original + 1 backoffice-website) |
