@@ -1,0 +1,1 @@
+Discarded experiment: experimental.inlineCss=true on the website. No gain (FCP 0.7->0.8 s mobile, Best Practices 100->96 on home). Reverted.
