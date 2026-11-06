@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Candidate } from '../types/candidate';
 import {
   getCandidateName,
@@ -46,6 +46,7 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
   isEditing = false,
   onCancel,
 }) => {
+  const uid = useId();
   const [name, setName] = useState<string>(
     initialData ? getCandidateName(initialData) : ''
   );
@@ -158,10 +159,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Nombre completo */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-name`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Nombre Completo <span className="text-rose-500">*</span>
           </label>
-          <input
+          <input id={`${uid}-name`}
             type="text"
             value={name}
             onChange={(e) => {
@@ -180,10 +181,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-email`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Correo Electrónico <span className="text-rose-500">*</span>
           </label>
-          <input
+          <input id={`${uid}-email`}
             type="email"
             value={email}
             onChange={(e) => {
@@ -203,10 +204,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Puesto */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-position`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Puesto / Cargo <span className="text-rose-500">*</span>
           </label>
-          <input
+          <input id={`${uid}-position`}
             type="text"
             value={position}
             onChange={(e) => {
@@ -226,10 +227,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Teléfono */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-phone`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Teléfono
           </label>
-          <input
+          <input id={`${uid}-phone`}
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -240,10 +241,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* LinkedIn URL */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-linkedin`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             URL de LinkedIn
           </label>
-          <input
+          <input id={`${uid}-linkedin`}
             type="url"
             value={linkedin}
             onChange={(e) => setLinkedin(e.target.value)}
@@ -254,10 +255,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* CV URL */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-cvUrl`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             URL del CV
           </label>
-          <input
+          <input id={`${uid}-cvUrl`}
             type="url"
             value={cvUrl}
             onChange={(e) => setCvUrl(e.target.value)}
@@ -268,10 +269,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Años de experiencia */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-yearsOfExperience`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Años de Experiencia
           </label>
-          <input
+          <input id={`${uid}-yearsOfExperience`}
             type="number"
             min="0"
             step="1"
@@ -292,10 +293,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Estado */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-status`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Estado
           </label>
-          <select
+          <select id={`${uid}-status`}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer"
@@ -310,10 +311,10 @@ export const CandidateForm: React.FC<CandidateFormProps> = ({
 
         {/* Etapa */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label htmlFor={`${uid}-stage`} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             Etapa del Proceso
           </label>
-          <select
+          <select id={`${uid}-stage`}
             value={stage}
             onChange={(e) => setStage(e.target.value)}
             className="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer"

@@ -1,0 +1,40 @@
+[
+  {
+    "page": "website/new-candidate",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.7 s",
+    "lcp": "0.7 s",
+    "tbt": "20 ms",
+    "cls": "0",
+    "si": "0.7 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      78,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "website/new-candidate",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.2 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+]
