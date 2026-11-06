@@ -13,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <main className="flex flex-1 flex-col">{children}</main>
+      </body>
     </html>
   );
 }

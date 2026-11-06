@@ -111,9 +111,9 @@ export const CandidateCard: React.FC<CandidateCardProps> = ({ candidate }) => {
       <div>
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               {name}
-            </h3>
+            </h2>
             <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">
               {position}
             </p>
