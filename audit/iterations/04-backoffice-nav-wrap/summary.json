@@ -1,0 +1,116 @@
+[
+  {
+    "page": "backoffice/dashboard",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "50 ms",
+    "cls": "0",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      99,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/dashboard",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-form",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "40 ms",
+    "cls": "0",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-form",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/login",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "40 ms",
+    "cls": "0",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/login",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+]
