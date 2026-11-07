@@ -1,5 +1,5 @@
 // Deps (install in a scratch dir, not in the repo): npm i lighthouse@13.6.0 chrome-launcher puppeteer-core
-// Env: CHROME_PATH=<chromium binary>. Both prod servers must be running (next build && next start).
+// Env: CHROME_PATH=<chromium binary>; AUDIT_JWT=<real access token> (needed for the `data: true` views, which call the API). Both prod servers must be running (next build && next start).
 // Usage: node run-lighthouse.mjs <outDir> [filter]
 // Runs Lighthouse (3 runs, keeps the median-Performance run) against the PRODUCTION servers
 // (website :3000, backoffice :3001) in mobile + desktop and saves JSON, HTML and a PNG of the report.
@@ -18,13 +18,16 @@ fs.mkdirSync(outDir, { recursive: true });
 // The backoffice guard only checks that the JWT has a future `exp` (signature is verified by the API),
 // so a seeded token is enough to render the protected dashboard shell.
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const FAKE_JWT = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: 'audit', exp: Math.floor(Date.now() / 1000) + 86400 })}.sig`;
+const FAKE_JWT = process.env.AUDIT_JWT || `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: 'audit', exp: Math.floor(Date.now() / 1000) + 86400 })}.sig`;
 
 const TARGETS = [
   { app: 'website', name: 'home', url: 'http://localhost:3000/' },
   { app: 'website', name: 'new-candidate', url: 'http://localhost:3000/candidates/new' },
   { app: 'backoffice', name: 'dashboard', url: 'http://localhost:3001/', token: true },
   { app: 'backoffice', name: 'incident-form', url: 'http://localhost:3001/incidents/new', token: true },
+  { app: 'backoffice', name: 'suppliers', url: 'http://localhost:3001/suppliers', token: true, data: true },
+  { app: 'backoffice', name: 'incident-list', url: 'http://localhost:3001/incidents/list', token: true, data: true },
+  { app: 'backoffice', name: 'inventory-products', url: 'http://localhost:3001/inventory/products', token: true, data: true },
   { app: 'backoffice', name: 'login', url: 'http://localhost:3001/login' },
 ];
 

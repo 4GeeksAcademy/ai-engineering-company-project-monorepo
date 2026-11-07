@@ -1,0 +1,40 @@
+[
+  {
+    "page": "backoffice/inventory-products",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 96,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "30 ms",
+    "cls": "0.001",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      99,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/inventory-products",
+    "mode": "desktop",
+    "perf": 98,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0.088",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      98,
+      98,
+      98
+    ]
+  }
+]
