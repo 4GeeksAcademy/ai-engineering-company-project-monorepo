@@ -190,44 +190,6 @@
     ]
   },
   {
-    "page": "backoffice/incident-list",
-    "mode": "mobile",
-    "perf": 96,
-    "a11y": 100,
-    "bp": 100,
-    "seo": 100,
-    "fcp": "0.6 s",
-    "lcp": "1.0 s",
-    "tbt": "230 ms",
-    "cls": "0.001",
-    "si": "0.6 s",
-    "ttfb": "Root document took 0 ms",
-    "perfRuns": [
-      94,
-      96,
-      99
-    ]
-  },
-  {
-    "page": "backoffice/incident-list",
-    "mode": "desktop",
-    "perf": 100,
-    "a11y": 100,
-    "bp": 100,
-    "seo": 100,
-    "fcp": "0.2 s",
-    "lcp": "0.3 s",
-    "tbt": "0 ms",
-    "cls": "0",
-    "si": "0.2 s",
-    "ttfb": "Root document took 0 ms",
-    "perfRuns": [
-      100,
-      100,
-      100
-    ]
-  },
-  {
     "page": "backoffice/inventory-products",
     "mode": "mobile",
     "perf": 100,
@@ -293,6 +255,44 @@
     "seo": 100,
     "fcp": "0.2 s",
     "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-list",
+    "mode": "mobile",
+    "perf": 99,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "1.0 s",
+    "tbt": "110 ms",
+    "cls": "0.001",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      83,
+      99,
+      99
+    ]
+  },
+  {
+    "page": "backoffice/incident-list",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.4 s",
     "tbt": "0 ms",
     "cls": "0",
     "si": "0.2 s",

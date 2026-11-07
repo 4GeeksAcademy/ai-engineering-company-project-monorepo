@@ -19,6 +19,9 @@ import {
   type IncidentStatus,
 } from "@/lib/incidentsApi";
 
+// Rows rendered at once. The API returns every incident; rendering them all blocks the main thread on phones.
+const PAGE_SIZE = 50;
+
 const LOAD_ERROR = "No se pudieron cargar las incidencias. Comprueba tu conexión e inténtalo de nuevo.";
 
 function statusChangeError(reason: unknown, incident: Incident, status: IncidentStatus): string {
@@ -38,6 +41,7 @@ export default function IncidentListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [pending, setPending] = useState<ReadonlySet<number>>(new Set());
   // Only the latest request may update the list, so quick filter changes never show stale rows.
   const latestRequest = useRef(0);
@@ -47,6 +51,7 @@ export default function IncidentListPage() {
     const request = ++latestRequest.current;
     setLoading(true);
     setError("");
+    setVisibleCount(PAGE_SIZE);
     try {
       const data = await listIncidents({ status, origin, branch });
       if (request === latestRequest.current) setIncidents(data);
@@ -166,7 +171,10 @@ export default function IncidentListPage() {
           )
         ) : (
           <>
-            <p className="muted small">{incidents.length === 1 ? "1 incidencia" : `${incidents.length} incidencias`}</p>
+            <p className="muted small">
+              {incidents.length === 1 ? "1 incidencia" : `${incidents.length} incidencias`}
+              {incidents.length > visibleCount && ` · mostrando ${visibleCount}`}
+            </p>
             <table className="incidents">
               <thead>
                 <tr>
@@ -180,11 +188,18 @@ export default function IncidentListPage() {
                 </tr>
               </thead>
               <tbody>
-                {incidents.map((incident) => (
+                {incidents.slice(0, visibleCount).map((incident) => (
                   <IncidentRow key={incident.id} incident={incident} pending={pending.has(incident.id)} onChangeStatus={changeStatus} />
                 ))}
               </tbody>
             </table>
+            {incidents.length > visibleCount && (
+              <div className="state">
+                <button type="button" className="secondary" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
+                  Mostrar más ({incidents.length - visibleCount} restantes)
+                </button>
+              </div>
+            )}
           </>
         )}
       </section>

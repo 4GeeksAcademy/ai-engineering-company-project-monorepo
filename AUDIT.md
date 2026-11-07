@@ -78,7 +78,12 @@ Ordenados por impacto en los KPI principales.
 ### P7 — `/favicon.ico` 404 en consola (ambas apps)
 - **Causa raíz:** no hay icono de aplicación; el navegador lo pide y recibe 404, que Lighthouse registra como error de consola. Bajó Best Practices a 96 en una pasada de `/incidents/list` móvil (intermitente, no reproducible a voluntad).
 
-### P8 — CSS que bloquea el render (ambas apps) · **investigado, descartado**
+### P8 — TBT de 220 ms en `/incidents/list` (móvil) · Performance 96
+- **Síntoma:** es la vista con más bloqueo del hilo principal (TBT 220 ms frente a 30–100 ms en las demás) y con Performance 96.
+- **Causa raíz:** el desglose de Lighthouse muestra 704 ms de evaluación de JS (mayormente los chunks de React/Next, comunes a todas las páginas) y 124 ms de estilo/layout. Lo que distingue a esta página es que la API devuelve **las 96 incidencias y se renderizan todas a la vez**: 96 filas × 7 columnas con botones, que se hidratan y maquetan en la misma tarea larga. Con más incidencias empeoraría linealmente.
+- Se probó antes `content-visibility: auto` en las filas: ganancia marginal y dentro del ruido (TBT 230 → 200 ms); se descartó.
+
+### P9 — CSS que bloquea el render (ambas apps) · **investigado, descartado**
 - `render-blocking-insight` estimaba 110–150 ms en móvil. Hipótesis: `experimental.inlineCss` lo elimina. Se probó en la web y **no mejoró** (FCP 0,7 → 0,8 s; BP de la home móvil 100 → 96). Se revirtió; evidencia en `audit/iterations/05-website-inline-css/`. En el backoffice no se probó: la propia documentación de Next lo desaconseja para usuarios recurrentes (pierden la caché del CSS), que es el caso de una herramienta diaria.
 
 ### Observados y **no** corregidos (impacto nulo o fuera de alcance)
@@ -86,7 +91,6 @@ Ordenados por impacto en los KPI principales.
 |---|---|
 | `unused-javascript` 24–49 KiB | Son los *chunks* del runtime de React/Next, no código propio; no se puede eliminar sin reestructurar. |
 | `network-dependency-tree` | Informativo (cadena JS→JS normal del App Router); sin ahorro estimado. |
-| `/incidents/list` móvil: TBT 220–230 ms, Performance 96 | Son las 96 filas × 7 columnas renderizadas en el hilo principal tras hidratar. Reducirlo exige paginación o virtualización de la tabla, que cambia el producto y la arquitectura de la vista; ya está por encima de 90 y de los umbrales de LCP/CLS. Se documenta como siguiente paso. |
 | Speculation Rules / preloads (sugeridos por las skills) | Son *sugerencias*: el LCP ya es < 1 s y no hay imagen LCP que priorizar. Se mide impacto antes de añadir complejidad. |
 | Imágenes, fuentes y CLS | No hay imágenes rasterizadas (solo SVG inline) ni fuentes web (se usa la pila del sistema): CLS = 0 en todas las páginas. Se verificó, no se asume. |
 
@@ -94,7 +98,7 @@ Ordenados por impacto en los KPI principales.
 
 Instaladas a nivel de proyecto con `npx skills add` (`.claude/skills/`, registradas en `skills-lock.json`): `core-web-vitals` y `performance` (addyosmani/web-quality-skills) y `web-perf` (cloudflare/skills). Se leyeron antes de usarlas. No hay servidor MCP de Chrome DevTools en este entorno, así que se aplicó su flujo con Lighthouse como alternativa de laboratorio (que `core-web-vitals` contempla expresamente).
 
-- `web-perf`: fases 2–3 (desglose de LCP, *render blocking*, dependencias de red, accesibilidad) → origen de P1–P7 y del experimento P8; su regla «no priorizar cambios con 0 ms de impacto» → descarte de P8 y de los hallazgos no corregidos.
+- `web-perf`: fases 2–3 (desglose de LCP, *render blocking*, dependencias de red, accesibilidad) → origen de P1–P8 y del experimento P9; su regla «no priorizar cambios con 0 ms de impacto» → descarte de P9 y de los hallazgos no corregidos.
 - `core-web-vitals`: sección «Client-side rendering delays» y checklist LCP («LCP element in initial HTML, not JS-rendered») → solución de P1; «medir antes y después en las mismas condiciones» → método.
 - `performance`: flujo de medición (`references/MEASUREMENT.md`) → medianas de 3 pasadas y comparación en condiciones equivalentes.
 
