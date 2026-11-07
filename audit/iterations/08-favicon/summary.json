@@ -1,0 +1,40 @@
+[
+  {
+    "page": "backoffice/incident-list",
+    "mode": "mobile",
+    "perf": 98,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.7 s",
+    "lcp": "1.0 s",
+    "tbt": "150 ms",
+    "cls": "0.001",
+    "si": "0.7 s",
+    "ttfb": "Root document took 10 ms",
+    "perfRuns": [
+      95,
+      98,
+      98
+    ]
+  },
+  {
+    "page": "backoffice/incident-list",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+]
