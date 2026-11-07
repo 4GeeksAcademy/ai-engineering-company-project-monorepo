@@ -123,11 +123,11 @@ def create_exit(session: Session, data: AssetExitCreate, user_uuid: str) -> Asse
 
 
 def _entry_response(entry: AssetEntry, asset: Asset) -> AssetEntryResponse:
-    return AssetEntryResponse.model_validate({**entry.model_dump(), "asset": asset})
+    return AssetEntryResponse.model_validate({**entry.model_dump(), "asset_name": asset.name, "asset_sku": asset.sku})
 
 
 def _exit_response(exit_: AssetExit, asset: Asset) -> AssetExitResponse:
-    return AssetExitResponse.model_validate({**exit_.model_dump(), "asset": asset})
+    return AssetExitResponse.model_validate({**exit_.model_dump(), "asset_name": asset.name, "asset_sku": asset.sku})
 
 
 def list_orders(session: Session, office: Office | None = None) -> list[OrderResponse]:

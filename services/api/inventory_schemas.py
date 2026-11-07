@@ -1,5 +1,6 @@
 """Pydantic request/response schemas of the inventory API.
 
+Order responses flatten the asset to asset_id, asset_name and asset_sku (all the orders table reads).
 Independent classes: none inherits from the SQLModel tables (inventory_models.py)
 and no endpoint returns a table object. `current_stock` exists only here, computed
 from the orders; it is not a column and no request schema accepts it.
@@ -37,6 +38,8 @@ class ExitType(StrEnum):
 
 
 class AssetCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: Text
     sku: Text
     category: AssetCategory
@@ -54,22 +57,12 @@ class AssetResponse(BaseModel):
     current_stock: int
 
 
-class AssetSummary(BaseModel):
-    """The asset data shown inside an order."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    sku: str
-    category: AssetCategory
-    office: Office
-
-
 # --- Orders ---------------------------------------------------------------------------------------
 
 
 class AssetEntryCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     asset_id: int
     quantity: int = Field(gt=0, description="Units received (greater than 0)")
     supplier: Text
@@ -77,6 +70,8 @@ class AssetEntryCreate(BaseModel):
 
 
 class AssetExitCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     asset_id: int
     quantity: int = Field(gt=0, description="Units assigned or consumed (greater than 0)")
     exit_type: ExitType
@@ -97,7 +92,9 @@ class AssetEntryResponse(BaseModel):
 
     order_type: Literal["inbound"] = "inbound"
     id: int
-    asset: AssetSummary
+    asset_id: int
+    asset_name: str
+    asset_sku: str
     quantity: int
     supplier: str
     office: Office
@@ -110,7 +107,9 @@ class AssetExitResponse(BaseModel):
 
     order_type: Literal["outbound"] = "outbound"
     id: int
-    asset: AssetSummary
+    asset_id: int
+    asset_name: str
+    asset_sku: str
     quantity: int
     exit_type: ExitType
     assigned_to: str | None

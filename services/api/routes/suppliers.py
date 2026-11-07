@@ -6,7 +6,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from models import Category, Country, RateUpdate, StatusUpdate, Supplier, SupplierCreate
+from models import (
+    Category,
+    Country,
+    RateUpdate,
+    StatusUpdate,
+    Supplier,
+    SupplierCreate,
+    SupplierDetail,
+    SupplierListItem,
+)
 from database import SupplierRepository
 from dependencies import get_current_user
 
@@ -36,7 +45,7 @@ def _found(supplier: Supplier | None, supplier_id: int) -> Supplier:
 
 @router.post(
     "",
-    response_model=Supplier,
+    response_model=SupplierDetail,
     status_code=status.HTTP_201_CREATED,
     responses={409: {"description": "A supplier with that name already exists"}},
 )
@@ -46,7 +55,7 @@ def create_supplier(payload: SupplierCreate, repository: Repository) -> Supplier
     return repository.create(payload)
 
 
-@router.get("", response_model=list[Supplier])
+@router.get("", response_model=list[SupplierListItem])
 def list_suppliers(
     repository: Repository,
     country: Country | None = None,
@@ -55,17 +64,17 @@ def list_suppliers(
     return repository.list(country=country, category=category)
 
 
-@router.get("/{supplier_id}", response_model=Supplier, responses=NOT_FOUND)
+@router.get("/{supplier_id}", response_model=SupplierDetail, responses=NOT_FOUND)
 def get_supplier(supplier_id: int, repository: Repository) -> Supplier:
     return _found(repository.get(supplier_id), supplier_id)
 
 
-@router.patch("/{supplier_id}/rate", response_model=Supplier, responses=NOT_FOUND)
+@router.patch("/{supplier_id}/rate", response_model=SupplierDetail, responses=NOT_FOUND)
 def update_rate(supplier_id: int, payload: RateUpdate, repository: Repository) -> Supplier:
     return _found(repository.update_rate(supplier_id, payload.monthly_rate), supplier_id)
 
 
-@router.patch("/{supplier_id}/status", response_model=Supplier, responses=NOT_FOUND)
+@router.patch("/{supplier_id}/status", response_model=SupplierDetail, responses=NOT_FOUND)
 def update_status(supplier_id: int, payload: StatusUpdate, repository: Repository) -> Supplier:
     return _found(repository.update_status(supplier_id, payload.status), supplier_id)
 

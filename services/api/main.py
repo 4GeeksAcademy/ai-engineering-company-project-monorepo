@@ -9,9 +9,11 @@ import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Literal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from database import (
     IncidentRepository,
@@ -79,6 +81,10 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+class Health(BaseModel):
+    status: Literal["ok"]
+
+
+@app.get("/health", response_model=Health)
+def health() -> Health:
+    return Health(status="ok")

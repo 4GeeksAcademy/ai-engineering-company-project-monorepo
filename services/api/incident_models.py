@@ -62,6 +62,28 @@ class Incident(IncidentRecord):
         return list(STATUS_TRANSITIONS[self.status])
 
 
+class IncidentListItem(BaseModel):
+    """Row of GET /api/incidents: what the list shows and acts on. No `source_id` (CSV seed key) or `updated_at`."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    description: str
+    category: IncidentCategory
+    status: IncidentStatus
+    origin: IncidentOrigin
+    branch: Branch
+    created_at: AwareDatetime
+    next_statuses: list[IncidentStatus]
+
+
+class IncidentDetail(IncidentListItem):
+    """One incident (create, read, status change): the list row plus `updated_at`."""
+
+    updated_at: AwareDatetime
+
+
 class StatusUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

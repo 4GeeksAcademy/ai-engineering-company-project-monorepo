@@ -175,9 +175,7 @@ export type IncidentInput = {
 export type Incident = IncidentInput & {
   id: number;
   status: IncidentStatus;
-  source_id: string | null;
   created_at: string;
-  updated_at: string;
   next_statuses: IncidentStatus[];
 };
 

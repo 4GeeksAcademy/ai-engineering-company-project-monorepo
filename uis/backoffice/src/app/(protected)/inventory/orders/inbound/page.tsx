@@ -41,7 +41,7 @@ function InboundForm() {
     setSaving(true);
     try {
       const order = await createInboundOrder({ asset_id: asset.id, quantity: Number(quantity), supplier: supplier.trim(), office: asset.office });
-      setNotice(`Entrada registrada: ${order.quantity} × ${order.asset.name} (${order.asset.sku}) de ${order.supplier}.`);
+      setNotice(`Entrada registrada: ${order.quantity} × ${order.asset_name} (${order.asset_sku}) de ${order.supplier}.`);
       setAssetId("");
       setQuantity("");
       setSupplier("");

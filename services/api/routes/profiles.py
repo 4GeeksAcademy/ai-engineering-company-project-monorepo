@@ -6,14 +6,14 @@ from fastapi import APIRouter, HTTPException
 
 import user_service
 from dependencies import CurrentUser, UserRepo
-from user_models import Profile, ProfileUpdate
+from user_models import Profile, ProfilePublic, ProfileUpdate
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 UNAUTHORIZED = {401: {"description": "Missing, malformed or expired token"}}
 
 
-@router.get("/me", response_model=Profile, responses={**UNAUTHORIZED, 404: {"description": "Profile not found"}})
+@router.get("/me", response_model=ProfilePublic, responses={**UNAUTHORIZED, 404: {"description": "Profile not found"}})
 def get_my_profile(current: CurrentUser, repository: UserRepo) -> Profile:
     profile = user_service.get_profile(repository, current.id)
     if profile is None:
@@ -21,6 +21,6 @@ def get_my_profile(current: CurrentUser, repository: UserRepo) -> Profile:
     return profile
 
 
-@router.put("/me", response_model=Profile, responses=UNAUTHORIZED)
+@router.put("/me", response_model=ProfilePublic, responses=UNAUTHORIZED)
 def update_my_profile(payload: ProfileUpdate, current: CurrentUser, repository: UserRepo) -> Profile:
     return user_service.update_profile(repository, current.id, payload)

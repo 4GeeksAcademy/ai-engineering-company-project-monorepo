@@ -54,7 +54,7 @@ def test_create_returns_201_with_defaults(auth_client):
     incident = create(auth_client, title="  Zendesk caído  ")
     assert incident["title"] == "Zendesk caído"
     assert incident["status"] == "open"
-    assert incident["source_id"] is None
+    assert "source_id" not in incident
     assert incident["next_statuses"] == ["in_progress", "discarded"]
     assert incident["created_at"] == incident["updated_at"]
     assert incident["created_at"].endswith("Z") or incident["created_at"].endswith("+00:00")

@@ -12,6 +12,7 @@ import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from dependencies import get_current_user
 from nexova_shared.csv_validation import (
@@ -26,6 +27,29 @@ from nexova_shared.csv_validation import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class AnalysisLabels(BaseModel):
+    rules: dict[str, str]
+    problems: dict[str, str]
+    scores: dict[int, str]
+
+
+class AnalysisResponse(BaseModel):
+    """Metrics of an uploaded CSV, as the dashboard reads them. Row contents are never echoed."""
+
+    total_records: int
+    valid_records: int
+    invalid_records: int
+    invalid_breakdown: dict[str, int]
+    invalid_by_field: dict[str, dict[str, int]]
+    by_category: dict[str, int]
+    by_status: dict[str, int]
+    scored_tickets: int
+    closed_tickets: int
+    average_score: float | None
+    score_breakdown: dict[int, int]
+    labels: AnalysisLabels
 
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 CSV_CONTENT_TYPES = {"text/csv", "application/csv", "application/vnd.ms-excel", "text/plain", "application/octet-stream"}
@@ -48,7 +72,7 @@ def _response(result: AnalysisResult) -> dict:
     }
 
 
-@router.post("/analyze")
+@router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_incidents(file: UploadFile = File(...)) -> dict:
     global _last_result
     if not file.filename or not file.filename.lower().endswith(".csv"):
@@ -74,7 +98,11 @@ async def analyze_incidents(file: UploadFile = File(...)) -> dict:
     return _response(result)
 
 
-@router.get("/results/export")
+@router.get(
+    "/results/export",
+    response_class=StreamingResponse,
+    responses={200: {"content": {"text/csv": {}}, "description": "results.csv attachment (a file, not JSON)"}},
+)
 def export_results() -> StreamingResponse:
     if _last_result is None:
         raise HTTPException(status_code=404, detail="No analysis has been run yet; upload a CSV first")

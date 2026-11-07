@@ -15,7 +15,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from database import IncidentRepository, InvalidStatusTransition
 from dependencies import get_current_user
 from incident_errors import IncidentRoute
-from incident_models import Incident, IncidentCreate, IncidentRecord, IncidentSummary, StatusUpdate
+from incident_models import (
+    Incident,
+    IncidentCreate,
+    IncidentDetail,
+    IncidentListItem,
+    IncidentRecord,
+    IncidentSummary,
+    StatusUpdate,
+)
 from nexova_shared.incidents import STATUS_TRANSITIONS, Branch, IncidentCategory, IncidentOrigin, IncidentStatus
 
 router = APIRouter(
@@ -51,13 +59,13 @@ def _transition_message(error: InvalidStatusTransition) -> str:
     return f"No se puede pasar de «{current}» a «{new}»: desde «{current}» solo se puede pasar a {options}"
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=IncidentDetail, status_code=status.HTTP_201_CREATED)
 def create_incident(data: IncidentCreate, repository: Repository) -> Incident:
     now = datetime.now(UTC)
     return repository.create(IncidentRecord(**data.model_dump(), created_at=now, updated_at=now))
 
 
-@router.get("")
+@router.get("", response_model=list[IncidentListItem])
 def list_incidents(
     repository: Repository,
     status: IncidentStatus | None = None,
@@ -70,13 +78,13 @@ def list_incidents(
 
 
 # Declared before /{incident_id} so "summary" is never read as an id.
-@router.get("/summary")
+@router.get("/summary", response_model=IncidentSummary)
 def incidents_summary(repository: Repository) -> IncidentSummary:
     """Totals by status, category, origin and branch; every allowed value is present, even at 0."""
     return repository.summary()
 
 
-@router.get("/{incident_id}")
+@router.get("/{incident_id}", response_model=IncidentDetail)
 def get_incident(incident_id: int, repository: Repository) -> Incident:
     incident = repository.get(incident_id)
     if incident is None:
@@ -84,7 +92,7 @@ def get_incident(incident_id: int, repository: Repository) -> Incident:
     return incident
 
 
-@router.patch("/{incident_id}/status")
+@router.patch("/{incident_id}/status", response_model=IncidentDetail)
 def update_incident_status(incident_id: int, data: StatusUpdate, repository: Repository) -> Incident:
     """Change only the status (and updated_at), following the lifecycle in nexova_shared.incidents."""
     try:

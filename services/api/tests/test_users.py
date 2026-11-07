@@ -15,10 +15,18 @@ def _make_admin(client, user_id: str) -> None:
     client.app.state.user_repository.update_user(user_id, {"role": "admin"})
 
 
-def test_register_returns_public_fields_only(anon_client):
+def test_register_does_not_echo_the_email_or_any_credential(anon_client):
     body = register(anon_client, "ana@nexova.example", name="Ana")
+    assert set(body) == {"id", "role"}
+    assert body["role"] == "user"
+
+
+def test_user_detail_exposes_the_documented_fields_only(anon_client):
+    user = register(anon_client, "ana@nexova.example")
+    headers = login(anon_client, "ana@nexova.example")
+    body = anon_client.get(f"/users/{user['id']}", headers=headers).json()
     assert set(body) == {"id", "email", "is_active", "role", "created_at"}
-    assert body["role"] == "user" and body["is_active"] is True
+    assert body["is_active"] is True
     assert datetime.fromisoformat(body["created_at"]).utcoffset() == UTC.utcoffset(None)
 
 
@@ -67,8 +75,9 @@ def test_user_routes_require_a_token(anon_client, method, path):
 def test_list_and_get_users_never_expose_the_hash(auth_client):
     users = auth_client.get("/users").json()
     assert len(users) == 1
-    assert "hashed_password" not in users[0]
-    assert auth_client.get(f"/users/{users[0]['id']}").json() == users[0]
+    assert set(users[0]) == {"id", "email", "role", "is_active"}
+    detail = auth_client.get(f"/users/{users[0]['id']}").json()
+    assert detail == {**users[0], "created_at": detail["created_at"]}
     assert auth_client.get("/users/unknown").status_code == 404
 
 
@@ -114,7 +123,8 @@ def test_user_a_cannot_modify_user_b(anon_client, method, payload):
     bob = register(anon_client, "bob@nexova.example")
     headers = login(anon_client, "ana@nexova.example")
     assert anon_client.request(method, f"/users/{bob['id']}", json=payload, headers=headers).status_code == 403
-    assert anon_client.get(f"/users/{bob['id']}", headers=headers).json() == bob
+    after = anon_client.get(f"/users/{bob['id']}", headers=headers).json()
+    assert after["id"] == bob["id"] and after["email"] == "bob@nexova.example" and after["role"] == "user"
 
 
 def test_admin_can_update_role_and_delete_other_users(anon_client):
@@ -224,4 +234,5 @@ def test_admin_can_delete_themselves(anon_client):
 def test_empty_update_body_is_a_no_op(anon_client):
     user = register(anon_client, "ana@nexova.example")
     headers = login(anon_client, "ana@nexova.example")
-    assert anon_client.put(f"/users/{user['id']}", json={}, headers=headers).json() == user
+    before = anon_client.get(f"/users/{user['id']}", headers=headers).json()
+    assert anon_client.put(f"/users/{user['id']}", json={}, headers=headers).json() == before

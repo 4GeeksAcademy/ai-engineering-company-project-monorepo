@@ -10,7 +10,7 @@ from conftest import login, register
 def test_get_my_profile(anon_client):
     user = register(anon_client, "ana@nexova.example", name="Ana", phone="600")
     body = anon_client.get("/profiles/me", headers=login(anon_client, "ana@nexova.example")).json()
-    assert body["user_id"] == user["id"]
+    assert set(body) == {"name", "phone", "address"}
     assert (body["name"], body["phone"], body["address"]) == ("Ana", "600", None)
 
 

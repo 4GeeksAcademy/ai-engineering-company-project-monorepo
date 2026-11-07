@@ -41,7 +41,7 @@ export default function OrderHistoryPage() {
           <tbody>
             {orders.map((order) => (
               <tr key={`${order.order_type}-${order.id}`}>
-                <td>{order.asset.name} <code>{order.asset.sku}</code></td>
+                <td>{order.asset_name} <code>{order.asset_sku}</code></td>
                 <td className="num">{order.order_type === "inbound" ? "+" : "−"}{order.quantity}</td>
                 <td>
                   {order.order_type === "inbound"

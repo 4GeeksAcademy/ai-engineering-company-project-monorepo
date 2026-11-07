@@ -78,7 +78,7 @@ function OutboundForm() {
         assigned_to: exitType === "allocation" ? assignedTo.trim() : null,
         office: asset.office,
       });
-      setNotice(`Salida registrada (${EXIT_TYPE_LABELS[order.exit_type]}): ${order.quantity} × ${order.asset.name} (${order.asset.sku}).`);
+      setNotice(`Salida registrada (${EXIT_TYPE_LABELS[order.exit_type]}): ${order.quantity} × ${order.asset_name} (${order.asset_sku}).`);
       setQuantity("");
       setAssignedTo("");
       setStockVersion((version) => version + 1); // refresh the stock shown

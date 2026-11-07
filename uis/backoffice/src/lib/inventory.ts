@@ -32,12 +32,12 @@ export type Asset = {
   current_stock: number;
 };
 
-export type AssetSummary = Omit<Asset, "current_stock">;
-
 export type AssetEntry = {
   order_type: "inbound";
   id: number;
-  asset: AssetSummary;
+  asset_id: number;
+  asset_name: string;
+  asset_sku: string;
   quantity: number;
   supplier: string;
   office: Office;
@@ -48,7 +48,9 @@ export type AssetEntry = {
 export type AssetExit = {
   order_type: "outbound";
   id: number;
-  asset: AssetSummary;
+  asset_id: number;
+  asset_name: string;
+  asset_sku: string;
   quantity: number;
   exit_type: ExitType;
   assigned_to: string | null;

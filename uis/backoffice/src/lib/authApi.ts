@@ -5,7 +5,7 @@ export type ProfileFields = { name: string | null; phone: string | null; address
 
 export type Me = { email: string; role: "admin" | "manager" | "user"; profile: ProfileFields | null };
 
-export type Profile = ProfileFields & { id: string; user_id: string };
+export type Profile = ProfileFields;
 
 export type RegisterInput = { email: string; password: string } & Partial<ProfileFields>;
 

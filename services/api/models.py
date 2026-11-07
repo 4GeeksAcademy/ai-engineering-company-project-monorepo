@@ -80,12 +80,36 @@ class SupplierCreate(BaseModel):
 
 
 class Supplier(SupplierCreate):
-    """Supplier as returned by the API: the stored fields plus `id` and `updated_at`."""
+    """Supplier as stored: the creatable fields plus `id` and `updated_at`. Internal; responses use
+    SupplierDetail / SupplierListItem."""
 
     model_config = ConfigDict(extra="ignore")
 
     id: int
     updated_at: datetime
+
+
+class SupplierListItem(BaseModel):
+    """Row of GET /suppliers: what the directory table shows. `contact_email` is left for the detail view."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    country: Country
+    categories: list[Category]
+    monthly_rate: float
+    currency: Currency
+    status: SupplierStatus
+    contract_renewal_date: date | None
+    notes: str | None
+    updated_at: datetime
+
+
+class SupplierDetail(SupplierListItem):
+    """One supplier (create, read, rate and status updates): the row plus the contact email."""
+
+    contact_email: EmailStr | None
 
 
 class RateUpdate(BaseModel):

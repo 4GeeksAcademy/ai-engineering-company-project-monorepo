@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Response, status
 import user_service
 from database import EmailAlreadyRegistered
 from dependencies import CurrentUser, UserRepo
-from user_models import Role, User, UserCreate, UserPublic, UserUpdate
+from user_models import Role, User, UserCreate, UserListItem, UserPublic, UserRegistered, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,7 +28,7 @@ def _require_self_or_admin(current: User, user_id: str) -> None:
         raise HTTPException(status_code=403, detail="You can only manage your own account")
 
 
-@router.post("", response_model=UserPublic, status_code=status.HTTP_201_CREATED, responses=CONFLICT)
+@router.post("", response_model=UserRegistered, status_code=status.HTTP_201_CREATED, responses=CONFLICT)
 def create_user(payload: UserCreate, repository: UserRepo) -> User:
     try:
         return user_service.create_user(repository, payload)
@@ -36,7 +36,7 @@ def create_user(payload: UserCreate, repository: UserRepo) -> User:
         raise HTTPException(status_code=409, detail="That email is already registered") from error
 
 
-@router.get("", response_model=list[UserPublic], responses=UNAUTHORIZED)
+@router.get("", response_model=list[UserListItem], responses=UNAUTHORIZED)
 def list_users(_: CurrentUser, repository: UserRepo) -> list[User]:
     return user_service.list_users(repository)
 

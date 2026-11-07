@@ -3,6 +3,7 @@
 Users and profiles live only in TinyDB. Other modules reference a user by its
 TinyDB `id` (a uuid4 string) as `user_uuid`. `hashed_password` exists only on
 the internal `User` model; every response model leaves it out.
+Response models list each exposed attribute explicitly.
 """
 
 from __future__ import annotations
@@ -64,8 +65,8 @@ class UserUpdate(BaseModel):
     role: Role | None = None
 
 
-class UserPublic(BaseModel):
-    """User as returned by the API: never includes the password hash."""
+class User(BaseModel):
+    """User as stored in TinyDB. Internal only: never used as a response_model."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -74,12 +75,33 @@ class UserPublic(BaseModel):
     is_active: bool
     role: Role
     created_at: datetime
-
-
-class User(UserPublic):
-    """User as stored in TinyDB. Internal only."""
-
     hashed_password: str
+
+
+class UserRegistered(BaseModel):
+    """Answer to the public sign-up (POST /users). Echoes neither the email nor any credential."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    role: Role
+
+
+class UserListItem(BaseModel):
+    """Row of GET /users: enough to identify an account and its state."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: EmailStr
+    role: Role
+    is_active: bool
+
+
+class UserPublic(UserListItem):
+    """Detail of one account (GET/PUT /users/{id}): the list row plus `created_at`. No password hash."""
+
+    created_at: datetime
 
 
 class ProfileUpdate(ProfileFields):
@@ -87,10 +109,18 @@ class ProfileUpdate(ProfileFields):
 
 
 class Profile(ProfileFields):
+    """Profile as stored. Internal only: `id` and `user_id` are server-side keys."""
+
     model_config = ConfigDict(extra="ignore")
 
     id: str
     user_id: str
+
+
+class ProfilePublic(ProfileFields):
+    """Profile as returned by GET/PUT /profiles/me: only the three editable fields."""
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PasswordResetToken(BaseModel):
@@ -103,6 +133,8 @@ class PasswordResetToken(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
 
 
@@ -130,6 +162,10 @@ class Token(BaseModel):
 
 
 class Me(BaseModel):
+    """Caller's own account (GET /auth/me). Echoing the email is intentional: the profile view needs it."""
+
+    model_config = ConfigDict(from_attributes=True)
+
     email: EmailStr
     role: Role
     profile: ProfileFields | None

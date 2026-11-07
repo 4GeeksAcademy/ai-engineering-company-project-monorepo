@@ -74,7 +74,7 @@ def test_no_endpoint_edits_stock(auth_client):
     for method in (auth_client.put, auth_client.patch):
         assert method(f"/inventory/products/{asset_id}", json={"current_stock": 99}).status_code == 405
     created = auth_client.post("/inventory/products", json={**ASSET, "sku": "NXV-IT-009", "current_stock": 99})
-    assert created.json()["current_stock"] == 0
+    assert created.status_code == 422  # write schemas reject fields they do not own
 
 
 # --- Exits above the stock ----------------------------------------------------------------------------
@@ -154,8 +154,9 @@ def test_user_uuid_comes_from_the_token_not_the_body(anon_client):
     user = register(anon_client, "ops@nexova.example")
     anon_client.headers.update(login(anon_client, "ops@nexova.example"))
     asset_id = new_asset(anon_client)["id"]
-    entry = inbound(anon_client, asset_id, 5, user_uuid="forged-id").json()
-    exit_ = outbound(anon_client, asset_id, 1, user_uuid="forged-id").json()
+    assert inbound(anon_client, asset_id, 5, user_uuid="forged-id").status_code == 422
+    entry = inbound(anon_client, asset_id, 5).json()
+    exit_ = outbound(anon_client, asset_id, 1).json()
     assert entry["user_uuid"] == exit_["user_uuid"] == user["id"]
 
 
@@ -181,7 +182,8 @@ def test_orders_list_has_both_types_with_asset_data(auth_client):
     orders = auth_client.get("/inventory/orders").json()
     assert {order["order_type"] for order in orders} == {"inbound", "outbound"}
     for order in orders:
-        assert order["asset"] == {"id": asset_id, **{key: ASSET[key] for key in ("name", "sku", "category", "office")}}
+        assert (order["asset_id"], order["asset_name"], order["asset_sku"]) == (asset_id, ASSET["name"], ASSET["sku"])
+        assert "asset" not in order
         assert order["office"] == "Valencia"
         assert order["user_uuid"]
 
@@ -192,7 +194,7 @@ def test_orders_can_be_filtered_by_office(auth_client):
     inbound(auth_client, valencia, 5)
     inbound(auth_client, miami, 5, office="Miami")
     orders = auth_client.get("/inventory/orders", params={"office": "Miami"}).json()
-    assert [order["asset"]["id"] for order in orders] == [miami]
+    assert [order["asset_id"] for order in orders] == [miami]
     assert [asset["id"] for asset in auth_client.get("/inventory/products", params={"office": "Miami"}).json()] == [miami]
 
 

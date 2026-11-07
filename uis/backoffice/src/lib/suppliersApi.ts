@@ -50,7 +50,12 @@ export type SupplierInput = {
   notes?: string | null;
 };
 
-export type Supplier = Required<SupplierInput> & { id: number; updated_at: string };
+/** `contact_email` only comes with the detail responses (create, rate and status updates), not with the list. */
+export type Supplier = Omit<Required<SupplierInput>, "contact_email"> & {
+  contact_email?: string | null;
+  id: number;
+  updated_at: string;
+};
 
 export type SupplierFilters = { country?: Country | ""; category?: Category | "" };
 
