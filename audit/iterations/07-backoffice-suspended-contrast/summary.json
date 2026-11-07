@@ -1,0 +1,40 @@
+[
+  {
+    "page": "backoffice/suppliers",
+    "mode": "mobile",
+    "perf": 99,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.7 s",
+    "lcp": "0.9 s",
+    "tbt": "110 ms",
+    "cls": "0.003",
+    "si": "0.7 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      96,
+      99,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/suppliers",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0.008",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+]
