@@ -1,20 +1,28 @@
-"""One-time password reset token storage over TinyDB."""
+"""One-time password reset token storage over SQL (Postgres/Supabase).
+
+Migrated from TinyDB — see app/models/password_reset_token_storage.py.
+No Pydantic schema existed for this entity even before the migration
+(built as a raw dict); that remains true.
+"""
 
 from __future__ import annotations
 
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
-from tinydb import TinyDB, where
+from sqlalchemy import and_, select, update
+from sqlmodel import Session
 
 from app.core.config import get_settings
+from app.core.database import engine
+from app.models.password_reset_token_storage import password_reset_tokens_table
 from app.models.user import UserUpdate
 from app.services import users as users_service
 
-_DB_PATH = Path(__file__).resolve().parent.parent.parent / "db.json"
-TOKENS_TABLE = "password_reset_tokens"
+
+def _get_session() -> Session:
+    return Session(engine)
 
 
 def _now() -> datetime:
@@ -31,45 +39,55 @@ def issue_token(user_id: int) -> str:
     now = _now()
     raw_token = secrets.token_urlsafe(32)
 
-    with TinyDB(_DB_PATH) as db:
-        tokens = db.table(TOKENS_TABLE)
-
-        tokens.update(
-            {"used_at": now.isoformat()},
-            (where("user_id") == user_id) & (where("used_at") == None),  # noqa: E711
+    with _get_session() as db:
+        db.execute(
+            update(password_reset_tokens_table)
+            .where(
+                and_(
+                    password_reset_tokens_table.c.user_id == user_id,
+                    password_reset_tokens_table.c.used_at.is_(None),
+                )
+            )
+            .values(used_at=now)
         )
-        tokens.insert(
-            {
-                "user_id": user_id,
-                "token_hash": _hash_token(raw_token),
-                "created_at": now.isoformat(),
-                "expires_at": (
-                    now + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES)
-                ).isoformat(),
-                "used_at": None,
-            }
+        db.execute(
+            password_reset_tokens_table.insert().values(
+                user_id=user_id,
+                token_hash=_hash_token(raw_token),
+                created_at=now,
+                expires_at=now + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES),
+                used_at=None,
+            )
         )
+        db.commit()
     return raw_token
 
 
 def consume_token(token: str, new_password: str) -> bool:
     """Update the user's password if the token is valid, unexpired, and unused."""
-    with TinyDB(_DB_PATH) as db:
-        tokens = db.table(TOKENS_TABLE)
-        doc = tokens.get(where("token_hash") == _hash_token(token))
+    with _get_session() as db:
+        row = db.execute(
+            select(password_reset_tokens_table).where(
+                password_reset_tokens_table.c.token_hash == _hash_token(token)
+            )
+        ).first()
 
-        if doc is None or doc.get("used_at") is not None:
+        if row is None or row.used_at is not None:
             return False
 
-        expires_at = datetime.fromisoformat(doc["expires_at"])
+        expires_at = row.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
         if expires_at <= _now():
             return False
 
-        user_id = doc["user_id"]
-        tokens.update(
-            {"used_at": _now().isoformat()},
-            doc_ids=[doc.doc_id],
+        user_id = row.user_id
+        db.execute(
+            update(password_reset_tokens_table)
+            .where(password_reset_tokens_table.c.id == row.id)
+            .values(used_at=_now())
         )
+        db.commit()
 
     updated_user = users_service.update_user(
         user_id,

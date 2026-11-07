@@ -2,72 +2,98 @@
 
 from __future__ import annotations
 
-import json
+from datetime import datetime, timezone
+
 import pytest
-from datetime import date
 from httpx import ASGITransport, AsyncClient
-from pathlib import Path
-from tinydb import TinyDB
+from sqlalchemy import insert, select
 
 from app.core import cache
 from app.core.security import create_access_token
 from app.main import app
-
-
-# ── Helpers ───────────────────────────────────────────────
-TEST_DB = Path(__file__).parent / "_test_suppliers.json"
-
-
-def _seed_test_db(docs: list[dict] | None = None) -> TinyDB:
-    """Create a fresh test TinyDB and optionally seed it."""
-    db = TinyDB(TEST_DB)
-    if docs:
-        table = db.table("suppliers")
-        for doc in docs:
-            table.insert(doc)
-    return db
-
-
-def _clean_test_db():
-    """Remove the test database file."""
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
+from app.models.supplier_storage import suppliers_table
 
 AUTH_HEADERS: dict[str, str] = {}
 
 
-def _seed_staff_token() -> str:
-    """Insert an admin user into the test DB and mint a JWT for it."""
-    db = TinyDB(TEST_DB)
-    uid = db.table("users").insert({
-        "email": "staff@test.com",
-        "hashed_password": "not-used-by-these-tests",
-        "is_active": True,
-        "role": "admin",
-        "created_at": "2026-01-01T00:00:00+00:00",
-    })
-    db.table("profiles").insert({
-        "user_id": uid, "name": "Staff", "phone": None, "address": None,
-    })
-    db.close()
-    return create_access_token(subject=str(uid), role="admin")
+def _seed_test_db(docs: list[dict] | None = None) -> None:
+    """Insert raw rows directly into the suppliers table (bypassing the
+    service layer / its validation), mirroring what the old TinyDB
+    version of this helper did. ISO date/datetime strings (as the test
+    fixtures below pass them) are parsed into real date/datetime objects
+    — a raw Core insert, unlike the service layer, does no coercion."""
+    if not docs:
+        return
+
+    from datetime import date as date_cls
+    from datetime import datetime as datetime_cls
+
+    from app.services.suppliers import engine
+
+    all_columns = suppliers_table.columns.keys()
+    parsed_docs = []
+    for doc in docs:
+        # executemany() requires every row dict to have the exact same
+        # keys — fill any column the fixture omitted with None/a default,
+        # same as the service layer (and the old TinyDB doc shape) would.
+        parsed = {column: doc.get(column) for column in all_columns if column != "id"}
+        parsed.update({k: v for k, v in doc.items() if k in all_columns})
+        if parsed.get("dietary_preferences") is None:
+            parsed["dietary_preferences"] = []
+        if parsed.get("wants_email_offers") is None:
+            parsed["wants_email_offers"] = False
+        if isinstance(parsed.get("date_of_birth"), str):
+            parsed["date_of_birth"] = date_cls.fromisoformat(parsed["date_of_birth"])
+        for field in ("created_at", "updated_at"):
+            if isinstance(parsed.get(field), str):
+                parsed[field] = datetime_cls.fromisoformat(parsed[field])
+        parsed_docs.append(parsed)
+
+    with engine.connect() as conn:
+        conn.execute(insert(suppliers_table), parsed_docs)
+        conn.commit()
+
+
+def _get_supplier_id_by_email(email: str) -> int:
+    from app.services.suppliers import engine
+
+    with engine.connect() as conn:
+        row = conn.execute(select(suppliers_table.c.id).where(suppliers_table.c.email == email)).one()
+        return row.id
+
+
+def _seed_staff_token() -> int:
+    """Insert an admin user (+ profile) into the test DB and mint a JWT for it."""
+    from app.models.profile_storage import profiles_table
+    from app.models.user_storage import users_table
+    from app.services.users import engine
+
+    with engine.connect() as conn:
+        result = conn.execute(
+            insert(users_table).values(
+                email="staff@test.com",
+                hashed_password="not-used-by-these-tests",
+                is_active=True,
+                role="admin",
+                created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            )
+        )
+        uid = result.inserted_primary_key[0]
+        conn.execute(insert(profiles_table).values(user_id=uid, name="Staff", phone=None, address=None))
+        conn.commit()
+    return uid
 
 
 @pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    """Point the suppliers/profiles routers at the test database for every test."""
-    monkeypatch.setattr("app.routers.suppliers._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    _clean_test_db()
+def _setup(sql_engine):
+    """Seed a staff JWT for every test and reset the in-process cache."""
+    uid = _seed_staff_token()
     AUTH_HEADERS.clear()
-    AUTH_HEADERS["Authorization"] = f"Bearer {_seed_staff_token()}"
+    AUTH_HEADERS["Authorization"] = f"Bearer {create_access_token(subject=str(uid), role='admin')}"
     # The suppliers list is cached in-process (see docs/cache-evaluation.md);
     # without this, a stale entry from a previous test could leak in here.
     cache.invalidate_prefix("")
     yield
-    _clean_test_db()
 
 
 # ── Fixtures ──────────────────────────────────────────────
@@ -279,13 +305,12 @@ class TestListSuppliers:
 class TestGetSupplier:
     @pytest.mark.asyncio
     async def test_get_supplier_by_id(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -312,13 +337,12 @@ class TestGetSupplier:
 class TestUpdateRate:
     @pytest.mark.asyncio
     async def test_update_rate(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -334,13 +358,12 @@ class TestUpdateRate:
 
     @pytest.mark.asyncio
     async def test_update_rate_rejects_zero(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -353,13 +376,12 @@ class TestUpdateRate:
 
     @pytest.mark.asyncio
     async def test_update_rate_rejects_negative(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -386,13 +408,12 @@ class TestUpdateRate:
 class TestUpdateStatus:
     @pytest.mark.asyncio
     async def test_suspend_supplier(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -409,13 +430,12 @@ class TestUpdateStatus:
 
     @pytest.mark.asyncio
     async def test_activate_supplier(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SECOND_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SECOND_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -430,13 +450,12 @@ class TestUpdateStatus:
 
     @pytest.mark.asyncio
     async def test_update_status_rejects_invalid_value(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS
@@ -465,13 +484,12 @@ class TestUpdateStatus:
 class TestDeleteSupplier:
     @pytest.mark.asyncio
     async def test_delete_supplier(self):
-        db = _seed_test_db([{
+        _seed_test_db([{
             **SAMPLE_SUPPLIER,
             "created_at": "2026-01-01T00:00:00+00:00",
             "updated_at": "2026-01-01T00:00:00+00:00",
         }])
-        doc_id = db.table("suppliers").all()[0].doc_id
-        db.close()
+        doc_id = _get_supplier_id_by_email(SAMPLE_SUPPLIER["email"])
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS

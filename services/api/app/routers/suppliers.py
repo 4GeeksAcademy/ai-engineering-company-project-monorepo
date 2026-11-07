@@ -1,12 +1,15 @@
-"""Suppliers CRUD router — Brasa Points supplier directory."""
+"""Suppliers CRUD router — Brasa Points supplier directory.
+
+Migrated from TinyDB: persistence now lives in app/services/suppliers.py
+(this router used to own it directly — the only entity with that
+inconsistency; fixed as part of the SQL migration).
+"""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from tinydb import TinyDB, where
 
 from app.core import cache
 from app.core.deps import require_any_user, require_staff
@@ -19,6 +22,7 @@ from app.models.schemas import (
     SupplierStatus,
     SupplierStatusUpdate,
 )
+from app.services import suppliers as suppliers_service
 
 router = APIRouter(prefix="/suppliers", tags=["suppliers"])
 
@@ -28,44 +32,6 @@ router = APIRouter(prefix="/suppliers", tags=["suppliers"])
 _LIST_CACHE_PREFIX = "suppliers:list"
 _LIST_CACHE_TTL_SECONDS = 180
 
-# ── Database ──────────────────────────────────────────────
-# Shared TinyDB instance (same path used by seed.py)
-import sys
-from pathlib import Path
-
-_DB_PATH = Path(__file__).resolve().parent.parent.parent / "db.json"
-
-
-def _get_db() -> TinyDB:
-    return TinyDB(_DB_PATH)
-
-
-def _get_table(db: TinyDB):
-    return db.table("suppliers")
-
-
-def _doc_to_response(doc: dict) -> SupplierResponse:
-    """Convert a TinyDB document (with doc_id) to a SupplierResponse."""
-    return SupplierResponse(
-        id=doc.doc_id,
-        full_name=doc["full_name"],
-        email=doc["email"],
-        phone=doc["phone"],
-        country=doc["country"],
-        city=doc["city"],
-        favorite_location=doc.get("favorite_location"),
-        dietary_preferences=doc.get("dietary_preferences", []),
-        how_did_you_find_us=doc["how_did_you_find_us"],
-        date_of_birth=doc["date_of_birth"],
-        accepts_terms=doc["accepts_terms"],
-        wants_email_offers=doc.get("wants_email_offers", False),
-        product_category=doc.get("product_category", "Other"),
-        rate=doc.get("rate", 0.0),
-        status=doc.get("status", "active"),
-        created_at=doc["created_at"],
-        updated_at=doc["updated_at"],
-    )
-
 
 # ── POST /suppliers ───────────────────────────────────────
 @router.post("", response_model=ApiResponse[SupplierResponse], status_code=201)
@@ -74,29 +40,15 @@ async def create_supplier(
     current_user: dict = Depends(require_staff),
 ):
     """Register a new supplier (staff only — manager or admin)."""
-    with _get_db() as db:
-        table = _get_table(db)
-
-        # Check for duplicate email
-        if table.search(where("email") == payload.email):
-            raise HTTPException(
-                status_code=409,
-                detail=f"A supplier with email '{payload.email}' already exists.",
-            )
-
-        now = datetime.now(timezone.utc).isoformat()
-        data = payload.model_dump(mode="json")
-        data["date_of_birth"] = str(data["date_of_birth"])
-        data["created_at"] = now
-        data["updated_at"] = now
-
-        doc_id = table.insert(data)
-        doc = table.get(doc_id=doc_id)
+    try:
+        supplier = suppliers_service.create_supplier(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
 
     cache.invalidate_prefix(_LIST_CACHE_PREFIX)
     return ApiResponse(
         message="Supplier registered successfully",
-        data=_doc_to_response(doc),
+        data=supplier,
     )
 
 
@@ -117,18 +69,11 @@ async def list_suppliers(
     if cached is not None:
         return cached
 
-    with _get_db() as db:
-        results = _get_table(db).all()
-
-    if product_category is not None:
-        results = [doc for doc in results if doc.get("product_category") == product_category]
-
-    if status is not None:
-        results = [doc for doc in results if doc.get("status") == status.value]
+    results = suppliers_service.list_suppliers(product_category=product_category, status=status)
 
     response = ApiResponse(
         message=f"Found {len(results)} supplier(s)",
-        data=[_doc_to_response(doc) for doc in results],
+        data=results,
     )
     cache.set(cache_key, response, _LIST_CACHE_TTL_SECONDS)
     return response
@@ -141,13 +86,11 @@ async def get_supplier(
     current_user: dict = Depends(require_any_user),
 ):
     """Return the detail of a supplier by ID (authenticated)."""
-    with _get_db() as db:
-        doc = _get_table(db).get(doc_id=supplier_id)
-
-    if doc is None:
+    supplier = suppliers_service.get_supplier_by_id(supplier_id)
+    if supplier is None:
         raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
 
-    return ApiResponse(data=_doc_to_response(doc))
+    return ApiResponse(data=supplier)
 
 
 # ── PATCH /suppliers/{supplier_id}/rate ────────────────────
@@ -158,22 +101,14 @@ async def update_supplier_rate(
     current_user: dict = Depends(require_staff),
 ):
     """Update a supplier's rate (staff only). Records updated_at."""
-    with _get_db() as db:
-        table = _get_table(db)
-
-        doc = table.get(doc_id=supplier_id)
-        if doc is None:
-            raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
-
-        now = datetime.now(timezone.utc).isoformat()
-        table.update({"rate": payload.rate, "updated_at": now}, doc_ids=[supplier_id])
-
-        updated_doc = table.get(doc_id=supplier_id)
+    supplier = suppliers_service.update_supplier_rate(supplier_id, payload.rate)
+    if supplier is None:
+        raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
 
     cache.invalidate_prefix(_LIST_CACHE_PREFIX)
     return ApiResponse(
         message="Supplier rate updated successfully",
-        data=_doc_to_response(updated_doc),
+        data=supplier,
     )
 
 
@@ -185,24 +120,14 @@ async def update_supplier_status(
     current_user: dict = Depends(require_staff),
 ):
     """Activate or suspend a supplier (staff only)."""
-    with _get_db() as db:
-        table = _get_table(db)
-
-        doc = table.get(doc_id=supplier_id)
-        if doc is None:
-            raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
-
-        now = datetime.now(timezone.utc).isoformat()
-        table.update(
-            {"status": payload.status.value, "updated_at": now}, doc_ids=[supplier_id]
-        )
-
-        updated_doc = table.get(doc_id=supplier_id)
+    supplier = suppliers_service.update_supplier_status(supplier_id, payload.status)
+    if supplier is None:
+        raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
 
     cache.invalidate_prefix(_LIST_CACHE_PREFIX)
     return ApiResponse(
         message=f"Supplier status changed to {payload.status.value}",
-        data=_doc_to_response(updated_doc),
+        data=supplier,
     )
 
 
@@ -213,14 +138,8 @@ async def delete_supplier(
     current_user: dict = Depends(require_staff),
 ):
     """Remove a supplier from the directory (staff only)."""
-    with _get_db() as db:
-        table = _get_table(db)
-
-        doc = table.get(doc_id=supplier_id)
-        if doc is None:
-            raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
-
-        table.remove(doc_ids=[supplier_id])
+    if not suppliers_service.delete_supplier(supplier_id):
+        raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
 
     cache.invalidate_prefix(_LIST_CACHE_PREFIX)
     return ApiResponse(message=f"Supplier {supplier_id} deleted successfully")

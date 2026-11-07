@@ -9,31 +9,12 @@ analyze, records list/notes) or an untyped `ApiResponse` wrapper
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
-TEST_DB = Path(__file__).parent / "_test_serialization_contracts.json"
-
-
-def _clean_test_db():
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.incidents._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.records._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.routers.suppliers._DB_PATH", TEST_DB)
-    _clean_test_db()
-    yield
-    _clean_test_db()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 def _auth_headers(token: str) -> dict[str, str]:

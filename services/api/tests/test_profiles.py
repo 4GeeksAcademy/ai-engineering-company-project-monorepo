@@ -4,31 +4,15 @@ from __future__ import annotations
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from pathlib import Path
-from tinydb import TinyDB, where
+from sqlalchemy import select
 
 from app.main import app
 from app.models.profile import ProfileUpdate
+from app.models.profile_storage import profiles_table
 from app.services import profiles as profiles_service
 from app.services import users as users_service
 
-
-TEST_DB = Path(__file__).parent / "_test_profiles.json"
-
-
-def _clean_test_db():
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    """Point both the users and profiles services at the test database."""
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    _clean_test_db()
-    yield
-    _clean_test_db()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 def _auth_headers(token: str) -> dict[str, str]:
@@ -51,10 +35,11 @@ async def _login(client: AsyncClient, email: str, password: str = "secret123") -
 
 
 def _stored_profile(user_id: int) -> dict | None:
-    db = TinyDB(TEST_DB)
-    doc = db.table("profiles").get(where("user_id") == user_id)
-    db.close()
-    return doc
+    from app.services.profiles import engine
+
+    with engine.connect() as conn:
+        row = conn.execute(select(profiles_table).where(profiles_table.c.user_id == user_id)).first()
+        return dict(row._mapping) if row is not None else None
 
 
 # ── GET /profiles/me ──────────────────────────────────────
@@ -301,12 +286,13 @@ class TestProfileService:
         ) as client:
             created = await _register(client, "ana@test.com", name="Ana")
 
-        db = TinyDB(TEST_DB)
-        profiles = db.table("profiles").all()
-        db.close()
+        from app.services.profiles import engine
+
+        with engine.connect() as conn:
+            profiles = conn.execute(select(profiles_table)).all()
 
         assert len(profiles) == 1
-        assert profiles[0]["user_id"] == created["id"]
+        assert profiles[0].user_id == created["id"]
 
     @pytest.mark.asyncio
     async def test_create_profile_rejects_duplicate_user_id(self):

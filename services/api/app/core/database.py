@@ -1,8 +1,14 @@
 """Database clients: legacy TinyDB store and the SQLModel/Supabase engine.
 
-TinyDB keeps backing the current services (users, records, incidents,
-suppliers). The SQLModel engine is the entry point for anything migrating
-to Supabase (Postgres).
+users/profiles/password_reset_tokens/suppliers/incidents/records/
+candidate_notes have all been migrated off TinyDB to SQL — see
+app/models/*_storage.py and
+supabase/migrations/20261106120000_create_users_profiles_tokens_suppliers_incidents_records.sql.
+`get_tinydb()`/`TINYDB_PATH` are kept only for `migrate_tinydb_to_sql.py`
+(the one-time migration script) to read the legacy `db.json` snapshot —
+no application service reads or writes TinyDB anymore. Safe to remove
+once that migration has run and been verified against the real database
+(see migrate_tinydb_to_sql.py's own docstring for the exact sequence).
 """
 
 from __future__ import annotations

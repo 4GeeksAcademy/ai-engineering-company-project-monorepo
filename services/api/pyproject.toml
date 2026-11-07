@@ -29,6 +29,7 @@ seed-incidents = "seed_incidents:main"
 seed-inventory = "seed_inventory:main"
 benchmark = "benchmark_endpoints:main"
 generate-events = "generate_events:main"
+migrate-tinydb = "migrate_tinydb_to_sql:main"
 
 [project.optional-dependencies]
 test = [

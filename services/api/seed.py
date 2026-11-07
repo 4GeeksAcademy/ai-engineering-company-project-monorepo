@@ -1,11 +1,10 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["tinydb>=4.8.0"]
-# ///
-"""Seed the TinyDB database with initial Brasa Points suppliers.
+"""Seed the SQL database (Postgres/Supabase) with initial Brasa Points suppliers.
 
 Initial supplier data sourced from the Brasaland company context
 (uis/backoffice/lib/data.ts — brasaPointsMembers).
+
+Migrated from TinyDB: uses app.services.suppliers (SQL-backed) instead of
+writing to db.json directly.
 
 Usage (via uv):
     uv run seed
@@ -13,14 +12,8 @@ Usage (via uv):
 
 from __future__ import annotations
 
-import sys
-from datetime import date, datetime, timezone
-from pathlib import Path
-
-from tinydb import TinyDB, Query
-
-# ── Database path ────────────────────────────────────────────────
-DB_PATH = Path(__file__).parent / "db.json"
+from app.models.schemas import SupplierCreate
+from app.services import suppliers as suppliers_service
 
 # ── Initial supplier data (from company context) ────────────────
 INITIAL_SUPPLIERS: list[dict] = [
@@ -156,53 +149,34 @@ INITIAL_SUPPLIERS: list[dict] = [
 
 
 def seed() -> None:
-    """Insert initial suppliers into TinyDB, skipping duplicates by email."""
-    try:
-        with TinyDB(DB_PATH) as db:
-            suppliers_table = db.table("suppliers")
+    """Insert initial suppliers into SQL, skipping duplicates by email."""
+    inserted = 0
+    skipped = 0
 
-            existing_emails: set[str] = {
-                doc["email"] for doc in suppliers_table.all()
-            }
+    for supplier in INITIAL_SUPPLIERS:
+        try:
+            created = suppliers_service.create_supplier(SupplierCreate(**supplier))
+        except ValueError:
+            skipped += 1
+            print(f"  ⏭  Skipped (duplicate): {supplier['full_name']} <{supplier['email']}>")
+            continue
+        inserted += 1
+        print(f"  ✅ Inserted: {created['full_name']} <{created['email']}> (id={created['id']})")
 
-            inserted = 0
-            skipped = 0
+    total_in_db = len(suppliers_service.list_suppliers())
 
-            now = datetime.now(timezone.utc).isoformat()
-
-            for supplier in INITIAL_SUPPLIERS:
-                if supplier["email"] in existing_emails:
-                    skipped += 1
-                    print(f"  ⏭  Skipped (duplicate): {supplier['full_name']} <{supplier['email']}>")
-                    continue
-
-                suppliers_table.insert({
-                    **supplier,
-                    "created_at": now,
-                    "updated_at": now,
-                })
-                existing_emails.add(supplier["email"])
-                inserted += 1
-                print(f"  ✅ Inserted: {supplier['full_name']} <{supplier['email']}>")
-
-            total_in_db = len(suppliers_table)
-
-            print()
-            print("─" * 50)
-            print(f"  📊 Summary")
-            print(f"     Inserted : {inserted}")
-            print(f"     Skipped  : {skipped}")
-            print(f"     Total in DB: {total_in_db}")
-            print("─" * 50)
-    except OSError as exc:
-        print(f"❌ Could not write to the database at {DB_PATH}: {exc}", file=sys.stderr)
-        sys.exit(1)
+    print()
+    print("─" * 50)
+    print("  📊 Summary")
+    print(f"     Inserted : {inserted}")
+    print(f"     Skipped  : {skipped}")
+    print(f"     Total in DB: {total_in_db}")
+    print("─" * 50)
 
 
 def main() -> None:
     """Entry point for `uv run seed`."""
-    print("🌱 Seeding Brasaland suppliers into TinyDB …")
-    print(f"   Database: {DB_PATH}")
+    print("🌱 Seeding Brasaland suppliers into SQL …")
     print()
     seed()
     print("\nDone! ✨")

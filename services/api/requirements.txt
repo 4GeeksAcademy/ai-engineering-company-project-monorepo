@@ -18,6 +18,9 @@ resend==2.49.0
 sqlmodel>=0.0.48
 psycopg2-binary>=2.9.13
 
+# ── Data analysis (telemetry report pipeline) ─────────────
+pandas>=2.2
+
 # ── Dev / Test ────────────────────────────────────────────
 pytest==8.3.5
 pytest-asyncio==0.25.3

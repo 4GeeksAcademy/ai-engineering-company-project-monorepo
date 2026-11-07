@@ -15,31 +15,15 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from httpx import ASGITransport, AsyncClient
 from jose import jwt
-from pathlib import Path
-from tinydb import TinyDB, where
-from tinydb.table import Document
+from sqlalchemy import insert, select
 
 from app.core.config import get_settings
 from app.core.security import ALGORITHM, create_access_token
 from app.main import app
+from app.models.profile_storage import profiles_table
+from app.models.user_storage import users_table
 
-TEST_DB = Path(__file__).parent / "_test_route_protection.json"
-
-
-def _clean_test_db():
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.routers.suppliers._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.incidents._DB_PATH", TEST_DB)
-    _clean_test_db()
-    yield
-    _clean_test_db()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 def _headers(token: str) -> dict[str, str]:
@@ -48,21 +32,24 @@ def _headers(token: str) -> dict[str, str]:
 
 def _token(role: str, *, user_id: int = 1, active: bool = True) -> str:
     """Mint a JWT for a (possibly non-existent) user id with the given role."""
-    # Seed the user so get_current_user can resolve it from the DB
-    db = TinyDB(TEST_DB)
-    table = db.table("users")
-    if table.get(doc_id=user_id) is None:
-        table.insert(Document(
-            {
-                "email": f"{role}{user_id}@test.com",
-                "hashed_password": "x",
-                "is_active": active,
-                "role": role,
-                "created_at": "2026-01-01T00:00:00+00:00",
-            },
-            doc_id=user_id,
-        ))
-    db.close()
+    # Seed the user (with that exact id) so get_current_user can resolve
+    # it from the DB.
+    from app.services.users import engine
+
+    with engine.connect() as conn:
+        existing = conn.execute(select(users_table.c.id).where(users_table.c.id == user_id)).first()
+        if existing is None:
+            conn.execute(
+                insert(users_table).values(
+                    id=user_id,
+                    email=f"{role}{user_id}@test.com",
+                    hashed_password="x",
+                    is_active=active,
+                    role=role,
+                    created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                )
+            )
+            conn.commit()
     return create_access_token(subject=str(user_id), role=role)
 
 
@@ -355,8 +342,11 @@ class TestOwnershipForbidden:
             )
             assert resp.status_code in (200, 404)
 
-            db = TinyDB(TEST_DB)
-            b_profile = db.table("profiles").get(where("user_id") == b_id)
-            db.close()
+            from app.services.profiles import engine
+
+            with engine.connect() as conn:
+                b_profile = conn.execute(
+                    select(profiles_table).where(profiles_table.c.user_id == b_id)
+                ).first()
             if b_profile is not None:
-                assert b_profile["name"] == "B's Name"
+                assert b_profile.name == "B's Name"

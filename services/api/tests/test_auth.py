@@ -2,33 +2,18 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from tinydb import TinyDB
+from sqlalchemy import select
 
 from app.main import app
+from app.models.password_reset_token_storage import password_reset_tokens_table
 from app.models.user import UserUpdate
 from app.services import users as users_service
 
-
-TEST_DB = Path(__file__).parent / "_test_auth.json"
-
-
-def _clean_test_db():
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.password_resets._DB_PATH", TEST_DB)
-    _clean_test_db()
-    yield
-    _clean_test_db()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 async def _register(client: AsyncClient, email: str, **overrides) -> dict:
@@ -176,14 +161,13 @@ class TestPasswordRecovery:
         assert sent[0][0] == "ana@test.com"
         assert "/reset-password?token=" in sent[0][1]
 
-        db = TinyDB(TEST_DB)
-        token_doc = db.table("password_reset_tokens").all()[0]
-        db.close()
-        lifetime = datetime.fromisoformat(token_doc["expires_at"]) - datetime.fromisoformat(
-            token_doc["created_at"]
-        )
+        from app.services.password_resets import engine
+
+        with engine.connect() as conn:
+            token_row = conn.execute(select(password_reset_tokens_table)).first()
+        lifetime = token_row.expires_at - token_row.created_at
         assert lifetime == timedelta(minutes=15)
-        assert "token=" not in token_doc["token_hash"]
+        assert "token=" not in token_row.token_hash
 
     @pytest.mark.asyncio
     async def test_reset_token_changes_password_and_cannot_be_reused(self, monkeypatch):
@@ -242,14 +226,18 @@ class TestPasswordRecovery:
             )
             token = reset_urls[0].split("token=", 1)[1]
 
-            db = TinyDB(TEST_DB)
-            tokens = db.table("password_reset_tokens")
-            token_doc = tokens.all()[0]
-            tokens.update(
-                {"expires_at": (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()},
-                doc_ids=[token_doc.doc_id],
-            )
-            db.close()
+            from sqlalchemy import update
+
+            from app.services.password_resets import engine
+
+            with engine.connect() as conn:
+                token_row = conn.execute(select(password_reset_tokens_table)).first()
+                conn.execute(
+                    update(password_reset_tokens_table)
+                    .where(password_reset_tokens_table.c.id == token_row.id)
+                    .values(expires_at=datetime.now(timezone.utc) - timedelta(seconds=1))
+                )
+                conn.commit()
 
             response = await client.post(
                 "/api/v1/auth/reset-password",

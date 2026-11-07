@@ -5,19 +5,23 @@ kitchen prep or discarded (context.md: "Fresh ingredients selected
 daily" implies spoilage/waste tracking, not just consumption). Mirrors
 InboundStock's shape and FK pattern (app.models.inbound).
 
-`user_uuid` identifies the staff member who logged the exit. Users are
-TinyDB documents (app.services.users), a separate store from this
-Supabase table, so it is kept as a plain string with no SQL-level FK.
+`user_uuid` identifies the staff member who logged the exit — a real FK
+to `users.id` (retrofitted in
+supabase/migrations/20261106130000_add_fk_retrofit_inbound_stock_stock_exits.sql,
+once `users` moved from TinyDB to SQL). Keeps its historical name
+("_uuid") even though it is an integer, not a UUID — see that
+migration's comments.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlmodel import Field, SQLModel
 
 from app.models.schemas import City, Country, ExitReason
+from app.models.user_storage import users_table
 
 
 class StockExit(SQLModel, table=True):
@@ -36,7 +40,12 @@ class StockExit(SQLModel, table=True):
         default="kitchen_use", sa_column=Column(String)
     )
 
-    user_uuid: str = Field(index=True, description="UUID/id of the staff member who logged this exit")
+    # FK built from the actual Column object — see inbound.py's comment
+    # on why (users lives on its own separate Core MetaData).
+    user_uuid: int = Field(
+        sa_column=Column(Integer, ForeignKey(users_table.c.id), index=True, nullable=False),
+        description="FK to users.id — the staff member who logged this exit",
+    )
 
     # Which restaurant location the stock left from.
     country: Country = Field(sa_column=Column(String))

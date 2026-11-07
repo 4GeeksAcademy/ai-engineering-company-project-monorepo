@@ -185,7 +185,7 @@ async def create_inbound_order(
     # never counts toward its own "historical" baseline.
     historical_cost = _historical_unit_cost(db, payload.ingredient_id, payload.supplier_id)
 
-    entry = InboundStock(**payload.model_dump(), user_uuid=str(current_user["id"]))
+    entry = InboundStock(**payload.model_dump(), user_uuid=current_user["id"])
     db.add(entry)
     db.commit()
     db.refresh(entry)
@@ -230,7 +230,7 @@ async def create_outbound_order(
             ),
         )
 
-    entry = StockExit(**payload.model_dump(), user_uuid=str(current_user["id"]))
+    entry = StockExit(**payload.model_dump(), user_uuid=current_user["id"])
     db.add(entry)
     db.commit()
     db.refresh(entry)

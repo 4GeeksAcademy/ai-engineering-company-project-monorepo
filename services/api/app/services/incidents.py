@@ -1,5 +1,11 @@
-"""Incident Manager service — CRUD + metrics over TinyDB, plus the CSV
-analysis/import pipeline (a port of analyze.py) that feeds the same table.
+"""Incident Manager service — CRUD + metrics over SQL (Postgres/Supabase),
+plus the CSV analysis/import pipeline (a port of analyze.py) that feeds
+the same table.
+
+Migrated from TinyDB — see app/models/incident_storage.py. Same per-call
+session pattern as app/services/users.py — see that module's docstring
+for why. `list_incidents`/`get_incident_metrics` now filter/aggregate via
+real SQL WHERE/ORDER BY instead of loading every row into Python.
 """
 
 from __future__ import annotations
@@ -10,10 +16,12 @@ import logging
 import uuid
 from collections import Counter
 from datetime import date, datetime, timezone
-from pathlib import Path
 
-from tinydb import TinyDB, where
+from sqlalchemy import func, select, update
+from sqlmodel import Session
 
+from app.core.database import engine
+from app.models.incident_storage import incidents_table
 from app.models.schemas import (
     INCIDENT_STATUS_TRANSITIONS,
     IncidentCreate,
@@ -25,10 +33,9 @@ from app.models.schemas import (
 
 logger = logging.getLogger(__name__)
 
-# Shared TinyDB file
-_DB_PATH = Path(__file__).resolve().parent.parent.parent / "db.json"
 
-INCIDENTS_TABLE = "incidents"
+def _get_session() -> Session:
+    return Session(engine)
 
 # ── Constants (mirrored from analyze.py / incidents-context.md) ──
 
@@ -80,10 +87,6 @@ EXPECTED_COLUMNS = {
 }
 
 INVALID_CSV_RECORDS_MESSAGE = "invalid CSV records are not inserted"
-
-
-def _get_db() -> TinyDB:
-    return TinyDB(_DB_PATH)
 
 
 # ── Shared CSV validation (used by /incidents/analyze AND seed_incidents.py) ──
@@ -367,19 +370,26 @@ def results_to_csv_bytes(results: dict) -> bytes:
 # ── CRUD ───────────────────────────────────────────────────────
 
 
+def _row_to_dict(row) -> dict:
+    return dict(row._mapping)
+
+
 def create_incident(payload: IncidentCreate) -> dict:
-    """Create an incident. Returns the persisted document."""
-    now = datetime.now(timezone.utc).isoformat()
-    doc = {
-        "id": str(uuid.uuid4()),
-        **payload.model_dump(mode="json"),
+    """Create an incident. Returns the persisted row as a dict."""
+    now = datetime.now(timezone.utc)
+    incident_id = str(uuid.uuid4())
+    data = {
+        "id": incident_id,
+        **payload.model_dump(),
         "created_at": now,
         "updated_at": now,
     }
 
-    with _get_db() as db:
-        db.table(INCIDENTS_TABLE).insert(doc)
-    return doc
+    with _get_session() as db:
+        db.execute(incidents_table.insert().values(**data))
+        db.commit()
+        row = db.execute(select(incidents_table).where(incidents_table.c.id == incident_id)).one()
+        return _row_to_dict(row)
 
 
 def list_incidents(
@@ -393,54 +403,59 @@ def list_incidents(
     limit: int = 20,
 ) -> tuple[list[dict], int]:
     """Return paginated incidents, newest first, with optional filters."""
-    with _get_db() as db:
-        docs = db.table(INCIDENTS_TABLE).all()
+    with _get_session() as db:
+        stmt = select(incidents_table)
+        count_stmt = select(func.count()).select_from(incidents_table)
 
-    if status:
-        docs = [d for d in docs if d.get("status") == status]
-    if category:
-        docs = [d for d in docs if d.get("category") == category]
-    if branch:
-        docs = [d for d in docs if d.get("branch") == branch]
-    if origin:
-        docs = [d for d in docs if d.get("origin") == origin]
-    if search:
-        needle = search.lower()
-        docs = [
-            d
-            for d in docs
-            if needle in d.get("title", "").lower()
-            or needle in d.get("description", "").lower()
-        ]
+        if status:
+            stmt = stmt.where(incidents_table.c.status == status)
+            count_stmt = count_stmt.where(incidents_table.c.status == status)
+        if category:
+            stmt = stmt.where(incidents_table.c.category == category)
+            count_stmt = count_stmt.where(incidents_table.c.category == category)
+        if branch:
+            stmt = stmt.where(incidents_table.c.branch == branch)
+            count_stmt = count_stmt.where(incidents_table.c.branch == branch)
+        if origin:
+            stmt = stmt.where(incidents_table.c.origin == origin)
+            count_stmt = count_stmt.where(incidents_table.c.origin == origin)
+        if search:
+            needle = f"%{search.lower()}%"
+            search_filter = func.lower(incidents_table.c.title).like(needle) | func.lower(
+                incidents_table.c.description
+            ).like(needle)
+            stmt = stmt.where(search_filter)
+            count_stmt = count_stmt.where(search_filter)
 
-    total = len(docs)
-    docs.sort(key=lambda d: d.get("created_at", ""), reverse=True)
+        total = db.execute(count_stmt).scalar_one()
 
-    start = (page - 1) * limit
-    end = start + limit
-    page_docs = docs[start:end]
+        stmt = stmt.order_by(incidents_table.c.created_at.desc()).offset((page - 1) * limit).limit(limit)
+        rows = db.execute(stmt).all()
 
-    return page_docs, total
+        return [_row_to_dict(row) for row in rows], total
 
 
 def get_incident_by_id(incident_id: str) -> dict | None:
-    with _get_db() as db:
-        return db.table(INCIDENTS_TABLE).get(where("id") == incident_id)
+    with _get_session() as db:
+        row = db.execute(select(incidents_table).where(incidents_table.c.id == incident_id)).first()
+        return _row_to_dict(row) if row is not None else None
 
 
 def update_incident(incident_id: str, payload: IncidentUpdate) -> dict | None:
     """Partially update an incident's editable fields. Returns None if not found."""
-    with _get_db() as db:
-        table = db.table(INCIDENTS_TABLE)
-
-        if table.get(where("id") == incident_id) is None:
+    with _get_session() as db:
+        existing = db.execute(select(incidents_table.c.id).where(incidents_table.c.id == incident_id)).first()
+        if existing is None:
             return None
 
-        data = payload.model_dump(exclude_unset=True, mode="json")
-        data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        data = payload.model_dump(exclude_unset=True)
+        data["updated_at"] = datetime.now(timezone.utc)
 
-        table.update(data, where("id") == incident_id)
-        return table.get(where("id") == incident_id)
+        db.execute(update(incidents_table).where(incidents_table.c.id == incident_id).values(**data))
+        db.commit()
+
+        row = db.execute(select(incidents_table).where(incidents_table.c.id == incident_id)).one()
+        return _row_to_dict(row)
 
 
 def update_incident_status(incident_id: str, payload: IncidentStatusUpdate) -> dict | None:
@@ -449,38 +464,39 @@ def update_incident_status(incident_id: str, payload: IncidentStatusUpdate) -> d
     Raises ValueError for an illegal transition or a resolve attempt with no
     satisfaction score on file.
     """
-    with _get_db() as db:
-        table = db.table(INCIDENTS_TABLE)
-
-        doc = table.get(where("id") == incident_id)
-        if doc is None:
+    with _get_session() as db:
+        row = db.execute(select(incidents_table).where(incidents_table.c.id == incident_id)).first()
+        if row is None:
             return None
 
-        current = IncidentStatus(doc["status"])
+        current = IncidentStatus(row.status)
         target = payload.status
 
         if target != current and target not in INCIDENT_STATUS_TRANSITIONS.get(current, set()):
             raise ValueError(f"Cannot transition incident from {current.value} to {target.value}")
 
-        score = payload.satisfaction_score if payload.satisfaction_score is not None else doc.get("satisfaction_score")
+        score = payload.satisfaction_score if payload.satisfaction_score is not None else row.satisfaction_score
         if target is IncidentStatus.RESOLVED and score is None:
             raise ValueError("Resolved incidents require a satisfaction score")
 
         update_fields: dict = {
             "status": target.value,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc),
         }
         if payload.satisfaction_score is not None:
             update_fields["satisfaction_score"] = payload.satisfaction_score
 
-        table.update(update_fields, where("id") == incident_id)
-        return table.get(where("id") == incident_id)
+        db.execute(update(incidents_table).where(incidents_table.c.id == incident_id).values(**update_fields))
+        db.commit()
+
+        updated = db.execute(select(incidents_table).where(incidents_table.c.id == incident_id)).one()
+        return _row_to_dict(updated)
 
 
 def get_incident_metrics() -> dict:
     """Aggregate incidents for the leadership dashboard."""
-    with _get_db() as db:
-        docs = db.table(INCIDENTS_TABLE).all()
+    with _get_session() as db:
+        docs = [_row_to_dict(row) for row in db.execute(select(incidents_table)).all()]
 
     status_counts = Counter(d.get("status") for d in docs)
     category_counts = Counter(d.get("category") for d in docs)
@@ -498,10 +514,10 @@ def get_incident_metrics() -> dict:
     resolution_seconds: list[float] = []
     for d in resolved_docs:
         try:
-            created = datetime.fromisoformat(d["created_at"])
-            updated = datetime.fromisoformat(d["updated_at"])
+            created = d["created_at"]
+            updated = d["updated_at"]
             resolution_seconds.append((updated - created).total_seconds())
-        except (KeyError, ValueError):
+        except (KeyError, TypeError):
             continue
     avg_resolution_seconds = (
         round(sum(resolution_seconds) / len(resolution_seconds), 2)

@@ -4,62 +4,35 @@ from __future__ import annotations
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from pathlib import Path
-from tinydb import TinyDB
+from sqlalchemy import select
 
 from app.main import app
+from app.models.profile_storage import profiles_table
 from app.models.user import UserUpdate
+from app.models.user_storage import users_table
 from app.services import users as users_service
 
-
-# ── Helpers ───────────────────────────────────────────────
-TEST_DB = Path(__file__).parent / "_test_users.json"
-
-USERS_TABLE = "users"
-PROFILES_TABLE = "profiles"
-
-
-def _clean_test_db():
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    """Point the users and profiles services at the test database."""
-    monkeypatch.setattr("app.services.users._DB_PATH", TEST_DB)
-    monkeypatch.setattr("app.services.profiles._DB_PATH", TEST_DB)
-    _clean_test_db()
-    yield
-    _clean_test_db()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 def _auth_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def _db() -> TinyDB:
-    return TinyDB(TEST_DB)
-
-
 def _stored_user(user_id: int) -> dict | None:
-    db = _db()
-    doc = db.table(USERS_TABLE).get(doc_id=user_id)
-    db.close()
-    return doc
+    from app.services.users import engine
+
+    with engine.connect() as conn:
+        row = conn.execute(select(users_table).where(users_table.c.id == user_id)).first()
+        return dict(row._mapping) if row is not None else None
 
 
 def _stored_profile(user_id: int) -> dict | None:
-    db = _db()
-    doc = db.table(PROFILES_TABLE).get(where_user_id(user_id))
-    db.close()
-    return doc
+    from app.services.users import engine
 
-
-def where_user_id(user_id: int):
-    from tinydb import where
-
-    return where("user_id") == user_id
+    with engine.connect() as conn:
+        row = conn.execute(select(profiles_table).where(profiles_table.c.user_id == user_id)).first()
+        return dict(row._mapping) if row is not None else None
 
 
 async def _register(client: AsyncClient, **overrides) -> dict:

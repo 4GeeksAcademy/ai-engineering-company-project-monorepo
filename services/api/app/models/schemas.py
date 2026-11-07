@@ -484,7 +484,7 @@ class InboundStockFields(BaseModel):
     ingredient_id: int = Field(..., gt=0, description="MenuItem.id this delivery replenishes")
     quantity: float = Field(..., gt=0)
     unit: str = Field(default="kg", min_length=1)
-    supplier_id: int | None = Field(default=None, description="Supplier doc_id in TinyDB")
+    supplier_id: int | None = Field(default=None, description="FK to suppliers.id")
     country: Country
     city: City | None = None
 
@@ -513,7 +513,7 @@ class InboundStockCreate(InboundStockFields):
 
 class InboundStockResponse(InboundStockFields):
     id: int
-    user_uuid: str = Field(..., description="Authenticated TinyDB user id that logged the receipt")
+    user_uuid: int = Field(..., description="FK to users.id — the authenticated user who logged the receipt")
     created_at: datetime
     unit_cost: float | None = Field(
         default=None, description="Null for deliveries logged before this field existed."
@@ -565,7 +565,7 @@ class StockExitCreate(StockExitFields):
 
 class StockExitResponse(StockExitFields):
     id: int
-    user_uuid: str = Field(..., description="Authenticated TinyDB user id that logged the exit")
+    user_uuid: int = Field(..., description="FK to users.id — the authenticated user who logged the exit")
     created_at: datetime
     minimum_stock: float = Field(..., description="The product's configured threshold at the time of this exit.")
     current_stock_after: float = Field(..., description="current_stock immediately after this withdrawal.")
@@ -595,7 +595,7 @@ class OrderResponse(BaseModel):
     product_sku: str
     quantity: float
     unit: str
-    user_uuid: str
+    user_uuid: int
     country: Country
     city: City | None
     created_at: datetime

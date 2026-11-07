@@ -4,19 +4,25 @@ Records a delivery of ingredients received at a restaurant from a
 supplier (context.md: "Fresh ingredients selected daily"). Each row
 links back to the MenuItem the stock replenishes.
 
-`user_uuid` identifies the staff member who logged the receipt. Users
-are TinyDB documents (app.services.users), a separate store from this
-Supabase table, so it is kept as a plain string with no SQL-level FK.
+`user_uuid` identifies the staff member who logged the receipt — a real
+FK to `users.id` (retrofitted in
+supabase/migrations/20261106130000_add_fk_retrofit_inbound_stock_stock_exits.sql,
+once `users` moved from TinyDB to SQL). Keeps its historical name
+("_uuid") even though it is an integer, not a UUID, to avoid rippling
+the rename across app code/tests for no functional gain — see that
+migration's comments.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlmodel import Field, SQLModel
 
 from app.models.schemas import City, Country
+from app.models.supplier_storage import suppliers_table
+from app.models.user_storage import users_table
 
 
 class InboundStock(SQLModel, table=True):
@@ -40,12 +46,22 @@ class InboundStock(SQLModel, table=True):
         ),
     )
 
-    # Who supplied and who logged the delivery.
+    # Who supplied and who logged the delivery. FKs built from the actual
+    # Column objects (not SQLModel's `foreign_key="tablename.col"` string
+    # sugar) — `suppliers`/`users` live on their own separate Core
+    # `MetaData` (see supplier_storage.py/user_storage.py), so a
+    # string-based FK can't be resolved within `SQLModel.metadata` at
+    # `create_all()` time; an explicit Column reference resolves directly
+    # and needs no by-name metadata lookup.
     supplier_id: int | None = Field(
         default=None,
-        description="Supplier doc_id from the TinyDB suppliers table (no SQL FK across stores)",
+        sa_column=Column(Integer, ForeignKey(suppliers_table.c.id), nullable=True),
+        description="FK to suppliers.id",
     )
-    user_uuid: str = Field(index=True, description="UUID/id of the staff member who logged this receipt")
+    user_uuid: int = Field(
+        sa_column=Column(Integer, ForeignKey(users_table.c.id), index=True, nullable=False),
+        description="FK to users.id — the staff member who logged this receipt",
+    )
 
     # Which restaurant location received the stock.
     country: Country = Field(sa_column=Column(String))

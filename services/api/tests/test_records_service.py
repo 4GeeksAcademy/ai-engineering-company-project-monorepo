@@ -1,11 +1,9 @@
 """Unit tests for the candidate records service layer — business logic
-only, calling app.services.records directly against a throwaway TinyDB
-file (no HTTP client, no FastAPI routing/serialization involved).
+only, calling app.services.records directly against a throwaway in-memory
+SQLite database (see tests/conftest.py's `sql_engine` fixture).
 """
 
 from __future__ import annotations
-
-from pathlib import Path
 
 import pytest
 
@@ -19,17 +17,7 @@ from app.models.schemas import (
 )
 from app.services import records as records_service
 
-TEST_DB = Path(__file__).parent / "_test_records_service.json"
-
-
-@pytest.fixture(autouse=True)
-def _patch_db_path(monkeypatch):
-    monkeypatch.setattr(records_service, "_DB_PATH", TEST_DB)
-    if TEST_DB.exists():
-        TEST_DB.unlink()
-    yield
-    if TEST_DB.exists():
-        TEST_DB.unlink()
+pytestmark = pytest.mark.usefixtures("sql_engine")
 
 
 def _payload(**overrides) -> RecordCreate:

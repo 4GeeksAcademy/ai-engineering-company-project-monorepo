@@ -42,7 +42,7 @@ async def login(payload: LoginRequest):
     if not doc.get("is_active", True):
         raise HTTPException(status_code=401, detail="User account is inactive")
 
-    token = create_access_token(subject=str(doc.doc_id), role=doc["role"])
+    token = create_access_token(subject=str(doc["id"]), role=doc["role"])
 
     return ApiResponse(
         message="Login successful",
