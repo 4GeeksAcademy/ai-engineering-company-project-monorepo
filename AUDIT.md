@@ -43,7 +43,7 @@ Se registró una cuenta de prueba y se midió con un token real, sobre la base c
 ### Páginas elegidas y límites de la medición
 
 - **Web:** la home (la página con más componentes: 20+ tarjetas y filtros) y el formulario de alta (la más compleja en formularios).
-- **Backoffice:** el dashboard (`/`), `/incidents/new` y `/login` con una sesión sembrada (el guard solo comprueba que `exp` sea futuro), y las vistas con tablas y datos (`/suppliers`, `/incidents/list`, `/inventory/products`) con una cuenta de prueba real (`lighthouse-audit@example.com`, creada en el Supabase del proyecto; conviene borrarla al terminar). Las vistas de entrada/salida de órdenes y de resumen de incidencias no se auditaron.
+- **Backoffice:** el dashboard (`/`), `/incidents/new` y `/login` con una sesión sembrada (el guard solo comprueba que `exp` sea futuro), y las vistas con tablas y datos (`/suppliers`, `/incidents/list`, `/inventory/products`) con una cuenta real de prueba (creada en el almacén local de usuarios de la API y **eliminada al terminar** la auditoría). Las vistas de entrada/salida de órdenes y de resumen de incidencias no se auditaron.
 - **Un error de mi propio arnés, corregido:** la primera medición de `/login` reutilizó el Chrome con el JWT del dashboard, `GuestOnly` redirigió y salió Performance 95 / LCP 2,6 s (falso). Tras limpiar el almacenamiento, el login real es 100 con LCP 0,8 s. Se descartó esa hipótesis y no se tocó `GuestOnly` (commit `b80c33b`).
 - Las cifras son de laboratorio, en localhost con latencia simulada por Lighthouse. Son útiles para comparar antes/después, no para predecir cifras de campo. INP no se mide en laboratorio; se usa TBT como indicador aproximado.
 
