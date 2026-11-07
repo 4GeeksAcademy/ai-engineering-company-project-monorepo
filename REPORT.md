@@ -9,7 +9,7 @@ El punto de partida ya era sano en laboratorio (Performance 98–100 en todas la
 | Frontend | Mejora principal medida |
 |---|---|
 | Sitio corporativo | LCP home móvil **2,2 s → 0,7 s** (−68 %); Accessibility home 96 → **100**; Accessibility formulario 86 → **100** |
-| Backoffice | Accessibility móvil 96 → **100** (dashboard e incident-form); LCP móvil 1,0 s → **0,8 s** |
+| Backoffice | Accessibility móvil 96 → **100** (dashboard e incident-form); **CLS de `/suppliers` en escritorio 0,118 → 0,008** (superaba el umbral de 0,1); Accessibility de `/suppliers` 96 → **100** |
 
 ## Comparativa antes / después
 
@@ -17,18 +17,33 @@ P = Performance, A = Accessibility, BP = Best Practices, SEO. Entre paréntesis,
 
 | Página | Modo | P antes → después | A antes → después | BP | SEO | LCP antes → después |
 |---|---|---|---|---|---|---|
-| Web · home | Móvil | 98 → 99 (79/98/98 → 74/99/100) | 96 → **100** | 100 → 100 | 100 → 100 | 2,2 s → **0,7 s** |
+| Web · home | Móvil | 98 → 99 (79/98/98 → 99/99/99) | 96 → **100** | 100 → 100 | 100 → 100 | 2,2 s → **0,7 s** |
 | Web · home | Escritorio | 100 → 100 | 96 → **100** | 100 → 100 | 100 → 100 | 0,5 s → 0,2 s |
-| Web · nueva candidatura | Móvil | 100 → 100 | 86 → **100** | 100 → 100 | 100 → 100 | 0,8 s → 0,6 s |
+| Web · nueva candidatura | Móvil | 100 → 99 (98/99/99) | 86 → **100** | 100 → 100 | 100 → 100 | 0,8 s → 0,7 s |
 | Web · nueva candidatura | Escritorio | 100 → 100 | 86 → **100** | 100 → 100 | 100 → 100 | 0,2 s → 0,2 s |
 | Backoffice · dashboard | Móvil | 100 → 100 | 96 → **100** | 100 → 100 | 100 → 100 | 1,0 s → 0,8 s |
 | Backoffice · dashboard | Escritorio | 100 → 100 | 100 → 100 | 100 → 100 | 100 → 100 | 0,3 s → 0,3 s |
 | Backoffice · incident-form | Móvil | 100 → 100 | 96 → **100** | 100 → 100 | 100 → 100 | 1,0 s → 0,8 s |
 | Backoffice · incident-form | Escritorio | 100 → 100 | 100 → 100 | 100 → 100 | 100 → 100 | 0,3 s → 0,3 s |
-| Backoffice · login | Móvil | 100 → 100 | 100 → 100 | 100 → 100 | 100 → 100 | 0,8 s → 1,0 s (ruido, ver nota) |
+| Backoffice · login | Móvil | 100 → 100 | 100 → 100 | 100 → 100 | 100 → 100 | 0,8 s → 0,8 s |
 | Backoffice · login | Escritorio | 100 → 100 | 100 → 100 | 100 → 100 | 100 → 100 | 0,3 s → 0,3 s |
 
-CLS = 0 en todas las páginas antes y después (0,005 en la home de escritorio antes, 0 después).
+### Vistas con datos reales (backoffice, sesión real)
+
+Línea base medida sobre el código de `b80c33b` (worktree aparte); «después» = código final. Mismos datos en la base (15 proveedores, 96 incidencias, 6 productos).
+
+| Página | Modo | P antes → después | A antes → después | BP | CLS antes → después | TBT antes → después |
+|---|---|---|---|---|---|---|
+| `/suppliers` | Móvil | 98 → 99 | 96 → **100** | 100 → 100 | 0,004 → 0,003 | 160 → 100 ms |
+| `/suppliers` | Escritorio | 96 → **100** | 96 → **100** | 100 → 100 | **0,118 → 0,008** | 0 → 0 ms |
+| `/incidents/list` | Móvil | 96 → 96 | 96 → **100** | 96 → **100** | 0,001 → 0,001 | 220 → 230 ms |
+| `/incidents/list` | Escritorio | 100 → 100 | 100 → 100 | 100 → 100 | 0,009 → 0 | 0 → 0 ms |
+| `/inventory/products` | Móvil | 100 → 100 | 96 → **100** | 100 → 100 | 0,001 → 0,001 | 30 → 50 ms |
+| `/inventory/products` | Escritorio | 98 → **100** | 100 → 100 | 100 → 100 | **0,088 → 0,003** | 0 → 0 ms |
+
+`/incidents/list` en móvil **no mejora en Performance** (96 → 96, TBT 220 → 230 ms, dentro del ruido): son 96 filas renderizadas en el hilo principal y arreglarlo exige paginar o virtualizar la tabla, es decir, cambiar el producto. Sigue por encima de 90 y de los umbrales de LCP/CLS.
+
+CLS = 0 en todas las páginas sin datos antes y después (0,005 en la home de escritorio antes, 0 después).
 
 ## Correcciones aplicadas (una por commit)
 
@@ -38,29 +53,35 @@ CLS = 0 en todas las páginas antes y después (0,005 en la home de escritorio a
 | 2 | `a04fc92` | **A11y home.** `<main>` en el layout raíz (y sin `<main>` anidados en `error`/`not-found`); tarjetas `h3` → `h2`. | Accessibility 96 → **100**. |
 | 3 | `89eba74` | **A11y formulario.** 9 `label` asociados a su control con `htmlFor`/`id` (`useId`). | Accessibility 86 → **100**. |
 | 4 | `263c352` | **Backoffice móvil.** `.topbar ul` con `flex-wrap`: los enlaces ya no se desbordan sobre fondo claro (contraste 1,33:1) ni generan scroll horizontal. | Accessibility 96 → **100**; LCP 1,0 → 0,8 s. |
-| 5 | `1f27bc8` | **Experimento descartado:** `inlineCss` en la web. Sin ganancia (FCP 0,7 → 0,8 s) y Best Practices de la home móvil 100 → 96. Revertido; evidencia guardada. | Sin mejora → no se aplica. |
+| 5 | `16b684f` | **CLS en escritorio (vistas con datos).** Al cargar la tabla aparecía la barra de scroll y el `<main>` centrado se desplazaba lateralmente. `html { scrollbar-gutter: stable }` reserva ese hueco. | `/suppliers` CLS 0,118 → **0,008** (Performance 96 → 100); productos 0,088 → **0,003**. |
+| 6 | `e63902a` | **Contraste en proveedores suspendidos.** `opacity: .55` en las celdas bajaba texto, chips y enlaces a 2,3–3,75:1; ahora se atenúa con color de texto y fondo (≥ 4,5:1), conservando la pista visual. | `/suppliers` Accessibility 96 → **100** (móvil y escritorio). |
+| 7 | `048b9ed` | **`/favicon.ico` 404** en ambas apps: se añade `app/icon.svg`. Es higiene (el 404 bajó BP a 96 en una sola pasada, no es reproducible a voluntad). | Sin ganancia demostrable en una sola ejecución; BP 100 en todas las medidas finales. |
+| 8 | `1f27bc8` | **Experimento descartado:** `inlineCss` en la web. Sin ganancia (FCP 0,7 → 0,8 s) y Best Practices de la home móvil 100 → 96. Revertido; evidencia guardada. | Sin mejora → no se aplica. |
 | R1 | `2e6acc4` | **Refactor:** hook `useLoader` (`lib/useLoader.ts`) para el patrón carga/loading/error; aplicado a productos, historial de órdenes y `useAssets`. | −59 líneas netas en las 3 páginas/hooks (+35 del hook compartido), sin cambio de comportamiento salvo que `useAssets` ahora vacía la lista si falla una recarga. 70/70 tests, lint y tipos OK. |
 | R2 | `5a6f0c4` | **Refactor:** componente `SelectFilter` compartido por `StatusFilter` y `StageFilter` (API pública intacta). | Sin impacto en métricas; elimina ~45 líneas duplicadas. |
 
 ## Qué tuvo mayor impacto
 
-1. **Corrección 1 (renderizar la lista en el servidor)** fue, con diferencia, la de mayor impacto en rendimiento: es la única que movió un KPI principal (LCP −1,5 s en móvil) y además **estabilizó** la página (la pasada mala de 79 desapareció al dejar de depender de la cadena JS + API externa en el camino crítico de render). Es una causa de fondo —*render dependiente de hidratación*—, no un ajuste cosmético.
-2. **Las correcciones de accesibilidad (2, 3, 4)** tuvieron el mayor impacto en puntuación (+4, +14, +4 puntos de Accessibility), y la 4 corrige además un fallo real de uso en móvil.
-3. **Lo que no ayudó:** `inlineCss`. Se midió, empeoró ligeramente y se descartó, en línea con la regla de `web-perf` de no actuar sin impacto medible.
+1. **Corrección 5 (`scrollbar-gutter`)** fue la única que arregló un Core Web Vital **por encima del umbral**: CLS 0,118 en `/suppliers` (escritorio) pasa a 0,008, y sube Performance de 96 a 100. Una línea de CSS, pero solo era visible al medir con datos reales: en las páginas vacías el problema no existe. Es la lección más útil de la auditoría.
+2. **Corrección 1 (renderizar la lista en el servidor)** fue la de mayor impacto en tiempo: LCP −1,5 s en móvil en la home, y además **estabilizó** la página (la pasada de 79 desapareció al dejar de depender de la cadena JS + API externa en el camino crítico de render). Es una causa de fondo —*render dependiente de hidratación*—, no un ajuste cosmético.
+3. **Las correcciones de accesibilidad (2, 3, 4, 6)** movieron más puntos de Accessibility (+4, +14, +4, +4); la 4 corrige además un fallo real de uso en móvil, y la 6 un fallo de legibilidad (contraste de 2,3:1) en una vista que usa el equipo a diario.
+4. **Lo que no ayudó:** `inlineCss` (se midió, empeoró ligeramente y se descartó) y el favicon (higiene, sin ganancia demostrable).
 
 ## Verificación de no-regresión
 
 - Tras cada cambio se reconstruyó en producción y se volvió a ejecutar Lighthouse en las mismas URLs.
+- La línea base de las vistas con datos se midió sobre el código original (worktree de `b80c33b`), no por inferencia.
 - Sitio: `eslint` y `tsc --noEmit` limpios; prueba funcional manual con Chromium sobre el build de producción de la home (enlace con filtros, cambio de estado/etapa, búsqueda, «Limpiar filtros», URL sincronizada) sin errores de JS.
-- Backoffice: `eslint`, `tsc --noEmit` y `npm test` (70 tests) en verde tras el refactor; build de producción OK.
+- Backoffice: `eslint`, `tsc --noEmit` y `npm test` (70 tests) en verde tras el refactor; build de producción OK en cada iteración (los cambios 5–7 son CSS y un icono).
 - No se reestructuró la arquitectura de ningún frontend: son cambios dirigidos (un archivo de página dividido en servidor + cliente, una línea de CSS, atributos de accesibilidad, dos extracciones).
 
 ## Limitaciones y notas honestas
 
-- **Variabilidad:** la mediana es lo que se reporta, pero hay pasadas atípicas (home móvil: 74 en la medición final, 79 en la inicial). Con servidor y API externa recién arrancados, la primera petición no tiene la caché de 30 s caliente; es una hipótesis razonable, no comprobada. La mediana de 99 es estable en todas las mediciones tras el cambio 1.
-- **Login móvil, LCP 0,8 → 1,0 s:** no se modificó nada del login; es ruido de laboratorio (Performance sigue en 100 en las 3 pasadas).
+- **Variabilidad:** la mediana es lo que se reporta, pero hay pasadas atípicas (home móvil: 79 en la medición inicial y 74 en una intermedia; 99/99/99 en la final). Con servidor y API externa recién arrancados, la primera petición no tiene la caché de 30 s caliente; es una hipótesis razonable, no comprobada.
+- **Ruido entre mediciones:** el LCP del login móvil dio 1,0 s en una medición intermedia y 0,8 s en la final sin tocar nada del login; diferencias de ±0,2 s o ±1–2 puntos de Performance no se interpretan como cambio.
+- **`/incidents/list` móvil no mejora** (Performance 96, TBT ~230 ms) y no se corrigió: requeriría paginación o virtualización de 96 filas, un cambio de producto, no una corrección dirigida.
 - **Resultado a medias de «mejora en Performance»:** como la línea base ya era ≥ 98, el score global de Performance apenas se mueve (98 → 99). La mejora medible está en LCP y en Accessibility, no en un salto de Performance.
-- **Sin datos reales en el backoffice:** el dashboard se audita con una sesión sembrada y sin las vistas de tablas (`/suppliers`, `/incidents/list`); conviene repetir la auditoría con credenciales reales y datos.
+- **Cobertura del backoffice:** dashboard, login y formulario con sesión sembrada; `/suppliers`, `/incidents/list` e `/inventory/products` con una cuenta de prueba real (`lighthouse-audit@example.com`, creada en el Supabase del proyecto; **conviene borrarla**). No se auditaron entrada/salida de activos, historial de órdenes ni el resumen de incidencias.
 - **Dependencia externa:** la home depende de `NEXT_PUBLIC_API_URL` (API de terceros). El servidor ahora cachea 30 s y, si falla, el cliente muestra sus estados de carga/error de siempre.
 - **Comportamiento nuevo a tener en cuenta:** al filtrar, la URL se actualiza con `replaceState` (antes `router.push`), así que cada filtro ya no crea una entrada en el historial del navegador; a cambio, el cambio de filtro es inmediato y sin viaje al servidor.
 - **Pendiente (siguiente paso):** aplicar `useLoader` a `suppliers`, `incidents/list` e `IncidentTotals`; compartir las opciones de estado/etapa de `CandidateForm`; medir INP con datos de campo (RUM) cuando haya tráfico real.
@@ -73,5 +94,5 @@ CLS = 0 en todas las páginas antes y después (0,005 en la home de escritorio a
 (cd uis/backoffice              && npm run build && npx next start -p 3001) &
 # 2. Lighthouse (dependencias fuera del repo)
 mkdir /tmp/lh && cd /tmp/lh && npm i lighthouse@13.6.0 chrome-launcher puppeteer-core
-CHROME_PATH=<ruta a chromium> node <repo>/audit/tools/run-lighthouse.mjs <repo>/audit/after
+AUDIT_JWT=<token real, para las vistas con datos> CHROME_PATH=<ruta a chromium> node <repo>/audit/tools/run-lighthouse.mjs <repo>/audit/after
 ```

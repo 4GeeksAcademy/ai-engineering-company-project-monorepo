@@ -8,14 +8,14 @@
     "seo": 100,
     "fcp": "0.7 s",
     "lcp": "0.7 s",
-    "tbt": "90 ms",
+    "tbt": "110 ms",
     "cls": "0",
     "si": "0.7 s",
     "ttfb": "Root document took 30 ms",
     "perfRuns": [
-      74,
       99,
-      100
+      99,
+      99
     ]
   },
   {
@@ -30,7 +30,7 @@
     "tbt": "0 ms",
     "cls": "0",
     "si": "0.2 s",
-    "ttfb": "Root document took 10 ms",
+    "ttfb": "Root document took 20 ms",
     "perfRuns": [
       100,
       100,
@@ -40,20 +40,20 @@
   {
     "page": "website/new-candidate",
     "mode": "mobile",
-    "perf": 100,
+    "perf": 99,
     "a11y": 100,
     "bp": 100,
     "seo": 100,
-    "fcp": "0.6 s",
-    "lcp": "0.6 s",
-    "tbt": "50 ms",
+    "fcp": "0.7 s",
+    "lcp": "0.7 s",
+    "tbt": "100 ms",
     "cls": "0",
-    "si": "0.6 s",
+    "si": "0.7 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
-      97,
-      100,
-      100
+      98,
+      99,
+      99
     ]
   },
   {
@@ -82,11 +82,11 @@
     "a11y": 100,
     "bp": 100,
     "seo": 100,
-    "fcp": "0.7 s",
+    "fcp": "0.6 s",
     "lcp": "0.8 s",
-    "tbt": "60 ms",
+    "tbt": "40 ms",
     "cls": "0",
-    "si": "0.7 s",
+    "si": "0.6 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
       99,
@@ -120,14 +120,14 @@
     "a11y": 100,
     "bp": 100,
     "seo": 100,
-    "fcp": "0.6 s",
+    "fcp": "0.7 s",
     "lcp": "0.8 s",
-    "tbt": "40 ms",
+    "tbt": "50 ms",
     "cls": "0",
-    "si": "0.6 s",
+    "si": "0.7 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
-      100,
+      99,
       100,
       100
     ]
@@ -143,6 +143,120 @@
     "lcp": "0.3 s",
     "tbt": "0 ms",
     "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/suppliers",
+    "mode": "mobile",
+    "perf": 99,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "1.0 s",
+    "tbt": "100 ms",
+    "cls": "0.003",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      99,
+      99,
+      99
+    ]
+  },
+  {
+    "page": "backoffice/suppliers",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.4 s",
+    "tbt": "0 ms",
+    "cls": "0.008",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/incident-list",
+    "mode": "mobile",
+    "perf": 96,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "1.0 s",
+    "tbt": "230 ms",
+    "cls": "0.001",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      94,
+      96,
+      99
+    ]
+  },
+  {
+    "page": "backoffice/incident-list",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0",
+    "si": "0.2 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/inventory-products",
+    "mode": "mobile",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.6 s",
+    "lcp": "0.8 s",
+    "tbt": "50 ms",
+    "cls": "0.001",
+    "si": "0.6 s",
+    "ttfb": "Root document took 0 ms",
+    "perfRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  {
+    "page": "backoffice/inventory-products",
+    "mode": "desktop",
+    "perf": 100,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "fcp": "0.2 s",
+    "lcp": "0.3 s",
+    "tbt": "0 ms",
+    "cls": "0.003",
     "si": "0.2 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
@@ -159,13 +273,13 @@
     "bp": 100,
     "seo": 100,
     "fcp": "0.6 s",
-    "lcp": "1.0 s",
+    "lcp": "0.8 s",
     "tbt": "30 ms",
     "cls": "0",
     "si": "0.6 s",
     "ttfb": "Root document took 0 ms",
     "perfRuns": [
-      100,
+      99,
       100,
       100
     ]
