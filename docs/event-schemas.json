@@ -92,7 +92,8 @@
               "unit",
               "currency",
               "order_id",
-              "supplier_id"
+              "supplier_id",
+              "unit_cost"
             ],
             "properties": {
               "location_id": {
@@ -154,6 +155,11 @@
                   "null"
                 ],
                 "description": "Id del proveedor (null: InboundStock.supplier_id es opcional)."
+              },
+              "unit_cost": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Costo unitario pagado, en la moneda local del evento (COP/USD) — docs/company-briefing.md section 3."
               }
             },
             "description": "Propiedades especificas de inbound_order_created."
@@ -328,7 +334,8 @@
               "unit",
               "currency",
               "order_id",
-              "reason"
+              "reason",
+              "unit_cost"
             ],
             "properties": {
               "location_id": {
@@ -392,6 +399,11 @@
                   "theft_suspected"
                 ],
                 "description": "Causa exacta de merma exigida por el briefing."
+              },
+              "unit_cost": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Costo unitario pagado, en la moneda local del evento (COP/USD) — docs/company-briefing.md section 3."
               }
             },
             "description": "Propiedades especificas de stock_waste_registered."

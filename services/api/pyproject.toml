@@ -20,6 +20,12 @@ dependencies = [
     "sqlmodel>=0.0.48",
     "psycopg2-binary>=2.9.13",
     "pandas>=2.2",
+    "prefect>=3.4.5",
+    # prefect.workers.base imports the importlib_metadata backport
+    # unconditionally (not stdlib importlib.metadata) even on Python 3.13,
+    # but prefect itself doesn't declare it as a dependency — without this,
+    # `prefect server start`/any `prefect` CLI command fails on import.
+    "importlib-metadata>=10.1.0",
 ]
 
 [project.scripts]

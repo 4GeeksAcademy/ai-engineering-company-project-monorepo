@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, getForbiddenField } from "@/lib/api-error";
 import { createOutboundOrder, EXIT_REASON_OPTIONS, fetchProducts } from "@/lib/inventory-api";
-import { validateQuantity } from "@/lib/inventory-form";
+import { validateQuantity, validateUnitCost } from "@/lib/inventory-form";
 import type { ExitReason, Product } from "@/lib/inventory-types";
 import { sanitizeErrorMessage, toCountryCode, toCurrency, toLocationId, track } from "@/lib/telemetry";
 import FormField from "../FormField";
@@ -37,9 +37,11 @@ export default function OutboundOrderForm() {
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("kg");
   const [reason, setReason] = useState<ExitReason>("kitchen_use");
+  const [unitCost, setUnitCost] = useState("");
 
   const [quantityError, setQuantityError] = useState<string | undefined>();
   const [productError, setProductError] = useState<string | undefined>();
+  const [unitCostError, setUnitCostError] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -76,20 +78,28 @@ export default function OutboundOrderForm() {
       !qtyError && selectedProduct && Number(quantity) > selectedProduct.current_stock
         ? `Only ${selectedProduct.current_stock} ${unit || "units"} available at ${selectedProduct.city ?? selectedProduct.country}.`
         : undefined;
+    // unit_cost is required for the 3 waste reasons (docs/company-briefing.md
+    // section 3's merma-cost decision: captured here, at registration time)
+    // and must stay empty for ordinary consumption — see
+    // services/api/app/models/schemas.py::StockExitCreate's matching validator.
+    const costError = isWasteReason(reason) ? validateUnitCost(unitCost) : undefined;
 
     setQuantityError(qtyError ?? insufficientStock);
     setProductError(prodError);
-    if (qtyError || insufficientStock || prodError || !selectedProduct) return;
+    setUnitCostError(costError);
+    if (qtyError || insufficientStock || prodError || costError || !selectedProduct) return;
 
     setSubmitting(true);
     const normalizedQuantity = Number(quantity);
     const normalizedUnit = unit.trim() || "kg";
+    const normalizedUnitCost = isWasteReason(reason) ? Number(unitCost) : null;
     try {
       const order = await createOutboundOrder({
         ingredient_id: selectedProduct.id,
         quantity: normalizedQuantity,
         unit: normalizedUnit,
         reason,
+        unit_cost: normalizedUnitCost,
         country: selectedProduct.country,
         city: selectedProduct.city,
       });
@@ -107,7 +117,10 @@ export default function OutboundOrderForm() {
       };
       if (isWasteReason(reason)) {
         // stock_waste_registered (docs/event-schemas.json) — obligatorio.
-        track("stock_waste_registered", { ...commonProperties, reason });
+        // unit_cost now required by the schema (company-briefing.md section
+        // 3) — sourced from `order.unit_cost`, the value the backend just
+        // persisted, not re-derived client-side.
+        track("stock_waste_registered", { ...commonProperties, reason, unit_cost: order.unit_cost as number });
       } else {
         // outbound_order_created (docs/event-schemas.json) — obligatorio.
         track("outbound_order_created", { ...commonProperties, reason });
@@ -268,10 +281,37 @@ export default function OutboundOrderForm() {
           <Select
             label="Reason"
             value={reason}
-            onChange={(val) => setReason(val)}
+            onChange={(val) => {
+              setReason(val);
+              // unit_cost only applies to waste reasons — clear any stale
+              // value/error left over from a previous selection so a
+              // non-waste submission never carries one.
+              if (!isWasteReason(val)) {
+                setUnitCost("");
+                setUnitCostError(undefined);
+              }
+            }}
             options={EXIT_REASON_OPTIONS}
           />
         </div>
+
+        {isWasteReason(reason) ? (
+          <FormField
+            label={`Unit cost (${selectedProduct ? toCurrency(selectedProduct.country) : "COP/USD"})`}
+            required
+            type="number"
+            min="0"
+            step="any"
+            value={unitCost}
+            onChange={(e) => {
+              setUnitCost(e.target.value);
+              setUnitCostError(undefined);
+            }}
+            placeholder="e.g. 45000"
+            error={unitCostError}
+            className="sm:col-span-2"
+          />
+        ) : null}
 
         <div className="sm:col-span-2 flex justify-end">
           <button

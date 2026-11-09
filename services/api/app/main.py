@@ -15,7 +15,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.core.database import init_db
-from app.routers import auth, health, incidents, inventory, profiles, records, suppliers, telemetry, users
+from app.routers import auth, health, incidents, inventory, profiles, records, reporting, suppliers, telemetry, users
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,7 @@ def create_app() -> FastAPI:
     application.include_router(users.router, prefix=settings.API_V1_PREFIX)
     application.include_router(profiles.router, prefix=settings.API_V1_PREFIX)
     application.include_router(telemetry.router, prefix=settings.API_V1_PREFIX)
+    application.include_router(reporting.router, prefix=settings.API_V1_PREFIX)
 
     return application
 

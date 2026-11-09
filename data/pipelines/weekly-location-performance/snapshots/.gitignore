@@ -1,0 +1,4 @@
+# Runtime output of notify.py (the optional/non-critical step) — not
+# committed, same reasoning as any other generated artifact directory.
+*.json
+!.gitignore

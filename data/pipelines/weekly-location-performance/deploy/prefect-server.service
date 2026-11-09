@@ -1,0 +1,27 @@
+[Unit]
+Description=Prefect server (self-hosted orchestration API + UI)
+After=network.target
+
+[Service]
+Type=simple
+# Adjust to the real deployment user/paths on the host.
+User=brasaland
+WorkingDirectory=/opt/brasaland/services/api
+
+# Prefect's OWN orchestration metadata (flow/task run history, deployments,
+# schedules) — separate from this pipeline's business data in the
+# `reporting` schema (Supabase). Defaults to SQLite under
+# /home/brasaland/.prefect/; point PREFECT_API_DATABASE_CONNECTION_URL at a
+# Postgres instance instead if this server's run-history volume ever
+# outgrows SQLite (not needed at this pipeline's current scale — one run a
+# week, ~14 rows each).
+Environment=PREFECT_HOME=/opt/brasaland/.prefect
+Environment=PREFECT_SERVER_API_HOST=0.0.0.0
+Environment=PREFECT_SERVER_API_PORT=4200
+
+ExecStart=/opt/brasaland/services/api/.venv/bin/prefect server start --host 0.0.0.0 --port 4200
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

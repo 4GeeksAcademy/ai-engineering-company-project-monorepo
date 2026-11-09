@@ -67,6 +67,9 @@ def _run_lightweight_migrations() -> None:
         conn.execute(
             text("ALTER TABLE inbound_stock ADD COLUMN IF NOT EXISTS unit_cost DOUBLE PRECISION")
         )
+        conn.execute(
+            text("ALTER TABLE stock_exits ADD COLUMN IF NOT EXISTS unit_cost DOUBLE PRECISION")
+        )
 
 
 def get_db() -> Generator[Session, None, None]:

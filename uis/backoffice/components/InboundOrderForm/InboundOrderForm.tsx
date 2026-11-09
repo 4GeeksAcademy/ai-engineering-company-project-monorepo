@@ -81,6 +81,9 @@ export default function InboundOrderForm() {
       });
       toast.success(`Delivery registered for ${selectedProduct.name}.`);
       // inbound_order_created (docs/event-schemas.json) — obligatorio.
+      // unit_cost now required by the schema (docs/company-briefing.md
+      // section 3, Costo de compra por local) — sourced from `order.unit_cost`,
+      // the value the backend just persisted, not re-derived client-side.
       track("inbound_order_created", {
         location_id: toLocationId(selectedProduct.country, selectedProduct.city),
         country: toCountryCode(selectedProduct.country),
@@ -91,6 +94,7 @@ export default function InboundOrderForm() {
         currency: toCurrency(selectedProduct.country),
         order_id: String(order.id),
         supplier_id: order.supplier_id != null ? String(order.supplier_id) : null,
+        unit_cost: order.unit_cost,
       });
       if (order.price_variance_detected && order.unit_cost_historical != null && order.variance_pct != null) {
         // ingredient_price_variance_detected (docs/event-schemas.json) —

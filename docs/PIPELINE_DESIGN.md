@@ -76,6 +76,8 @@ Estas 4 métricas responden preguntas **de ingeniería**: ¿cuánto tráfico rec
 
 Mientras estos dos insumos no se resuelvan, `total_purchase_cost`, `total_waste_cost` y `waste_ratio` **no se pueden calcular con datos reales** — el pipeline puede diseñarse y hasta implementarse con un valor `NULL`/pendiente explícito para esas tres columnas, pero no con datos inventados.
 
+> **Actualización — ambos insumos resueltos.** Punto 1: `unit_cost` se agregó al esquema de `inbound_order_created` (`docs/event-schemas.json`, regenerado a `app/models/events.py`) y al `track()` de `InboundOrderForm.tsx`. Punto 2: la decisión de negocio fue la opción (a) — `unit_cost` se captura **al registrar la merma**, nunca derivado del último `InboundStock`; columna nueva `stock_exits.unit_cost` (`app/models/outbound.py`, migración ligera en `app/core/database.py`), validada como obligatoria en `StockExitCreate` cuando `reason` es una causa de merma (`expired`/`kitchen_error`/`theft_suspected`) y prohibida en caso contrario (`app/models/schemas.py`), capturada en `OutboundOrderForm.tsx` y agregada al esquema de `stock_waste_registered`. El pipeline de Prefect (`data/pipelines/weekly-location-performance/transform.py`) ya leía `unit_cost` de `tags` de forma defensiva — no requirió ningún cambio para empezar a calcular costos reales en cuanto el evento lo incluya.
+
 ---
 
 ## 3. Diseño de extracción
@@ -420,7 +422,7 @@ Un operador debe poder ver ambos a la vez (p. ej. "el último intento falló hac
 
 ## 10. Mapeo a Prefect (Fase 4)
 
-**No existe Prefect instalado en este repo hoy** (`pyproject.toml` de `services/api` no lo incluye; no hay configuración de Prefect en ningún lugar del monorepo — confirmado por búsqueda exhaustiva). Todo lo que sigue es una **propuesta de integración**, no una instalación existente. Se asume **Prefect 3.x** (la generación activamente soportada a la fecha de este diseño, basada en `@flow`/`@task` y *deployments*) por ser la opción por defecto razonable hoy — **la versión exacta debe verificarse y fijarse** en `services/api/pyproject.toml` (o un `pyproject.toml` propio bajo `data/pipelines/`) antes de implementar, incluyendo su compatibilidad con `sqlmodel>=0.0.48`/`psycopg2-binary>=2.9.13` ya fijados ahí.
+> **Actualización — implementado.** Lo que sigue describía una propuesta cuando se escribió ("Prefect no está instalado hoy"); ya no es el caso. `prefect==3.4.5` está instalado (`services/api/pyproject.toml`), confirmado compatible con `sqlmodel`/`psycopg2-binary`/`pandas` ya fijados ahí (sin conflictos de resolución). El flow y las 3 tareas existen tal como se describen abajo, en los módulos exactos ya anticipados (`data/pipelines/weekly-location-performance/{flow,extract,transform,load}.py`), con un cuarto módulo adicional no previsto originalmente: `notify.py` (el paso opcional/no crítico de las Fases 1–2 del encargo de implementación — una instantánea JSON de evaluación, nunca un *block* de credenciales de Prefect: la conexión sigue resolviéndose vía `app.core.database.engine`/`DATABASE_URL`, igual que el resto de la API, sin introducir `prefect-sqlalchemy`). El resto de esta sección se deja como quedó escrita, ya verificada contra la implementación real salvo donde se anota lo contrario.
 
 ### Un flow principal
 
@@ -473,14 +475,39 @@ La escritura del log (`reporting.pipeline_runs`) **no es una tarea de Prefect** 
 - **Propagación**: el fallo final (post-reintentos) de cualquier tarea se captura en el cuerpo del flow, que escribe `status='failed'` + `failed_stage=<nombre de la tarea>` en el log, y luego re-lanza (o retorna un estado de fallo) para que el propio flow run de Prefect también quede `Failed` — manteniendo el estado de Prefect y el log de ejecución consistentes entre sí.
 - **Errores de datos inválidos vs. errores de configuración**: un dato inválido dentro de un evento individual (`tags` incompleto) nunca hace fallar una tarea — se cuenta y se excluye (sección 3/8). Un error de configuración (credenciales ausentes, `week_start` mal formado, el *block* de conexión no resuelto) falla la tarea de inmediato, sin reintentos, porque reintentar no cambia el resultado.
 
-### Configuración y credenciales vía Prefect Blocks (propuesto)
+### Configuración y credenciales (implementado — más simple que lo propuesto)
 
-- **Conexión a Supabase/Postgres**: un *block* de Prefect (propuesto: `SqlAlchemyConnector` de la integración `prefect-sqlalchemy`, o alternativamente un `Secret` block plano si la compatibilidad de versión de `prefect-sqlalchemy` con `sqlmodel`/`psycopg2-binary` ya fijados en `services/api/pyproject.toml` no se puede verificar a tiempo) — es el equivalente, en el lado de orquestación, de cómo `services/api/app/core/config.py` ya lee `DATABASE_URL` desde `.env`. **Ninguna integración de Prefect está instalada hoy** — esto es una propuesta a validar, no un hecho.
-- **Ningún secreto en parámetros de flow, logs o respuestas de API**: el único parámetro del flow es `week_start` (y `triggered_by`, un string no sensible) — la cadena de conexión se resuelve dentro de cada tarea desde el *block*, nunca se pasa como parámetro del flow ni se imprime en ningún log (mismo principio ya aplicado en `error_summary`, sección 9).
+- **Conexión a Supabase/Postgres**: **no se usó** ningún *block* de Prefect ni `prefect-sqlalchemy` (la propuesta original de esta sección) — cada tarea abre su propia `Session(engine)` reutilizando directamente `app.core.database.engine` (el mismo engine SQLAlchemy que ya usa el resto de la API, configurado desde `DATABASE_URL` en `.env` vía `app.core.config`). Más simple y consistente con "nunca duplicar configuración de conexión" — no hay una segunda fuente de verdad para la cadena de conexión.
+- **Ningún secreto en parámetros de flow, logs o respuestas de API**: confirmado en la implementación — los únicos parámetros del flow son `week_start`, `triggered_by` y `run_id` (ninguno sensible); la cadena de conexión nunca viaja como parámetro ni se imprime en ningún log (mismo principio ya aplicado en `error_summary`, sección 9).
 
 ### Segundo flow (opcional) y subflows
 
-Un flow de *backfill* (p. ej. `backfill_weekly_location_performance_flow(start_week, end_week)` que invoca las mismas 3 tareas semana por semana en el rango) es **opcional** y no se detalla aquí más allá de mencionarlo como extensión natural una vez el flow principal esté validado. Las 3 tareas ya están separadas limpiamente por etapa (extracción/transformación/carga, igual que el diagrama de la sección 4), de forma que cada una podría convertirse en su propio *subflow* más adelante sin rediseñar nada — no se requieren subflows en esta fase.
+Un flow de *backfill* (p. ej. `backfill_weekly_location_performance_flow(start_week, end_week)` que invoca las mismas 3 tareas semana por semana en el rango) es **opcional** y no se detalla aquí más allá de mencionarlo como extensión natural una vez el flow principal esté validado. Las 3 tareas ya están separadas limpiamente por etapa (extracción/transformación/carga, igual que el diagrama de la sección 4), de forma que cada una podría convertirse en su propio *subflow* más adelante sin rediseñar nada — no se requieren subflows en esta fase. **No implementado** — sigue siendo una extensión futura, no parte de este hito.
+
+### Periodicidad de negocio vs. programación automática real (Fase 4)
+
+Dos conceptos distintos — no confundir uno con el otro:
+
+- **Periodicidad prevista por el negocio**: **semanal**, con el dato fresco la mañana del **lunes** (`docs/company-briefing.md` sección 1: "el dato debe estar fresco la mañana del lunes, alineado con la expectativa que ya tiene el equipo de liderazgo de un 'reporte semanal automático'"). Esto es un requisito de negocio, no una propiedad del código — existiría igual si el pipeline se disparara a mano cada lunes.
+- **Zona horaria**: **UTC**, no la hora local de cada país (CO/US). Es la misma convención ya usada en toda la sección 3 para los límites `[week_start 00:00 UTC, week_start + 7 días)` — un supuesto explícito del diseño (sección 12, "Supuestos") que nunca fue confirmado formalmente por negocio, pero que ya está implementado de punta a punta (extracción, agregación y el cron de abajo comparten esta misma convención).
+- **Programación automática realmente configurada**: un cron **`0 5 * * 1`** (lunes 05:00 UTC) registrado en `data/pipelines/weekly-location-performance/serve.py`, vía `weekly_location_performance_flow.serve(cron="0 5 * * 1", ...)` contra un servidor Prefect **self-hosted** (sección "Self-hosted weekly scheduling" del README del pipeline; plantillas systemd en `data/pipelines/weekly-location-performance/deploy/`). **Esta programación solo corre de verdad si `prefect-server.service` y `weekly-location-performance-serve.service` están desplegados y activos en una máquina** — no hay ningún cron de sistema operativo, *scheduled task* ni *trigger* de infraestructura fuera de esos dos procesos. Si no se despliegan, la periodicidad sigue siendo solo la intención de negocio descrita arriba, nunca algo que ocurra por sí solo.
+
+### Comando de ejecución (Fase 4)
+
+Punto de entrada único, ejecutable desde la raíz del repo con el intérprete del virtualenv de `services/api` (el paquete `app.*` — `DATABASE_URL`, acceso a `telemetry_events` — está instalado en modo editable ahí; un `python` no apuntado a ese venv falla en `import app...` sin relación con este script):
+
+```bash
+# Semana ISO cerrada más reciente (por defecto):
+python data/pipelines/pipeline.py
+
+# Una semana específica (lunes, UTC):
+python data/pipelines/pipeline.py 2026-07-13
+
+# Equivalente, sin activar el venv:
+services/api/.venv/bin/python data/pipelines/pipeline.py
+```
+
+`data/pipelines/pipeline.py` es un *wrapper* delgado — importa y llama a `weekly_location_performance_flow` (`data/pipelines/weekly-location-performance/flow.py`), sin redefinir ninguna lógica. Corre el pipeline **una vez, sincrónicamente**, para la semana resuelta — no es, por sí mismo, la programación semanal (esa es la sección anterior); es el comando que tanto un operador humano como `serve.py`/`POST /reporting/pipeline-runs` (sección 11) usan como base para disparar una corrida.
 
 ---
 

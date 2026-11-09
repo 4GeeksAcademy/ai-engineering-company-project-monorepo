@@ -1,0 +1,29 @@
+[Unit]
+Description=weekly_location_performance_flow scheduler/executor (Prefect .serve())
+After=network.target prefect-server.service
+Requires=prefect-server.service
+
+[Service]
+Type=simple
+# Adjust to the real deployment user/paths on the host.
+User=brasaland
+# Must be this directory, not services/api — Prefect resolves the flow's
+# entrypoint as a path relative to the process's working directory at
+# registration time (see serve.py's module docstring and the ValueError
+# this raises if run from the wrong cwd).
+WorkingDirectory=/opt/brasaland/data/pipelines/weekly-location-performance
+
+# Points this long-running process at the self-hosted server above
+# (prefect-server.service) rather than spinning up its own ephemeral,
+# in-process server — that's what makes the schedule and run history
+# persistent and visible in the shared Prefect UI.
+Environment=PREFECT_API_URL=http://127.0.0.1:4200/api
+# DATABASE_URL (Supabase) comes from services/api/.env, loaded by
+# app.core.config at import time — not duplicated here.
+
+ExecStart=/opt/brasaland/services/api/.venv/bin/python serve.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

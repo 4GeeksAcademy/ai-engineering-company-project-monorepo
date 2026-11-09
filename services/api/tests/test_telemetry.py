@@ -41,6 +41,7 @@ VALID_EVENT = {
         "currency": "COP",
         "order_id": "101",
         "supplier_id": "9",
+        "unit_cost": 4500.0,
     },
 }
 

@@ -62,6 +62,12 @@ export interface OutboundOrderCreate {
   quantity: number;
   unit: string;
   reason: ExitReason;
+  /** Cost paid per unit, in the order's local currency — required when
+   * `reason` is a waste cause (expired/kitchen_error/theft_suspected),
+   * must be omitted otherwise. Captured at registration time, never
+   * derived from a prior inbound delivery (docs/company-briefing.md
+   * section 3's merma-cost decision). */
+  unit_cost?: number | null;
   country: Country;
   city: City | null;
 }
@@ -81,6 +87,8 @@ export interface InboundOrderResponse extends InboundOrderCreate {
 
 export interface OutboundOrderResponse extends OutboundOrderCreate {
   id: number;
+  /** Echoes OutboundOrderCreate.unit_cost — null for non-waste exits. */
+  unit_cost: number | null;
   user_uuid: string;
   created_at: string;
   minimum_stock: number;

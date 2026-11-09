@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, timezone
 from enum import Enum
-from typing import Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -220,6 +220,12 @@ ProductCategory = Literal[
 # section 6 and the Phase 3 telemetry gap report). No existing StockExit row
 # used "waste" at the time of this change (verified against the dev DB).
 ExitReason = Literal["kitchen_use", "transfer", "other", "expired", "kitchen_error", "theft_suspected"]
+
+# The 3 reasons that make a StockExit a merma (waste) event rather than
+# ordinary consumption — same set OutboundOrderForm.tsx calls WASTE_REASONS
+# (docs/event-envelope.md section 6: stock_waste_registered vs.
+# outbound_order_created are mutually exclusive over the same row).
+WASTE_REASONS: frozenset[str] = frozenset({"expired", "kitchen_error", "theft_suspected"})
 
 CITIES_BY_COUNTRY: dict[Country, set[City]] = {
     "Colombia": {"Medellín", "Bogotá", "Cali"},
@@ -560,13 +566,44 @@ class StockExitFields(BaseModel):
 
 
 class StockExitCreate(StockExitFields):
+    # Merma cost decision (docs/company-briefing.md section 3 / the
+    # PIPELINE_DESIGN.md gap this closes): captured AT REGISTRATION TIME,
+    # never derived from a prior inbound delivery. Required exactly when
+    # `reason` is a waste cause — a non-waste exit (kitchen_use/transfer/
+    # other) isn't merma and must not carry a fabricated cost.
+    unit_cost: float | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Cost paid per unit, in the order's local currency. Required "
+            "when `reason` is expired/kitchen_error/theft_suspected; must "
+            "be omitted/null otherwise."
+        ),
+    )
+
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    @model_validator(mode="after")
+    def validate_unit_cost_matches_reason(self) -> "StockExitCreate":
+        is_waste = self.reason in WASTE_REASONS
+        if is_waste and self.unit_cost is None:
+            raise ValueError(
+                "unit_cost is required when reason is a waste cause "
+                "(expired, kitchen_error, theft_suspected)."
+            )
+        if not is_waste and self.unit_cost is not None:
+            raise ValueError("unit_cost must not be provided when reason is not a waste cause.")
+        return self
 
 
 class StockExitResponse(StockExitFields):
     id: int
     user_uuid: int = Field(..., description="FK to users.id — the authenticated user who logged the exit")
     created_at: datetime
+    unit_cost: float | None = Field(
+        default=None,
+        description="Cost paid per unit — set only for waste exits (see StockExitCreate.unit_cost).",
+    )
     minimum_stock: float = Field(..., description="The product's configured threshold at the time of this exit.")
     current_stock_after: float = Field(..., description="current_stock immediately after this withdrawal.")
     threshold_crossed: bool = Field(
@@ -606,3 +643,88 @@ class OrderResponse(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ── Reporting (weekly-location-performance pipeline) ─────
+# Contracts for app.routers.reporting / app.services.reporting — the
+# pipeline itself (flow, tasks, the `reporting` schema tables) lives in
+# data/pipelines/weekly-location-performance/, per
+# docs/PIPELINE_DESIGN.md. These schemas describe the HTTP layer only;
+# field names mirror reporting.pipeline_runs
+# (data/pipelines/weekly-location-performance/schema.py) and
+# reporting.weekly_location_performance (docs/company-briefing.md section
+# 5) exactly — never a renamed/looser shape.
+PipelineRunStatus = Literal["running", "succeeded", "failed"]
+
+
+class PipelineRunResponse(BaseModel):
+    """One row of reporting.pipeline_runs, as the API exposes it."""
+
+    id: str
+    prefect_flow_run_id: str | None
+    pipeline_name: str
+    pipeline_version: str
+    requested_week_start: date
+    scope: dict[str, Any]
+    status: PipelineRunStatus
+    started_at: datetime
+    finished_at: datetime | None
+    records_read: int | None
+    records_rejected: int | None
+    records_transformed: int | None
+    records_loaded: int | None
+    failed_stage: str | None
+    error_summary: str | None
+    optional_step_error: str | None
+    triggered_by: str
+
+
+class LatestPipelineRunsResponse(BaseModel):
+    """GET /reporting/pipeline-runs/latest (no run_id query param) —
+    docs/PIPELINE_DESIGN.md section 11/9's explicit distinction between
+    "último intento" (any status) and "última carga exitosa"."""
+
+    latest_attempt: PipelineRunResponse
+    latest_succeeded: PipelineRunResponse | None
+
+
+class TriggerPipelineRunRequest(BaseModel):
+    """POST /reporting/pipeline-runs body — week_start optional, ISO date."""
+
+    week_start: date | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TriggerPipelineRunResponse(BaseModel):
+    """POST /reporting/pipeline-runs response (202) — run_id is the same
+    reporting.pipeline_runs.id the caller polls via
+    GET /reporting/pipeline-runs/latest?run_id=..."""
+
+    run_id: str
+    status: Literal["running"]
+    week_start: date
+
+
+class WeeklyLocationPerformanceEntry(BaseModel):
+    """One row of reporting.weekly_location_performance for one location —
+    field names and shape are docs/company-briefing.md section 6's exact
+    contract (the one GET /reporting/weekly-location-performance must
+    match exactly), minus `id`/`computed_at` (not part of that contract)."""
+
+    location_id: str
+    country: str
+    total_purchase_cost: float
+    total_waste_cost: float
+    waste_ratio: float
+    stockout_events_count: int
+    price_alert_events_count: int
+    currency: str
+
+
+class WeeklyLocationPerformanceResponse(BaseModel):
+    """GET /reporting/weekly-location-performance response — exact shape
+    of docs/company-briefing.md section 6: {"week_start", "locations": [...]}."""
+
+    week_start: date
+    locations: list[WeeklyLocationPerformanceEntry]

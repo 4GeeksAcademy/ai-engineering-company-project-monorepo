@@ -39,6 +39,15 @@ class StockExit(SQLModel, table=True):
     reason: ExitReason = Field(
         default="kitchen_use", sa_column=Column(String)
     )
+    unit_cost: float | None = Field(
+        default=None,
+        description=(
+            "Cost paid per unit, captured at registration time — only for "
+            "waste exits (reason in expired/kitchen_error/theft_suspected). "
+            "Null for ordinary consumption and for rows created before this "
+            "column existed. docs/company-briefing.md section 3."
+        ),
+    )
 
     # FK built from the actual Column object — see inbound.py's comment
     # on why (users lives on its own separate Core MetaData).
