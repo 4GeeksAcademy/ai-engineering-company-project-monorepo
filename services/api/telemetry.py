@@ -5,17 +5,20 @@ import logging
 import math
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ValidationError, root_validator
 from sqlalchemy import text
 from starlette.concurrency import run_in_threadpool
+from services.api.auth import get_current_user
+from services.api.models import Role, User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/telemetry", tags=["telemetry"])
+report_router = APIRouter(prefix="/telemetry", tags=["telemetry"])
 MAX_BATCH_EVENTS = 20
 MAX_BATCH_BYTES = 64 * 1024
 SCHEMA_VERSION = "1.0.0"
@@ -259,3 +262,40 @@ async def capture_telemetry(request: Request) -> dict[str, int]:
     rejected += len(valid_events) - stored
     logger.info("Telemetry batch processed received=%d stored=%d rejected=%d", len(raw_events), stored, rejected)
     return {"received": len(raw_events), "stored": stored, "rejected": rejected}
+
+
+def _parse_report_date(value: str | None, default: datetime) -> datetime:
+    if value is None:
+        return default
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Report dates must be ISO-8601 datetimes.") from None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise HTTPException(status_code=422, detail="Report dates must include a timezone.")
+    return parsed.astimezone(timezone.utc)
+
+
+@router.get("/report")
+@report_router.get("/report")
+def telemetry_report(
+    start: str | None = Query(default=None, alias="from"),
+    end: str | None = Query(default=None, alias="to"),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Return manager-only operational telemetry metrics for a UTC period."""
+    if current_user.role not in {Role.ADMIN, Role.MANAGER}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions.")
+    period_end = _parse_report_date(
+        end, datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    )
+    period_start = _parse_report_date(start, period_end - timedelta(days=7))
+    if period_start >= period_end:
+        raise HTTPException(status_code=422, detail="Report start must be before report end.")
+
+    from services.telemetry.analysis import build_technical_report
+
+    return {
+        "period": {"from": period_start.isoformat(), "to": period_end.isoformat()},
+        "metrics": build_technical_report(period_start, period_end),
+    }

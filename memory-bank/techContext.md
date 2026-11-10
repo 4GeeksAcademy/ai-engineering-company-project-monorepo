@@ -12,6 +12,11 @@
   events are emitted by the supplier service routes after a persisted mutation
   or a real not-found failure. No frontend instrumentation is required for these
   server-side event types.
+- `GET /telemetry/report` and `/api/telemetry/report` require manager/admin
+  authentication and query the telemetry engine over a UTC half-open date range.
+  `services/telemetry/analysis.py` reports daily event volume, daily API error
+  ratio, and mean/p95 latency by canonical route; it uses standard-library
+  aggregation and does not add a dashboard or separate auth metric.
 
 ## Current repository baseline
 

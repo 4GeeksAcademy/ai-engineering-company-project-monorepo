@@ -11,6 +11,10 @@
 - The live Supabase table/schema was verified. Frontend source is not changed in
   the storage submission branch. A live failure outcome can be generated with a
   non-existent supplier ID without mutating supplier records.
+- Added manager/admin-only `GET /telemetry/report` with a compatibility alias at
+  `/api/telemetry/report`; the JSON includes daily event volume, API error rate,
+  and mean/p95 latency by route. No additional auth metric or visual dashboard
+  is included.
 
 ## Completed
 

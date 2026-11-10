@@ -10,6 +10,8 @@ Reset links and recipient addresses are not printed by default. For local develo
 
 Telemetry uses `TELEMETRY_DATABASE_URL`, separate from inventory's `DATABASE_URL`. Apply `services/telemetry/schema.sql` to the Supabase project to create the event table and indexes. The service exposes `POST /api/telemetry/events`; it validates each event independently and returns `received`, `stored`, and `rejected` counts. API timing and successful or rejected supplier mutations are emitted from the FastAPI service without changing either frontend.
 
+`GET /telemetry/report` (also available at `/api/telemetry/report`) is restricted to managers and admins. It returns UTC daily event volume, daily API error rate, and mean/p95 latency by route. These metrics answer whether telemetry volume is changing, whether API failures are rising, and which route has slow responses. The report does not include a separate authentication-success metric or a visual dashboard.
+
 Run the API from the repository root with:
 
 ```powershell
