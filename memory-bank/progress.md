@@ -1,5 +1,17 @@
 # Progress
 
+## Telemetry Event Storage
+
+- Added an idempotent Supabase schema at `services/telemetry/schema.sql` and a
+  dedicated `TELEMETRY_DATABASE_URL` connection; inventory remains on
+  `DATABASE_URL`.
+- `POST /api/telemetry/events` validates and stores mixed batches with per-event
+  rejection counts. FastAPI now emits route/status/duration events and supplier
+  action outcomes only from the service layer after success or a real 404.
+- The live Supabase table/schema was verified. Frontend source is not changed in
+  the storage submission branch. A live failure outcome can be generated with a
+  non-existent supplier ID without mutating supplier records.
+
 ## Completed
 
 ## INFRA-40 — Dockerization & Production Deploy

@@ -6,6 +6,10 @@ The API loads the root `.env` at startup. `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` 
 
 Reset links and recipient addresses are not printed by default. For local development only, explicitly set `ALLOW_PASSWORD_RESET_CONSOLE_FALLBACK=true` in the root `.env` to print a usable reset link when Resend is unavailable. Restart the API after changing the setting. Never enable this in production or shared logs; console links are credentials. Real email still requires a valid Resend key and sender.
 
+## Telemetry Event Storage
+
+Telemetry uses `TELEMETRY_DATABASE_URL`, separate from inventory's `DATABASE_URL`. Apply `services/telemetry/schema.sql` to the Supabase project to create the event table and indexes. The service exposes `POST /api/telemetry/events`; it validates each event independently and returns `received`, `stored`, and `rejected` counts. API timing and successful or rejected supplier mutations are emitted from the FastAPI service without changing either frontend.
+
 Run the API from the repository root with:
 
 ```powershell

@@ -6,12 +6,14 @@ import os
 from io import StringIO
 from pathlib import Path
 import sys
+import time
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.concurrency import run_in_threadpool
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,8 +36,44 @@ from services.api.routes.suppliers import router as suppliers_router  # noqa: E4
 from services.api.routes.users import router as users_router  # noqa: E402
 from services.api.routes.incidents import router as incidents_router  # noqa: E402
 from services.api.routes.inventory import router as inventory_router  # noqa: E402
+from services.api import telemetry as telemetry_module  # noqa: E402
+from services.api.telemetry import router as telemetry_router  # noqa: E402
 
 app = FastAPI(title="TrackFlow API", version="1.1.0")
+timing_logger = logging.getLogger("api.timing")
+
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    started = time.perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        route = request.scope.get("route")
+        route_path = getattr(route, "path", "")
+        duration_ms = max(0, (time.perf_counter() - started) * 1000)
+        telemetry_route = telemetry_module.canonical_api_route(route_path)
+        if telemetry_route and request.method in telemetry_module.API_METHODS:
+            await run_in_threadpool(
+                telemetry_module.record_server_event,
+                "api_latency_recorded",
+                {
+                    "route": telemetry_route,
+                    "method": request.method,
+                    "status_code": status_code,
+                    "duration_ms": duration_ms,
+                },
+            )
+        timing_logger.info(
+            "%s %s status=%s duration_ms=%.3f",
+            request.method,
+            route_path or "<unmatched>",
+            status_code,
+            duration_ms,
+        )
 
 # ------------------------------------------------------------------
 # CORS origins
@@ -88,6 +126,7 @@ app.include_router(users_router)
 app.include_router(profiles_router)
 app.include_router(suppliers_router)
 app.include_router(inventory_router)
+app.include_router(telemetry_router)
 
 
 @app.get("/health")

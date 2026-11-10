@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trackflow.example/schemas/telemetry-event-batch.schema.json",
+  "title": "TrackFlow telemetry event batch",
+  "description": "Strict event envelope and allowlisted per-event properties for TrackFlow's telemetry capture/storage pipeline. Unknown envelope and property keys are rejected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["events"],
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventId", "timestamp", "sessionId", "userId", "event_type", "schemaVersion", "requestId", "properties"],
+      "properties": {
+        "eventId": { "type": "string", "format": "uuid", "description": "Unique event identifier." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Capture time in ISO 8601 UTC." },
+        "sessionId": { "type": ["string", "null"], "format": "uuid", "description": "Opaque, rotating UUID session identifier; null before a session exists or for anonymous public auth attempts." },
+        "userId": { "type": ["string", "null"], "format": "uuid", "description": "Independent random UUID scoped to the authenticated session; rotate at login and clear at logout/session expiry. Null for anonymous events. Never derived from account identity; no cross-session joins." },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "inbound_order_created",
+            "outbound_order_created",
+            "stock_threshold_triggered",
+            "direct_stock_edit_rejected",
+            "inventory_discrepancy_detected",
+            "inventory_validation_failed",
+            "inventory_products_viewed",
+            "login_succeeded",
+            "login_failed",
+            "session_expired",
+            "navigation_page_viewed",
+            "flow_abandoned",
+            "api_latency_recorded",
+            "frontend_error_captured",
+            "web_vital_recorded",
+            "supplier_action_completed",
+            "incident_action_completed"
+          ]
+        },
+        "schemaVersion": { "type": "string", "const": "1.0.0" },
+        "requestId": { "type": "string", "format": "uuid", "description": "Correlation ID for a frontend action/request; generated at capture time if no API request ID is available." },
+        "properties": {
+          "type": "object",
+          "description": "Validated against the strict schema selected by event_type below."
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "event_type": { "const": "inbound_order_created" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/inbound_order_created" } } } },
+        { "if": { "properties": { "event_type": { "const": "outbound_order_created" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/outbound_order_created" } } } },
+        { "if": { "properties": { "event_type": { "const": "stock_threshold_triggered" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/stock_threshold_triggered" } } } },
+        { "if": { "properties": { "event_type": { "const": "direct_stock_edit_rejected" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/direct_stock_edit_rejected" } } } },
+        { "if": { "properties": { "event_type": { "const": "inventory_discrepancy_detected" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/inventory_discrepancy_detected" } } } },
+        { "if": { "properties": { "event_type": { "const": "inventory_validation_failed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/inventory_validation_failed" } } } },
+        { "if": { "properties": { "event_type": { "const": "inventory_products_viewed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/inventory_products_viewed" } } } },
+        { "if": { "properties": { "event_type": { "const": "login_succeeded" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/login_succeeded" } } } },
+        { "if": { "properties": { "event_type": { "const": "login_failed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/login_failed" } } } },
+        { "if": { "properties": { "event_type": { "const": "session_expired" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/session_expired" } } } },
+        { "if": { "properties": { "event_type": { "const": "navigation_page_viewed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/navigation_page_viewed" } } } },
+        { "if": { "properties": { "event_type": { "const": "flow_abandoned" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/flow_abandoned" } } } },
+        { "if": { "properties": { "event_type": { "const": "api_latency_recorded" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/api_latency_recorded" } } } },
+        { "if": { "properties": { "event_type": { "const": "frontend_error_captured" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/frontend_error_captured" } } } },
+        { "if": { "properties": { "event_type": { "const": "web_vital_recorded" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/web_vital_recorded" } } } },
+        { "if": { "properties": { "event_type": { "const": "supplier_action_completed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/supplier_action_completed" } } } },
+        { "if": { "properties": { "event_type": { "const": "incident_action_completed" } } }, "then": { "properties": { "properties": { "$ref": "#/$defs/incident_action_completed" } } } }
+      ]
+    },
+    "warehouse": { "type": "string", "enum": ["los_angeles", "zaragoza"] },
+    "product_category": { "type": "string", "enum": ["fashion", "electronics", "cosmetics"] },
+    "client_id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9._-]+$", "description": "Stable approved brand/client key; never a display name or contact detail." },
+    "product_id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9._-]+$", "description": "SKU business code, not a database primary key." },
+    "inbound_order_created": { "type": "object", "additionalProperties": false, "required": ["warehouse", "client_id", "product_id", "product_category", "quantity"], "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "client_id": { "$ref": "#/$defs/client_id" }, "product_id": { "$ref": "#/$defs/product_id" }, "product_category": { "$ref": "#/$defs/product_category" }, "quantity": { "type": "integer", "minimum": 1 } } },
+    "outbound_order_created": { "type": "object", "additionalProperties": false, "required": ["warehouse", "client_id", "product_id", "product_category", "quantity"], "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "client_id": { "$ref": "#/$defs/client_id" }, "product_id": { "$ref": "#/$defs/product_id" }, "product_category": { "$ref": "#/$defs/product_category" }, "quantity": { "type": "integer", "minimum": 1 } } },
+    "stock_threshold_triggered": { "type": "object", "additionalProperties": false, "required": ["warehouse", "client_id", "product_id", "product_category", "quantity", "minimum_stock"], "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "client_id": { "$ref": "#/$defs/client_id" }, "product_id": { "$ref": "#/$defs/product_id" }, "product_category": { "$ref": "#/$defs/product_category" }, "quantity": { "type": "integer", "minimum": 0 }, "minimum_stock": { "type": "integer", "minimum": 0 } } },
+    "direct_stock_edit_rejected": { "type": "object", "additionalProperties": false, "required": ["warehouse", "client_id", "product_id", "product_category", "quantity", "rejection_code"], "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "client_id": { "$ref": "#/$defs/client_id" }, "product_id": { "$ref": "#/$defs/product_id" }, "product_category": { "$ref": "#/$defs/product_category" }, "quantity": { "type": "integer", "minimum": 0, "description": "Absolute units represented by the rejected attempted edit; never raw request data." }, "rejection_code": { "type": "string", "enum": ["direct_stock_write_forbidden"] } } },
+    "inventory_discrepancy_detected": { "type": "object", "additionalProperties": false, "required": ["warehouse", "client_id", "product_id", "product_category", "quantity", "system_quantity", "physical_quantity"], "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "client_id": { "$ref": "#/$defs/client_id" }, "product_id": { "$ref": "#/$defs/product_id" }, "product_category": { "$ref": "#/$defs/product_category" }, "quantity": { "type": "integer", "minimum": 1, "description": "Absolute difference between physical_quantity and system_quantity." }, "system_quantity": { "type": "integer", "minimum": 0 }, "physical_quantity": { "type": "integer", "minimum": 0 } } },
+    "inventory_validation_failed": { "type": "object", "additionalProperties": false, "required": ["operation", "validation_code", "warehouse", "product_id"], "properties": { "operation": { "type": "string", "enum": ["inbound", "outbound", "product"] }, "validation_code": { "type": "string", "enum": ["quantity_invalid", "sku_unknown", "warehouse_mismatch", "insufficient_stock", "missing_tracking_number", "duplicate_sku", "required_field_missing"] }, "warehouse": { "anyOf": [{ "$ref": "#/$defs/warehouse" }, { "type": "null" }] }, "product_id": { "type": ["string", "null"], "maxLength": 128 }, "product_category": { "anyOf": [{ "$ref": "#/$defs/product_category" }, { "type": "null" }] } } },
+    "inventory_products_viewed": { "type": "object", "additionalProperties": false, "properties": { "warehouse": { "$ref": "#/$defs/warehouse" }, "product_category": { "$ref": "#/$defs/product_category" }, "result_count": { "type": "integer", "minimum": 0 } } },
+    "login_succeeded": { "type": "object", "additionalProperties": false, "properties": { "auth_method": { "type": "string", "enum": ["password"] } } },
+    "login_failed": { "type": "object", "additionalProperties": false, "required": ["reason"], "properties": { "reason": { "type": "string", "enum": ["invalid_credentials", "network_error", "rate_limited"] } } },
+    "session_expired": { "type": "object", "additionalProperties": false, "required": ["reason"], "properties": { "reason": { "type": "string", "const": "unauthorized_response" } } },
+    "navigation_page_viewed": { "type": "object", "additionalProperties": false, "required": ["route"], "properties": { "route": { "type": "string", "enum": ["/", "/inventory/products", "/inventory/orders", "/inventory/orders/inbound", "/inventory/orders/outbound", "/suppliers", "/incidents", "/incident-file-analyzer", "/account/profile"] } } },
+    "flow_abandoned": { "type": "object", "additionalProperties": false, "required": ["flow", "last_step"], "properties": { "flow": { "type": "string", "enum": ["inbound_order", "outbound_order", "supplier_create", "incident_create"] }, "last_step": { "type": "string", "enum": ["form_opened", "form_started", "validation_failed", "submission_started"] } } },
+    "api_latency_recorded": { "type": "object", "additionalProperties": false, "required": ["route", "method", "status_code", "duration_ms"], "properties": { "route": { "type": "string", "enum": ["/auth/login", "/auth/me", "/users", "/profiles/me", "/inventory/products", "/inventory/orders", "/suppliers", "/api/incidents"] }, "method": { "type": "string", "enum": ["GET", "POST", "PATCH", "DELETE"] }, "status_code": { "type": "integer", "minimum": 100, "maximum": 599 }, "duration_ms": { "type": "number", "minimum": 0 } } },
+    "frontend_error_captured": { "type": "object", "additionalProperties": false, "required": ["error_kind", "error_code", "route"], "properties": { "error_kind": { "type": "string", "enum": ["window_error", "unhandled_rejection", "render_error"] }, "error_code": { "type": "string", "maxLength": 80, "pattern": "^[A-Z0-9_]+$" }, "route": { "type": "string", "enum": ["/", "/inventory/products", "/inventory/orders", "/inventory/orders/inbound", "/inventory/orders/outbound", "/suppliers", "/incidents", "/incident-file-analyzer", "/account/profile"] } } },
+    "web_vital_recorded": { "type": "object", "additionalProperties": false, "required": ["metric_name", "value", "route"], "properties": { "metric_name": { "type": "string", "enum": ["CLS", "FCP", "INP", "LCP", "TTFB"] }, "value": { "type": "number", "minimum": 0 }, "route": { "type": "string", "enum": ["/", "/inventory/products", "/inventory/orders", "/inventory/orders/inbound", "/inventory/orders/outbound", "/suppliers", "/incidents", "/incident-file-analyzer", "/account/profile"] } } },
+    "supplier_action_completed": { "type": "object", "additionalProperties": false, "required": ["action", "result"], "properties": { "action": { "type": "string", "enum": ["created", "rate_updated", "status_updated", "deleted"] }, "result": { "type": "string", "enum": ["success", "failure"] } } },
+    "incident_action_completed": { "type": "object", "additionalProperties": false, "required": ["action", "result"], "properties": { "action": { "type": "string", "enum": ["created", "status_updated"] }, "result": { "type": "string", "enum": ["success", "failure"] } } }
+  }
+}

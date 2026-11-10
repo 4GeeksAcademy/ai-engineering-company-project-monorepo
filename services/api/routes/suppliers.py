@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from services.api import telemetry
 from services.api.auth import get_current_user
 from services.api.database import (
     create_supplier,
@@ -29,7 +30,11 @@ def post_supplier(
     payload: SupplierCreate,
     current_user: User = Depends(get_current_user),
 ) -> Supplier:
-    return create_supplier(payload)
+    supplier = create_supplier(payload)
+    telemetry.record_server_event(
+        "supplier_action_completed", {"action": "created", "result": "success"}
+    )
+    return supplier
 
 
 @router.get("", response_model=list[Supplier])
@@ -59,7 +64,13 @@ def patch_supplier_rate(
 ) -> Supplier:
     supplier = update_supplier_rate(supplier_id, payload.rate_per_shipment)
     if supplier is None:
+        telemetry.record_server_event(
+            "supplier_action_completed", {"action": "rate_updated", "result": "failure"}
+        )
         raise HTTPException(status_code=404, detail="Supplier not found.")
+    telemetry.record_server_event(
+        "supplier_action_completed", {"action": "rate_updated", "result": "success"}
+    )
     return supplier
 
 
@@ -71,7 +82,13 @@ def patch_supplier_status(
 ) -> Supplier:
     supplier = update_supplier_status(supplier_id, payload.status)
     if supplier is None:
+        telemetry.record_server_event(
+            "supplier_action_completed", {"action": "status_updated", "result": "failure"}
+        )
         raise HTTPException(status_code=404, detail="Supplier not found.")
+    telemetry.record_server_event(
+        "supplier_action_completed", {"action": "status_updated", "result": "success"}
+    )
     return supplier
 
 
@@ -82,5 +99,11 @@ def remove_supplier(
 ) -> dict[str, object]:
     deleted = delete_supplier(supplier_id)
     if not deleted:
+        telemetry.record_server_event(
+            "supplier_action_completed", {"action": "deleted", "result": "failure"}
+        )
         raise HTTPException(status_code=404, detail="Supplier not found.")
+    telemetry.record_server_event(
+        "supplier_action_completed", {"action": "deleted", "result": "success"}
+    )
     return {"deleted": True, "id": supplier_id}

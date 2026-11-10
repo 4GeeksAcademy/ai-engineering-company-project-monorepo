@@ -49,6 +49,26 @@ class TestCreateSupplier:
         assert body["status"] == "active"
         assert body["id"] > 0
 
+    def test_successful_create_emits_business_event(self, client, auth_headers, monkeypatch):
+        from services.api import telemetry
+
+        headers, _ = auth_headers
+        events = []
+        monkeypatch.setattr(
+            telemetry,
+            "record_server_event",
+            lambda event_type, properties: events.append((event_type, properties)),
+        )
+
+        response = client.post("/suppliers", json=_supplier_payload(), headers=headers)
+
+        assert response.status_code == 201
+        business_events = [event for event in events if event[0] == "supplier_action_completed"]
+        assert business_events == [(
+            "supplier_action_completed",
+            {"action": "created", "result": "success"},
+        )]
+
     def test_happy_path_creates_spain_supplier(self, client, auth_headers):
         headers, _ = auth_headers
         response = client.post(
@@ -173,6 +193,26 @@ class TestPatchSupplierRate:
             "/suppliers/999999/rate", json={"rate_per_shipment": 8.5}, headers=headers
         )
         assert response.status_code == 404
+
+    def test_missing_supplier_failure_emits_business_event(self, client, auth_headers, monkeypatch):
+        from services.api import telemetry
+
+        headers, _ = auth_headers
+        events = []
+        monkeypatch.setattr(
+            telemetry,
+            "record_server_event",
+            lambda event_type, properties: events.append((event_type, properties)),
+        )
+
+        response = client.patch(
+            "/suppliers/-1/rate", json={"rate_per_shipment": 8.5}, headers=headers
+        )
+
+        assert response.status_code == 404
+        assert ("supplier_action_completed", {
+            "action": "rate_updated", "result": "failure"
+        }) in events
 
 
 class TestPatchSupplierStatus:

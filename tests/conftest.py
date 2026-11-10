@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from services.api import auth as auth_module
 from services.api import database as database_module
+from services.api import telemetry as telemetry_module
 from services.api.main import app
 from services.api.models import UserCreate
 
@@ -31,6 +32,7 @@ def isolated_storage(tmp_path, monkeypatch):
     """
     monkeypatch.setattr(database_module, "USER_DB_PATH", tmp_path / "users.json")
     monkeypatch.setattr(database_module, "DB_PATH", tmp_path / "suppliers.json")
+    monkeypatch.setattr(telemetry_module, "persist_events", lambda events: len(events))
     from services.api import incidents as incidents_module
 
     monkeypatch.setattr(incidents_module, "DB_PATH", tmp_path / "incidents.sqlite3")
