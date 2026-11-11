@@ -37,7 +37,7 @@ function ResetPasswordForm() {
     try {
       await api.post("/auth/reset-password", {
         token,
-        new_password: password
+        new_password: password,
       });
       setSuccess(true);
       setTimeout(() => {
@@ -57,10 +57,10 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="text-center space-y-4">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="p-4 bg-rose-500/10 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-medium">
           Enlace inválido o sin token de seguridad.
         </div>
-        <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 font-semibold">
+        <Link href="/forgot-password" className="inline-block text-emerald-400 hover:underline text-xs font-semibold">
           Solicitar un nuevo enlace
         </Link>
       </div>
@@ -70,11 +70,14 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center space-y-4">
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 font-medium">
+        <div className="p-4 bg-emerald-500/15 border border-emerald-400/40 rounded-xl text-emerald-300 text-sm font-medium">
           ¡Contraseña actualizada con éxito!
         </div>
-        <p className="text-sm text-slate-500">Serás redirigido al inicio de sesión en unos segundos...</p>
-        <Link href="/login" className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm">
+        <p className="text-xs text-slate-400">Serás redirigido al inicio de sesión en unos segundos...</p>
+        <Link
+          href="/login"
+          className="inline-block mt-2 px-5 py-2.5 bg-emerald-400 text-[#0a0d12] rounded-xl font-bold text-xs"
+        >
           Ir a Iniciar Sesión ahora
         </Link>
       </div>
@@ -84,10 +87,10 @@ function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+        <div className="p-3.5 bg-rose-500/10 border border-rose-500/40 rounded-xl text-rose-300 text-xs">
           {error}
           <div className="mt-2">
-            <Link href="/forgot-password" className="font-semibold underline">
+            <Link href="/forgot-password" className="font-semibold text-amber-200 underline">
               Solicitar nuevo enlace
             </Link>
           </div>
@@ -95,25 +98,29 @@ function ResetPasswordForm() {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Nueva Contraseña</label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          Nueva Contraseña
+        </label>
         <input
           type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500"
+          className="w-full px-4 py-2.5 border border-emerald-500/25 bg-[#0a0d12]/90 rounded-xl text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/25"
           placeholder="••••••••"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Confirmar Contraseña</label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          Confirmar Contraseña
+        </label>
         <input
           type="password"
           required
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500"
+          className="w-full px-4 py-2.5 border border-emerald-500/25 bg-[#0a0d12]/90 rounded-xl text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/25"
           placeholder="••••••••"
         />
       </div>
@@ -121,7 +128,7 @@ function ResetPasswordForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow disabled:opacity-50"
+        className="w-full py-3 bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] text-sm font-bold rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.3)] disabled:opacity-50 transition"
       >
         {isSubmitting ? "Guardando..." : "Restablecer Contraseña"}
       </button>
@@ -131,13 +138,18 @@ function ResetPasswordForm() {
 
 export default function ResetPassword() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-slate-100">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">Elige tu nueva contraseña</h1>
-          <p className="text-sm text-slate-500 mt-2">Asegúrate de usar al menos 6 caracteres.</p>
+    <div className="relative min-h-screen flex items-center justify-center bg-[#0a0d12] px-4 text-slate-100 overflow-hidden">
+      <div className="pointer-events-none absolute top-[-15%] left-1/2 -translate-x-1/2 h-[460px] w-[720px] rounded-full bg-emerald-500/12 blur-[140px]" />
+
+      <div className="relative z-10 max-w-md w-full p-8 bg-[#121721]/85 rounded-2xl shadow-2xl border border-emerald-500/25 backdrop-blur-xl">
+        <div className="text-center mb-7">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+            Restablecimiento Seguro
+          </span>
+          <h1 className="mt-1 text-2xl font-bold text-white">Elige tu nueva contraseña</h1>
+          <p className="text-xs text-slate-400 mt-1.5">Asegúrate de usar al menos 6 caracteres.</p>
         </div>
-        <Suspense fallback={<div className="text-center">Cargando...</div>}>
+        <Suspense fallback={<div className="text-center text-xs text-slate-400">Cargando...</div>}>
           <ResetPasswordForm />
         </Suspense>
       </div>

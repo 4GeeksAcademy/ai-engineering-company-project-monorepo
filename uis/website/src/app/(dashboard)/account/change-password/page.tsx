@@ -9,14 +9,14 @@ export default function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       setError("La nueva contraseña y la confirmación no coinciden.");
       return;
@@ -39,7 +39,7 @@ export default function ChangePassword() {
     try {
       await api.post("/auth/change-password", {
         current_password: currentPassword,
-        new_password: newPassword
+        new_password: newPassword,
       });
       setSuccess(true);
       setCurrentPassword("");
@@ -57,63 +57,72 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="max-w-2xl mx-auto py-4 px-2 sm:px-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Cambiar Contraseña</h1>
-          <p className="text-sm text-slate-500 mt-1">Actualiza tu contraseña de acceso.</p>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+            Seguridad
+          </span>
+          <h1 className="text-2xl font-bold text-white mt-0.5">Cambiar Contraseña</h1>
+          <p className="text-xs text-slate-400 mt-1">Actualiza tu contraseña de acceso corporativo.</p>
         </div>
-        <Link href="/account/profile" className="text-sm text-blue-600 hover:underline">
+        <Link href="/account/profile" className="text-xs font-semibold text-emerald-400 hover:underline">
           &larr; Volver a mi perfil
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="bg-[#121721]/85 rounded-2xl shadow-2xl border border-emerald-500/25 p-8 backdrop-blur-xl">
         {success && (
-          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700">
+          <div className="mb-6 p-4 bg-emerald-500/15 border border-emerald-400/40 rounded-xl text-emerald-300 text-xs font-medium">
             ¡Tu contraseña ha sido cambiada exitosamente!
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña Actual</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+              Contraseña Actual
+            </label>
             <input
               type="password"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-emerald-500/25 bg-[#0a0d12]/90 rounded-xl text-sm text-white focus:ring-2 focus:ring-emerald-400/25 focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
-          <hr className="border-slate-100" />
+          <hr className="border-emerald-500/15" />
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nueva Contraseña</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+              Nueva Contraseña
+            </label>
             <input
               type="password"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-emerald-500/25 bg-[#0a0d12]/90 rounded-xl text-sm text-white focus:ring-2 focus:ring-emerald-400/25 focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Confirmar Nueva Contraseña</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+              Confirmar Nueva Contraseña
+            </label>
             <input
               type="password"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-emerald-500/25 bg-[#0a0d12]/90 rounded-xl text-sm text-white focus:ring-2 focus:ring-emerald-400/25 focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
@@ -121,7 +130,7 @@ export default function ChangePassword() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow disabled:opacity-50"
+              className="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] text-xs font-bold rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.3)] disabled:opacity-50 transition"
             >
               {isSubmitting ? "Guardando..." : "Actualizar Contraseña"}
             </button>

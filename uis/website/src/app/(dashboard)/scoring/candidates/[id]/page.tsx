@@ -11,15 +11,15 @@ import StatusStageControls from '@/components/candidates/StatusStageControls';
 import dynamic from 'next/dynamic';
 
 const CandidateNotesSection = dynamic(
-  () => import ('@/components/candidates/CandidateNotesSection'),
+  () => import('@/components/candidates/CandidateNotesSection'),
   {
     loading: () => (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
+      <div className="bg-[#121721]/80 backdrop-blur-xl rounded-2xl border border-emerald-500/20 p-8 text-center text-emerald-100/60">
         Cargando notas e historial...
       </div>
     ),
   }
-)
+);
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -69,7 +69,7 @@ export default function CandidateDetailPage({ params }: PageProps) {
           onRetry={fetchCandidate}
         />
         <div className="mt-4">
-          <Link href="/" className="text-xs font-semibold text-blue-600 hover:underline">
+          <Link href="/scoring" className="text-xs font-semibold text-emerald-400 hover:underline">
             &larr; Volver al listado de candidaturas
           </Link>
         </div>
@@ -84,8 +84,8 @@ export default function CandidateDetailPage({ params }: PageProps) {
       {/* Botón Volver y Acciones Header */}
       <div className="flex items-center justify-between mb-6">
         <Link
-          href="/"
-          className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-2 rounded-lg shadow-sm transition-colors"
+          href="/scoring"
+          className="inline-flex items-center text-xs font-semibold text-emerald-100/80 hover:text-white bg-[#121721]/80 border border-emerald-500/20 hover:border-emerald-400/40 px-3.5 py-2 rounded-xl shadow-sm transition-all"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -94,8 +94,8 @@ export default function CandidateDetailPage({ params }: PageProps) {
         </Link>
 
         <Link
-          href={`/candidates/${candidate.id}/edit`}
-          className="inline-flex items-center text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
+          href={`/scoring/candidates/${candidate.id}/edit`}
+          className="inline-flex items-center text-xs font-bold bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] px-4 py-2.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.25)] transition-all"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -105,20 +105,20 @@ export default function CandidateDetailPage({ params }: PageProps) {
       </div>
 
       {/* Tarjeta Principal del Candidato */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="bg-[#121721]/80 backdrop-blur-xl rounded-2xl border border-emerald-500/20 shadow-xl p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-emerald-500/15 pb-5">
           <div>
-            <span className="text-xs font-mono text-slate-400">ID Candidatura: #{candidate.id}</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">{candidate.name}</h1>
-            <p className="text-sm font-semibold text-blue-600 mt-1">{candidate.position}</p>
+            <span className="text-xs font-mono text-amber-200/80">ID Candidatura: #{candidate.id}</span>
+            <h1 className="text-2xl font-bold text-white tracking-tight mt-0.5">{candidate.name}</h1>
+            <p className="text-sm font-semibold text-emerald-400 mt-1">{candidate.position}</p>
           </div>
           <div className="flex sm:flex-col items-end gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">Estado:</span>
+              <span className="text-xs text-emerald-100/50">Estado:</span>
               <Badge label={candidate.status} variant="status" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">Etapa:</span>
+              <span className="text-xs text-emerald-100/50">Etapa:</span>
               <Badge label={candidate.stage} variant="stage" />
             </div>
           </div>
@@ -127,20 +127,20 @@ export default function CandidateDetailPage({ params }: PageProps) {
         {/* Detalle de Campos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-5 text-xs">
           <div>
-            <span className="text-slate-400 font-medium block">Correo Electrónico</span>
-            <span className="text-slate-800 font-semibold mt-0.5 block truncate">{candidate.email}</span>
+            <span className="text-emerald-100/50 font-medium block">Correo Electrónico</span>
+            <span className="text-white font-semibold mt-1 block truncate">{candidate.email}</span>
           </div>
 
           <div>
-            <span className="text-slate-400 font-medium block">Teléfono de Contacto</span>
-            <span className="text-slate-800 font-semibold mt-0.5 block">
+            <span className="text-emerald-100/50 font-medium block">Teléfono de Contacto</span>
+            <span className="text-white font-semibold mt-1 block">
               {candidate.phone || 'No especificado'}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 font-medium block">Años de Experiencia</span>
-            <span className="text-slate-800 font-semibold mt-0.5 block">
+            <span className="text-emerald-100/50 font-medium block">Años de Experiencia</span>
+            <span className="text-amber-200 font-bold mt-1 block">
               {candidate.years_of_experience !== undefined && candidate.years_of_experience !== null
                 ? `${candidate.years_of_experience} años`
                 : 'No especificado'}
@@ -148,13 +148,13 @@ export default function CandidateDetailPage({ params }: PageProps) {
           </div>
 
           <div>
-            <span className="text-slate-400 font-medium block">Perfil de LinkedIn</span>
+            <span className="text-emerald-100/50 font-medium block">Perfil de LinkedIn</span>
             {candidate.linkedin ? (
               <a
                 href={candidate.linkedin.startsWith('http') ? candidate.linkedin : `https://${candidate.linkedin}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-semibold mt-0.5 inline-flex items-center"
+                className="text-emerald-400 hover:underline font-semibold mt-1 inline-flex items-center"
               >
                 Ver Perfil
                 <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,18 +162,18 @@ export default function CandidateDetailPage({ params }: PageProps) {
                 </svg>
               </a>
             ) : (
-              <span className="text-slate-400 mt-0.5 block">No proporcionado</span>
+              <span className="text-emerald-100/40 mt-1 block">No proporcionado</span>
             )}
           </div>
 
           <div>
-            <span className="text-slate-400 font-medium block">Curriculum Vitae (CV)</span>
+            <span className="text-emerald-100/50 font-medium block">Curriculum Vitae (CV)</span>
             {resumeLink ? (
               <a
                 href={resumeLink.startsWith('http') ? resumeLink : `https://${resumeLink}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-semibold mt-0.5 inline-flex items-center"
+                className="text-emerald-400 hover:underline font-semibold mt-1 inline-flex items-center"
               >
                 Ver Documento CV
                 <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,13 +181,13 @@ export default function CandidateDetailPage({ params }: PageProps) {
                 </svg>
               </a>
             ) : (
-              <span className="text-slate-400 mt-0.5 block">No adjuntado</span>
+              <span className="text-emerald-100/40 mt-1 block">No adjuntado</span>
             )}
           </div>
 
           <div>
-            <span className="text-slate-400 font-medium block">Fecha de Aplicación</span>
-            <span className="text-slate-800 font-semibold mt-0.5 block">
+            <span className="text-emerald-100/50 font-medium block">Fecha de Aplicación</span>
+            <span className="text-white font-semibold mt-1 block">
               {candidate.applied_at
                 ? new Date(candidate.applied_at).toLocaleDateString('es-ES', {
                     day: '2-digit',

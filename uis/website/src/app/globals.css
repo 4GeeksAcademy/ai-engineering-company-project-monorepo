@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta Gunmetal / Titanio Oscuro para no saturar la vista con verde */
+  --background: #0a0d12;
+  --foreground: #f1f5f9;
+  --nx-bg-base: #0a0d12;
+  --nx-surface-glass: #11161f;
+  --nx-surface-card: #161c27;
+  --nx-accent-emerald: #10b981;
+  --nx-accent-gold: #fde68a;
+
+  /* Escala tipográfica aumentada +2px respecto al defecto de Tailwind */
+  --text-xs: 0.875rem;      /* 14px (antes 12px) */
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 1rem;          /* 16px (antes 14px) */
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1.125rem;    /* 18px (antes 16px) */
+  --text-base--line-height: 1.65rem;
+  --text-lg: 1.25rem;       /* 20px (antes 18px) */
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.375rem;      /* 22px (antes 20px) */
+  --text-2xl: 1.625rem;     /* 26px (antes 24px) */
+  --text-3xl: 2rem;         /* 32px (antes 30px) */
 }
 
 @theme inline {
@@ -12,15 +31,66 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  scroll-behavior: smooth;
+  font-size: 18px; /* +2px base scale (16px -> 18px) */
+}
+
+@keyframes nxSpatialDrift {
+  0% {
+    background-position: 0px 0px, 0px 0px, 50% 0%;
+  }
+  50% {
+    background-position: 28px 28px, -28px 14px, 55% 15%;
+  }
+  100% {
+    background-position: 56px 56px, -56px 28px, 50% 0%;
+  }
+}
+
+@keyframes nxMeshWave {
+  0%, 100% {
+    transform: perspective(900px) rotateX(58deg) translateY(0px) translateZ(0px);
+    opacity: 0.35;
+  }
+  50% {
+    transform: perspective(900px) rotateX(58deg) translateY(24px) translateZ(10px);
+    opacity: 0.55;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: #0a0d12;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.045) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(30, 41, 59, 0.65), rgba(10, 13, 18, 0.95));
+  background-size: 56px 56px, 56px 56px, 100% 100%;
+  animation: nxSpatialDrift 26s linear infinite;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Superficie de malla espacial 3D reutilizable */
+.nx-spatial-bg {
+  position: relative;
+  background: radial-gradient(circle at 15% 15%, rgba(30, 41, 59, 0.55) 0%, transparent 45%),
+              radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+              linear-gradient(145deg, #090c10 0%, #10151e 50%, #0a0d12 100%);
+}
+
+.nx-spatial-mesh {
+  position: fixed;
+  inset: -30% -20% -20% -20%;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 20%, transparent 80%);
+  animation: nxMeshWave 14s ease-in-out infinite;
 }

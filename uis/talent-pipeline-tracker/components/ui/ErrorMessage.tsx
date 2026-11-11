@@ -12,9 +12,9 @@ export default function ErrorMessage({
   onRetry,
 }: ErrorMessageProps) {
   return (
-    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 my-4 text-rose-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 my-4 text-rose-200 shadow-lg backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div className="flex items-start space-x-3">
-        <div className="p-2 bg-rose-100 rounded-lg text-rose-600 flex-shrink-0">
+        <div className="p-2 bg-rose-500/20 border border-rose-400/30 rounded-xl text-rose-300 flex-shrink-0">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
@@ -25,16 +25,16 @@ export default function ErrorMessage({
           </svg>
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-rose-900">{title}</h4>
-          <p className="text-xs text-rose-700 mt-0.5">{message}</p>
+          <h4 className="text-sm font-bold text-rose-200">{title}</h4>
+          <p className="text-xs text-rose-200/80 mt-0.5">{message}</p>
         </div>
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="inline-flex items-center text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md transition-colors shadow-sm self-end sm:self-center"
+          className="inline-flex items-center text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-100 px-3.5 py-2 rounded-xl transition-colors self-end sm:self-center"
         >
-          <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

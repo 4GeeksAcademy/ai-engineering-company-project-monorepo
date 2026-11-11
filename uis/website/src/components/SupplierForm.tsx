@@ -44,28 +44,50 @@ export default function SupplierForm({ onSuccess, onCancel }: SupplierFormProps)
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md text-black">
-        <h2 className="text-xl font-bold mb-4">Nuevo Proveedor</h2>
-        
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-center items-center p-4">
+      <div className="bg-[#121721] border border-emerald-500/30 rounded-2xl shadow-2xl p-6 w-full max-w-md text-slate-100">
+        <h2 className="text-xl font-bold text-white mb-4">Nuevo Proveedor B2B</h2>
+
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-rose-500/10 border border-rose-500/40 text-rose-300 px-4 py-3 rounded-xl text-xs mb-4">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre</label>
-            <input required type="text" className="w-full border border-gray-300 p-2 rounded" value={name} onChange={e => setName(e.target.value)} />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              Nombre
+            </label>
+            <input
+              required
+              type="text"
+              className="w-full border border-emerald-500/25 bg-[#0a0d12] text-white px-3.5 py-2 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">País</label>
-            <input required type="text" className="w-full border border-gray-300 p-2 rounded" value={country} onChange={e => setCountry(e.target.value)} />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              País
+            </label>
+            <input
+              required
+              type="text"
+              className="w-full border border-emerald-500/25 bg-[#0a0d12] text-white px-3.5 py-2 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Categoría</label>
-            <select className="w-full border border-gray-300 p-2 rounded" value={categories} onChange={e => setCategories(e.target.value)}>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              Categoría
+            </label>
+            <select
+              className="w-full border border-emerald-500/25 bg-[#0a0d12] text-white px-3.5 py-2 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+              value={categories}
+              onChange={(e) => setCategories(e.target.value)}
+            >
               <option value="IT">IT</option>
               <option value="Marketing">Marketing</option>
               <option value="HR">HR</option>
@@ -73,19 +95,46 @@ export default function SupplierForm({ onSuccess, onCancel }: SupplierFormProps)
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Tarifa (por hora)</label>
-            <input required type="number" step="0.01" min="0.01" className="w-full border border-gray-300 p-2 rounded" value={hourlyRate} onChange={e => setHourlyRate(parseFloat(e.target.value))} />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              Tarifa (por hora)
+            </label>
+            <input
+              required
+              type="number"
+              step="0.01"
+              min="0.01"
+              className="w-full border border-emerald-500/25 bg-[#0a0d12] text-white px-3.5 py-2 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(parseFloat(e.target.value))}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Estado</label>
-            <select className="w-full border border-gray-300 p-2 rounded" value={status} onChange={e => setStatus(e.target.value)}>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              Estado
+            </label>
+            <select
+              className="w-full border border-emerald-500/25 bg-[#0a0d12] text-white px-3.5 py-2 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
               <option value="active">Activo</option>
               <option value="suspended">Suspendido</option>
             </select>
           </div>
-          <div className="flex justify-end gap-2 mt-6">
-            <button type="button" onClick={onCancel} className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50">Cancelar</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+          <div className="flex justify-end gap-2.5 mt-6 pt-3 border-t border-emerald-500/15">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 border border-emerald-500/25 rounded-xl text-xs font-semibold text-slate-300 hover:bg-emerald-500/10"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-emerald-400 text-[#0a0d12] rounded-xl text-xs font-bold hover:bg-emerald-300"
+            >
+              Guardar
+            </button>
           </div>
         </form>
       </div>

@@ -71,32 +71,32 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+    <div className="bg-[#121721]/80 backdrop-blur-xl rounded-2xl border border-emerald-500/20 p-6 shadow-xl">
+      <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 pb-3 border-b border-emerald-500/15 flex items-center justify-between">
         <span>Notas Internas del Consultor</span>
-        <span className="text-xs font-normal text-slate-500 lowercase">({notes.length} notas)</span>
+        <span className="text-xs font-mono text-emerald-300/70 lowercase">({notes.length} notas)</span>
       </h3>
 
       {/* Formulario para agregar nueva nota */}
       <form onSubmit={handleAddNote} className="mb-6">
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <input
             type="text"
             placeholder="Añadir una observación o nota sobre el candidato..."
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             disabled={submitting}
-            className="flex-1 bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className="flex-1 bg-[#181f2c]/90 border border-emerald-500/25 text-white placeholder-emerald-200/30 text-xs rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={submitting || !newNote.trim()}
-            className="inline-flex items-center text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center text-xs font-bold bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] px-4 py-2.5 rounded-xl transition-all disabled:opacity-50"
           >
             {submitting ? (
-              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+              <div className="w-3.5 h-3.5 border-2 border-[#0a0d12] border-t-transparent rounded-full animate-spin mr-1.5" />
             ) : (
-              <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             )}
@@ -107,9 +107,9 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
 
       {/* Mensaje de Error */}
       {error && (
-        <div className="p-3 bg-rose-50 text-rose-800 text-xs rounded-lg mb-4 flex items-center justify-between">
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs rounded-xl mb-4 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-800">
+          <button onClick={() => setError(null)} className="text-rose-300 hover:text-white">
             &times;
           </button>
         </div>
@@ -123,12 +123,12 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
           {notes.map((note) => (
             <div
               key={note.id}
-              className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-start justify-between gap-3 text-xs"
+              className="p-3.5 bg-[#181f2c]/90 border border-emerald-500/20 rounded-xl flex items-start justify-between gap-3 text-xs"
             >
               <div className="flex-1">
-                <p className="text-slate-800 whitespace-pre-wrap">{note.content}</p>
+                <p className="text-emerald-50 whitespace-pre-wrap leading-relaxed">{note.content}</p>
                 {note.created_at && (
-                  <span className="text-[10px] text-slate-400 mt-1 block">
+                  <span className="text-[10px] font-mono text-emerald-300/50 mt-1.5 block">
                     {new Date(note.created_at).toLocaleDateString('es-ES', {
                       day: '2-digit',
                       month: 'short',
@@ -142,11 +142,11 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
               <button
                 onClick={() => handleDeleteNote(note.id)}
                 disabled={deletingId === note.id}
-                className="text-slate-400 hover:text-rose-600 transition-colors p-1 rounded-md hover:bg-rose-50 disabled:opacity-50"
+                className="text-emerald-300/40 hover:text-rose-400 transition-colors p-1.5 rounded-lg hover:bg-rose-500/10 disabled:opacity-50"
                 title="Eliminar nota"
               >
                 {deletingId === note.id ? (
-                  <div className="w-3.5 h-3.5 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -162,7 +162,7 @@ export default function CandidateNotesSection({ candidateId }: CandidateNotesSec
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-400 italic text-center py-4">
+        <p className="text-xs text-emerald-100/40 italic text-center py-6">
           No hay notas registradas para este candidato.
         </p>
       )}

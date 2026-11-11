@@ -10,9 +10,7 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
-  subsets: 
-  
-  ['latin'],
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
@@ -27,13 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
+      <body className="min-h-full flex flex-col bg-[#0a0d12] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
         <Header />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}
         </main>
-        <footer className="bg-slate-900 border-t border-slate-800 text-slate-400 py-6 text-center text-xs">
+        <footer className="bg-[#030d0a] border-t border-emerald-500/15 text-emerald-100/50 py-6 text-center text-xs">
           <p>
             &copy; {new Date().getFullYear()} Nexova Solutions — Operaciones de Selección. Todos los
             derechos reservados.

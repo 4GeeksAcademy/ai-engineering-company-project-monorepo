@@ -66,16 +66,19 @@ function CandidatesContent() {
       {/* Header Banner del departamento */}
       <div className="mb-6 flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-200/80 block mb-1">
+            Talent Acquisition Command
+          </span>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">
             Pipeline de Candidaturas
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-emerald-100/70 mt-1">
             Gestión en tiempo real de los procesos de selección activos para Operaciones de Selección.
           </p>
         </div>
         <Link 
           href="/incidents" 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+          className="bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)]"
         >
           Analizador de Incidencias
         </Link>
@@ -103,7 +106,7 @@ function CandidatesContent() {
         <>
           {/* Métricas rápidas */}
           <div className="flex items-center justify-between mb-4 px-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-emerald-200/70 uppercase tracking-wider">
               Mostrando {filteredCandidates.length} de {candidates.length} candidaturas
             </span>
           </div>
@@ -116,14 +119,14 @@ function CandidatesContent() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200 p-12 text-center my-6">
-              <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="bg-[#121721]/80 backdrop-blur-xl rounded-2xl border border-emerald-500/20 p-12 text-center my-6">
+              <div className="w-12 h-12 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">No se encontraron candidaturas</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-white">No se encontraron candidaturas</h3>
+              <p className="text-xs text-emerald-100/60 mt-1 max-w-sm mx-auto">
                 No hay candidaturas que coincidan con los filtros seleccionados o el término de búsqueda.
               </p>
             </div>

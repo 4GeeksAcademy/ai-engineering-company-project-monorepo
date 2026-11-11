@@ -49,7 +49,7 @@ export default function EditCandidatePage({ params }: PageProps) {
       setCandidate(updated);
       setSuccess(true);
       setTimeout(() => {
-        router.push(`/candidates/${candidateId}`);
+        router.push(`/scoring/candidates/${candidateId}`);
       }, 1200);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al actualizar la candidatura.';
@@ -71,7 +71,7 @@ export default function EditCandidatePage({ params }: PageProps) {
           onRetry={fetchCandidate}
         />
         <div className="mt-4">
-          <Link href="/" className="text-xs font-semibold text-blue-600 hover:underline">
+          <Link href="/scoring" className="text-xs font-semibold text-emerald-400 hover:underline">
             &larr; Volver al listado principal
           </Link>
         </div>
@@ -84,8 +84,8 @@ export default function EditCandidatePage({ params }: PageProps) {
       {/* Volver al Detalle */}
       <div className="mb-6">
         <Link
-          href={`/candidates/${candidate.id}`}
-          className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-2 rounded-lg shadow-sm transition-colors"
+          href={`/scoring/candidates/${candidate.id}`}
+          className="inline-flex items-center text-xs font-semibold text-emerald-100/80 hover:text-white bg-[#121721]/80 border border-emerald-500/20 hover:border-emerald-400/40 px-3.5 py-2 rounded-xl shadow-sm transition-all"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -96,8 +96,8 @@ export default function EditCandidatePage({ params }: PageProps) {
 
       {/* Success Banner */}
       {success && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl mb-6 flex items-center space-x-2">
-          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="p-4 bg-emerald-500/15 border border-emerald-400/35 text-emerald-200 text-xs rounded-2xl mb-6 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <span className="font-semibold">
@@ -108,7 +108,7 @@ export default function EditCandidatePage({ params }: PageProps) {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl mb-6">
+        <div className="p-4 bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs rounded-2xl mb-6">
           <span className="font-semibold">{error}</span>
         </div>
       )}

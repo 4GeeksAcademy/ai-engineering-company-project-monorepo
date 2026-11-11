@@ -1,27 +1,53 @@
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #0a0d12;
+  --foreground: #f1f5f9;
+  --nx-bg-base: #0a0d12;
+  --nx-surface-glass: #121721;
+  --nx-surface-card: #181f2c;
+  --nx-accent-emerald: #10b981;
+  --nx-accent-gold: #fde68a;
+}
+
+@keyframes nxSpatialDrift {
+  0% {
+    background-position: 0px 0px, 0px 0px, 50% 0%;
+  }
+  50% {
+    background-position: 28px 28px, -28px 14px, 55% 15%;
+  }
+  100% {
+    background-position: 56px 56px, -56px 28px, 50% 0%;
+  }
 }
 
 html {
   height: 100%;
-  background-color: #ffffff;
+  background-color: #0a0d12;
+  font-size: 18px; /* +2px base scale across the entire UI */
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  background-color: #ffffff;
+  background-color: #0a0d12;
 }
 
 body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  color: #0f172a;
-  background-color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
+  color: #f1f5f9;
+  background-color: #0a0d12;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(30, 41, 59, 0.65), rgba(10, 13, 18, 0.95));
+  background-size: 56px 56px, 56px 56px, 100% 100%;
+  animation: nxSpatialDrift 26s linear infinite;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

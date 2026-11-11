@@ -1,11 +1,11 @@
-'use client'
+'use client';
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import api from '../../lib/axios'; // Importamos nuestro interceptor de Axios
 import { useAuth } from '../../context/AuthContext'; // Importamos el contexto de autenticación
-
 
 export default function LoginPage() {
     // 1. Manejo del Estado Local del Formulario
@@ -40,7 +40,6 @@ export default function LoginPage() {
 
             // 5. Redirigimos al usuario a una zona privada (ej. su perfil)
             router.push('/account/profile');
-
         } catch (err) {
             // 6. Manejo de Errores: Qué pasa si las credenciales son incorrectas
             if (axios.isAxiosError(err) && err.response?.status === 401) {
@@ -53,64 +52,97 @@ export default function LoginPage() {
         }
     };
 
-    // 7. Interfaz Visual (UI)
+    // 7. Interfaz Visual (UI) — Emerald Command Center
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <div className="w-full max-w-md p-8 bg-white rounded shadow-md">
-                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
+        <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0a0d12] px-4 py-12 text-slate-100 overflow-hidden">
+            {/* Luz ambiental esmeralda */}
+            <div className="pointer-events-none absolute top-[-15%] left-1/2 -translate-x-1/2 h-[480px] w-[760px] rounded-full bg-emerald-500/12 blur-[140px]" />
+
+            <div className="relative z-10 w-full max-w-md rounded-2xl border border-emerald-500/25 bg-[#121721]/85 p-8 shadow-[0_25px_80px_rgba(0,0,0,0.75)] backdrop-blur-xl">
+                <div className="mb-7 flex flex-col items-center text-center">
+                    <Link href="/" className="mb-4 flex items-center gap-2.5">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-700 font-black text-lg text-[#0a0d12] shadow-lg shadow-emerald-500/25">
+                            N
+                        </div>
+                    </Link>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                        Portal Corporativo B2B
+                    </span>
+                    <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-white">
+                        Iniciar Sesión
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Accede al centro de mando de talento, soporte e IA
+                    </p>
+                </div>
 
                 {/* Mostrar mensaje de error si existe */}
                 {error && (
-                    <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-sm">
+                    <div className="mb-5 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3.5 text-xs font-medium text-rose-300">
                         {error}
                     </div>
                 )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                            Correo Electrónico
+                        </label>
                         <input
                             type="email"
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1.5 block w-full rounded-xl border border-emerald-500/25 bg-[#0a0d12]/90 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/25 transition"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="tu@correo.com"
+                            placeholder="admin@nexova.com"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                            Contraseña
+                        </label>
                         <input
                             type="password"
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1.5 block w-full rounded-xl border border-emerald-500/25 bg-[#0a0d12]/90 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/25 transition"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                         />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 pt-2">
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 transition-colors"
+                            className="w-full flex justify-center rounded-xl bg-emerald-400 py-3 px-4 text-sm font-bold text-[#0a0d12] shadow-[0_0_25px_rgba(16,185,129,0.35)] transition hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50"
                         >
-                            {loading ? 'Cargando...' : 'Entrar'}
+                            {loading ? 'Autenticando...' : 'Entrar al Command Center'}
                         </button>
                         <div className="text-center">
-                            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline font-medium">
+                            <Link
+                                href="/forgot-password"
+                                className="text-xs font-medium text-emerald-400/90 hover:text-emerald-300 hover:underline"
+                            >
                                 ¿Olvidaste tu contraseña?
                             </Link>
                         </div>
                     </div>
                 </form>
-                <p className="mt-4 text-center text-sm text-gray-600">
-                    ¿No tienes una cuenta? <Link href="/register" className="text-blue-600 hover:underline">Regístrate</Link>
+
+                <p className="mt-6 border-t border-emerald-500/15 pt-5 text-center text-xs text-slate-400">
+                    ¿No tienes una cuenta?{' '}
+                    <Link href="/register" className="font-semibold text-amber-200 hover:underline">
+                        Regístrate
+                    </Link>
                 </p>
             </div>
 
             {/* Enlace para volver a la Web Oficial */}
-            <div className="mt-8">
-                <Link href="/" className="flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+            <div className="relative z-10 mt-8">
+                <Link
+                    href="/"
+                    className="flex items-center text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors"
+                >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -120,7 +152,3 @@ export default function LoginPage() {
         </div>
     );
 }
-
-
-
-

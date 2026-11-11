@@ -1,9 +1,11 @@
+/* uis/backoffice/src/app/inventory/products/products.module.css — Emerald Command Center */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem 1.5rem;
   font-family: var(--font-geist-sans), sans-serif;
-  color: #1a1a1a;
+  color: #f1f5f9;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -14,7 +16,7 @@
 
 .header {
   margin-bottom: 2.5rem;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
   padding-bottom: 1.5rem;
 }
 
@@ -25,30 +27,31 @@
 }
 
 .titleIcon {
-  color: #2563eb;
+  color: #34d399;
 }
 
 .title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.1rem;
+  font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  background: linear-gradient(135deg, #ffffff, #6ee7b7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-  color: #64748b;
+  color: rgba(209, 250, 229, 0.72);
   margin-top: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .tableContainer {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  background: rgba(18, 23, 33, 0.85);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(16, 185, 129, 0.22);
 }
 
 .table {
@@ -58,14 +61,14 @@
 }
 
 .table th {
-  background: #f8fafc;
+  background: rgba(24, 31, 44, 0.95);
   padding: 1rem 1.5rem;
-  font-weight: 600;
-  color: #475569;
-  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fde68a;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .row {
@@ -73,62 +76,62 @@
 }
 
 .row:hover {
-  background-color: #f1f5f9;
+  background-color: rgba(16, 185, 129, 0.08);
 }
 
 .table td {
-  padding: 1rem 1.5rem;
+  padding: 1.1rem 1.5rem;
   vertical-align: middle;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.12);
 }
 
 .assetName {
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .sku {
   font-family: var(--font-geist-mono), monospace;
-  color: #64748b;
+  color: #a7f3d0;
   font-size: 0.9rem;
 }
 
 .deptBadge {
-  background: #f1f5f9;
-  color: #334155;
-  padding: 0.25rem 0.75rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #d1fae5;
+  padding: 0.3rem 0.85rem;
   border-radius: 9999px;
   font-size: 0.85rem;
-  font-weight: 500;
-  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .stockBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.65rem;
+  font-weight: 700;
   font-size: 0.95rem;
 }
 
 .statusHealthy {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.35);
 }
 
 .statusWarning {
-  background: #fef9c3;
-  color: #854d0e;
-  border: 1px solid #fef08a;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.35);
 }
 
 .statusDanger {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: rgba(244, 63, 94, 0.15);
+  color: #fda4af;
+  border: 1px solid rgba(244, 63, 94, 0.35);
 }
 
 .actions {
@@ -139,45 +142,45 @@
 .actionBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
   text-decoration: none;
   transition: all 0.2s ease;
   border: 1px solid transparent;
 }
 
 .btnInbound {
-  background: #f0fdf4;
-  color: #16a34a;
-  border-color: #bbf7d0;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.35);
 }
 
 .btnInbound:hover {
-  background: #dcfce7;
+  background: rgba(16, 185, 129, 0.28);
   transform: translateY(-1px);
 }
 
 .btnOutbound {
-  background: #fff1f2;
-  color: #e11d48;
-  border-color: #fecdd3;
+  background: rgba(244, 63, 94, 0.14);
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.35);
 }
 
 .btnOutbound:hover {
-  background: #ffe4e6;
+  background: rgba(244, 63, 94, 0.25);
   transform: translateY(-1px);
 }
 
 .loading, .error, .emptyState {
   padding: 3rem;
   text-align: center;
-  color: #64748b;
+  color: #a7f3d0;
   font-size: 1.1rem;
 }
 
 .error {
-  color: #ef4444;
+  color: #fda4af;
 }

@@ -1,9 +1,9 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 
 export default function SupportPage() {
-  const [messages, setMessages] = useState<{role: string, text: string}[]>([]);
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
   const [input, setInput] = useState('');
   const [status, setStatus] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -12,64 +12,83 @@ export default function SupportPage() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Agregar mensaje del usuario
     const newMessages = [...messages, { role: 'user', text: input }];
     setMessages(newMessages);
     setInput('');
-    setStatus('Escribiendo...');
+    setStatus('Enrutando consulta por el grafo de soporte...');
 
-    // Simulacion de respuesta del bot
     setTimeout(() => {
       setStatus('');
-      setMessages([...newMessages, { 
-        role: 'bot', 
-        text: 'He registrado tu incidencia. Estoy escalando este ticket a un agente humano para que lo revise lo antes posible.' 
-      }]);
+      setMessages([
+        ...newMessages,
+        {
+          role: 'bot',
+          text: 'He registrado tu incidencia en tiempo real. Estoy escalando este ticket a un agente especialista para su resolución prioritaria.',
+        },
+      ]);
       setIsSuccess(true);
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 antialiased">
-      <header className="border-b border-blue-200 bg-white">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegacion principal">
-          <Link href="/" className="text-lg font-semibold tracking-wide text-blue-900">
-            Nexova Solutions
-          </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Inicio</Link>
-            <Link href="/admin/tickets" className="rounded-md px-3 py-2 text-blue-900 hover:bg-blue-100">Panel de tickets</Link>
-          </div>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm sm:p-6">
-          <header>
-            <h1 className="text-2xl font-bold text-blue-950">Atencion al Cliente y Triaje Inteligente</h1>
-            <p className="mt-2 text-sm text-slate-700">
-              El asistente realiza filtrado inicial, intenta resolver y, si es necesario, escala automaticamente a ticket para agentes.
-            </p>
+    <div className="text-slate-100 antialiased">
+      <div className="mx-auto max-w-4xl">
+        <section className="rounded-2xl border border-emerald-500/25 bg-[#121721]/85 p-6 shadow-2xl backdrop-blur-xl">
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-emerald-500/15 pb-5">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                Asistente Inteligente · LangGraph Triaje
+              </span>
+              <h1 className="mt-1 text-2xl font-bold text-white">
+                Atención al Cliente y Triaje Inteligente
+              </h1>
+              <p className="mt-1 text-xs text-slate-300">
+                El asistente realiza filtrado inicial, consulta herramientas operativas y escala automáticamente a ticket para agentes.
+              </p>
+            </div>
+            <Link
+              href="/admin/tickets"
+              className="inline-flex items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-400 hover:text-[#0a0d12] transition"
+            >
+              Panel de Tickets →
+            </Link>
           </header>
 
-          <section className="mt-5 rounded-xl border border-slate-200 bg-slate-50">
-            <div className="h-[420px] overflow-y-auto p-4 flex flex-col gap-4" aria-live="polite" aria-label="Conversacion de soporte">
+          <section className="mt-6 rounded-xl border border-emerald-500/20 bg-[#0a0d12]/90 overflow-hidden">
+            <div
+              className="h-[380px] overflow-y-auto p-5 flex flex-col gap-3.5"
+              aria-live="polite"
+              aria-label="Conversación de soporte"
+            >
               {messages.length === 0 && (
-                <div className="text-center text-slate-500 mt-10">
-                  Escribe tu consulta para comenzar el triaje...
+                <div className="text-center text-slate-500 mt-16 text-xs font-mono">
+                  [READY] Escribe tu consulta o número de incidencia para comenzar el triaje...
                 </div>
               )}
               {messages.map((msg, idx) => (
-                <div key={idx} className={`p-3 rounded-lg max-w-[80%] ${msg.role === 'user' ? 'bg-blue-100 text-blue-900 self-end' : 'bg-white border border-slate-200 text-slate-800 self-start'}`}>
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl text-xs sm:text-sm max-w-[80%] ${
+                    msg.role === 'user'
+                      ? 'bg-emerald-400 text-[#0a0d12] font-medium self-end'
+                      : 'bg-[#181f2c] border border-emerald-500/25 text-slate-200 self-start'
+                  }`}
+                >
                   {msg.text}
                 </div>
               ))}
             </div>
 
-            <p className="px-4 pb-2 text-xs font-medium text-blue-700" aria-live="polite">{status}</p>
+            {status && (
+              <p className="px-5 pb-2 text-xs font-mono text-emerald-400 animate-pulse" aria-live="polite">
+                {status}
+              </p>
+            )}
 
-            <form onSubmit={handleSubmit} className="border-t border-slate-200 bg-white p-3 sm:p-4 rounded-b-xl">
-              <label htmlFor="chatInput" className="sr-only">Escribe tu mensaje</label>
+            <form onSubmit={handleSubmit} className="border-t border-emerald-500/15 bg-[#121721] p-4">
+              <label htmlFor="chatInput" className="sr-only">
+                Escribe tu mensaje
+              </label>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   id="chatInput"
@@ -77,12 +96,12 @@ export default function SupportPage() {
                   required
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Describe tu incidencia..."
-                  className="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
+                  placeholder="Describe tu incidencia o consulta el estado de un ticket..."
+                  className="w-full rounded-xl border border-emerald-500/25 bg-[#0a0d12] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/25"
                 />
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-400 px-6 py-2.5 text-xs font-bold text-[#0a0d12] shadow-[0_0_20px_rgba(16,185,129,0.3)] transition hover:bg-emerald-300"
                 >
                   Enviar
                 </button>
@@ -90,17 +109,27 @@ export default function SupportPage() {
             </form>
 
             {isSuccess && (
-              <section className="border-t border-emerald-200 bg-emerald-50 px-4 py-4 rounded-b-xl mt-2" aria-live="polite">
-                <h2 className="text-sm font-semibold text-emerald-800">Ticket escalado correctamente</h2>
-                <p className="mt-1 text-sm text-emerald-700">Un agente se pondrá en contacto contigo pronto.</p>
-                <Link href="/admin/tickets" className="mt-3 inline-flex rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
-                  Ver panel de agentes
+              <section
+                className="border-t border-emerald-400/30 bg-emerald-500/10 px-5 py-4"
+                aria-live="polite"
+              >
+                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  ✓ Ticket escalado correctamente
+                </h2>
+                <p className="mt-1 text-xs text-slate-300">
+                  Un agente especialista revisará el contexto de tu caso.
+                </p>
+                <Link
+                  href="/admin/tickets"
+                  className="mt-3 inline-flex rounded-lg border border-emerald-400/40 bg-[#0a0d12] px-3.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-400 hover:text-[#0a0d12] transition"
+                >
+                  Ver panel de agentes →
                 </Link>
               </section>
             )}
           </section>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

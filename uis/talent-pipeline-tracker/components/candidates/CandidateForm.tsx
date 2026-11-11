@@ -51,14 +51,14 @@ export default function CandidateForm({
       return;
     }
 
-    const payload: any = {
-      full_name: name.trim(),
+    const payload: CreateCandidateInput | UpdateCandidateInput = {
+      name: name.trim(),
       email: email.trim(),
       phone: phone.trim() || undefined,
       position: position.trim(),
       linkedin: linkedin.trim() || undefined,
       resume_url: resumeUrl.trim() || undefined,
-      experience_years: yearsOfExperience ? Number(yearsOfExperience) : undefined,
+      years_of_experience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
       status,
       stage,
     };
@@ -74,16 +74,19 @@ export default function CandidateForm({
     }
   };
 
+  const inputClass =
+    'w-full bg-[#181f2c]/90 border border-emerald-500/25 text-white placeholder-emerald-200/30 text-xs rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 disabled:opacity-50 transition-all';
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-900 mb-6 pb-3 border-b border-slate-100">
+    <form onSubmit={handleSubmit} className="bg-[#121721]/80 backdrop-blur-xl rounded-2xl border border-emerald-500/20 p-6 shadow-xl">
+      <h2 className="text-lg font-bold text-white mb-6 pb-3 border-b border-emerald-500/15">
         {isEditing ? 'Editar Datos de Candidatura' : 'Registrar Nueva Candidatura'}
       </h2>
 
       {validationError && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-lg mb-6 flex items-center justify-between">
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs rounded-xl mb-6 flex items-center justify-between">
           <span>{validationError}</span>
-          <button type="button" onClick={() => setValidationError(null)} className="text-rose-600 hover:text-rose-800 font-bold">
+          <button type="button" onClick={() => setValidationError(null)} className="text-rose-300 hover:text-white font-bold">
             &times;
           </button>
         </div>
@@ -92,8 +95,8 @@ export default function CandidateForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Nombre completo */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
-            Nombre Completo <span className="text-rose-500">*</span>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">
+            Nombre Completo <span className="text-amber-300">*</span>
           </label>
           <input
             type="text"
@@ -102,14 +105,14 @@ export default function CandidateForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Correo Electrónico */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
-            Correo Electrónico <span className="text-rose-500">*</span>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">
+            Correo Electrónico <span className="text-amber-300">*</span>
           </label>
           <input
             type="email"
@@ -118,14 +121,14 @@ export default function CandidateForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Puesto al que aplica */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
-            Puesto de Trabajo <span className="text-rose-500">*</span>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">
+            Puesto de Trabajo <span className="text-amber-300">*</span>
           </label>
           <input
             type="text"
@@ -134,52 +137,52 @@ export default function CandidateForm({
             value={position}
             onChange={(e) => setPosition(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Teléfono */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Teléfono de Contacto</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">Teléfono de Contacto</label>
           <input
             type="tel"
             placeholder="Ej: +34 612 345 678"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Enlace LinkedIn */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Enlace Perfil LinkedIn</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">Enlace Perfil LinkedIn</label>
           <input
             type="url"
             placeholder="https://linkedin.com/in/candidato"
             value={linkedin}
             onChange={(e) => setLinkedin(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Enlace al CV */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">URL Documento CV</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">URL Documento CV</label>
           <input
             type="url"
             placeholder="https://drive.google.com/cv.pdf"
             value={resumeUrl}
             onChange={(e) => setResumeUrl(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Años de Experiencia */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Años de Experiencia</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">Años de Experiencia</label>
           <input
             type="number"
             min="0"
@@ -188,18 +191,18 @@ export default function CandidateForm({
             value={yearsOfExperience}
             onChange={(e) => setYearsOfExperience(e.target.value)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           />
         </div>
 
         {/* Estado Inicial */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Estado de Candidatura</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">Estado de Candidatura</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as CandidateStatus)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           >
             <option value="PENDING">PENDIENTE (PENDING)</option>
             <option value="IN_REVIEW">EN REVISIÓN (IN_REVIEW)</option>
@@ -210,12 +213,12 @@ export default function CandidateForm({
 
         {/* Etapa Inicial */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Etapa del Proceso</label>
+          <label className="block text-xs font-bold text-emerald-100/80 mb-1.5">Etapa del Proceso</label>
           <select
             value={stage}
             onChange={(e) => setStage(e.target.value as CandidateStage)}
             disabled={submitting}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className={inputClass}
           >
             <option value="SCREENING">CRIBA (SCREENING)</option>
             <option value="INTERVIEW">ENTREVISTA (INTERVIEW)</option>
@@ -227,14 +230,14 @@ export default function CandidateForm({
       </div>
 
       {/* Acciones del Formulario */}
-      <div className="flex items-center justify-end space-x-3 border-t border-slate-100 pt-5">
+      <div className="flex items-center justify-end space-x-3 border-t border-emerald-500/15 pt-5">
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+          className="inline-flex items-center text-xs font-bold bg-emerald-400 hover:bg-emerald-300 text-[#0a0d12] px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all disabled:opacity-50"
         >
           {submitting && (
-            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+            <div className="w-3.5 h-3.5 border-2 border-[#0a0d12] border-t-transparent rounded-full animate-spin mr-2" />
           )}
           {submitLabel}
         </button>
