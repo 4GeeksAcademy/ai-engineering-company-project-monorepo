@@ -6,6 +6,14 @@ user-invocable: false
 
 # Contexto técnico de TrackFlow
 
+## Alcance de aplicación
+
+Esta regla aplica al proponer o implementar cambios de arquitectura, stack tecnológico, integraciones o despliegue para TrackFlow. No exige clasificar decisiones en tareas rutinarias que no afecten esas áreas.
+
+## Regla de desarrollo
+
+Verifica las afirmaciones técnicas en el repositorio y distingue lo observado, la arquitectura heredada, las propuestas y las decisiones confirmadas. No presentes una propuesta o un sistema heredado como implementado o aprobado; cuando se confirme una decisión, actualiza `memory-bank/techContext.md`.
+
 ## Procedimiento
 
 1. Lee `memory-bank/techContext.md` y consulta el briefing de dominio cuando el cambio dependa de sistemas o procesos actuales de TrackFlow.
