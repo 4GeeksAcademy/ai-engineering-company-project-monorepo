@@ -1,0 +1,6 @@
+{"timestamp":"00:00:03.540","source":"Server","level":"LOG","message":"- Cache Components enabled"}
+{"timestamp":"00:00:03.540","source":"Server","level":"LOG","message":"- Partial Prefetching enabled"}
+{"timestamp":"00:00:03.540","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:06.564","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:00:37.152","source":"Server","level":"WARN","message":"Route / is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev"}
+{"timestamp":"00:00:38.784","source":"Server","level":"WARN","message":"⚠ Blocked cross-origin request to Next.js dev resource /_next/hmr from \"127.0.0.1\".\nCross-origin access to Next.js dev resources is blocked by default for safety.\n\nTo allow this host in development, add it to \"allowedDevOrigins\" in next.config.js and restart the dev server:\n\n// next.config.js\nmodule.exports = {\n  allowedDevOrigins: ['127.0.0.1'],\n}\n\nRead more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins"}
