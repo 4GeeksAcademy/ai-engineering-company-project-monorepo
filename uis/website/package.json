@@ -1,0 +1,16 @@
+{
+  "name": "trackflow-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public website for TrackFlow (last-mile delivery and warehouse management). Milestone: Web Fundamentals.",
+  "scripts": {
+    "build:css": "postcss src/styles.css -o styles.css",
+    "watch:css": "postcss src/styles.css -o styles.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "postcss": "^8.5.0",
+    "postcss-cli": "^12.0.0",
+    "tailwindcss": "^4.3.3"
+  }
+}

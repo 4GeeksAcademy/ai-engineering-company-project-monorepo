@@ -1,0 +1,8 @@
+# Keep local build artifacts and dependencies out of version control.
+node_modules/
+npm-debug.log*
+
+# The compiled Tailwind stylesheet is generated from src/styles.css by `npm run build:css`.
+# It is intentionally NOT committed; the documented `npx` server command relies on it,
+# and the build step regenerates it locally before serving (see README.md).
+styles.css

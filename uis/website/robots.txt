@@ -1,0 +1,7 @@
+# TrackFlow website robots
+# TODO(D9): replace provisional domain with the real one before launch
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.trackflowlogistics.com/sitemap.xml
