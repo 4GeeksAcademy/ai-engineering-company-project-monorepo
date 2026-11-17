@@ -27,7 +27,7 @@ export interface ValidationResult {
 export interface ValidationRule {
   field: string;
   message: string;
-  check: (value: any) => boolean;
+  check: (value: unknown) => boolean;
 }
 
 // ============================================
