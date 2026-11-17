@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run live static website",
+			"type": "shell",
+			"command": "npx --yes serve . -l tcp://127.0.0.1:4173",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
