@@ -97,7 +97,7 @@ def get_mcp_auth_middleware() -> type[BaseHTTPMiddleware]:
         async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
             # Eximir discovery público y preflight CORS
             path = request.url.path
-            if request.method == "OPTIONS" or path.startswith("/.well-known") or path in ["/health", "/", "/auth/token"]:
+            if request.method == "OPTIONS" or path.startswith("/.well-known") or path in ["/health", "/"]:
                 return await call_next(request)
             # Para cualquier otra ruta MCP, ejecutar validación Bearer con mcpauth
             return await super().dispatch(request, call_next)

@@ -13,10 +13,10 @@ from mcps.company_tools.auth import (
     mcp_auth,
     get_mcp_auth_middleware,
     get_protected_resource_metadata,
-    create_access_token,
 )
 from mcps.company_tools.tools_incidents import register_incident_tools
 from mcps.company_tools.tools_inventory import register_inventory_tools
+from starlette.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nexova.mcp_server")
@@ -75,49 +75,19 @@ async def health_check(request: Request) -> Response:
     )
 
 
-@mcp.custom_route("/auth/token", methods=["GET", "POST", "OPTIONS"])
-async def issue_development_token(request: Request) -> Response:
-    """
-    Endpoint de utilidad para pruebas locales y MCP Playground.
-    Genera un Access Token JWT válido firmado con la clave del servidor.
-    Permite especificar client_id y scopes mediante query params.
-    """
-    if request.method == "OPTIONS":
-        return Response(
-            status_code=204,
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                "Access-Control-Allow-Headers": "*",
-            },
-        )
-
-    client_id = request.query_params.get("client_id", "playground-client")
-    scope_param = request.query_params.get("scope")
-    if scope_param:
-        scopes = [s.strip() for s in scope_param.split(" ") if s.strip()]
-    else:
-        scopes = settings.supported_scopes
-
-    token = create_access_token(client_id=client_id, scopes=scopes)
-    response = JSONResponse(
-        {
-            "access_token": token,
-            "token_type": "bearer",
-            "client_id": client_id,
-            "scopes": scopes,
-            "expires_in": 7200,
-        }
-    )
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
-
 
 # 4. Construcción de la Aplicación ASGI con Middleware de Seguridad
 def create_app():
-    """Construye y configura la aplicación Starlette con el middleware Bearer de mcpauth."""
+    """Construye y configura la aplicación Starlette con el middleware Bearer de mcpauth y CORS."""
     app = mcp.http_app()
     app.add_middleware(get_mcp_auth_middleware())
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["Mcp-Session-Id", "WWW-Authenticate"],
+    )
     return app
 
 

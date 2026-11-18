@@ -78,15 +78,31 @@ def test_invalid_token_rejected(client):
     assert data.get("error") in ["invalid_token", "invalid_bearer_token"]
 
 
-def test_development_token_endpoint(client):
-    """Verifica la generación de tokens de prueba desde /auth/token."""
+def test_auth_token_endpoint_not_publicly_accessible(client):
+    """Verifica que /auth/token no esté expuesto públicamente sin autenticación."""
     res = client.get("/auth/token?client_id=tester-1")
-    assert res.status_code == 200
-    data = res.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
-    assert data["client_id"] == "tester-1"
+    assert res.status_code == 401
 
+def test_cannot_list_tools_without_oauth_token(client):
+    """Sin access token OAuth válido, un cliente NO puede listar tools (tools/list)."""
+    payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+    for endpoint in ("/mcp", "/messages"):
+        res = client.post(endpoint, json=payload)
+        assert res.status_code == 401
+        assert res.json().get("error") == "missing_auth_header"
+
+def test_cannot_call_tools_without_oauth_token(client):
+    """Sin access token OAuth válido, un cliente NO puede ejecutar ninguna tool (tools/call)."""
+    payload = {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/call",
+        "params": {"name": "inventory_query_stock", "arguments": {}},
+    }
+    for endpoint in ("/mcp", "/messages"):
+        res = client.post(endpoint, json=payload)
+        assert res.status_code == 401
+        assert res.json().get("error") == "missing_auth_header"
 
 # =====================================================================
 # 2. PRUEBAS DE TOOLS DE INCIDENCIAS Y MÁQUINA DE ESTADOS
