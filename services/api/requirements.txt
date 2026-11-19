@@ -10,3 +10,4 @@ bcrypt<4.1
 python-dotenv>=1.0,<2
 sqlmodel>=0.0.30
 psycopg2-binary>=2.9.13
+pandas>=2.2,<4

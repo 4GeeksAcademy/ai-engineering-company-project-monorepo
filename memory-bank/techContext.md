@@ -14,9 +14,10 @@
   server-side event types.
 - `GET /telemetry/report` and `/api/telemetry/report` require manager/admin
   authentication and query the telemetry engine over a UTC half-open date range.
-  `services/telemetry/analysis.py` reports daily event volume, daily API error
-  ratio, and mean/p95 latency by canonical route; it uses standard-library
-  aggregation and does not add a dashboard or separate auth metric.
+  `services/telemetry/analysis.py` loads bounded rows into Pandas, refines types
+  and timestamps, then groups daily event volume, API error ratio, and mean/p95
+  latency by canonical route. A bounded cache keys normalized windows for 60s;
+  no dashboard or separate auth metric is included.
 
 ## Current repository baseline
 

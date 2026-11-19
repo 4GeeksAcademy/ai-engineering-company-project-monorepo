@@ -5,7 +5,10 @@ import logging
 import math
 import os
 import re
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
+from threading import Lock
+from time import monotonic
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -19,6 +22,10 @@ from services.api.models import Role, User
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/telemetry", tags=["telemetry"])
 report_router = APIRouter(prefix="/telemetry", tags=["telemetry"])
+REPORT_CACHE_TTL_SECONDS = 60
+REPORT_CACHE_MAX_ENTRIES = 128
+_report_cache: OrderedDict[tuple[str, str], tuple[float, dict[str, Any]]] = OrderedDict()
+_report_cache_lock = Lock()
 MAX_BATCH_EVENTS = 20
 MAX_BATCH_BYTES = 64 * 1024
 SCHEMA_VERSION = "1.0.0"
@@ -276,6 +283,30 @@ def _parse_report_date(value: str | None, default: datetime) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+def clear_report_cache() -> None:
+    with _report_cache_lock:
+        _report_cache.clear()
+
+
+def _cached_report_metrics(start: datetime, end: datetime) -> dict[str, Any]:
+    key = (start.isoformat(), end.isoformat())
+    with _report_cache_lock:
+        now = monotonic()
+        cached = _report_cache.get(key)
+        if cached is not None and cached[0] > now:
+            _report_cache.move_to_end(key)
+            return cached[1]
+        _report_cache.pop(key, None)
+
+        from services.telemetry.analysis import build_technical_report
+
+        metrics = build_technical_report(start, end)
+        _report_cache[key] = (monotonic() + REPORT_CACHE_TTL_SECONDS, metrics)
+        while len(_report_cache) > REPORT_CACHE_MAX_ENTRIES:
+            _report_cache.popitem(last=False)
+        return metrics
+
+
 @router.get("/report")
 @report_router.get("/report")
 def telemetry_report(
@@ -293,9 +324,7 @@ def telemetry_report(
     if period_start >= period_end:
         raise HTTPException(status_code=422, detail="Report start must be before report end.")
 
-    from services.telemetry.analysis import build_technical_report
-
     return {
         "period": {"from": period_start.isoformat(), "to": period_end.isoformat()},
-        "metrics": build_technical_report(period_start, period_end),
+        "metrics": _cached_report_metrics(period_start, period_end),
     }

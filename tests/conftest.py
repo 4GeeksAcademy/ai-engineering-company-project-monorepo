@@ -33,6 +33,7 @@ def isolated_storage(tmp_path, monkeypatch):
     monkeypatch.setattr(database_module, "USER_DB_PATH", tmp_path / "users.json")
     monkeypatch.setattr(database_module, "DB_PATH", tmp_path / "suppliers.json")
     monkeypatch.setattr(telemetry_module, "persist_events", lambda events: len(events))
+    telemetry_module.clear_report_cache()
     from services.api import incidents as incidents_module
 
     monkeypatch.setattr(incidents_module, "DB_PATH", tmp_path / "incidents.sqlite3")
@@ -43,6 +44,7 @@ def isolated_storage(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(inventory_database_module, "engine", inventory_engine)
     yield
+    telemetry_module.clear_report_cache()
     inventory_engine.dispose()
 
 

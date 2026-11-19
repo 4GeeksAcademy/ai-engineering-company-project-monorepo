@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 from typing import Any
 
+import pandas as pd
 from sqlalchemy import bindparam, text
 
 
@@ -51,20 +51,7 @@ def _read_events(
     return [dict(row) for row in rows]
 
 
-def _event_day(value: Any) -> str | None:
-    if isinstance(value, str):
-        try:
-            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        except ValueError:
-            return None
-    if not isinstance(value, datetime):
-        return None
-    if value.tzinfo is None or value.utcoffset() is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%d")
-
-
-def _properties(value: Any) -> dict[str, Any]:
+def _properties_dict(value: Any) -> dict[str, Any]:
     if isinstance(value, dict):
         return value
     if isinstance(value, str):
@@ -76,50 +63,55 @@ def _properties(value: Any) -> dict[str, Any]:
     return {}
 
 
-def _number(value: Any) -> float | None:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return None
-    return float(value)
+def _frame(event_types: tuple[str, ...], start: datetime, end: datetime) -> pd.DataFrame:
+    frame = pd.DataFrame.from_records(_read_events(event_types, start, end))
+    if frame.empty:
+        return pd.DataFrame(columns=["event_type", "event_timestamp", "properties", "day"])
 
-
-def _percentile(values: list[float], percentile: float) -> float:
-    ordered = sorted(values)
-    position = (len(ordered) - 1) * percentile
-    lower = int(position)
-    upper = min(lower + 1, len(ordered) - 1)
-    fraction = position - lower
-    return ordered[lower] + (ordered[upper] - ordered[lower]) * fraction
+    frame["event_timestamp"] = pd.to_datetime(frame["event_timestamp"], utc=True, errors="coerce")
+    frame = frame.dropna(subset=["event_timestamp"]).copy()
+    frame["day"] = frame["event_timestamp"].dt.strftime("%Y-%m-%d")
+    frame["properties"] = frame["properties"].map(_properties_dict)
+    return frame
 
 
 def events_per_day(start: datetime, end: datetime) -> list[dict[str, Any]]:
     """Count event volume per UTC day to reveal activity or ingestion gaps."""
-    counts: Counter[str] = Counter()
-    for event in _read_events(ALL_EVENT_TYPES, start, end):
-        day = _event_day(event.get("event_timestamp"))
-        if day is not None:
-            counts[day] += 1
-    return [{"day": day, "event_count": count} for day, count in sorted(counts.items())]
+    frame = _frame(ALL_EVENT_TYPES, start, end)
+    if frame.empty:
+        return []
+    grouped = frame.groupby("day").size().reset_index(name="event_count")
+    return [
+        {"day": str(row.day), "event_count": int(row.event_count)}
+        for row in grouped.itertuples(index=False)
+    ]
 
 
 def api_error_rate_by_day(start: datetime, end: datetime) -> list[dict[str, Any]]:
     """Measure daily API failure ratio to flag reliability regressions."""
-    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0])
-    for event in _read_events(("api_latency_recorded",), start, end):
-        day = _event_day(event.get("event_timestamp"))
-        status_code = _number(_properties(event.get("properties")).get("status_code"))
-        if day is None or status_code is None:
-            continue
-        counts[day][0] += 1
-        counts[day][1] += int(status_code >= 400)
+    frame = _frame(("api_latency_recorded",), start, end)
+    if frame.empty:
+        return []
+    frame["status_code"] = frame["properties"].map(
+        lambda properties: pd.to_numeric(properties.get("status_code"), errors="coerce")
+    )
+    frame = frame.dropna(subset=["status_code"])
+    if frame.empty:
+        return []
+    frame["is_error"] = frame["status_code"] >= 400
+    grouped = frame.groupby("day").agg(
+        request_count=("is_error", "size"),
+        error_count=("is_error", "sum"),
+    ).reset_index()
+    grouped["error_rate"] = (grouped["error_count"] / grouped["request_count"]).round(6)
     return [
         {
-            "day": day,
-            "request_count": requests,
-            "error_count": errors,
-            "error_rate": round(errors / requests, 6),
+            "day": str(row.day),
+            "request_count": int(row.request_count),
+            "error_count": int(row.error_count),
+            "error_rate": float(row.error_rate),
         }
-        for day, (requests, errors) in sorted(counts.items())
-        if requests
+        for row in grouped.itertuples(index=False)
     ]
 
 
@@ -127,25 +119,35 @@ def api_latency_by_day_route(start: datetime, end: datetime) -> list[dict[str, A
     """Report mean and p95 latency by safe route to identify slow endpoints."""
     from services.api.telemetry import API_ROUTES
 
-    samples: dict[tuple[str, str], list[float]] = defaultdict(list)
-    for event in _read_events(("api_latency_recorded",), start, end):
-        day = _event_day(event.get("event_timestamp"))
-        properties = _properties(event.get("properties"))
-        route = properties.get("route")
-        duration = _number(properties.get("duration_ms"))
-        if day is None or route not in API_ROUTES or duration is None or duration < 0:
-            continue
-        samples[(day, route)].append(duration)
-    results = []
-    for (day, route), durations in sorted(samples.items()):
-        results.append({
-            "day": day,
-            "route": route,
-            "request_count": len(durations),
-            "mean_duration_ms": round(sum(durations) / len(durations), 3),
-            "p95_duration_ms": round(_percentile(durations, 0.95), 3),
-        })
-    return results
+    frame = _frame(("api_latency_recorded",), start, end)
+    if frame.empty:
+        return []
+    frame["route"] = frame["properties"].map(lambda properties: properties.get("route"))
+    frame["duration_ms"] = frame["properties"].map(
+        lambda properties: pd.to_numeric(properties.get("duration_ms"), errors="coerce")
+    )
+    frame = frame[
+        frame["route"].isin(API_ROUTES)
+        & frame["duration_ms"].notna()
+        & (frame["duration_ms"] >= 0)
+    ]
+    if frame.empty:
+        return []
+    grouped = frame.groupby(["day", "route"])["duration_ms"].agg(
+        request_count="size",
+        mean_duration_ms="mean",
+        p95_duration_ms=lambda values: values.quantile(0.95),
+    ).reset_index()
+    return [
+        {
+            "day": str(row.day),
+            "route": row.route,
+            "request_count": int(row.request_count),
+            "mean_duration_ms": round(float(row.mean_duration_ms), 3),
+            "p95_duration_ms": round(float(row.p95_duration_ms), 3),
+        }
+        for row in grouped.itertuples(index=False)
+    ]
 
 
 def build_technical_report(start: datetime, end: datetime) -> dict[str, list[dict[str, Any]]]:

@@ -63,22 +63,52 @@ def test_report_excludes_unsafe_routes_and_invalid_values(monkeypatch):
 
 def test_report_route_is_authenticated_and_returns_metrics(client, admin_account, monkeypatch):
     expected_metrics = {"events_per_day": [{"day": "2026-01-02", "event_count": 2}]}
+    build_calls = []
+
+    def build(start, end):
+        build_calls.append((start, end))
+        return expected_metrics
+
     monkeypatch.setattr(
         "services.telemetry.analysis.build_technical_report",
-        lambda _start, _end: expected_metrics,
+        build,
     )
 
-    response = client.get(
-        "/telemetry/report?from=2026-01-01T00:00:00Z&to=2026-01-03T00:00:00Z",
-        headers=admin_account["headers"],
-    )
+    url = "/telemetry/report?from=2026-01-01T00:00:00Z&to=2026-01-03T00:00:00Z"
+    response = client.get(url, headers=admin_account["headers"])
+    cached_response = client.get(url, headers=admin_account["headers"])
 
     assert response.status_code == 200
+    assert cached_response.json() == response.json()
     assert response.json()["metrics"] == expected_metrics
     assert response.json()["period"] == {
         "from": "2026-01-01T00:00:00+00:00",
         "to": "2026-01-03T00:00:00+00:00",
     }
+    assert len(build_calls) == 1
+
+
+def test_report_cache_expires_after_sixty_seconds(client, admin_account, monkeypatch):
+    from services.api import telemetry as telemetry_module
+
+    now = [100.0]
+    build_calls = []
+    monkeypatch.setattr(telemetry_module, "monotonic", lambda: now[0])
+    monkeypatch.setattr(
+        "services.telemetry.analysis.build_technical_report",
+        lambda *_args: build_calls.append(True) or {"events_per_day": []},
+    )
+    headers = admin_account["headers"]
+    url = "/telemetry/report?from=2026-01-01T00:00:00Z&to=2026-01-02T00:00:00Z"
+
+    assert client.get(url, headers=headers).status_code == 200
+    now[0] += 59
+    assert client.get(url, headers=headers).status_code == 200
+    now[0] += 2
+    assert client.get(url, headers=headers).status_code == 200
+
+    assert len(build_calls) == 2
+    assert telemetry_module.REPORT_CACHE_TTL_SECONDS == 60
 
 
 def test_api_telemetry_report_alias_and_date_validation(client, admin_account, monkeypatch):

@@ -13,8 +13,10 @@
   non-existent supplier ID without mutating supplier records.
 - Added manager/admin-only `GET /telemetry/report` with a compatibility alias at
   `/api/telemetry/report`; the JSON includes daily event volume, API error rate,
-  and mean/p95 latency by route. No additional auth metric or visual dashboard
-  is included.
+  and mean/p95 latency by route. SQL bounds the UTC window; Pandas performs the
+  refine/group/aggregate steps and a bounded 60-second cache reuses results per
+  normalized query window. No additional auth metric or visual dashboard is
+  included.
 
 ## Completed
 
