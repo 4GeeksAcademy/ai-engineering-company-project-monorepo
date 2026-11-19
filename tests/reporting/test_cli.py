@@ -43,6 +43,17 @@ def test_main_runs_the_full_flow_and_prints_the_run_summary(week_of_activity, ca
 
 
 @pytest.mark.usefixtures("prefect_server")
+def test_a_scheduled_trigger_is_recorded_with_who_launched_it(week_of_activity, capsys):
+    # Lo que pasa scripts/nightly_export.py (hito 21): enlaza pipeline_runs con su fila de job_runs.
+    assert pipeline.main(["--week-start", WEEK.isoformat(), "--lookback-weeks", "0", "--trigger", "scheduled",
+                          "--triggered-by", "nightly_export:abc"]) == 0
+    capsys.readouterr()
+    with week_of_activity.connect() as connection:
+        row = connection.execute(select(RUNS.c.trigger, RUNS.c.triggered_by)).one()
+    assert tuple(row) == ("scheduled", "nightly_export:abc")
+
+
+@pytest.mark.usefixtures("prefect_server")
 def test_backfill_runs_one_subflow_per_week(week_of_activity, capsys):
     store(week_of_activity, inventory_event("outbound_order_created", "2026-10-28T10:00:00.000Z"))
     assert pipeline.main(["--backfill-from", PREVIOUS_WEEK.isoformat(), "--backfill-to", WEEK.isoformat()]) == 0

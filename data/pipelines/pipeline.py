@@ -41,6 +41,8 @@ Ejecución (frecuencia prevista: semanal, lunes 06:00 UTC; ver PIPELINE_DESIGN.m
     python data/pipelines/pipeline.py --week-start 2026-11-02 # una semana concreta
     python data/pipelines/pipeline.py --backfill-from 2026-09-07 --backfill-to 2026-11-02
     python data/pipelines/pipeline.py --serve                 # deployment weekly-monday (cron 0 6 * * 1 UTC)
+    python data/pipelines/pipeline.py --trigger scheduled --triggered-by nightly_export:<id>
+                                                              # lo que lanza scripts/nightly_export.py (hito 21)
 
 (`uv run python …` si el entorno virtual no está activado.)
 """
@@ -594,6 +596,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--environment", help="tags.environment de los eventos (por defecto, el de la API)")
     parser.add_argument("--backfill-from", type=_monday, help="backfill: primer lunes")
     parser.add_argument("--backfill-to", type=_monday, help="backfill: último lunes")
+    parser.add_argument("--trigger", choices=("manual", "scheduled"), default="manual",
+                        help="quién la lanza: manual (por defecto) o scheduled (un disparador programado, "
+                             "p. ej. scripts/nightly_export.py)")
+    parser.add_argument("--triggered-by", help="identificador de quien la lanza (reporting.pipeline_runs.triggered_by)")
     parser.add_argument("--serve", action="store_true",
                         help="sirve el deployment weekly-monday (cron 0 6 * * 1, UTC) y espera a sus corridas")
     args = parser.parse_args(argv)
@@ -615,11 +621,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.backfill_from:
             result: Any = backfill_weekly_warehouse_client_performance_flow(
                 args.backfill_from, args.backfill_to, environment=args.environment,
+                triggered_by=args.triggered_by,
             )
         else:
             result = weekly_warehouse_client_performance_flow(
                 week_start=args.week_start, lookback_weeks=args.lookback_weeks,
-                environment=args.environment, trigger="manual",
+                environment=args.environment, trigger=args.trigger, triggered_by=args.triggered_by,
             )
     except PipelineStageError as error:
         # El detalle ya está en el log de Prefect y en reporting.pipeline_runs.

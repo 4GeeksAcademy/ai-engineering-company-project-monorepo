@@ -20,6 +20,9 @@ __pycache__/
 /services/api/db.embeddings.json
 # data/pipelines/pipeline.py: snapshots JSON opcionales del reporte semanal (override con REPORTING_SNAPSHOT_DIR)
 /data/process/reporting/
+# scripts/nightly_export.py: backup diario de telemetry_events (lleva user_id/session_id; override con NIGHTLY_EXPORT_DIR)
+/data/raw/telemetry_*.csv
+/data/raw/.telemetry_*.csv.tmp
 
 # Dependencias de Node (website, backoffice y app Next.js)
 node_modules/
