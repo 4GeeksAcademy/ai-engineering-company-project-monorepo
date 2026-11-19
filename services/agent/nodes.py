@@ -17,6 +17,13 @@ from services.agent.memory_evaluator import (
     evaluate_turn_for_memory,
     format_proposal_question,
 )
+from services.agent.guardrails import (
+    check_input_security,
+    classify_input_scope,
+    isolate_external_chunks,
+    sanitize_external_text,
+    validate_output,
+)
 from data.pipelines.rag import retrieve, generate_answer
 
 logger = logging.getLogger(__name__)
@@ -156,6 +163,47 @@ def validate_input_node(state: AgentState) -> Dict[str, Any]:
         "execution_trace": trace,
     }
 
+def _apply_output_guard(answer: str) -> tuple[str, bool, str | None]:
+    """Valida toda salida del agente contra fugas de contenido o fallos estructurales."""
+    checked = validate_output(answer)
+    if not checked.allowed and checked.response:
+        return checked.response, True, checked.failure_type
+    return checked.response or answer, False, None
+
+
+def input_guardrail_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Capa de guardrails de entrada (Seguridad + Alcance):
+    Bloquea jailbreaks / cruce de cuentas y redirige casual / uso personal
+    antes de llegar al RAG, a las tools MCP o a la memoria persistente.
+    """
+    question = state.get("question", "")
+    base_trace = list(state.get("execution_trace", []))
+
+    sec = check_input_security(question)
+    if not sec.allowed:
+        return {
+            "guardrail_triggered": True,
+            "guardrail_failure_type": sec.failure_type,
+            "answer": sec.response or "",
+            "execution_trace": base_trace + ["input_guardrail"],
+        }
+
+    scope = classify_input_scope(question)
+    if not scope.allowed:
+        return {
+            "guardrail_triggered": True,
+            "guardrail_failure_type": scope.failure_type,
+            "answer": scope.response or "",
+            "execution_trace": base_trace + ["input_guardrail"],
+        }
+
+    return {
+        "guardrail_triggered": False,
+        "guardrail_failure_type": None,
+        "execution_trace": base_trace,
+    }
+
 
 def classify_intent_node(state: AgentState) -> Dict[str, Any]:
     """
@@ -207,6 +255,10 @@ def incident_tool_node(state: AgentState) -> Dict[str, Any]:
             tool_data = get_incident_ticket(ticket_id, timeout=5.0)
         else:
             tool_data = query_incident_via_mcp(ticket_id, timeout=5.0)
+        if isinstance(tool_data, dict):
+            for field in ("title", "description"):
+                if isinstance(tool_data.get(field), str):
+                    tool_data[field] = sanitize_external_text(tool_data[field], source="mcp_tool")
         error = None if tool_data else "ticket_not_found"
     except Exception as exc:
         logger.warning(f"incident_tool_node: Error o timeout al consultar ticket '{ticket_id}' vía MCP: {exc}")
@@ -237,9 +289,12 @@ def format_tool_answer_node(state: AgentState) -> Dict[str, Any]:
     prefix = state.get("memory_only_response")
     if prefix:
         final_answer = f"{prefix}\n\n{final_answer}"
+    safe_answer, og_triggered, og_type = _apply_output_guard(final_answer)
     return {
-        "answer": final_answer,
-        "memory_proposal": proposal,
+        "answer": safe_answer,
+        "memory_proposal": None if og_triggered else proposal,
+        "guardrail_triggered": og_triggered or bool(state.get("guardrail_triggered", False)),
+        "guardrail_failure_type": og_type or state.get("guardrail_failure_type"),
         "execution_trace": trace,
     }
 
@@ -257,9 +312,12 @@ def tool_fallback_node(state: AgentState) -> Dict[str, Any]:
     prefix = state.get("memory_only_response")
     if prefix:
         final_answer = f"{prefix}\n\n{final_answer}"
+    safe_answer, og_triggered, og_type = _apply_output_guard(final_answer)
     return {
-        "answer": final_answer,
-        "memory_proposal": proposal,
+        "answer": safe_answer,
+        "memory_proposal": None if og_triggered else proposal,
+        "guardrail_triggered": og_triggered or bool(state.get("guardrail_triggered", False)),
+        "guardrail_failure_type": og_type or state.get("guardrail_failure_type"),
         "execution_trace": trace,
     }
 
@@ -271,7 +329,8 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
     trace = list(state.get("execution_trace", [])) + ["retrieve"]
 
     try:
-        context = retrieve(question, min_score=0.70)
+        raw_context = retrieve(question, min_score=0.70)
+        context = isolate_external_chunks(raw_context) if raw_context else []
     except Exception as exc:
         logger.error(f"Error al ejecutar retrieve en base vectorial: {exc}")
         context = []
@@ -305,9 +364,12 @@ def honest_refusal_node(state: AgentState) -> Dict[str, Any]:
     if prefix:
         final_answer = f"{prefix}\n\n{final_answer}"
 
+    safe_answer, og_triggered, og_type = _apply_output_guard(final_answer)
     return {
-        "answer": final_answer,
-        "memory_proposal": proposal,
+        "answer": safe_answer,
+        "memory_proposal": None if og_triggered else proposal,
+        "guardrail_triggered": og_triggered or bool(state.get("guardrail_triggered", False)),
+        "guardrail_failure_type": og_type or state.get("guardrail_failure_type"),
         "execution_trace": trace,
     }
 
@@ -339,9 +401,12 @@ def generate_answer_node(state: AgentState) -> Dict[str, Any]:
     if prefix:
         final_answer = f"{prefix}\n\n{final_answer}"
 
+    safe_answer, og_triggered, og_type = _apply_output_guard(final_answer)
     return {
-        "answer": final_answer,
-        "memory_proposal": proposal,
+        "answer": safe_answer,
+        "memory_proposal": None if og_triggered else proposal,
+        "guardrail_triggered": og_triggered or bool(state.get("guardrail_triggered", False)),
+        "guardrail_failure_type": og_type or state.get("guardrail_failure_type"),
         "execution_trace": trace,
     }
 
@@ -349,7 +414,10 @@ def generate_answer_node(state: AgentState) -> Dict[str, Any]:
 def memory_only_reply_node(state: AgentState) -> Dict[str, Any]:
     """Nodo final cuando el turno únicamente resolvía una propuesta pendiente de memoria."""
     trace = list(state.get("execution_trace", [])) + ["memory_only_reply"]
+    safe_answer, og_triggered, og_type = _apply_output_guard(state.get("answer", ""))
     return {
-        "answer": state.get("answer", ""),
+        "answer": safe_answer,
+        "guardrail_triggered": og_triggered or bool(state.get("guardrail_triggered", False)),
+        "guardrail_failure_type": og_type or state.get("guardrail_failure_type"),
         "execution_trace": trace,
     }

@@ -10,6 +10,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from services.agent.state import AgentState
 from services.agent.nodes import (
     validate_input_node,
+    input_guardrail_node,
     classify_intent_node,
     incident_tool_node,
     format_tool_answer_node,
@@ -26,12 +27,22 @@ def route_after_validation(state: AgentState) -> str:
     Arista condicional 1:
     - Si hay error de validación (pregunta vacía), enruta a honest_refusal.
     - Si el turno solo resolvía una propuesta pendiente de memoria, enruta a memory_only_reply.
-    - Si hay pregunta válida que responder, avanza a classify_intent.
+    - En caso contrario, pasa por input_guardrail antes de clasificar o buscar.
     """
     if state.get("error"):
         return "honest_refusal"
     if state.get("intent") == "memory_only":
         return "memory_only_reply"
+    return "input_guardrail"
+
+
+def route_after_input_guardrail(state: AgentState) -> str:
+    """
+    Arista condicional 1B (Harness):
+    Si un guardrail bloqueó o redirigió la entrada, termina el turno sin tocar RAG, MCP ni memoria.
+    """
+    if state.get("guardrail_triggered"):
+        return END
     return "classify_intent"
 
 
@@ -78,6 +89,7 @@ def create_agent_graph(checkpointer: Optional[MemorySaver] = None):
 
     # 1. Registrar nodos con responsabilidad única
     workflow.add_node("validate_input", validate_input_node)
+    workflow.add_node("input_guardrail", input_guardrail_node)
     workflow.add_node("classify_intent", classify_intent_node)
     workflow.add_node("incident_tool", incident_tool_node)
     workflow.add_node("format_tool_answer", format_tool_answer_node)
@@ -95,9 +107,17 @@ def create_agent_graph(checkpointer: Optional[MemorySaver] = None):
         "validate_input",
         route_after_validation,
         {
-            "classify_intent": "classify_intent",
+            "input_guardrail": "input_guardrail",
             "honest_refusal": "honest_refusal",
             "memory_only_reply": "memory_only_reply",
+        },
+    )
+    workflow.add_conditional_edges(
+        "input_guardrail",
+        route_after_input_guardrail,
+        {
+            "classify_intent": "classify_intent",
+            END: END,
         },
     )
     workflow.add_conditional_edges(
