@@ -19,6 +19,8 @@ flowchart TD
     B -->|Nivel 1: Bajo| C[PACK_CODER Directo]
     B -->|Nivel 2: Medio| D[PACK_PLANNER ➔ PACK_CODER ➔ PACK_AUDITOR]
     B -->|Nivel 3: Alto| E[PACK_ARCHITECT ➔ PACK_PLANNER ➔ PACK_CODER ➔ PACK_AUDITOR]
+    B -->|Nivel 4: Muy Alto| F[PACK_ARCHITECT + Threat/FMEA ➔ PACK_PLANNER + Invariantes ➔ PACK_CODER + EDD ➔ PACK_AUDITOR + Red Teaming IA]
+    B -->|Nivel 5: Crítico| G[PACK_ARCHITECT + ADR/5 Expertos ➔ PACK_PLANNER + DAG/Thresholds ➔ PACK_CODER + Chaos/Contracts ➔ PACK_AUDITOR + Eval Gate]
 ```
 
 ### 🔹 Nivel 1: Tarea Simple / Quick Fix (Baja Complejidad)
@@ -39,6 +41,22 @@ flowchart TD
   2. `PACK_PLANNER`: Abstracción de diseño y 3 ciclos de refinamiento crítico en `implementation-plan.md`.
   3. `PACK_CODER`: Desarrollo guiado por verificaciones fácticas y suite de tests unitarios/integrados.
   4. `PACK_AUDITOR`: Simulación de ataques Red Teaming, auditoría WCAG 2.1 AA / WPO y checklist pre-push.
+
+### 🔹 Nivel 4: Sistema Cognitivo / Agéntico y Estado Persistente (Muy Alta Complejidad)
+- **Ejemplos:** Agentes LangGraph con memoria persistente y consolidación, flujos *Human-in-the-Loop*, servidores MCP con OAuth + Scopes, pipelines RAG con evaluación de calidad.
+- **Protocolo Agéntico Avanzado:**
+  1. `PACK_ARCHITECT`: ToT + 3 Expertos ampliado con **Threat Modeling IA (OWASP LLM Top 10)** y **FMEA** (*memory poisoning*, fuga de PII/secretos, *privilege escalation* en tools, ambigüedad del usuario).
+  2. `PACK_PLANNER`: Step-Back + 3 ciclos + **Máquina de Estados e Invariantes explícitos** (diagramas `stateDiagram-v2` / `sequenceDiagram`, contratos Pydantic para *Structured Outputs*, reglas *default-deny* y matriz de ejemplos positivos/negativos).
+  3. `PACK_CODER`: CoVe + TDD + **Eval-Driven Development (EDD) y Replay Multi-Turno Determinista** (trayectorias completas, consolidación/TTL y registro auditable).
+  4. `PACK_AUDITOR`: **Adversarial Red Teaming de IA + Auditoría de Trazabilidad** (cambios de tema, intentos de inyección prohibida, doble propuesta simultánea, caída de Redis/Qdrant y verificación de logs).
+
+### 🔹 Nivel 5: Ecosistema Crítico / Multi-Agente / Producción Autónoma (Complejidad Crítica)
+- **Ejemplos:** Orquestación multi-agente coordinada (*Swarms* / workflows paralelos), harnesses de evaluación continua en CI/CD, sistemas distribuidos con SLAs estrictos, gobernanza de memoria core en producción.
+- **Protocolo Enterprise Completo:**
+  1. `PACK_ARCHITECT`: **ADR (Architecture Decision Records)** + **Panel de 5 Expertos** (UX, Dev Lead, Sec, Data/Eval Lead, SRE/FinOps) evaluando presupuesto de tokens, latencia p95, aislamiento de fallos y estrategia de *rollback*.
+  2. `PACK_PLANNER`: **Execution DAG + Thresholds Cuantitativos** (subtareas paralelas/secuenciales, umbrales numéricos de aceptación en evals y plan de contingencia).
+  3. `PACK_CODER`: **Contract Testing Cross-Service + Fault Injection (Chaos ligero)** simulando caídas de servicios externos, timeouts, concurrencia y regresión global del monorepo.
+  4. `PACK_AUDITOR`: **Continuous Eval Gate + Release Readiness Audit** con evidencia reproducible (métricas comparativas antes/después, trazas completas y verificación de ramas/PRs sin conflictos).
 
 ---
 
