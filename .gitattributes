@@ -1,2 +1,4 @@
 # start.sh se ejecuta en Linux (contenedor): siempre con finales de línea LF.
 *.sh text eol=lf
+# El crontab del scheduler (hito 21) lo lee supercronic en Linux: un \r al final rompería el comando.
+docker/scheduler/crontab text eol=lf
