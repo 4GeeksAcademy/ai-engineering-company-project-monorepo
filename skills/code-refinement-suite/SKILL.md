@@ -19,6 +19,8 @@ flowchart TD
     B -->|Nivel 1: Bajo| C[PACK_CODER Directo]
     B -->|Nivel 2: Medio| D[PACK_PLANNER ➔ PACK_CODER ➔ PACK_AUDITOR]
     B -->|Nivel 3: Alto| E[PACK_ARCHITECT ➔ PACK_PLANNER ➔ PACK_CODER ➔ PACK_AUDITOR]
+    B -->|Nivel 4: Muy Alto| F[PACK_ARCHITECT + Threat/FMEA ➔ PACK_PLANNER + Invariantes ➔ PACK_CODER + EDD/Wiring ➔ PACK_AUDITOR + Red Teaming IA]
+    B -->|Nivel 5: Crítico| G[PACK_ARCHITECT + ADR/5 Expertos ➔ PACK_PLANNER + DAG/Thresholds ➔ PACK_CODER + Chaos/Contracts ➔ PACK_AUDITOR + Eval Gate]
 ```
 
 ### 🔹 Nivel 1: Tarea Simple / Quick Fix (Baja Complejidad)
@@ -40,6 +42,22 @@ flowchart TD
   3. `PACK_CODER`: Desarrollo guiado por verificaciones fácticas y suite de tests unitarios/integrados.
   4. `PACK_AUDITOR`: Simulación de ataques Red Teaming, auditoría WCAG 2.1 AA / WPO y checklist pre-push.
 
+### 🔹 Nivel 4: Sistema Cognitivo / Agéntico y Estado Persistente (Muy Alta Complejidad)
+- **Ejemplos:** Agentes LangGraph con memoria persistente y consolidación, flujos *Human-in-the-Loop*, flujos *orchestrator-worker-synthesizer*, servidores MCP con OAuth + Scopes, pipelines RAG con evaluación de calidad.
+- **Protocolo Agéntico Avanzado:**
+  1. `PACK_ARCHITECT`: ToT + 3 Expertos ampliado con **Threat Modeling IA (OWASP LLM Top 10)** y **FMEA** (*memory poisoning*, fuga de PII/secretos, *privilege escalation* en tools, ambigüedad del usuario).
+  2. `PACK_PLANNER`: Step-Back + 3 ciclos + **Máquina de Estados e Invariantes explícitos** (diagramas `stateDiagram-v2` / `sequenceDiagram`, contratos Pydantic para *Structured Outputs*, reglas *default-deny* y orden estricto de nodos/aristas).
+  3. `PACK_CODER`: CoVe + TDD + **Eval-Driven Development (EDD) + Topology & Wiring Check** (verificar que el orden real de ejecución coincide con los invariantes del plan, que ningún símbolo de seguridad/prompt queda huérfano y que los tests con mocks validan los argumentos críticos recibidos).
+  4. `PACK_AUDITOR`: **Adversarial Red Teaming de IA + Stateful/Cross-Feature Check** (pruebas adversarias combinadas con estado previo activo de otros hitos, inyección indirecta en RAG/tools y auditoría de trazabilidad).
+
+### 🔹 Nivel 5: Ecosistema Crítico / Multi-Agente / Producción Autónoma (Complejidad Crítica)
+- **Ejemplos:** Orquestación multi-agente coordinada (*Swarms* / workflows paralelos), harnesses de evaluación continua en CI/CD, sistemas distribuidos con SLAs estrictos, gobernanza de memoria core en producción.
+- **Protocolo Enterprise Completo:**
+  1. `PACK_ARCHITECT`: **ADR (Architecture Decision Records)** + **Panel de 5 Expertos** (UX, Dev Lead, Sec, Data/Eval Lead, SRE/FinOps) evaluando presupuesto de tokens, latencia p95, aislamiento de fallos y estrategia de *rollback*.
+  2. `PACK_PLANNER`: **Execution DAG + Thresholds Cuantitativos** (subtareas paralelas/secuenciales, umbrales numéricos de aceptación en evals y plan de contingencia).
+  3. `PACK_CODER`: **Contract Testing Cross-Service + Fault Injection (Chaos ligero)** simulando caídas de servicios externos, timeouts, concurrencia y regresión global del monorepo.
+  4. `PACK_AUDITOR`: **Continuous Eval Gate + Release Readiness Audit** con evidencia reproducible (métricas comparativas antes/después, trazas completas y verificación de ramas/PRs sin conflictos).
+
 ---
 
 ## 📦 Especificación de los 4 Paquetes Modulares
@@ -54,12 +72,12 @@ flowchart TD
 - **Regla de Formato Obligatoria 1:** SIEMPRE debes incluir al final de cualquier plan de implementación que generes una sección titulada `## ⚙️ Métodos Aplicados (Code Refinement Suite)`. En esta sección, debes explicar brevemente cómo has aplicado o aplicarás conceptualmente los métodos específicos de esta suite (ToT, CoVe, Red Teaming, etc.) adaptados a la implementación actual.
 - **Regla de Formato Obligatoria 2:** SIEMPRE debes incluir una sección titulada `## 🗺️ Mapa de Trabajo por Fases (Roadmap)` que contenga las etapas de implementación en listas. Cada elemento de esta lista DEBE tener un checkbox (`- [ ]`) para poder ir marcándolos como completados a medida que avanza la ejecución.
 ### 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
-- **Herramientas:** `Chain of Verification (CoVe)` + `Test-Driven Refinement (TDD)`.
-- **Acción:** Contrasta los tipos e importaciones contra el código fuente real y ejecuta validaciones automatizadas (`npx tsc --noEmit`, `npm run lint`, `npm test`, `pytest`).
+- **Herramientas:** `Chain of Verification (CoVe)` + `Test-Driven Refinement (TDD)` + `Wiring & Mock-Args Check` (Nivel 4–5).
+- **Acción:** Contrasta los tipos e importaciones contra el código fuente real, verifica que ningún símbolo/prompt de seguridad quede sin invocarse en la ruta real, comprueba el orden de ejecución de nodos frente al plan, valida argumentos críticos en mocks (`call_args`) y ejecuta validaciones automatizadas (`npx tsc --noEmit`, `npm run lint`, `npm test`, `pytest`).
 
 ### 🛡️ PACK 4: AUDITOR (Pre-Despliegue y Protocolo Git)
-- **Herramientas:** `Red Teaming (Simulación de Ataques)` + `Checklist WCAG/WPO`.
-- **Acción:** Audita el código buscando fallos de seguridad, regresiones o problemas de rendimiento.
+- **Herramientas:** `Red Teaming (Simulación de Ataques)` + `Stateful / Cross-Feature Adversarial Check` (Nivel 4–5) + `Checklist WCAG/WPO`.
+- **Acción:** Audita el código buscando fallos de seguridad, bypasses al combinar estado heredado de hitos previos (ej. propuestas pendientes, jobs async interrumpidos), regresiones o problemas de rendimiento.
 
 ---
 

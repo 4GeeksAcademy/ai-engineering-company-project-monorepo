@@ -18,3 +18,8 @@ build/
 # Logs & OS
 *.log
 .DS_Store
+
+# Ephemeral runtime data & vector stores
+data/raw/
+qdrant_storage/
+services/api/data/app.db

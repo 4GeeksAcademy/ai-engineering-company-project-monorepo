@@ -28,6 +28,8 @@ dependencies = [
     "qdrant-client>=1.12.0,<1.14.0",
     "fastembed>=0.9.1",
     "langgraph>=1.2.20",
+    "markitdown[pdf]>=0.1.9",
+    "py-readability-metrics>=1.4.5",
 ]
 
 [project.scripts]

@@ -236,3 +236,59 @@ class PipelineRunDB(SQLModel, table=True):
     status: str = Field(nullable=False)
     records_processed: int = Field(default=0, nullable=False)
     error_message: Optional[str] = Field(default=None, nullable=True)
+
+# --- Modelos de Recepción y Enrutamiento de RFPs (Hito 9) ---
+
+class RFPTicket(SQLModel, table=True):
+    __tablename__ = "rfp_tickets"
+    __table_args__ = {"extend_existing": True}
+
+    ticket_id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    rfp_id: str = Field(default_factory=lambda: f"RFP-{uuid.uuid4().hex[:8].upper()}", index=True)
+    filename: str
+    raw_pdf_path: str
+    status: str = Field(default="analizando", index=True)
+    classification_reason: Optional[str] = None
+
+    # Metadatos extraídos (docs/nexova-rfp-BRIEFING.md §2.2 y §2.3)
+    client_name: Optional[str] = None
+    client_hq: Optional[str] = None
+    currency: Optional[str] = None
+    services_requested: Optional[str] = None  # JSON list
+    scope: Optional[str] = None
+    deadline: Optional[str] = None
+    budget_range: Optional[str] = None
+    departments_needed: Optional[str] = None  # JSON list
+
+    # Métricas de legibilidad, resumen de Ventas y contrato handoff a Parte 2
+    readability_metrics: Optional[str] = None  # JSON dict
+    synthesizer_summary: Optional[str] = None
+    handoff_payload: Optional[str] = None  # JSON dict
+    error_detail: Optional[str] = None
+
+    created_at: str = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
+    updated_at: str = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
+
+
+class RFPDepartmentSection(SQLModel, table=True):
+    __tablename__ = "rfp_department_sections"
+    __table_args__ = {"extend_existing": True}
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    ticket_id: str = Field(foreign_key="rfp_tickets.ticket_id", index=True)
+    department_id: str = Field(index=True)  # seleccion | capacitacion | soporte
+    department_name: str
+    owner_name: str
+    key_aspects: str  # JSON list/dict
+    open_questions: Optional[str] = None  # JSON list (cifras faltantes sin inventar)
+
+    # Campos preparados para Partes 2 y 3 (Hito 9)
+    draft_content: Optional[str] = None
+    evaluation_results: Optional[str] = None
+    approval_status: Optional[str] = None
+    approver: Optional[str] = None
+    approved_at: Optional[str] = None
