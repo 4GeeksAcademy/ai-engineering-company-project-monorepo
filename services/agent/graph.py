@@ -11,6 +11,7 @@ from services.agent.state import AgentState
 from services.agent.nodes import (
     validate_input_node,
     input_guardrail_node,
+    resolve_memory_node,
     classify_intent_node,
     incident_tool_node,
     format_tool_answer_node,
@@ -26,23 +27,30 @@ def route_after_validation(state: AgentState) -> str:
     """
     Arista condicional 1:
     - Si hay error de validación (pregunta vacía), enruta a honest_refusal.
-    - Si el turno solo resolvía una propuesta pendiente de memoria, enruta a memory_only_reply.
-    - En caso contrario, pasa por input_guardrail antes de clasificar o buscar.
+    - Si no, pasa OBLIGATORIAMENTE por input_guardrail antes de tocar memoria.
     """
     if state.get("error"):
         return "honest_refusal"
-    if state.get("intent") == "memory_only":
-        return "memory_only_reply"
     return "input_guardrail"
 
 
 def route_after_input_guardrail(state: AgentState) -> str:
     """
     Arista condicional 1B (Harness):
-    Si un guardrail bloqueó o redirigió la entrada, termina el turno sin tocar RAG, MCP ni memoria.
+    Si un guardrail bloqueó o redirigió la entrada, termina el turno sin resolver memoria ni usar RAG/MCP.
     """
     if state.get("guardrail_triggered"):
         return END
+    return "resolve_memory"
+
+
+def route_after_resolve_memory(state: AgentState) -> str:
+    """
+    Arista condicional 1C (Memoria Parte 1):
+    Si el turno solo resolvía una propuesta pendiente, termina en memory_only_reply; si no, clasifica intención.
+    """
+    if state.get("intent") == "memory_only":
+        return "memory_only_reply"
     return "classify_intent"
 
 
@@ -90,6 +98,7 @@ def create_agent_graph(checkpointer: Optional[MemorySaver] = None):
     # 1. Registrar nodos con responsabilidad única
     workflow.add_node("validate_input", validate_input_node)
     workflow.add_node("input_guardrail", input_guardrail_node)
+    workflow.add_node("resolve_memory", resolve_memory_node)
     workflow.add_node("classify_intent", classify_intent_node)
     workflow.add_node("incident_tool", incident_tool_node)
     workflow.add_node("format_tool_answer", format_tool_answer_node)
@@ -98,26 +107,34 @@ def create_agent_graph(checkpointer: Optional[MemorySaver] = None):
     workflow.add_node("honest_refusal", honest_refusal_node)
     workflow.add_node("generate_answer", generate_answer_node)
     workflow.add_node("memory_only_reply", memory_only_reply_node)
+    
 
     # 2. Conectar punto de entrada
     workflow.add_edge(START, "validate_input")
 
     # 3. Aristas condicionales de enrutamiento
     workflow.add_conditional_edges(
-        "validate_input",
-        route_after_validation,
-        {
-            "input_guardrail": "input_guardrail",
-            "honest_refusal": "honest_refusal",
-            "memory_only_reply": "memory_only_reply",
-        },
+    "validate_input",
+    route_after_validation,
+    {
+        "input_guardrail": "input_guardrail",
+        "honest_refusal": "honest_refusal",
+    },
     )
     workflow.add_conditional_edges(
         "input_guardrail",
         route_after_input_guardrail,
         {
-            "classify_intent": "classify_intent",
+            "resolve_memory": "resolve_memory",
             END: END,
+        },
+    )
+    workflow.add_conditional_edges(
+        "resolve_memory",
+        route_after_resolve_memory,
+        {
+            "memory_only_reply": "memory_only_reply",
+            "classify_intent": "classify_intent",
         },
     )
     workflow.add_conditional_edges(

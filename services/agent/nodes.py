@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 from services.agent.state import AgentState
 from services.agent.tools import query_incident_via_mcp, get_incident_ticket
 from services.agent.memory import memory_store, MemoryProposal
+
 from services.agent.memory_evaluator import (
     classify_pending_decision,
     detect_language,
@@ -18,6 +19,7 @@ from services.agent.memory_evaluator import (
     format_proposal_question,
 )
 from services.agent.guardrails import (
+    NEXOVA_SECURE_SYSTEM_PROMPT,
     check_input_security,
     classify_input_scope,
     isolate_external_chunks,
@@ -92,8 +94,8 @@ def _maybe_propose_memory(
 
 def validate_input_node(state: AgentState) -> Dict[str, Any]:
     """
-    Nodo 1: Valida que la pregunta no esté vacía, lee memoria vigente
-    y resuelve cualquier propuesta pendiente antes de continuar el turno.
+    Nodo 1: Valida únicamente que la pregunta no esté vacía antes de pasar
+    por la capa obligatoria de guardrails de entrada.
     """
     question = state.get("question", "").strip()
     thread_id = state.get("thread_id") or "default-thread"
@@ -107,6 +109,23 @@ def validate_input_node(state: AgentState) -> Dict[str, Any]:
             "answer": "La consulta no puede estar vacía. Por favor, formula una pregunta válida.",
             "execution_trace": trace,
         }
+
+    return {
+        "question": question,
+        "thread_id": thread_id,
+        "error": None,
+        "execution_trace": trace,
+    }
+
+
+def resolve_memory_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Nodo 2B (solo tras superar input_guardrail):
+    Lee la memoria consolidada vigente y resuelve cualquier propuesta pendiente.
+    """
+    question = state.get("question", "").strip()
+    thread_id = state.get("thread_id") or "default-thread"
+    trace = list(state.get("execution_trace", []))
 
     pending = memory_store.get_pending_proposal(thread_id)
     audit_dict = None
@@ -130,7 +149,6 @@ def validate_input_node(state: AgentState) -> Dict[str, Any]:
             lang,
         )
 
-        # Si el usuario solo respondió a la propuesta sin nueva pregunta, cerramos el turno
         if not classification.remaining_question:
             memory_facts = [e.fact for e in memory_store.read_memory()]
             return {
@@ -147,7 +165,6 @@ def validate_input_node(state: AgentState) -> Dict[str, Any]:
                 "execution_trace": trace,
             }
 
-        # Si además hizo otra pregunta en el mismo mensaje, continuamos el grafo con ella
         question = classification.remaining_question
 
     memory_facts = [e.fact for e in memory_store.read_memory()]
@@ -394,7 +411,11 @@ def generate_answer_node(state: AgentState) -> Dict[str, Any]:
             }
         ] + context
 
-    base_answer = generate_answer(question, context)
+    base_answer = generate_answer(
+        question,
+        context,
+        system_prompt=NEXOVA_SECURE_SYSTEM_PROMPT,
+    )
     final_answer, proposal = _maybe_propose_memory(state, question, base_answer)
 
     prefix = state.get("memory_only_response")

@@ -94,12 +94,17 @@ def retrieve(
     logger.info(f"retrieve(): '{clean_query[:40]}...' -> {len(clean_results)} fragmentos sobre umbral {min_score}.")
     return clean_results
 
-def generate_answer(question: str, context: list[dict[str, Any]]) -> str:
+def generate_answer(
+    question: str,
+    context: list[dict[str, Any]],
+    system_prompt: str | None = None,
+) -> str:
     """
     Genera una respuesta fundamentada exclusivamente en los fragmentos de contexto.
     Args:
         question: Pregunta del usuario.
-        context: Fragmentos recuperados por retrieve(). 
+        context: Fragmentos recuperados por retrieve().
+        system_prompt: Prompt del sistema opcional para reforzar autoridad y dominio.
     Returns:
         Respuesta generada o mensaje de rechazo honesto si no hay contexto.
     """
@@ -113,6 +118,7 @@ def generate_answer(question: str, context: list[dict[str, Any]]) -> str:
         f"Contenido:\n{c.get('text', '')}"
         for c in context
     )
+    active_system_prompt = system_prompt or SYSTEM_PROMPT
     # Si hay API Key configurada, invocamos el modelo de lenguaje de generación.
     if LLM_API_KEY:
         try:
@@ -126,10 +132,13 @@ def generate_answer(question: str, context: list[dict[str, Any]]) -> str:
                     json={
                         "model": LLM_MODEL,
                         "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "system", "content": active_system_prompt},
                             {
                                 "role": "user",
-                                "content": f"Contexto Oficial de Nexova:\n{formatted_context}\n\nPregunta: {question}",
+                                "content": (
+                                    f"Contexto Oficial de Nexova:\n{formatted_context}\n\n"
+                                    f"[INPUT DEL USUARIO]\n{question}"
+                                ),
                             },
                         ],
                         "temperature": 0.1,
