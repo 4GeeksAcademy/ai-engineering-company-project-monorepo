@@ -3,6 +3,7 @@ tests/pipelines/test_agent_memory.py
 Suite EDD y Red Teaming para Memoria Persistente y Auto-mejora del Agente (Hito 8 · Parte 1).
 """
 import pytest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from services.agent.memory import AgentMemoryStore, MemoryProposal, validate_memory_candidate
@@ -168,3 +169,117 @@ def test_mixed_message_approves_and_answers_followup_question(mock_gen, mock_ret
     assert r2.get("memory_decision") == "approve"
     assert "Memoria actualizada" in r2["answer"]
     assert "soporte senior" in r2["answer"]
+
+
+# =====================================================================
+# 5. RESPUESTAS AMBIGUAS/CONTRADICTORIAS Y TTL/SILENCIO DE PROPUESTAS
+# =====================================================================
+
+@pytest.mark.parametrize("ambiguous_reply", [
+    "Sí, pero no",
+    "Sí, pero no estoy seguro",
+    "Ok, aunque mejor no",
+    "Tal vez luego",
+    "No sé, déjame pensarlo",
+    "Sí?",
+])
+def test_ambiguous_or_contradictory_replies_never_approve(isolated_memory, ambiguous_reply):
+    p = MemoryProposal(
+        thread_id="t-amb-strict",
+        fact="Los tickets de nómina retail ahora van en 24 horas.",
+        reason="SLA",
+        source_message="msg1",
+    )
+    isolated_memory.save_pending_proposal(p)
+
+    cls = classify_pending_decision(ambiguous_reply, p.fact)
+    assert cls.decision in ("ambiguous_or_unrelated", "reject")
+    assert cls.decision != "approve"
+
+    audit = isolated_memory.resolve_proposal("t-amb-strict", cls.decision, source_message=ambiguous_reply)
+    assert audit is not None
+    assert audit.decision != "approve"
+    assert audit.final_fact is None
+    assert isolated_memory.read_memory() == []
+
+
+@pytest.mark.parametrize("reply", ["Sí, pero no", "Sí, pero no estoy seguro", "No, mejor no"])
+def test_e2e_ambiguous_or_negative_reply_does_not_write_memory(isolated_memory, reply):
+    p = MemoryProposal(
+        thread_id="hilo-duda",
+        fact="Ese cliente de finanzas siempre pide confirmación por email antes de cerrar un ticket.",
+        reason="Pref",
+        source_message="msg1",
+    )
+    isolated_memory.save_pending_proposal(p)
+
+    res = agent_nodes.validate_input_node({"question": reply, "thread_id": "hilo-duda"})
+    assert res["memory_decision"] != "approve"
+    assert isolated_memory.read_memory() == []
+    audit = isolated_memory.get_audit_log("hilo-duda")
+    assert len(audit) == 1
+    assert audit[0].decision != "approve"
+    assert audit[0].final_fact is None
+
+
+def test_local_pending_proposal_ttl_expires_and_audits_abandonment(tmp_path, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    store = AgentMemoryStore(
+        redis_url="redis://127.0.0.1:1/0",
+        local_path=tmp_path / "mem_ttl.json",
+        pending_ttl_seconds=3600,
+    )
+
+    past = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    expired_proposal = MemoryProposal(
+        thread_id="t-silent",
+        fact="Los tickets urgentes de retail escalan en 24 horas.",
+        reason="SLA",
+        source_message="msg1",
+        expires_at=past,
+    )
+    ok, _ = store.save_pending_proposal(expired_proposal)
+    assert ok is True
+
+    # Al consultar tras caducar el TTL (silencio del usuario), no sigue pendiente y deja auditoría
+    assert store.get_pending_proposal("t-silent") is None
+    assert store.read_memory() == []
+
+    audit = store.get_audit_log("t-silent")
+    assert len(audit) == 1
+    assert audit[0].decision == "expired"
+    assert audit[0].final_fact is None
+    assert audit[0].proposal_id == expired_proposal.proposal_id
+
+    # El hilo queda libre para una nueva propuesta sin quedar bloqueado
+    fresh_proposal = MemoryProposal(
+        thread_id="t-silent",
+        fact="El cliente de tecnología siempre prefiere comunicación por email.",
+        reason="Pref",
+        source_message="msg2",
+    )
+    ok_fresh, err_fresh = store.save_pending_proposal(fresh_proposal)
+    assert ok_fresh is True
+    assert err_fresh is None
+
+
+def test_get_audit_log_sweeps_abandoned_local_proposals(tmp_path):
+    store = AgentMemoryStore(
+        redis_url="redis://127.0.0.1:1/0",
+        local_path=tmp_path / "mem_sweep.json",
+    )
+    past = (datetime.now(timezone.utc) - timedelta(minutes=65)).isoformat()
+    p = MemoryProposal(
+        thread_id="t-abandoned",
+        fact="Los tickets de facturación escalan directo a Tom Callahan.",
+        reason="Pattern",
+        source_message="msg1",
+        expires_at=past,
+    )
+    store.save_pending_proposal(p)
+
+    # Incluso sin un nuevo mensaje en el hilo, consultar auditoría barre propuestas expiradas
+    audit = store.get_audit_log("t-abandoned")
+    assert len(audit) == 1
+    assert audit[0].decision == "expired"
+    assert store.read_memory() == []

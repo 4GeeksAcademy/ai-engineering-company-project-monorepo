@@ -72,10 +72,68 @@ def _split_remaining_question(message: str) -> Optional[str]:
     return tail if len(tail) > 5 else None
 
 
+_HEDGE_OR_NEGATION_RE = re.compile(
+    r"\b("
+    r"pero|aunque|sin embargo|no estoy seguro|no estoy segura|no s[eé]|duda|dudo|"
+    r"quiz[aá]s?|tal vez|a lo mejor|puede ser|depende|espera|mejor no|luego|despu[eé]s|"
+    r"not sure|unsure|maybe|perhaps|but|however|although|wait|never\s*mind|don'?t|do not|nope|no"
+    r")\b",
+    re.IGNORECASE,
+)
+
+_UNEQUIVOCAL_APPROVE_EXACT = {
+    "si", "sí", "ok", "okay", "vale", "claro", "adelante", "aprobado",
+    "recuerdalo", "recuérdalo", "guardalo", "guárdalo", "confirmo", "confirmado",
+    "de acuerdo", "por supuesto", "sin duda", "perfecto",
+    "yes", "yep", "yeah", "sure", "approve", "approved", "save it", "confirm", "confirmed", "go ahead",
+}
+
+_APPROVE_PREFIXES = {"si", "sí", "ok", "okay", "vale", "claro", "yes", "yep", "sure"}
+_APPROVE_SUFFIXES = {
+    "recuerdalo", "recuérdalo", "guardalo", "guárdalo", "adelante", "aprobado",
+    "confirmo", "confirmado", "por favor", "de acuerdo",
+    "save it", "approve", "approved", "go ahead", "please", "confirm",
+}
+
+_EXPLICIT_REJECT_EXACT = {
+    "no", "nop", "nope", "rechazar", "rechazado", "descarta", "descartar", "descartalo", "descártalo",
+    "cancelar", "cancela", "cancel", "reject", "rejected", "don't", "do not", "no gracias", "no, gracias",
+    "mejor no", "no, mejor no", "no lo guardes", "no guardes", "olvidalo", "olvídalo",
+}
+
+
+def _normalize_clause(text: str) -> str:
+    cleaned = re.sub(r"^[¡¿\s]+|[.!?\s]+$", "", (text or "").strip().lower())
+    cleaned = re.sub(r"[,;:]+\s*", " ", cleaned)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _is_unequivocal_approve(clause: str) -> bool:
+    if not clause or "?" in clause or _HEDGE_OR_NEGATION_RE.search(clause):
+        return False
+    norm = _normalize_clause(clause)
+    if norm in _UNEQUIVOCAL_APPROVE_EXACT:
+        return True
+    parts = norm.split(maxsplit=1)
+    return len(parts) == 2 and parts[0] in _APPROVE_PREFIXES and parts[1] in _APPROVE_SUFFIXES
+
+
+def _is_explicit_reject(clause: str) -> bool:
+    if not clause or "?" in clause:
+        return False
+    norm = _normalize_clause(clause)
+    if norm in _EXPLICIT_REJECT_EXACT:
+        return True
+    # Rechazo explícito que empieza por 'no' sin contradicción afirmativa ('sí, pero no' es ambiguo)
+    tokens = norm.split()
+    return bool(tokens and tokens[0] in {"no", "nope", "cancelar", "reject", "descartar", "descarta"})
+
+
 def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassification:
     """
     Clasifica explícitamente la intención del usuario respecto a una propuesta pendiente.
-    Regla: ambigüedad o cambio de tema -> 'ambiguous_or_unrelated' (rechazo por defecto).
+    Regla: ambigüedad, duda o cambio de tema -> 'ambiguous_or_unrelated' (rechazo por defecto).
+    Exige aprobación inequívoca para devolver 'approve'.
     """
     cleaned = (message or "").strip()
     if not cleaned:
@@ -93,19 +151,20 @@ def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassi
                 f"Propuesta pendiente: {pending_fact}\n"
                 f"Mensaje del usuario: {cleaned}\n\n"
                 "Reglas estrictas:\n"
-                "- 'approve': aprueba explícitamente guardar la propuesta.\n"
+                "- 'approve': aprueba de forma inequívoca guardar la propuesta (sin dudas ni contradicciones).\n"
                 "- 'reject': rechaza explícitamente guardarla.\n"
                 "- 'edit': pide modificar el texto propuesto (devuelve el texto corregido en edited_fact).\n"
-                "- 'ambiguous_or_unrelated': cambia de tema, hace otra pregunta sin responder o es ambiguo.\n"
+                "- 'ambiguous_or_unrelated': cambia de tema, hace otra pregunta sin responder, duda o es ambiguo "
+                "(ej. 'Sí, pero no', 'Sí, pero no estoy seguro').\n"
                 "- Si además de responder incluye una nueva pregunta, extráela en remaining_question."
             )
             return structured_llm.invoke(prompt)
         except Exception as exc:
             logger.debug(f"Fallback determinista en clasificador de memoria: {exc}")
 
-    # Clasificador determinista explícito (sin '"sí" in mensaje' ingenuo)
+    # Clasificador determinista estricto: NO parte por coma para no truncar 'Sí, pero no'
     lower = cleaned.lower()
-    first_clause = re.split(r"[.!?,\n]", lower, maxsplit=1)[0].strip()
+    first_sentence = re.split(r"(?<=[.!?\n])\s*", lower, maxsplit=1)[0].strip()
     remaining = _split_remaining_question(cleaned)
 
     edit_match = re.match(r"^(?:edita|editar|cambia|cambiar|mejor guarda|edit|change)\s*[:\-]?\s*(.+)$", cleaned, re.IGNORECASE)
@@ -116,18 +175,21 @@ def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassi
             remaining_question=remaining,
         )
 
-    approve_exact = {"si", "sí", "ok", "vale", "claro", "adelante", "aprobado", "recuerdalo", "recuérdalo", "yes", "yep", "sure", "approve", "save it"}
-    reject_exact = {"no", "nop", "nope", "rechazar", "descarta", "descartar", "cancelar", "cancel", "reject", "don't", "no gracias"}
-
-    tokens = first_clause.split()
-    if first_clause in approve_exact or (tokens and tokens[0] in {"sí", "si", "yes", "ok", "vale", "claro"} and "?" not in first_clause):
+    if _is_unequivocal_approve(first_sentence):
         return ProposalClassification(decision="approve", remaining_question=remaining)
 
-    if first_clause in reject_exact or (tokens and tokens[0] in {"no", "nope", "cancelar", "reject"} and "?" not in first_clause):
+    if _is_explicit_reject(first_sentence):
         return ProposalClassification(decision="reject", remaining_question=remaining)
 
-    # Cambio de tema / pregunta nueva sin confirmación explícita -> rechazo por defecto
-    return ProposalClassification(decision="ambiguous_or_unrelated", remaining_question=cleaned)
+    # Ambigüedad, duda ('Sí, pero no', 'Sí, pero no estoy seguro') o cambio de tema -> rechazo por defecto
+    has_followup_question = "?" in cleaned or remaining is not None
+    looks_like_hedged_reply = bool(
+        re.match(r"^(?:s[ií]|ok|okay|vale|claro|yes|sure|tal vez|quiz[aá]s?|no s[eé]|depende)\b", lower)
+    )
+    next_question = remaining if (looks_like_hedged_reply and not ("?" in cleaned and remaining is None)) else (
+        cleaned if (has_followup_question or not looks_like_hedged_reply) else None
+    )
+    return ProposalClassification(decision="ambiguous_or_unrelated", remaining_question=next_question)
 
 
 def evaluate_turn_for_memory(
