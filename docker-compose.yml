@@ -103,6 +103,44 @@ services:
     networks:
       - trackflow-net
 
+  # Job nocturno de telemetría (hito 21, ticket #DEV-53): scripts/nightly_export.py cada día a las
+  # 02:30 UTC (docker/scheduler/crontab). Contenedor aparte del backend: no comparte proceso ni
+  # hilo con FastAPI. Registra cada ejecución en job_runs; el pipeline, en reporting.pipeline_runs.
+  #   docker compose logs -f nightly-export                                    # sus logs
+  #   docker compose run --rm nightly-export python scripts/nightly_export.py  # ejecutarlo ya
+  #   docker compose run --rm -e TARGET_DATE=2026-11-15 nightly-export python scripts/nightly_export.py
+  nightly-export:
+    build:
+      context: ./services
+      dockerfile: ../docker/scheduler/Dockerfile
+      additional_contexts:
+        scheduler: ./docker/scheduler
+    init: true
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Define DATABASE_URL en .env (copia .env.example)}
+      # El pipeline (subproceso) carga la configuración de la API, que exige estas dos.
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Define JWT_SECRET_KEY en .env (copia .env.example)}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      TELEMETRY_ENVIRONMENT: ${TELEMETRY_ENVIRONMENT:-development}
+      REPORTING_ENVIRONMENT: ${REPORTING_ENVIRONMENT:-}
+      REPORTING_READER_DATABASE_URL: ${REPORTING_READER_DATABASE_URL:-}
+      REPORTING_WRITER_DATABASE_URL: ${REPORTING_WRITER_DATABASE_URL:-}
+      PREFECT_API_URL: ${PREFECT_API_URL:-}
+      JOB_RUNS_DATABASE_URL: ${JOB_RUNS_DATABASE_URL:-}
+      NIGHTLY_EXPORT_PIPELINE_TIMEOUT_MINUTES: ${NIGHTLY_EXPORT_PIPELINE_TIMEOUT_MINUTES:-}
+      NIGHTLY_EXPORT_STALE_AFTER_MINUTES: ${NIGHTLY_EXPORT_STALE_AFTER_MINUTES:-}
+      # El pipeline importa services/database.py, que abre TinyDB al importarse: un archivo propio
+      # del contenedor, para no tocar nunca el services/api/db.json del backend.
+      TINYDB_PATH: /tmp/scheduler-tinydb.json
+    volumes:
+      - ./services:/app/services
+      - ./scripts:/app/scripts
+      # El pipeline (data/pipelines) y los CSV de backup (data/raw), que quedan en el host.
+      - ./data:/app/data
+    networks:
+      - trackflow-net
+
 networks:
   trackflow-net:
     name: trackflow-net

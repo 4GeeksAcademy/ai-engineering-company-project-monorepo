@@ -1,0 +1,18 @@
+# Crontab del contenedor `nightly-export` (hito 21, ticket #DEV-53). Lo ejecuta supercronic.
+#
+# El contenedor corre con TZ=UTC, así que la hora es UTC, igual que el "ayer" del script.
+#
+# ┌──────── minuto (30)
+# │  ┌───── hora (02)
+# │  │ ┌─── día del mes / mes / día de la semana: todos
+# │  │ │
+# 30 2 * * *   → cada día a las 02:30 UTC
+#
+# Por qué a las 02:30 UTC:
+# - El día anterior ya está cerrado y quedan 2,5 h de margen para eventos que llegan tarde (lotes
+#   del backoffice reenviados, reintentos de la API).
+# - Termina mucho antes de la corrida semanal de Prefect (lunes 06:00 UTC), así que las dos nunca
+#   compiten por el lock de reporting.pipeline_runs.
+# - Es de madrugada tanto en Zaragoza (03:30/04:30) como en Los Ángeles (18:30/19:30 del día
+#   anterior, fuera de la hora punta de la API).
+30 2 * * * python /app/scripts/nightly_export.py
