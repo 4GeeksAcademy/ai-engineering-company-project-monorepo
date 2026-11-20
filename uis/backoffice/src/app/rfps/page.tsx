@@ -23,6 +23,7 @@ import {
     UserCheck,
     XCircle,
     Bell,
+    MessageSquare,
     Radio,
     WifiOff,
 } from "lucide-react";
@@ -353,6 +354,24 @@ export default function RFPsPage() {
                             }}
                         >
                             <Layers size={15} /> Inventario
+                        </Link>
+                        <Link
+                            href="/support-chat"
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.4rem",
+                                padding: "0.5rem 0.9rem",
+                                borderRadius: "0.5rem",
+                                background: "rgba(16, 185, 129, 0.14)",
+                                border: "1px solid rgba(16, 185, 129, 0.4)",
+                                color: "#34d399",
+                                fontSize: "0.85rem",
+                                fontWeight: 600,
+                                textDecoration: "none",
+                            }}
+                        >
+                            <MessageSquare size={15} /> Chat Soporte
                         </Link>
                     </div>
                 </header>

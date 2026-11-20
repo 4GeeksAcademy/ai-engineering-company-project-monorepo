@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Layers,
   ArrowRight,
+  MessageSquare,
   ShieldAlert,
 } from "lucide-react";
 import styles from "./knowledge.module.css";
@@ -108,6 +109,9 @@ export default function KnowledgePage() {
             </Link>
             <Link href="/inventory/products" className={styles.navLink}>
               <Layers size={16} /> Inventario
+            </Link>
+            <Link href="/support-chat" className={styles.navLink}>
+              <MessageSquare size={16} /> Chat Soporte
             </Link>
           </div>
         </header>

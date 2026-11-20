@@ -1,221 +1,214 @@
-# Implementation Plan: Sistemas en Tiempo Real — Notificaciones SSE (Parte 1 de 2)
+# Implementation Plan: Sistemas en Tiempo Real — Streaming de Chat por WebSocket (Parte 2 de 2)
 
-**Nivel de Complejidad:** Nivel 3 (Arquitectura / Módulo Crítico — Streaming en tiempo real con Auth Guard y resiliencia)  
-**Rama de Trabajo:** `feature/sse-notifications`  
-**Documentos de Referencia:** `.github/STRATEGY.md`, `docs/nexova-rfp-BRIEFING.md`, `AGENTS.md`  
+**Nivel de Complejidad:** Nivel 3 (Arquitectura Bidireccional — WebSocket Pub/Sub, Streaming Token-a-Token, Abort Real y Rehidratación)  
+**Rama de Trabajo:** `feature/websocket-chat`  
+**Documentos de Referencia:** `.github/STRATEGY.md`, `BRIEFING (real-time-communication)`, `AGENTS.md`, `services/agent/graph.py`, `services/api/routes/agent.py`
 
 ---
 
 ## 1. 📐 PACK 1: ARCHITECT (Ideación y Decisión Técnica)
 
 ### 1.1 Árbol de Pensamiento (Tree of Thoughts - ToT)
-Se evaluaron tres ramas arquitecturales para resolver la notificación en tiempo real de nuevos tickets de RFP:
+Se evaluaron tres opciones para lograr streaming token-a-token e interrupción en tiempo real del agente `first_line_support`:
 
-- **Rama A (Polling corto frecuente desde el frontend con `setInterval` cada 2-3s):**
-  - *Ventajas:* Implementación rápida en el frontend sin cambios profundos en el backend.
-  - *Riesgos:* Sobrecarga masiva de la base de datos y de FastAPI con peticiones HTTP repetitivas (99% de ellas sin cambios). Viola explícitamente el requerimiento de `STRATEGY.md` ("reemplazar el refresco manual con un flujo que empuje la notificación al frontend"). **Descartada.**
-- **Rama B (WebSockets bidireccionales con protocolo `ws://` / `wss://`):**
-  - *Ventajas:* Comunicación dúplex de bajísima latencia.
-  - *Riesgos:* Sobreingeniería para un requerimiento donde el tráfico es exclusivamente unidireccional (servidor a cliente). Los navegadores no soportan el envío nativo de cabeceras HTTP personalizadas (como `Authorization: Bearer <token>`) en el handshake estándar de `WebSocket` sin hacks en query params (vulnerable a fuga de tokens en logs). Complica proxies y balanceadores. **Descartada.**
-- **Rama C (Server-Sent Events con `fetch` + `ReadableStream` y Broadcaster en memoria - Elegida):**
+- **Rama A (SSE para salida + `POST /agent/abort` por HTTP separado):**
+  - *Ventajas:* Reutiliza SSE de la Parte 1.
+  - *Riesgos:* Dos canales separados introducen condiciones de carrera entre el stream de lectura y el endpoint de abort; no cumple el criterio de aceptación de `STRATEGY.md` ("el canal debe ser bidireccional", "SSE ya no alcanza"). **Descartada.**
+- **Rama B (Usar LangGraph `interrupt()` HITL para detener respuestas):**
+  - *Ventajas:* Mecanismo nativo de grafos.
+  - *Riesgos:* Viola explícitamente `STRATEGY.md`: LangGraph `interrupt()` pausa nodos entre transiciones esperando aprobación humana, **no** cancela un stream de tokens en vuelo. **Descartada.**
+- **Rama C (WebSocket Bidireccional + Pub/Sub por Sesión `chat.<session_id>` + Cancelación de `asyncio.Task` - Elegida):**
   - *Ventajas:*
-    1. Basado en HTTP/1.1 y HTTP/2 estándar (`text/event-stream`), compatible con proxies y cortafuegos.
-    2. Al consumirse en el frontend con `fetch` y `ReadableStreamDefaultReader` (en lugar de `EventSource` vanilla), permite adjuntar limpiamente la cabecera `Authorization: Bearer <JWT>`, cumpliendo el Auth Guard Standard.
-    3. Conexiones ligeras y no bloqueantes en FastAPI mediante generadores asíncronos (`asyncio.Queue`).
-    4. Soporte de reconexión con backoff progresivo y frames de keep-alive (`: ping\n\n`) para evitar cierres prematuros por inactividad.
+    1. Canal único full-duplex: el cliente envía `user_message` e `interrupt_requested` mientras recibe `token_chunk` concurrentemente.
+    2. Desacopla al productor (ejecución del grafo `agent_app`) de los consumidores (múltiples clientes WebSocket suscritos a `chat.<session_id>`), permitiendo observadores/supervisores en vivo sin duplicar llamadas al agente.
+    3. Al recibir `interrupt_requested`, cancela la `asyncio.Task` en vuelo (`task.cancel()`), abortando genuinamente el stream sin emitir más `token_chunk`, conservando el mensaje parcial como `interrupted` y arrancando un turno nuevo con `new_input`.
+    4. No modifica la lógica interna ni las herramientas de `services/agent/graph.py` ni `services/agent/nodes.py`.
 
 ---
 
 ### 1.2 Análisis del Panel de 3 Expertos
 
 #### 1. UX / Product Specialist
-- **Feedback inmediato y no invasivo:** Cuando entra una nueva RFP, la pantalla del dashboard no debe parpadear ni forzar un refresco total. El nuevo ticket debe insertarse en la parte superior de la tabla de tickets con un badge visual temporal ("Nuevo" / "Recién llegado") y un toast informativo con el nombre del cliente y el estado inicial (`analizando`).
-- **Transparencia en el estado de red:** Se incorporará en el encabezado del panel un indicador discreto de conexión en tiempo real:
-  - 🟢 *En vivo* (conectado y escuchando stream).
-  - 🟡 *Reconectando (intento N)...* (en período de backoff tras corte de red).
-  - 🔴 *Desconectado* (si se agotan los reintentos o el usuario no está autenticado).
+- **Efecto de escritura en vivo:** El asistente muestra un indicador de escritura y va añadiendo cada `token_chunk` conforme llega, sin reemplazar todo el mensaje al final.
+- **Control de interrupción natural:** Mientras el agente responde, el usuario puede enviar un nuevo mensaje o pulsar "Interrumpir y redirigir". El mensaje parcial del asistente permanece visible en el historial con un badge `"Interrumpido"` (`status: "interrupted"`), y la respuesta redirigida aparece debajo como un turno nuevo.
+- **Reconexión transparente:** Si se pierde la red, la UI muestra `"Reconectando..."` con backoff exponencial, reconecta usando el mismo `session_id` y recibe `session_snapshot` para restaurar la conversación completa sin perder el hilo.
 
 #### 2. Dev Lead / Software Architect
-- **Desacoplamiento mediante Broadcaster (`services/api/sse_manager.py`):**
-  - El router de subida de tickets (`services/api/routes/rfps.py`) no debe saber nada sobre sockets HTTP o clientes web conectados. Simplemente invoca `await rfp_broadcaster.publish("rfp_ticket_created", payload)`.
-  - El broadcaster mantiene un set de colas `asyncio.Queue(maxsize=100)`. Si un suscriptor es lento y satura la cola, se descarta el mensaje más antiguo o se purga la conexión para evitar fugas de memoria (*leak*).
-- **Consumo con Stream Reader en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
-  - Encapsular la conexión en un hook limpio que devuelva `{ isConnected, reconnectingAttempt, lastEvent }`.
-  - Uso riguroso de `AbortController` para cancelar y cerrar el stream en el evento `cleanup` de `useEffect` (evitando conexiones fantasma al cambiar de ruta).
+- **Gestor Pub/Sub y Sesiones (`services/api/ws_chat_manager.py`):**
+  - Entidad `ChatSession` alineada al BRIEFING: `session_id`, `agent_id="first_line_support"`, `user_id`, `client_id`, `status` (`"active" | "interrupted" | "closed"`), `created_at` y lista ordenada de mensajes (`message_id`, `role`, `content`, `status`, `created_at`).
+  - Canal `chat.<session_id>` con conjunto de suscriptores (`WebSocket` / `asyncio.Queue`), garantizando broadcast único por sesión sin duplicar ejecuciones del agente.
+  - Control de tarea activa (`active_task: asyncio.Task`) por sesión: cuando llega `interrupt_requested`, se cancela la tarea activa, se espera su cierre limpio, se marca el mensaje parcial como `interrupted`, se publica `generation_interrupted` y se lanza un turno nuevo si `new_input` está presente.
+- **Adaptador de Streaming para `agent_app` (`services/api/routes/agent.py`):**
+  - Invoca `agent_app.astream(initial_state, config={"configurable": {"thread_id": session_id}}, stream_mode=["messages", "updates"])` sin alterar `services/agent/`.
+  - Si un nodo emite `AIMessageChunk` nativos, se transmiten token a token; si un nodo determinista/RAG (`generate_answer`, `format_tool_answer`, `honest_refusal`, `tool_fallback`) entrega el texto completo en `updates`, el adaptador lo divide en tokens y lo emite progresivamente con puntos de suspensión `await asyncio.sleep(...)` para que `task.cancel()` aborte instantáneamente entre tokens.
 
 #### 3. Security & Compliance Specialist (Auth Guard Standard)
-- **Protección obligatoria del endpoint:** `GET /api/rfps/stream` debe exigir `current_user: dict = Depends(get_current_user)`. Clientes no autenticados reciben inmediatamente `401 Unauthorized`.
-- **Cero exposición en URLs:** Prohibido aceptar tokens en la query string (`?token=...`). El JWT viaja exclusivamente en el header `Authorization: Bearer <token>`.
-- **Invariante de IA:** Esta entrega no ejecuta ni invoca ningún agente o modelo generativo. Es una capa pura de transporte reactivo.
+- **Autenticación en Handshake WebSocket:**
+  - Extrae el JWT desde `?token=...` en la URL del handshake (y opcionalmente soporta un primer frame `{ "event": "auth", "data": { "token": "..." } }` si no vino en query string).
+  - Valida el JWT con la misma lógica/clave de `services/api/routes/auth.py` (`decode_access_token` / `SECRET_KEY`). Si falta o es inválido, cierra inmediatamente el socket con código `1008` (Policy Violation) antes de emitir `session_snapshot` o aceptar eventos.
+- **Exigencia de `session_id`:** Requerido en el handshake (`/agent/ws/{session_id}` o `?session_id=...`).
 
 ---
 
-### 1.3 Threat Modeling (OWASP API Security) & FMEA
+### 1.3 Threat Modeling & FMEA
 
 | Amenaza / Modo de Fallo | Riesgo / Impacto | Severidad | Mitigación Técnica |
-| :--- | :--- | :--- | :--- |
-| **Acceso no autorizado al stream** | Un atacante escucha en vivo las RFPs confidenciales de clientes. | Crítica | Auth Guard estricto con `Depends(get_current_user)` validando firma y expiración del JWT en el handshake del stream. |
-| **Cierre prematuro de conexión por proxies** | Proxies intermedios o Next.js cortan la conexión tras 30s de silencio. | Alta | Tarea periódica de keep-alive en FastAPI emitiendo comentarios SSE (`: ping\n\n`) cada 15 segundos. |
-| **Pérdida de eventos durante caída de red** | Una RFP llega mientras el cliente comercial sufre un microcorte de red. | Alta | Política de recuperación: al reconectar exitosamente, el cliente ejecuta un refetch ligero de la lista de tickets y deduplica por `ticket_id`. |
-| **Duplicación de tickets en la UI tras reconexión** | El mismo ticket aparece repetido dos veces en la tabla. | Media | Invariante en React: fusión de estado usando `Map<string, RFPTicket>` indexado por `ticket_id`. |
-| **Fuga de memoria por clientes desconectados bruscamente** | Clientes que cierran la pestaña dejan colas huérfanas en el backend. | Alta | Captura de `asyncio.CancelledError` y bloque `finally` en el endpoint SSE para desuscribir y limpiar la cola del cliente. |
+| :--- | :--- | :---: | :--- |
+| **Acceso sin JWT al WebSocket** | Cualquiera lee o interactúa con sesiones de soporte de clientes. | Crítica | Validación estricta del mismo JWT de `auth.py` en el handshake; cierre inmediato (`1008`) antes de enviar `session_snapshot`. |
+| **Tokens "zombies" tras interrupción** | Llegan `token_chunk` de la respuesta vieja mezclados con la nueva. | Alta | Cancelación explícita de `asyncio.Task` + verificación de `generation_id` / `message_id` antes de publicar en `chat.<session_id>`, y espera (`await`) a que la tarea anterior termine antes de iniciar el nuevo turno. |
+| **Desincronización tras caída de red** | Al reconectar, el chat aparece vacío y se pierde el contexto. | Alta | Emisión automática de `session_snapshot` al completar el handshake con todo el historial (`messages`, incluyendo mensajes `interrupted`) y uso del mismo `session_id` como `thread_id` de LangGraph. |
+| **Múltiples observadores duplicando al agente** | 2 pestañas abiertas en la misma sesión ejecutan 2 veces al agente. | Alta | Productor único desacoplado en `ChatSessionManager`: solo la recepción de `user_message` / `interrupt_requested` dispara el productor, que publica en `chat.<session_id>` hacia todos los sockets suscritos. |
 
 ---
 
-## 2. 📝 PACK 2: PLANNER (Estructuración del Plan de Implementación)
+## 2. 📝 PACK 2: PLANNER (Contrato de Datos y Flujo)
 
-### 2.1 Contratos de Datos y Schemas
+### 2.1 Contrato WebSocket (`BRIEFING` Parte 2)
 
-#### Formato Wire del Protocolo SSE
-El stream responderá con `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive` y `X-Accel-Buffering: no`.
-
-**Frame de Keep-Alive:**
-```http
-: ping
-
-```
-
-**Frame de Evento (Creación de Ticket de RFP):**
-```http
-event: rfp_ticket_created
-data: {"ticket_id": "7f8b9c2a-...", "rfp_id": "RFP-...", "filename": "nexova-request-1.pdf", "status": "analizando", "client_name": null, "created_at": "2026-11-20T15:00:00Z"}
-
-```
-
-#### Payload del Evento en Python (`services/api/schemas.py`)
+#### Entidad `ChatSession`
 ```python
-class RFPTicketCreatedEvent(BaseModel):
-    ticket_id: str
-    rfp_id: str
-    filename: str
-    status: str = "analizando"
-    client_name: Optional[str] = None
+class ChatSession(BaseModel):
+    session_id: str
+    agent_id: str = "first_line_support"
+    user_id: str
+    client_id: Optional[str] = None
+    status: Literal["active", "interrupted", "closed"] = "active"
     created_at: str
 ```
 
----
+#### Eventos Cliente → Servidor
+- `user_message`:
+  ```json
+  {"event": "user_message", "data": {"session_id": "chat_0157", "text": "..."}}
+  ```
+- `interrupt_requested`:
+  ```json
+  {"event": "interrupt_requested", "data": {"session_id": "chat_0157", "new_input": "en realidad mi pregunta era sobre la factura"}}
+  ```
 
-### 2.2 Diagrama de Secuencia y Máquina de Estados
+#### Eventos Servidor → Cliente
+- `session_snapshot` (al conectar/reconectar):
+  ```json
+  {"event": "session_snapshot", "data": {"session_id": "chat_0157", "messages": []}}
+  ```
+- `token_chunk`:
+  ```json
+  {"event": "token_chunk", "data": {"session_id": "chat_0157", "token": "Claro", "sequence": 4}}
+  ```
+- `generation_interrupted`:
+  ```json
+  {"event": "generation_interrupted", "data": {"session_id": "chat_0157", "message_id": "msg_0321", "status": "interrupted"}}
+  ```
+- `generation_completed`:
+  ```json
+  {"event": "generation_completed", "data": {"session_id": "chat_0157", "message_id": "msg_0322"}}
+  ```
+
+### 2.2 Diagrama de Secuencia (Streaming + Interrupción)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Cliente as Backoffice (Next.js)
-    participant Auth as Auth Middleware (FastAPI)
-    participant StreamAPI as SSE Endpoint (/api/rfps/stream)
-    participant Broadcaster as SSEBroadcaster (Memoria)
-    participant UploadAPI as Upload Endpoint (/api/rfps/upload)
+    actor Cliente as UI Chat (Next.js)
+    participant WS as WebSocket Endpoint (/agent/ws/{session_id})
+    participant PubSub as ChatSessionManager (chat.<session_id>)
+    participant Agent as agent_app (LangGraph)
 
-    Cliente->>StreamAPI: GET /api/rfps/stream (Header Authorization: Bearer JWT)
-    StreamAPI->>Auth: Verifica token (get_current_user)
-    Auth-->>StreamAPI: Usuario autenticado (email, role)
-    StreamAPI->>Broadcaster: subscribe() -> asyncio.Queue
-    StreamAPI-->>Cliente: 200 OK (Content-Type: text/event-stream)
-    
-    loop Cada 15 segundos
-        StreamAPI-->>Cliente: : ping\n\n
+    Cliente->>WS: Connect WS (?token=JWT)
+    WS->>WS: Verifica JWT y session_id
+    WS->>PubSub: subscribe(session_id)
+    PubSub-->>Cliente: {"event": "session_snapshot", "data": {"session_id": ..., "messages": [...]}}
+
+    Cliente->>WS: {"event": "user_message", "data": {"session_id": ..., "text": "Hola"}}
+    WS->>PubSub: start_generation(text) -> Task
+    PubSub->>Agent: astream(state, thread_id=session_id)
+    loop Token a token
+        Agent-->>PubSub: token
+        PubSub-->>Cliente: {"event": "token_chunk", "data": {"session_id": ..., "token": ..., "sequence": n}}
     end
 
-    Note over UploadAPI: Llega un nuevo PDF de RFP
-    UploadAPI->>UploadAPI: Persiste RFPTicket (status="analizando")
-    UploadAPI->>Broadcaster: publish("rfp_ticket_created", ticket_dict)
-    Broadcaster->>StreamAPI: Despacha payload a la cola del suscriptor
-    StreamAPI-->>Cliente: event: rfp_ticket_created\ndata: {...}\n\n
-    Cliente->>Cliente: Inserta en lista + Toast visual
+    Note over Cliente,PubSub: Usuario interrumpe a mitad de respuesta
+    Cliente->>WS: {"event": "interrupt_requested", "data": {"session_id": ..., "new_input": "sobre mi factura"}}
+    WS->>PubSub: interrupt_and_redirect(new_input)
+    PubSub->>PubSub: task.cancel() -> aborta stream inmediatamente
+    PubSub->>PubSub: Marca mensaje parcial status="interrupted"
+    PubSub-->>Cliente: {"event": "generation_interrupted", "data": {"session_id": ..., "message_id": "msg_1", "status": "interrupted"}}
+    PubSub->>Agent: Nuevo turno con new_input (thread_id=session_id)
+    Agent-->>PubSub: Nuevos tokens
+    PubSub-->>Cliente: token_chunk ... -> generation_completed
 ```
 
 ---
 
-### 2.3 Respuestas Arquitectónicas a las Preguntas de Diseño (STRATEGY.md)
+## 3. 💻 PACK 3: CODER (Mapa de Implementación Paso a Paso)
 
-1. **¿Si 2 personas del equipo comercial abren el dashboard al mismo tiempo vs 50 personas a la vez?**
-   - *Respuesta:* Cada conexión SSE cliente establece su propio canal HTTP y su propia cola asíncrona ligera (`asyncio.Queue`) gestionada por el `SSEBroadcaster`. No abren conexiones independientes a la base de datos ni ejecutan consultas periódicas. Para 50 usuarios, el costo de CPU y memoria en una instancia asíncrona de Uvicorn/FastAPI es prácticamente insignificante (~10-20 KB de memoria total).
-   - Si la aplicación creciera a cientos de comerciales distribuidos en un cluster de múltiples workers/contenedores Uvicorn, la capa intermedia en memoria se reemplazaría por un backend de pub/sub distribuido (Redis Pub/Sub o NATS), permitiendo que cualquier worker que reciba la subida publique el evento y todos los workers con clientes conectados lo propaguen a sus respectivos sockets.
-2. **¿Qué estrategia de recuperación se eligió para tickets registrados durante una desconexión y cómo se evitan duplicados?**
-   - *Respuesta:* Se eligió la estrategia **"Refetch al Reconectar + Deduplicación por Clave Primaria"**. Cuando el hook de React detecta que la conexión se restableció con éxito tras un corte, dispara inmediatamente `rfpService.listTickets()` para recuperar cualquier ticket creado durante el período de desconexión.
-   - En el frontend, el estado de tickets se consolida mediante una función de combinación indexada por `ticket_id` (usando un diccionario o `Map`), de forma que si un evento ya había llegado o llega durante la sincronización, jamás se duplica en la interfaz de usuario.
-3. **¿Por qué SSE es la herramienta correcta para este caso y no WebSockets? ¿En qué momento dejaría de serlo?**
-   - *Respuesta:* Las notificaciones de nuevas RFPs son un flujo estrictamente **unidireccional** (servidor hacia los dashboards de los comerciales). SSE es nativo de la capa HTTP, opera sobre HTTP/1.1 y HTTP/2 multiplexado, atraviesa sin problemas proxies corporativos y cortafuegos, y permite autenticación limpia enviando cabeceras `Authorization: Bearer <token>` mediante la API `fetch` del navegador. WebSockets añade complejidad innecesaria de handshake, protocolo de enmarcado dúplex y dificultad para pasar headers de autenticación estándar.
-   - *Cuándo dejaría de serlo:* SSE dejaría de ser la herramienta correcta si el flujo requiriese bidireccionalidad intensiva y de baja latencia en el mismo canal (por ejemplo, edición colaborativa concurrente del alcance de la propuesta entre Marcos y Javier, cursores compartidos, o un chat interactivo de feedback en tiempo real).
-
----
-
-## 3. 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
-
-### Componentes a Desarrollar:
-
-1. **Gestor de Eventos SSE (`services/api/sse_manager.py`):**
-   - Clase `SSEBroadcaster` con soporte `subscribe()`, `unsubscribe()`, y `publish(event_name, data)`.
-   - Limpieza automática de colas saturadas o cerradas.
-2. **Endpoint SSE en FastAPI (`services/api/routes/rfps.py`):**
-   - `GET /api/rfps/stream`: Protegido con `Depends(get_current_user)`.
-   - Generador asíncrono con `request: Request`, comprobación periódica `await request.is_disconnected()` y `asyncio.wait_for(queue.get(), timeout=15.0)` para emitir latidos keep-alive (`: ping\n\n`) cada 15s y limpiar la cola en `finally`.
-   - Modificación de `POST /api/rfps/upload` para publicar el evento `rfp_ticket_created` en cuanto el ticket se guarda en la base de datos con estado `"analizando"`.
-3. **Hook de Notificaciones en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
-   - Implementación de lector de stream con `window.fetch` + `response.body.getReader()`.
-   - Búfer acumulativo de texto (`buffer += decoder.decode(chunk, { stream: true })`) procesando únicamente frames completos delimitados por `\n\n` (evita errores por fragmentación TCP).
-   - Inyección de cabecera `Authorization: Bearer ${token}` extraída de `localStorage`.
-   - Algoritmo de reconexión con backoff exponencial (`1000ms * 2^attempt`, máx. `30000ms`, más *jitter* aleatorio).
-   - Disparo de callback de recuperación al reconectar.
-4. **Integración en UI Dashboard (`uis/backoffice/src/app/rfps/page.tsx`):**
-   - Indicador de estado de conexión SSE en la cabecera del panel.
-   - Inserción reactiva de nuevos tickets y toast de notificación al recibir `rfp_ticket_created`.
-   - Deduplicación estricta de tickets por `ticket_id`.
-5. **Suite de Pruebas Automatizadas (`tests/api/test_rfp_sse.py`):**
-   - Test 1: Verificar rechazo `401 Unauthorized` si no hay JWT.
-   - Test 2: Verificar cabeceras `text/event-stream` y keep-alive `: ping\n\n`.
-   - Test 3: Verificar emisión y formato del evento `rfp_ticket_created` al subir un archivo o invocar el broadcaster.
+1. **Backend — Auth helper + Gestor Pub/Sub (`services/api/ws_chat_manager.py`):**
+   - Modelo `ChatSession` y `ChatMessage` con los campos exactos del BRIEFING.
+   - `ChatSessionManager` con canales `chat.<session_id>`, registro de múltiples suscriptores WebSocket, historial en memoria para `session_snapshot`, y cancelación segura de `asyncio.Task` para abort real.
+2. **Backend — Endpoint WebSocket en `services/api/routes/agent.py`:**
+   - Reutilizar/exponer validación JWT en `services/api/routes/auth.py` (si no existe función pública reutilizable para WS).
+   - Añadir `@router.websocket("/ws/{session_id}")` en `services/api/routes/agent.py` conectado al `ChatSessionManager` y `agent_app`.
+3. **Pruebas Automatizadas (`tests/api/test_websocket_chat.py`):**
+   - Test 1: Rechazo sin JWT válido.
+   - Test 2: Handshake con `session_id` devuelve `session_snapshot`.
+   - Test 3: Flujo `user_message` → múltiples `token_chunk` → `generation_completed`.
+   - Test 4: Flujo `interrupt_requested` a mitad de respuesta → aborta generación (`generation_interrupted` con `status="interrupted"`), no emite más tokens del turno viejo, conserva mensaje parcial y arranca nuevo turno con `new_input`.
+   - Test 5: Reconexión con el mismo `session_id` restaura el historial completo en `session_snapshot`.
+   - Test 6: Múltiples clientes suscritos a `chat.<session_id>` reciben los mismos eventos sin duplicar invocaciones al agente.
+4. **Frontend — Hook + Interfaz de Chat en Tiempo Real (`uis/backoffice/src/hooks/useSupportChatWS.ts` y `uis/backoffice/src/app/support-chat/page.tsx` o integración en `knowledge`):**
+   - Cliente WebSocket con `?token=...`, `session_id` persistente, streaming token-a-token en vivo, control de interrupción/redirección dejando visible el mensaje marcado como `interrupted`, y reconexión exponencial con rehidratación automática desde `session_snapshot`.
+   - Enlace de navegación desde el Backoffice para acceder directamente al Chat de Soporte en Vivo.
 
 ---
 
-## 4. 🛡️ PACK 4: AUDITOR (Testing, Concurrencia y Protocolo Git)
+## 4. 🛡️ PACK 4: AUDITOR (Verificación y Preguntas de Diseño PR)
 
-### 4.1 Verificaciones Automatizadas
-- Ejecución de tests unitarios y de integración con `pytest`:
-  `uv run pytest tests/api/test_rfp_sse.py -v`
-- Comprobación de no regresión en tests existentes:
-  `uv run pytest tests/pipelines/ -v`
-- Verificación de tipos y lint en el frontend:
-  `cd uis/backoffice && npm run build` (o `npx tsc --noEmit`)
-
-### 4.2 Protocolo de Control Git
-- ⚠️ **Regla Inviolable:** NUNCA realizar `git push` automático.
-- Al completar la verificación del plan y código, solicitar consentimiento explícito al usuario.
+- **Comandos de verificación:**
+  - `uv run pytest tests/api/test_websocket_chat.py -v`
+  - `cd uis/backoffice && npx tsc --noEmit`
+- **Protocolo Git:**
+  - Rama `feature/websocket-chat` desde `main`.
+  - ⚠️ **Regla Inviolable:** NUNCA realizar `git push` automático sin consentimiento explícito del usuario.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-### Fase 1: Arquitectura de Streaming en Backend (`services/`)
-- [ ] 1.1 Crear el gestor de eventos en memoria `services/api/sse_manager.py` (`SSEBroadcaster`).
-- [ ] 1.2 Implementar el endpoint `GET /api/rfps/stream` en `services/api/routes/rfps.py` con Auth Guard (`Depends(get_current_user)`).
-- [ ] 1.3 Incorporar generador de eventos con frames de keep-alive (`: ping\n\n`) cada 15 segundos y manejo de desconexión.
-- [ ] 1.4 Integrar la publicación de `rfp_ticket_created` en `POST /api/rfps/upload` al registrar el ticket.
+### Fase 1: Gestor Pub/Sub y Sesiones WebSocket (`services/api/ws_chat_manager.py`)
+- [ ] 1.1 Definir modelos Pydantic del contrato (`ChatSession`, `ChatMessage`) alineados al BRIEFING de Nexova (`agent_id="first_line_support"`, `status`: `active | interrupted | closed`).
+- [ ] 1.2 Implementar `ChatSessionManager` con canales Pub/Sub `chat.<session_id>` desacoplando al productor del agente de múltiples consumidores WebSocket.
+- [ ] 1.3 Implementar historial por sesión y generación de `session_snapshot` para rehidratación en reconexión.
+- [ ] 1.4 Implementar cancelación de tarea en vuelo (`asyncio.Task.cancel()`) para abortar genuinamente la generación ante `interrupt_requested`, marcando el mensaje parcial como `interrupted` y lanzando el nuevo turno con `new_input`.
 
-### Fase 2: Suite de Pruebas Automatizadas del Stream (`tests/`)
-- [ ] 2.1 Crear `tests/api/test_rfp_sse.py` usando `httpx.AsyncClient`.
-- [ ] 2.2 Probar rechazo sin autenticación (`401 Unauthorized`).
-- [ ] 2.3 Probar recepción del formato wire de SSE (`event: rfp_ticket_created` y payload estructurado con campos del briefing).
-- [ ] 2.4 Ejecutar suite con `uv run pytest tests/api/test_rfp_sse.py -v`.
+### Fase 2: Endpoint WebSocket y Adaptador LangGraph (`services/api/routes/agent.py`)
+- [ ] 2.1 Validar el mismo JWT del backoffice en el handshake WebSocket (`?token=...` o primer frame `auth`) usando `get_current_user` de `services/api/routes/auth.py` (cierre `1008` si falta o es inválido).
+- [ ] 2.2 Exigir `session_id` en la ruta `/agent/ws/{session_id}` y usarlo como `thread_id` en LangGraph `agent_app.astream(...)`.
+- [ ] 2.3 Implementar adaptador de streaming token-a-token para `agent_app` (sin modificar `services/agent/graph.py` ni sus herramientas) emitiendo `token_chunk`, `generation_completed` y `generation_interrupted`.
 
-### Fase 3: Cliente Frontend con Tolerancia a Fallos (`uis/backoffice/`)
-- [ ] 3.1 Implementar el hook `useRFPNotifications` en `uis/backoffice/src/hooks/useRFPNotifications.ts` con `fetch` y `ReadableStreamDefaultReader`.
-- [ ] 3.2 Implementar reconexión con backoff exponencial progresivo y cancelación por `AbortController`.
-- [ ] 3.3 Implementar estrategia de recuperación con refetch al reconectar y deduplicación por `ticket_id`.
-- [ ] 3.4 Conectar el hook en `uis/backoffice/src/app/rfps/page.tsx` con indicador visual de estado y actualización en tiempo real de la lista.
-- [ ] 3.5 Validar compilación TypeScript en frontend (`cd uis/backoffice && npx tsc --noEmit`).
+### Fase 3: Pruebas Automatizadas (`tests/api/test_websocket_chat.py`)
+- [ ] 3.1 Verificar rechazo del handshake sin JWT válido.
+- [ ] 3.2 Verificar emisión de `session_snapshot` al conectar con `session_id`.
+- [ ] 3.3 Verificar flujo `user_message` → `token_chunk` (secuenciales) → `generation_completed`.
+- [ ] 3.4 Verificar flujo `interrupt_requested` a mitad de stream → abort real (`generation_interrupted` con `status="interrupted"`, cero tokens residuales, conservación del mensaje parcial y nuevo turno reflejando `new_input`).
+- [ ] 3.5 Verificar reconexión con el mismo `session_id` restaurando el hilo completo y difusión Pub/Sub a múltiples observadores sin duplicar invocaciones al agente.
 
-### Fase 4: Auditoría de Seguridad y Verificación Pre-Push
-- [ ] 4.1 Auditar que no exista ninguna llamada a LLMs ni agentes en la solución de esta parte.
-- [ ] 4.2 Ejecutar pruebas de regresión globales del backend (`uv run pytest`).
-- [ ] 4.3 Solicitar confirmación explícita para control de versiones Git.
+### Fase 4: Interfaz de Chat en Tiempo Real (`uis/backoffice/`)
+- [ ] 4.1 Crear hook `uis/backoffice/src/hooks/useSupportChatWS.ts` con `WebSocket`, `?token=...`, `session_id` persistente, reconexión con backoff exponencial y rehidratación desde `session_snapshot`.
+- [ ] 4.2 Crear vista de chat de soporte (`uis/backoffice/src/app/support-chat/page.tsx`) con renderizado de tokens en vivo, botón/flujo de interrupción y redirección en mitad de respuesta, y badge visible de `interrupted`.
+- [ ] 4.3 Añadir enlace de navegación en el Backoffice y validar compilación TypeScript (`cd uis/backoffice && npx tsc --noEmit`).
+
+### Fase 5: Auditoría Final y Protocolo Git (PACK 4)
+- [ ] 5.1 Verificar que `services/agent/` (lógica interna y herramientas) permanece intacto y no se mezclan payloads RFP/SSE de la Parte 1.
+- [ ] 5.2 Ejecutar `uv run pytest tests/api/test_websocket_chat.py -v` y `npx tsc --noEmit` tras el último cambio.
+- [ ] 5.3 Solicitar consentimiento explícito del usuario antes de realizar `git push` hacia `feature/websocket-chat`.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
 
-1. **Tree of Thoughts (ToT):** Evaluación comparativa formal entre Polling, WebSockets y SSE, ponderando seguridad de tokens, costo computacional y adecuación funcional.
-2. **Panel de 3 Expertos (UX, Dev, Sec):** Integración armónica de requerimientos de interfaz amigable (estados de conexión y toasts), arquitectura limpia (patrón pub/sub desacoplado con colas asíncronas) y cumplimiento estricto del Auth Guard Standard.
-3. **Threat Modeling & FMEA:** Identificación proactiva de riesgos críticos: fugas de memoria por clientes desconectados, cortes silenciosos por proxies y desincronización de eventos durante caídas de red.
-4. **Chain of Verification (CoVe):** Contrastación exhaustiva contra los modelos reales de `RFPTicket` y las funciones existentes en `rfps.py` y `rfps.ts`.
-5. **Test-Driven Refinement (TDD):** Planificación de pruebas específicas para validar el wire protocol de SSE antes de dar por cerrada la fase de backend.
+1. **Tree of Thoughts (ToT):** Comparativa formal entre SSE+HTTP abort, LangGraph HITL `interrupt()`, y WebSocket bidireccional con Pub/Sub + cancelación de `asyncio.Task`.
+2. **Panel de 3 Expertos (UX, Dev Lead, Security):** Equilibrio entre escritura en vivo + visibilidad de mensajes `interrupted`, desacoplamiento productor/consumidor en `chat.<session_id>`, y validación JWT estricta en handshake.
+3. **Threat Modeling & FMEA:** Mitigación de acceso no autorizado (`1008`), tokens zombies tras interrupción (`task.cancel()` + espera explícita), pérdida de contexto en reconexión (`session_snapshot`), y duplicación de agente ante múltiples observadores.
+4. **Chain of Verification (CoVe) & Wiring Check:** Contrastado contra `services/agent/graph.py`, `services/agent/nodes.py`, `data/pipelines/rag.py`, y `services/api/routes/auth.py`.
+5. **Test-Driven Refinement (TDD):** Pruebas automatizadas de contrato WebSocket (`token_chunk`, `generation_interrupted`, `generation_completed`, `session_snapshot`) y reconexión antes de cerrar el ciclo.
+
