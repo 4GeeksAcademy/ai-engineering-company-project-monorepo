@@ -1,91 +1,223 @@
-# README
-Servidor MCP: Conectando tu Agente con las Herramientas de la Empresa
-Por [@marcogonzalo](https://github.com/marcogonzalo) y [otros contribuidores](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo/graphs/contributors) en [4Geeks Academy](https://4geeksacademy.com/)
-[build by developers](https://4geeks.com/) [4Geeks Academy](https://x.com/4geeksacademy)
-These instructions are [available in English](https://learn.4geeks.com/es/main-cohort/spain-aie-pt-3/syllabus/agentic-engineering/project/README.md).
+# Hito — Flujo Agéntico de RFPs: Aprobación y Cierre (Parte 3 de 3)
+
+Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí están quién aprueba cada departamento (y cualquier aprobador extra que tu empresa exija), las reglas de arbitraje ante conflictos y el formato del documento final. No inventes una escalera jerárquica multi-nivel salvo que tu BRIEFING lo diga (p. ej. umbral de CEO); en la mayoría de empresas el sign-off es el responsable nombrado de cada departamento activo.
 
 ## 🎯 Tu reto
 📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-### Sobre los MCP Servers
-Un MCP Server expone las capacidades de un sistema (herramientas, recursos, prompts) mediante un protocolo estándar que cualquier agente compatible puede descubrir y consumir, sin acoplarse al código interno de tu backend. A diferencia de las tools que ya conectaste directamente al grafo de tu agente, un MCP Server puede ser reutilizado por múltiples clientes — otros agentes, otros equipos, otras compañías del ecosistema — siempre que se autentiquen correctamente. Por eso la autenticación y el principio de mínimo privilegio no son un detalle: un servidor MCP sin auth es una vulnerabilidad real desde el primer día.
+En la Parte 2 cada departamento ya genera y autoevalúa su sección de la propuesta económica dentro del mismo ticket abierto en la Parte 1. Falta lo más delicado: que un humano de cada departamento dé el visto bueno antes de que el documento final salga hacia el cliente.
 
-Tu agente ya sabe llamar herramientas directamente. Ahora tu tech lead ha abierto un ticket pidiendo que esas capacidades dejen de estar hardcodeadas dentro del grafo y se expongan como un servicio independiente, reutilizable y protegido por OAuth — y que el propio agente deje de llamar al Incidents Manager de forma directa para consumirlo a través del servidor MCP.
+### Ticket — Aprobación humana y cierre del documento
+**Contexto:** Ya generamos y autoevaluamos cada sección de la propuesta, pero nadie va a firmar una propuesta económica sin que un humano de cada departamento le dé el visto bueno. Esta es la última pieza del flujo que empezamos en la Parte 1 — y tiene que sentirse como una sola experiencia, no como tres proyectos pegados con cinta.
 
-**De:** Tu tech lead  
-**Para:** Tu squad  
-**Asunto:** RFP — Servidor MCP para herramientas de la compañía  
+**Qué necesito que construyas:**
+1. Antes de dar por aprobada la sección de un departamento, el flujo debe pasar por un punto de aprobación humana real — un human-in-the-loop, no solo un evaluador automático más.
+2. El flujo debe detenerse justo antes de esa acción irreversible, guardar el estado con un checkpointer, y poder reanudarse exactamente donde quedó cuando llegue la aprobación — no reiniciar desde cero.
+3. Esa pausa debe afectar solo la rama del departamento que está esperando aprobación; los demás departamentos que ya tengan su sección lista deben poder seguir avanzando en paralelo, no bloquearse entre sí.
+4. Define un límite de iteraciones y un nodo de arbitraje explícito para los desacuerdos entre departamentos. Conéctalo a los triggers de conflicto y al árbitro fijo de tu BRIEFING (reglas o un humano nombrado — no un LLM “votando” entre agentes).
+5. Cuando todos los departamentos den su sign-off, el documento final debe generarse solo, consolidando las secciones aprobadas.
+6. Quiero poder ver, para cualquier ejecución, qué agente hizo qué y en qué orden, porque cuando algo salga mal en producción no vamos a tener tiempo de adivinar.
 
-El agente que construimos ya consulta el Incidents Manager desde dentro del grafo, pero cualquier integración futura (otro agente, otro equipo, un partner externo) tendría que reimplementar esas mismas llamadas. Necesitamos exponerlas como un MCP Server independiente, autenticado con OAuth, para que cualquier cliente MCP autorizado pueda:
-1. Gestionar tickets del Incidents Manager (crear, actualizar, consultar estado).
-2. Consultar —nunca editar— los datos del inventario.
+Cuando termines, corre el flujo completo de principio a fin — desde que se sube la RFP en la Parte 1 hasta que se genera el documento final aquí — y revisa que se sienta como un solo proceso: sin saltos de estado raros, sin mensajes que no coincidan entre partes, sin pasos que se rompan en la transición de una parte a otra.
 
-El servidor no debe dar más permisos de los estrictamente necesarios para cada tool. Documenten bien el discovery: cualquier cliente debe poder entender qué puede hacer el servidor sin necesitar contexto humano adicional.
+**Acceptance criteria:** Una RFP puede recorrer las tres partes de punta a punta, pausarse para aprobación humana por departamento sin bloquear a los demás, y terminar en un documento final generado automáticamente, con trazabilidad completa de cada paso.
+— *Tu tech lead*
 
-Y no dejen la migración a medias: quiero que el propio agente reemplace su tool directa del Incidents Manager por una llamada al MCP Server como cliente. Si el agente sigue llamando al Incidents Manager por fuera del servidor, el ticket no está resuelto.
+---
 
-Los criterios de aceptación están en el checklist. Avísenme cuando esté listo para probarlo desde un cliente MCP.
+## 📚 Conocimiento complementario: cuándo interrumpir y cuándo poner un guardrail
+No todo control debe pausar el flujo para un humano. Los guardrails (validaciones automáticas de esquema, tipo o negocio) deben resolver solos los casos claros; reserva las interrupciones (interrupt) para decisiones que de verdad requieren juicio humano, como aprobar una propuesta económica antes de enviarla a un cliente. Y cuando interrumpas, hazlo de forma acotada: la interrupción debe pausar únicamente la rama del grafo que depende de esa aprobación (la sección de ese departamento y lo que dependa de ella), no el flujo completo — un departamento esperando el visto bueno de su gerente no debería frenar a los demás que ya están listos para avanzar.
 
-Como parte del reto, tu implementación debe resolver — sin que se te diga explícitamente en un checklist — las siguientes decisiones de diseño:
-* Qué transporte usar (stdio vs. Streamable HTTP) según si el servidor se consume localmente o por múltiples clientes remotos, y qué implica esa elección para la autenticación.
-* Cómo estructurar el sistema de permisos para que la tool de inventario sea, por diseño, de solo lectura — no basta con "no implementar" el endpoint de escritura, el servidor debe rechazar explícitamente cualquier intento.
-* Qué información exponer en el discovery (nombres, descripciones y esquemas de las tools) para que un agente externo, sin contexto humano previo, entienda qué puede y qué no puede hacer.
-* Cómo reemplazar, dentro del grafo del agente, el nodo que llamaba directamente al Incidents Manager por tools del MCP Server vía `langchain-mcp-adapters` — sin romper el enrutamiento entre RAG y tools que ya tenías funcionando.
+### Estados del ticket para esta parte (misma fila — nombres del BRIEFING):
+El ciclo completo está en el BRIEFING; aquí solo necesitas:
+
+| Estado | Rol | Cuándo |
+| :--- | :--- | :--- |
+| `en_evaluación` / `needs_human_review` | Entrada Parte 2 | El ticket llega con borradores + EvaluationResult (incl. secciones al tope) |
+| `esperando_aprobación` | Parte 3 escribe | Pausa humana mientras alguna aprobación de departamento esté pendiente |
+| `terminado` | Parte 3 escribe | Documento final guardado y accesible |
+
+*No inventes estados huérfanos; conserva valores previos de Parte 1/2 en la misma fila cuando no estés en transición.*
+
+---
+
+## 🗺️ Referencia visual: tickets de aprobación y síntesis del documento final
+Cuando los tickets de asignación por departamento de la Parte 2 están totalmente aprobados, un ultimate document synthesizer compila el documento final acordado y lo entrega a Ventas — las ramas por departamento aprueban de forma independiente y luego convergen:
+
+```mermaid
+flowchart LR
+    %% Entrada Estructurada
+    subgraph Input ["Entrada"]
+        WS["DEFINED WORKSTREAM<br/>STRUCTURE & META-INFO"]
+    end
+
+    %% Orquestador de Asignación
+    AO["ASSIGNMENT ORCHESTRATOR<br/><i>(Orchestrator)</i>"]
+    WS --> AO
+
+    %% Departamentos y Tareas Asignadas
+    subgraph Departments ["Departamentos y Tareas"]
+        direction TB
+
+        subgraph DeptSales ["DEPARTMENT: SALES"]
+            direction TB
+            S1["☑ Value Proposition Definition"]
+            S2["☑ Pricing & Commercial Terms"]
+            S3["☑ Client Relationship Strategy"]
+            S4["☑ Comms & Sales"]
+        end
+
+        subgraph DeptLegal ["DEPARTMENT: LEGAL & COMPLIANCE"]
+            direction TB
+            L1["☑ Terms & Conditions Review"]
+            L2["☑ Regulatory Alignment"]
+            L3["☐ Contract Generation"]
+            L4["☐ ..."]
+        end
+
+        subgraph DeptOps ["DEPARTMENT: OPERATIONS & DELIVERY"]
+            direction TB
+            O1["☑ Resource Allocation"]
+            O2["☑ Timeline & SLA Definition"]
+            O3["☐ Timeline Allocation"]
+            O4["☐ Contract Operations"]
+            O5["☐ Solution Design Validation"]
+        end
+    end
+
+    AO --> DeptSales
+    AO --> DeptLegal
+    AO --> DeptOps
+
+    %% Tickets de Asignación y Aprobación Humana
+    subgraph ApprovalTickets ["Department-specific assignment and approval tickets"]
+        direction TB
+
+        subgraph TicketSales ["SALES ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TS_Dept["Department: Sales"]
+            TS_Content["Assigned Content: [Brief summary of tasks]"]
+            TS_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+
+        subgraph TicketLegal ["LEGAL & COMPLIANCE ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TL_Dept["Department: Legal"]
+            TL_Content["Assigned Content: [Brief tasks]"]
+            TL_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+
+        subgraph TicketOps ["OPERATIONS & DELIVERY ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TO_Dept["Department: Operations & Delivery"]
+            TO_Content["Assigned Content: [Brief summary of tasks]"]
+            TO_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+    end
+
+    DeptSales --> TicketSales
+    DeptLegal --> TicketLegal
+    DeptOps --> TicketOps
+
+    %% Sintetizador Final
+    UDS["ULTIMATE DOCUMENT SYNTHESIZER<br/><i>(Final Synthesizer)</i><br/><small>Once all department assignment tickets<br/>are fully approved [X], the Ultimate<br/>Document Synthesizer compiles<br/>the final agreed-upon document</small>"]
+
+    TicketSales --> UDS
+    TicketLegal --> UDS
+    TicketOps --> UDS
+
+    %% Documento Final Acordado
+    DOC["FINAL AGREED-UPON<br/>DOCUMENT<br/><i>(Propuesta Económica Final)</i>"]
+    UDS --> DOC
+
+    %% Destinatario Final
+    RECIPIENT["SALES TEAM<br/><i>(Recipient)</i>"]
+    DOC --> RECIPIENT
+```
+
+---
+
+> 🔀 **PR aprobado → haz merge a `main`.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
+
+---
 
 ## 🌱 Cómo Empezar el Proyecto
-1. Ubícate en tu copia del [monorepo de la compañía](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) (si aún no tienes tu propio fork, créalo antes de continuar).
-2. Crea una rama nueva: `git switch -c feature/mcp-oauth-tools`.
-3. Trabaja sobre el backend del Incidents Manager y del módulo de inventario que ya construiste en hitos anteriores — el MCP Server se apoya en esos servicios, no los reemplaza.
-4. Instala las dependencias necesarias con `uv add` (por ejemplo, `fastmcp`, `mcpauth`, `langchain-mcp-adapters`) — nunca uses `pip install` directamente en este monorepo.
-5. Crea el servidor MCP dentro de la carpeta `mcps/` del monorepo (no bajo `services/`).
-6. Cablea OAuth con [MCP Auth](https://mcp-auth.dev/) (paquete Python `mcpauth`) — OAuth 2.1 / OIDC listo para usar en servidores MCP como resource server. No uses las helpers de auth integradas de FastMCP; usa MCP Auth para Protected Resource Metadata, validación de JWT bearer y scopes.
-7. Ubica el nodo del agente que hoy llama directamente al Incidents Manager — es el punto que vas a migrar para que consuma el nuevo MCP Server como cliente en lugar de llamar la API por fuera de él.
 
+Continúa sobre tu rama del Hito en el fork del monorepo de tu empresa, a partir de donde entregaste la Parte 2. Si todavía no tienes tu fork, créalo desde el monorepo base.
 
+1. Crea la rama `feature/rfp-approval-completion` a partir de tu rama de la Parte 2.
+2. Configura el checkpointer que corresponda a tu entorno (SQLite o Postgres — evita el checkpointer en memoria salvo en desarrollo local).
+3. Instala cualquier dependencia nueva con `uv add`.
+4. Revisa tu `company-BRIEFING.md` para conocer los aprobadores por departamento, los triggers de conflicto / árbitro fijo, y el formato del documento final.
 
 ---
 
-## 💻 Qué Debes Hacer
+## 💻 Lo Que Debes Hacer
 
-### Servidor MCP
-- [ ] Implementar el MCP Server en Python bajo `mcps/` usando FastMCP (u otro SDK MCP equivalente).
-- [ ] **Implementar autenticación OAuth con MCP Auth (`mcpauth`)** — monta Protected Resource Metadata, valida JWTs bearer contra un proveedor OAuth 2.1 / OIDC compatible y rechaza el acceso sin autenticar. **No** uses la capa OAuth/auth integrada de FastMCP en este proyecto.
-- [ ] Exponer al menos una tool para gestionar tickets del Incidents Manager (crear, actualizar y consultar estado).
-- [ ] Exponer al menos una tool de **solo consulta** sobre el inventario — cualquier intento de modificación debe ser rechazado explícitamente por el servidor, no simplemente omitido.
-- [ ] Documentar cada tool con nombre, descripción y esquema de entrada/salida suficientes para que un agente externo la descubra sin contexto humano adicional (`--help`-equivalente vía discovery de MCP).
+### Aprobación humana por departamento
+- [ ] Implementa un punto de interrupción (`interrupt`) antes de dar por aprobada la sección de cada departamento.
+- [ ] La interrupción debe pausar únicamente la rama del grafo correspondiente a ese departamento, sin bloquear el avance de los departamentos que ya están listos.
+- [ ] Persiste el estado del flujo con un checkpointer antes de cada interrupción, para que la ejecución sea reanudable.
+- [ ] Implementa el `resume` como un punto de entrada explícito del grafo — no como un reinicio del flujo completo.
+- [ ] Valida la respuesta humana al reanudar (aprobar, rechazar o solicitar cambios) antes de dejarla entrar de nuevo al grafo.
+- [ ] Extiende la interfaz de ticket construida en la Parte 1 (`uis/backoffice`) para que cada departamento pueda registrar su aprobación o rechazo.
 
-> ⚠️ **IMPORTANTE:** Los nombres de campos, IDs de entidad y valores de dominio en tu implementación deben coincidir con las APIs de incidencias e inventario que ya construiste. Una implementación genérica que ignore tus servicios existentes no será aceptada. Los cambios de estado deben pasar por el endpoint de ciclo de vida del Incidents Manager (`PATCH /api/incidents/{id}/status`), no por un `PATCH` genérico sobre el recurso de incidencia. Un MCP Server sin OAuth vía MCP Auth no será aceptado.
+### Guardrails y control de flujo
+- [ ] Define un límite máximo de iteraciones en cualquier ciclo restante entre departamentos.
+- [ ] Implementa un nodo de arbitraje explícito que dispare ante los triggers de conflicto de tu BRIEFING y resuelva con el árbitro fijo allí (humano nombrado o regla determinista — no freestyle de LLM entre agentes).
+- [ ] Registra en el estado, para cada ejecución de nodo, el agente, el input, el output y el timestamp (trazabilidad).
 
-### Autenticación y seguridad
-- [ ] Proteger el servidor con **OAuth** vía **MCP Auth** — ningún cliente sin access token válido puede listar ni invocar tools. Esto es obligatorio: el MCP Server no debe exponer herramientas de la compañía sin auth. Prefiere MCP Auth frente a la auth integrada de FastMCP para alinearte con la especificación de autorización de MCP (modo resource server, scopes, OIDC agnóstico al proveedor).
-- [ ] Aplicar el principio de mínimo privilegio: cada tool solo tiene acceso a los datos y operaciones que necesita para cumplir su función (enforce scopes con `required_scopes` de MCP Auth cuando aplique).
-- [ ] Definir y documentar los códigos de error y de salida esperados ante fallos de autenticación, autorización o validación (no un genérico "error").
-- [ ] Registrar en logs cada invocación de tool (qué tool, qué cliente, qué resultado) para trazabilidad.
+### Identidad del checkpointer
+- [ ] Haz namespacing del `thread_id` de cada ejecución del grafo por `ticket_id` (y por departamento si checkpointeas ramas por separado), p. ej. `rfp-{ticket_id}` o `rfp-{ticket_id}:{department}` — tickets concurrentes no deben compartir checkpoint.
 
-### Validación (MCP Playground)
-- [ ] Primero, prueba tu servidor MCP en **MCP Playground**. Desde **GitHub Codespaces**, expón/reenvía el puerto del servidor MCP (visibilidad pública) y pega la **URL reenviada de Codespaces** en Playground — `localhost` solo no funciona desde ese sitio. Conéctate y ejecuta al menos un flujo completo por cada tool expuesta.
-- [ ] Probar y documentar el comportamiento del servidor ante un intento de escritura sobre la tool de inventario (debe fallar de forma controlada y explicable).
+### Cierre del documento
+- [ ] Cuando todos los departamentos dan su aprobación, genera el documento final consolidando las secciones aprobadas.
+- [ ] Mientras alguna aprobación de departamento esté pendiente, pon el ticket en `esperando_aprobación`; cuando el documento final esté guardado, ponlo en `terminado` y déjalo accesible.
 
-### Migración del agente
-- [ ] Conectar el agente LangGraph que ya construiste al MCP Server usando `langchain-mcp-adapters`: reemplaza el nodo que llamaba directamente al Incidents Manager por tools cargadas desde el MCP Server.
-- [ ] Eliminar (o dejar explícitamente deprecada y sin uso) la implementación anterior de la tool directa — el agente no debe tener dos caminos posibles hacia el Incidents Manager.
-- [ ] Confirmar que el enrutamiento existente entre RAG y tools sigue funcionando igual que antes, ahora con el nuevo nodo cliente MCP en el lugar del anterior.
+### Revisión de extremo a extremo
+- [ ] Corre al menos una RFP de prueba a través de las tres partes completas (recepción → generación → aprobación y cierre) y confirma que los estados del ticket, los mensajes y los datos se mantengan consistentes de principio a fin.
+- [ ] Entrega una ruta E2E reproducible: fixture + script o test de integración que ejecute la Parte 3 con aprobaciones simuladas (`resume` programático / equivalente) — la revisión no debe depender solo de clicks irreproducibles en la UI.
+- [ ] Corrige cualquier salto, mensaje inconsistente o dato que se pierda en la transición entre partes.
 
+> ⚠️ **IMPORTANTE:** Los aprobadores por departamento, los triggers/árbitro de arbitraje y el formato del documento final deben coincidir con tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
+
+### Pruebas
+- [ ] Incluye pruebas unitarias en `tests/pipelines/` que cubran: interrupción y reanudación exitosa, límite de iteraciones alcanzado, y arbitraje ante desacuerdo.
+- [ ] Incluye un test (o aserción sobre el trace) que apruebe el departamento B mientras el departamento A sigue interrumpido — demuestra ramas paralelas, no paralelismo fingido en serie.
+- [ ] Incluye un test de integración / E2E o script con fixtures y resumes humanos simulados en el camino de la Parte 3 (idealmente Partes 1→3 con estado sembrado).
 
 ---
 
-## ✅ Qué Vamos a Evaluar
-- [ ] El servidor MCP vive bajo `mcps/`, levanta correctamente y expone sus tools mediante el mecanismo de discovery estándar de MCP.
-- [ ] Un cliente sin access token OAuth válido no puede listar ni ejecutar ninguna tool.
-- [ ] La tool de gestión de tickets crea, actualiza el estado vía `PATCH /api/incidents/{id}/status` y consulta contra el Incidents Manager real de la compañía.
-- [ ] La tool de inventario responde correctamente a consultas y rechaza explícitamente cualquier operación de escritura.
-- [ ] Cada tool tiene una descripción y un esquema claros, verificables desde el propio discovery del servidor sin leer el código fuente.
-- [ ] Los errores de autenticación, autorización y validación devuelven códigos y mensajes distintos entre sí.
-- [ ] Existe al menos un log por invocación de tool con cliente, tool y resultado.
-- [ ] El agente ya no llama al Incidents Manager de forma directa: toda interacción pasa por el MCP Server como cliente.
-- [ ] MCP Playground se usó con la **URL pública reenviada de Codespaces** (no localhost).
+## 🧭 Preguntas de Diseño
+- **¿Qué pasa si un departamento rechaza su sección después de la interrupción?** ¿El flujo vuelve al generador de la Parte 2 o requiere una nueva ejecución?
+- **¿Qué información mínima necesita ver un humano en el punto de aprobación para decidir con confianza, sin tener que releer todo el documento?**
+- **¿Cómo detectas los triggers de conflicto del BRIEFING en estado estructurado (no solo texto libre), para que el nodo de arbitraje sea real y no decorativo?**
+
+---
+
+## ✅ Lo Que Evaluaremos
+- [ ] El flujo se pausa correctamente antes de la aprobación de cada departamento y persiste su estado.
+- [ ] La pausa afecta solo la rama del departamento correspondiente — los demás pueden seguir sin bloquearse (probado con test/trace: aprobar B mientras A sigue interrumpido).
+- [ ] La ejecución se reanuda exactamente desde el punto de interrupción, sin reiniciar el flujo completo.
+- [ ] El `thread_id` está namespaced por ticket (y departamento si aplica); ejecuciones concurrentes no comparten checkpoint.
+- [ ] Existe un límite de iteraciones aplicado y verificable en el código, no solo mencionado.
+- [ ] El nodo de arbitraje dispara ante los triggers de conflicto del BRIEFING y resuelve con el árbitro fijo del BRIEFING (no freestyle de LLM).
+- [ ] Cada ejecución de nodo queda registrada con agente, input, output y timestamp.
+- [ ] El documento final se genera automáticamente solo cuando todos los departamentos han dado su aprobación.
+- [ ] El ticket usa `esperando_aprobación` mientras el HITL esté pendiente y `terminado` cuando el documento final sea accesible.
+- [ ] Existe una ruta E2E/fixture reproducible (script o test de integración con aprobaciones simuladas), no solo una demo manual en UI.
+- [ ] Una RFP de prueba puede recorrerse de principio a fin (Parte 1 a Parte 3) sin saltos de estado ni inconsistencias visibles entre partes.
+- [ ] Existen pruebas unitarias para la interrupción/reanudación, el límite de iteraciones, el arbitraje y la aprobación en paralelo bajo interrupt.
 
 ---
 
 ## 📦 Cómo Entregar
-Sigue el flujo estándar de entrega del monorepo: haz push de tu rama, abre un Pull Request hacia tu fork y describe en la descripción del PR qué transporte elegiste y por qué. Avisa a tu tech lead cuando el servidor esté listo para probarse desde un cliente MCP externo.
+Esta es la Parte 3 de 3 del Hito. Entrégala con su propio Pull Request.
+
+1. Haz commit y push de tu rama `feature/rfp-approval-completion`.
+2. Abre un Pull Request describiendo qué implementaste y cómo probarlo.
+3. Incluye en la descripción del PR un ejemplo completo: RFP de entrada, aprobación simulada por cada departamento, y el documento final generado — y enlaza el script/test de integración reproducible que ejecuta esas aprobaciones simuladas.
+4. Solicita revisión a tu tech lead.
+
+
+

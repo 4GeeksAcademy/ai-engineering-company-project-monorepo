@@ -10,7 +10,7 @@ import tempfile
 from fastapi.responses import FileResponse
 from services.api.routes import users, profiles, auth, inventory
 import csv
-from services.api.routes import suppliers, incidents, candidates, telemetry, tasks, knowledge, agent
+from services.api.routes import suppliers, incidents, candidates, telemetry, tasks, knowledge, agent, rfps
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from services.api.database import engine
@@ -119,6 +119,7 @@ app.include_router(reporting_router)
 app.include_router(tasks.router)
 app.include_router(knowledge.router)
 app.include_router(agent.router)
+app.include_router(rfps.router)
 
 latest_metrics = None
 
