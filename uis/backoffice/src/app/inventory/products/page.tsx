@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { inventoryService, Asset } from "@/lib/inventory";
-import { Package, ArrowDownToLine, ArrowUpFromLine, AlertCircle, CheckCircle2, XCircle, BarChart3 } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, AlertCircle, CheckCircle2, XCircle, BarChart3, FileText } from "lucide-react";
 import Link from "next/link";
 import styles from "./products.module.css";
 
@@ -47,24 +47,44 @@ export default function ProductsPage() {
             </div>
             <p className={styles.subtitle}>Gestión de stock de licencias y equipamiento (Nexova Solutions)</p>
           </div>
-          <Link
-            href="/reporting"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.6rem 1rem",
-              background: "#2563eb",
-              color: "#ffffff",
-              borderRadius: "8px",
-              textDecoration: "none",
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
-            }}
-          >
-            <BarChart3 size={16} /> Ver Panel de KPIs
-          </Link>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link
+              href="/rfps"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.6rem 1rem",
+                background: "#10b981",
+                color: "#0a0d12",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontWeight: 700,
+                fontSize: "0.875rem",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+              }}
+            >
+              <FileText size={16} /> Portal RFPs
+            </Link>
+            <Link
+              href="/reporting"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.6rem 1rem",
+                background: "#2563eb",
+                color: "#ffffff",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+              }}
+            >
+              <BarChart3 size={16} /> Ver Panel de KPIs
+            </Link>
+          </div>
         </div>
       </header>
 

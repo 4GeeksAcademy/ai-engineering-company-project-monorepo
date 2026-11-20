@@ -100,6 +100,9 @@ export default function KnowledgePage() {
           </div>
 
           <div className={styles.headerActions}>
+            <Link href="/rfps" className={styles.navLink}>
+              <FileText size={16} /> Portal RFPs
+            </Link>
             <Link href="/reporting" className={styles.navLink}>
               <TrendingUp size={16} /> Reporting Ejecutivo
             </Link>
