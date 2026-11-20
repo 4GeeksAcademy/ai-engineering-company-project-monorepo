@@ -74,3 +74,50 @@ class SynthesizerOutput(BaseModel):
     sales_summary: str
     conflicts_or_warnings: List[str] = Field(default_factory=list)
     handoff_payload: Dict[str, object] = Field(default_factory=dict)
+
+# --- Modelos de Evaluación y Borradores (Hito 9 · Parte 2) ---
+
+class ReadabilityEvaluation(BaseModel):
+    """Evaluación objetiva de legibilidad mediante métricas Flesch."""
+    passed: bool
+    flesch_reading_ease: float = 0.0
+    flesch_kincaid_grade: float = 0.0
+    feedback: Optional[str] = None
+
+
+class RelevanceEvaluation(BaseModel):
+    """Evaluación de pertinencia frente al alcance y aspectos clave de la RFP."""
+    passed: bool
+    covered_aspects: List[str] = Field(default_factory=list)
+    missing_aspects: List[str] = Field(default_factory=list)
+    feedback: Optional[str] = None
+
+
+class ComplianceEvaluation(BaseModel):
+    """Evaluación de cumplimiento estricto contra lineamientos de Nexova (§5)."""
+    passed: bool
+    rule_ids_checked: List[str] = Field(default_factory=list)
+    violations: List[str] = Field(default_factory=list)
+    feedback: Optional[str] = None
+
+
+class EvaluationResult(BaseModel):
+    """Resultado consolidado del ciclo evaluador para una sección departamental."""
+    department_id: DepartmentId
+    readability: ReadabilityEvaluation
+    relevance: RelevanceEvaluation
+    compliance: ComplianceEvaluation
+    overall_pass: bool
+    feedback_for_generator: str = ""
+    iteration: int = 1
+
+
+class DepartmentDraft(BaseModel):
+    """Borrador de la propuesta económica generado por el especialista del departamento."""
+    department_id: DepartmentId
+    department_name: str
+    owner_name: str
+    draft_content: str
+    iteration: int = 1
+    evaluation: Optional[EvaluationResult] = None
+    status: Literal["borrador_generado", "aprobado_evaluacion", "needs_human_review"] = "borrador_generado"

@@ -1,5 +1,21 @@
 // uis/backoffice/src/services/rfps.ts
 
+export interface EvaluationDetail {
+    passed: boolean;
+    feedback?: string | null;
+    [key: string]: unknown;
+}
+
+export interface EvaluationResultData {
+    department_id: string;
+    readability: EvaluationDetail;
+    relevance: EvaluationDetail;
+    compliance: EvaluationDetail;
+    overall_pass: boolean;
+    feedback_for_generator: string;
+    iteration: number;
+}
+
 export interface RFPDepartmentSection {
     id?: number | null;
     department_id: string;
@@ -7,6 +23,9 @@ export interface RFPDepartmentSection {
     owner_name: string;
     key_aspects: string[];
     open_questions: string[];
+    draft_content?: string | null;
+    evaluation_results?: EvaluationResultData | null;
+    approval_status?: "borrador_generado" | "aprobado_evaluacion" | "needs_human_review" | "reintentando" | string | null;
 }
 
 export interface RFPTicket {
@@ -14,7 +33,16 @@ export interface RFPTicket {
     rfp_id: string;
     filename: string;
     raw_pdf_path: string;
-    status: "analizando" | "descartado" | "analisis_completo" | "error" | string;
+    status:
+    | "analizando"
+    | "analisis_completo"
+    | "generando_borrador"
+    | "en_evaluacion"
+    | "needs_human_review"
+    | "listo_para_aprobacion"
+    | "descartado"
+    | "error"
+    | string;
     classification_reason?: string | null;
     client_name?: string | null;
     client_hq?: string | null;
@@ -82,6 +110,15 @@ class RFPService {
         });
 
         return this.handleResponse<RFPUploadResponse>(res, "Error al subir el PDF de la RFP");
+    }
+
+    async triggerGeneration(ticketId: string): Promise<{ ticket_id: string; status: string; message: string }> {
+        const res = await fetch(`/api/rfps/${encodeURIComponent(ticketId)}/generate`, {
+            method: "POST",
+            headers: this.getAuthHeaders(true),
+        });
+
+        return this.handleResponse(res, "Error al disparar la generación de propuesta");
     }
 
     async listTickets(): Promise<RFPTicket[]> {

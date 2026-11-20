@@ -1,21 +1,25 @@
 """
 data/pipelines/rfp_intake/graph.py
-Grafo LangGraph dedicado `rfp_intake` y runner con persistencia en SQLModel.
+Grafo LangGraph integrado (Recepción, Enrutamiento, Generación y Evaluación).
+Persistencia robusta en PostgreSQL/SQLModel.
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from langgraph.graph import END, StateGraph
-from sqlmodel import Session, delete
+from sqlmodel import Session, delete, select
 
 from data.pipelines.rfp_intake.nodes import (
     classifier_node,
+    draft_generation_node,
+    evaluation_node,
     ingest_node,
     orchestrator_node,
+    should_continue_generation_eval,
     synthesizer_node,
     workers_node,
 )
@@ -33,16 +37,22 @@ def _route_after_classifier(state: RFPIntakeState) -> str:
     return END
 
 
-def create_rfp_intake_graph():
-    """Construye y compila el grafo LangGraph independiente de CX."""
+def create_rfp_full_graph():
+    """Construye y compila el grafo completo de LangGraph (Partes 1 y 2)."""
     workflow = StateGraph(RFPIntakeState)
 
+    # Nodos Parte 1: Ingesta, Clasificación, Asignación y Síntesis
     workflow.add_node("ingest", ingest_node)
     workflow.add_node("classifier", classifier_node)
     workflow.add_node("orchestrator", orchestrator_node)
     workflow.add_node("workers", workers_node)
     workflow.add_node("synthesizer", synthesizer_node)
 
+    # Nodos Parte 2: Ciclo Generador-Evaluador
+    workflow.add_node("draft_generation", draft_generation_node)
+    workflow.add_node("evaluation", evaluation_node)
+
+    # Aristas y Puntos de Decisión
     workflow.set_entry_point("ingest")
     workflow.add_edge("ingest", "classifier")
     workflow.add_conditional_edges(
@@ -56,17 +66,48 @@ def create_rfp_intake_graph():
     workflow.add_edge("orchestrator", "workers")
     workflow.add_edge("workers", "synthesizer")
     workflow.add_edge("synthesizer", END)
+    workflow.add_edge("draft_generation", "evaluation")
+
+    # Bucle condicional de evaluación (reintenta o avanza a END)
+    workflow.add_conditional_edges(
+        "evaluation",
+        should_continue_generation_eval,
+        {
+            "draft_generation": "draft_generation",
+            END: END,
+        },
+    )
 
     return workflow.compile()
 
 
-rfp_intake_app = create_rfp_intake_graph()
+def create_rfp_generation_subgraph():
+    """Subgrafo enfocado exclusivamente en la Generación y Evaluación a partir del handoff."""
+    workflow = StateGraph(RFPIntakeState)
+    workflow.add_node("draft_generation", draft_generation_node)
+    workflow.add_node("evaluation", evaluation_node)
+
+    workflow.set_entry_point("draft_generation")
+    workflow.add_edge("draft_generation", "evaluation")
+    workflow.add_conditional_edges(
+        "evaluation",
+        should_continue_generation_eval,
+        {
+            "draft_generation": "draft_generation",
+            END: END,
+        },
+    )
+    return workflow.compile()
+
+
+rfp_intake_app = create_rfp_full_graph()
+rfp_generation_app = create_rfp_generation_subgraph()
 
 
 def run_rfp_intake_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any]:
     """
-    Ejecuta el grafo `rfp_intake` para un RFPTicket y persiste metadatos,
-    secciones departamentales y handoff_payload en PostgreSQL/SQLModel.
+    Parte 1: Ejecuta clasificación y enrutamiento departamental.
+    Persiste metadatos, secciones y handoff_payload con estado `analisis_completo`.
     """
     active_engine = db_engine or default_engine
 
@@ -82,6 +123,7 @@ def run_rfp_intake_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any]:
         }
 
     try:
+        # Ejecuta nodos hasta el synthesizer (Parte 1)
         result = rfp_intake_app.invoke(initial_state)
 
         with Session(active_engine) as session:
@@ -115,7 +157,7 @@ def run_rfp_intake_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any]:
             ticket.updated_at = datetime.now(timezone.utc).isoformat()
             session.add(ticket)
 
-            # Reemplaza secciones previas de este ticket (idempotencia)
+            # Persistencia de secciones departamentales con aspectos clave
             session.exec(
                 delete(RFPDepartmentSection).where(
                     RFPDepartmentSection.ticket_id == ticket.ticket_id
@@ -151,3 +193,102 @@ def run_rfp_intake_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any]:
                 session.add(ticket)
                 session.commit()
         return {"ticket_id": ticket_id, "status": "error", "error_detail": str(exc)}
+
+
+def run_rfp_generation_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any]:
+    """
+    Parte 2: Consume estrictamente el handoff de la Parte 1 (sin re-parsear el PDF).
+    Ejecuta el ciclo generador-evaluador y persiste borradores + evaluation_results.
+    """
+    active_engine = db_engine or default_engine
+
+    with Session(active_engine) as session:
+        ticket = session.get(RFPTicket, ticket_id)
+        if not ticket:
+            raise ValueError(f"RFPTicket {ticket_id} no encontrado")
+
+        sections = session.exec(
+            select(RFPDepartmentSection).where(RFPDepartmentSection.ticket_id == ticket_id)
+        ).all()
+
+        if not sections:
+            raise ValueError(f"No hay secciones departamentales registradas para el ticket {ticket_id}")
+
+        metadata = {
+            "client_name": ticket.client_name,
+            "client_hq": ticket.client_hq,
+            "currency": ticket.currency,
+            "scope": ticket.scope,
+            "deadline": ticket.deadline,
+            "budget_range": ticket.budget_range,
+        }
+
+        department_tasks: List[Dict[str, Any]] = []
+        for s in sections:
+            department_tasks.append({
+                "department_id": s.department_id,
+                "key_aspects": json.loads(s.key_aspects or "[]"),
+                "open_questions": json.loads(s.open_questions or "[]"),
+            })
+
+        initial_state: RFPIntakeState = {
+            "ticket_id": ticket.ticket_id,
+            "rfp_id": ticket.rfp_id,
+            "metadata": metadata,
+            "department_tasks": department_tasks,
+            "departments_needed": json.loads(ticket.departments_needed or "[]"),
+            "department_drafts": {},
+            "evaluation_results": {},
+            "iteration_counts": {},
+            "department_statuses": {},
+            "execution_trace": [],
+        }
+
+        # Actualiza el estado a generando_borrador antes de empezar
+        ticket.status = "generando_borrador"
+        ticket.updated_at = datetime.now(timezone.utc).isoformat()
+        session.add(ticket)
+        session.commit()
+
+    try:
+        result = rfp_generation_app.invoke(initial_state)
+
+        with Session(active_engine) as session:
+            ticket = session.get(RFPTicket, ticket_id)
+            sections = session.exec(
+                select(RFPDepartmentSection).where(RFPDepartmentSection.ticket_id == ticket_id)
+            ).all()
+
+            drafts = result.get("department_drafts", {})
+            evals = result.get("evaluation_results", {})
+            dept_statuses = result.get("department_statuses", {})
+
+            for sec in sections:
+                dept_draft = drafts.get(sec.department_id)
+                dept_eval = evals.get(sec.department_id)
+                if dept_draft:
+                    sec.draft_content = dept_draft.get("draft_content")
+                if dept_eval:
+                    sec.evaluation_results = json.dumps(dept_eval, ensure_ascii=False)
+                sec.approval_status = dept_statuses.get(sec.department_id, "borrador_generado")
+                session.add(sec)
+
+            ticket.status = result.get("status", "needs_human_review")
+            ticket.updated_at = datetime.now(timezone.utc).isoformat()
+            session.add(ticket)
+            session.commit()
+
+        return result
+
+    except Exception as exc:
+        logger.exception("Error en pipeline de generación para ticket %s", ticket_id)
+        with Session(active_engine) as session:
+            ticket = session.get(RFPTicket, ticket_id)
+            if ticket:
+                ticket.status = "error"
+                ticket.error_detail = str(exc)
+                ticket.updated_at = datetime.now(timezone.utc).isoformat()
+                session.add(ticket)
+                session.commit()
+        return {"ticket_id": ticket_id, "status": "error", "error_detail": str(exc)}
+        
