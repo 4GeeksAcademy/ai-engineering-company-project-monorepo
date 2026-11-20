@@ -1,185 +1,221 @@
-# Implementation Plan: Hito 9 (Parte 2 de 3) — Generación y Evaluación de Respuestas a RFPs
+# Implementation Plan: Sistemas en Tiempo Real — Notificaciones SSE (Parte 1 de 2)
 
-**Nivel de Complejidad:** Nivel 4 (Sistema Cognitivo / Agéntico y Estado Persistente)  
-**Rama de Trabajo:** `feature/rfp-response-generation`  
-**Documentos de Referencia:** `.github/STRATEGY.md`, `docs/nexova-rfp-BRIEFING.md`  
+**Nivel de Complejidad:** Nivel 3 (Arquitectura / Módulo Crítico — Streaming en tiempo real con Auth Guard y resiliencia)  
+**Rama de Trabajo:** `feature/sse-notifications`  
+**Documentos de Referencia:** `.github/STRATEGY.md`, `docs/nexova-rfp-BRIEFING.md`, `AGENTS.md`  
 
 ---
 
 ## 1. 📐 PACK 1: ARCHITECT (Ideación y Decisión Técnica)
 
 ### 1.1 Árbol de Pensamiento (Tree of Thoughts - ToT)
-Se evaluaron tres ramas arquitecturales para el ciclo generador-evaluador:
+Se evaluaron tres ramas arquitecturales para resolver la notificación en tiempo real de nuevos tickets de RFP:
 
-- **Rama A (Secuencial monolítica en un único LLM call):** El generador redacta y acto seguido se autoevalúa en la misma llamada.
-  - *Ventajas:* Implementación rápida.
-  - *Riesgos:* Sesgo de auto-aprobación del LLM (*sycophancy*), imposibilidad de correr evaluadores especializados en paralelo y mezcla de contextos. **Descartada.**
-- **Rama B (Multi-agente pesado con subagentes independientes en subprocesos):** Un proceso o subagente autónomo por cada evaluación y departamento.
-  - *Ventajas:* Aislamiento extremo.
-  - *Riesgos:* Sobrecarga innecesaria de latencia y llamadas IPC; fragilidad en la orquestación y mayor costo en CI/CD. **Descartada.**
-- **Rama C (Grafo LangGraph con Workers generadores paralelos y Evaluadores concurrentes aislados - Elegida):**
-  - Un subgrafo o nodo por departamento activo (`seleccion`, `capacitacion`, `soporte`).
-  - Tres evaluadores puros y concurrentes por departamento: **Legibilidad** (determinista con `py-readability-metrics`), **Pertinencia** (cobertura semántica de `key_aspects`), y **Cumplimiento** (matriz estricta de reglas de `company-BRIEFING.md`).
-  - Un nodo condensador que consolida el `EvaluationResult` estructurado y controla el bucle de feedback con límite de iteraciones (`max_iterations = 3`), pasando a `needs_human_review` si no aprueba.
+- **Rama A (Polling corto frecuente desde el frontend con `setInterval` cada 2-3s):**
+  - *Ventajas:* Implementación rápida en el frontend sin cambios profundos en el backend.
+  - *Riesgos:* Sobrecarga masiva de la base de datos y de FastAPI con peticiones HTTP repetitivas (99% de ellas sin cambios). Viola explícitamente el requerimiento de `STRATEGY.md` ("reemplazar el refresco manual con un flujo que empuje la notificación al frontend"). **Descartada.**
+- **Rama B (WebSockets bidireccionales con protocolo `ws://` / `wss://`):**
+  - *Ventajas:* Comunicación dúplex de bajísima latencia.
+  - *Riesgos:* Sobreingeniería para un requerimiento donde el tráfico es exclusivamente unidireccional (servidor a cliente). Los navegadores no soportan el envío nativo de cabeceras HTTP personalizadas (como `Authorization: Bearer <token>`) en el handshake estándar de `WebSocket` sin hacks en query params (vulnerable a fuga de tokens en logs). Complica proxies y balanceadores. **Descartada.**
+- **Rama C (Server-Sent Events con `fetch` + `ReadableStream` y Broadcaster en memoria - Elegida):**
+  - *Ventajas:*
+    1. Basado en HTTP/1.1 y HTTP/2 estándar (`text/event-stream`), compatible con proxies y cortafuegos.
+    2. Al consumirse en el frontend con `fetch` y `ReadableStreamDefaultReader` (en lugar de `EventSource` vanilla), permite adjuntar limpiamente la cabecera `Authorization: Bearer <JWT>`, cumpliendo el Auth Guard Standard.
+    3. Conexiones ligeras y no bloqueantes en FastAPI mediante generadores asíncronos (`asyncio.Queue`).
+    4. Soporte de reconexión con backoff progresivo y frames de keep-alive (`: ping\n\n`) para evitar cierres prematuros por inactividad.
 
 ---
 
-### 1.2 Análisis de los 3 Expertos
+### 1.2 Análisis del Panel de 3 Expertos
 
 #### 1. UX / Product Specialist
-- El ticket no debe morir nunca en un error opaco. Si una sección falla las evaluaciones tras agotar el límite, debe conservarse el último borrador junto con el desglose del fallo, marcando el ticket y la sección como `needs_human_review`.
-- En el Backoffice, el comercial de Ventas debe distinguir a simple vista las secciones aprobadas (badge verde) de aquellas provisionales que requieren intervención humana (badge ámbar con detalle del fallo).
+- **Feedback inmediato y no invasivo:** Cuando entra una nueva RFP, la pantalla del dashboard no debe parpadear ni forzar un refresco total. El nuevo ticket debe insertarse en la parte superior de la tabla de tickets con un badge visual temporal ("Nuevo" / "Recién llegado") y un toast informativo con el nombre del cliente y el estado inicial (`analizando`).
+- **Transparencia en el estado de red:** Se incorporará en el encabezado del panel un indicador discreto de conexión en tiempo real:
+  - 🟢 *En vivo* (conectado y escuchando stream).
+  - 🟡 *Reconectando (intento N)...* (en período de backoff tras corte de red).
+  - 🔴 *Desconectado* (si se agotan los reintentos o el usuario no está autenticado).
 
 #### 2. Dev Lead / Software Architect
-- **Contrato inmutable:** Se consume el handoff de la Parte 1 (`ticket_id`, metadatos, departamentos activos, `key_aspects` y `open_questions`). Prohibido re-parsear el PDF original.
-- **Concurrencia limpia:** Los evaluadores corren como funciones puras en paralelo mediante `ThreadPoolExecutor` dentro del nodo evaluador de cada departamento, devolviendo un objeto agregado `EvaluationResult` para evitar colisiones en el estado compartido.
-- **RAG Semántico Opcional:** El generador consulta la colección `nexova_knowledge` en Qdrant (si está disponible) para obtener tono institucional y políticas de reposición/SLAs antes de redactar.
+- **Desacoplamiento mediante Broadcaster (`services/api/sse_manager.py`):**
+  - El router de subida de tickets (`services/api/routes/rfps.py`) no debe saber nada sobre sockets HTTP o clientes web conectados. Simplemente invoca `await rfp_broadcaster.publish("rfp_ticket_created", payload)`.
+  - El broadcaster mantiene un set de colas `asyncio.Queue(maxsize=100)`. Si un suscriptor es lento y satura la cola, se descarta el mensaje más antiguo o se purga la conexión para evitar fugas de memoria (*leak*).
+- **Consumo con Stream Reader en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
+  - Encapsular la conexión en un hook limpio que devuelva `{ isConnected, reconnectingAttempt, lastEvent }`.
+  - Uso riguroso de `AbortController` para cancelar y cerrar el stream en el evento `cleanup` de `useEffect` (evitando conexiones fantasma al cambiar de ruta).
 
-#### 3. Security & Compliance Specialist
-- **Restricciones estrictas de Nexova (`docs/nexova-rfp-BRIEFING.md §5`):**
-  1. `RULE-WARRANTY`: Garantía de satisfacción estándar a 90 días obligatoria.
-  2. `RULE-CURRENCY`: Sede en España → EUR; Sede en Miami/EE. UU. → USD (según `client_hq`).
-  3. `RULE-TTC-MIN`: Búsqueda ejecutiva (Selección) no puede prometer cierre en < 15 días hábiles.
-  4. `RULE-SUPPORT-SLA`: Soporte outsourced debe explicitar SLA de respuesta de 24 horas.
-  5. `RULE-ANONYMIZATION`: Prohibido citar nombres de clientes reales sin anonimizar ("cliente del sector retail").
-- **Protección API:** Todo endpoint nuevo o extendido mantiene `Depends(get_current_user)`.
+#### 3. Security & Compliance Specialist (Auth Guard Standard)
+- **Protección obligatoria del endpoint:** `GET /api/rfps/stream` debe exigir `current_user: dict = Depends(get_current_user)`. Clientes no autenticados reciben inmediatamente `401 Unauthorized`.
+- **Cero exposición en URLs:** Prohibido aceptar tokens en la query string (`?token=...`). El JWT viaja exclusivamente en el header `Authorization: Bearer <token>`.
+- **Invariante de IA:** Esta entrega no ejecuta ni invoca ningún agente o modelo generativo. Es una capa pura de transporte reactivo.
 
 ---
 
-### 1.3 Threat Modeling (OWASP Top 10 for LLMs) & FMEA
+### 1.3 Threat Modeling (OWASP API Security) & FMEA
 
-| Amenaza / FMEA | Modo de Fallo | Severidad | Mitigación Técnica |
+| Amenaza / Modo de Fallo | Riesgo / Impacto | Severidad | Mitigación Técnica |
 | :--- | :--- | :--- | :--- |
-| **Bucle Infinito de Reintentos** | Generador no logra pasar evaluación y genera bucle infinito | Alta | Límite estricto de iteraciones (`iteration_count >= 3`). Al alcanzarse, transiciona forzosamente a `needs_human_review`. |
-| **Alucinación de Moneda / Slips** | Generador cotiza en USD para España o en EUR para Miami | Alta | Evaluador de Compliance valida `currency` vs `client_hq` mediante verificación programática determinista. |
-| **Colisión de Estado Concurrente** | Dos evaluadores sobreescriben la misma clave en el estado | Media | Evaluadores devuelven diccionarios aislados; el nodo consolida en `EvaluationResult` antes de escribir en el estado de LangGraph. |
-| **Pérdida de Borradores en DB** | Se descarta el borrador fallido dejando al comercial sin texto base | Media | La tabla `rfp_department_sections` persiste `draft_content` e `evaluation_results` en cada iteración. |
+| **Acceso no autorizado al stream** | Un atacante escucha en vivo las RFPs confidenciales de clientes. | Crítica | Auth Guard estricto con `Depends(get_current_user)` validando firma y expiración del JWT en el handshake del stream. |
+| **Cierre prematuro de conexión por proxies** | Proxies intermedios o Next.js cortan la conexión tras 30s de silencio. | Alta | Tarea periódica de keep-alive en FastAPI emitiendo comentarios SSE (`: ping\n\n`) cada 15 segundos. |
+| **Pérdida de eventos durante caída de red** | Una RFP llega mientras el cliente comercial sufre un microcorte de red. | Alta | Política de recuperación: al reconectar exitosamente, el cliente ejecuta un refetch ligero de la lista de tickets y deduplica por `ticket_id`. |
+| **Duplicación de tickets en la UI tras reconexión** | El mismo ticket aparece repetido dos veces en la tabla. | Media | Invariante en React: fusión de estado usando `Map<string, RFPTicket>` indexado por `ticket_id`. |
+| **Fuga de memoria por clientes desconectados bruscamente** | Clientes que cierran la pestaña dejan colas huérfanas en el backend. | Alta | Captura de `asyncio.CancelledError` y bloque `finally` en el endpoint SSE para desuscribir y limpiar la cola del cliente. |
 
 ---
 
 ## 2. 📝 PACK 2: PLANNER (Estructuración del Plan de Implementación)
 
-### 2.1 Contratos de Datos y Schemas Pydantic (`data/pipelines/rfp_intake/schemas.py`)
+### 2.1 Contratos de Datos y Schemas
 
-```python
-class ReadabilityEvaluation(BaseModel):
-    passed: bool
-    flesch_reading_ease: float
-    flesch_kincaid_grade: float
-    feedback: Optional[str] = None
+#### Formato Wire del Protocolo SSE
+El stream responderá con `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive` y `X-Accel-Buffering: no`.
 
-class RelevanceEvaluation(BaseModel):
-    passed: bool
-    covered_aspects: List[str]
-    missing_aspects: List[str]
-    feedback: Optional[str] = None
+**Frame de Keep-Alive:**
+```http
+: ping
 
-class ComplianceEvaluation(BaseModel):
-    passed: bool
-    rule_ids_checked: List[str]
-    violations: List[str]
-    feedback: Optional[str] = None
-
-class EvaluationResult(BaseModel):
-    department_id: str
-    readability: ReadabilityEvaluation
-    relevance: RelevanceEvaluation
-    compliance: ComplianceEvaluation
-    overall_pass: bool
-    feedback_for_generator: str
-    iteration: int
 ```
 
-### 2.2 Máquina de Estados e Invariantes
+**Frame de Evento (Creación de Ticket de RFP):**
+```http
+event: rfp_ticket_created
+data: {"ticket_id": "7f8b9c2a-...", "rfp_id": "RFP-...", "filename": "nexova-request-1.pdf", "status": "analizando", "client_name": null, "created_at": "2026-11-20T15:00:00Z"}
+
+```
+
+#### Payload del Evento en Python (`services/api/schemas.py`)
+```python
+class RFPTicketCreatedEvent(BaseModel):
+    ticket_id: str
+    rfp_id: str
+    filename: str
+    status: str = "analizando"
+    client_name: Optional[str] = None
+    created_at: str
+```
+
+---
+
+### 2.2 Diagrama de Secuencia y Máquina de Estados
 
 ```mermaid
-stateDiagram-v2
-    direction LR
-    [*] --> analisis_completo: Handoff Parte 1
-    analisis_completo --> generando_borrador: Inicia generación
-    generando_borrador --> en_evaluación: Secciones redactadas
-    en_evaluación --> generando_borrador: overall_pass == False & iter < 3 (con feedback)
-    en_evaluación --> needs_human_review: overall_pass == False & iter >= 3
-    en_evaluación --> listo_para_aprobacion: overall_pass == True (Todas las secciones)
-    needs_human_review --> HandoffParte3: Pasa con bandera de revisión humana
-    listo_para_aprobacion --> HandoffParte3: Pasa limpio a Parte 3
+sequenceDiagram
+    autonumber
+    actor Cliente as Backoffice (Next.js)
+    participant Auth as Auth Middleware (FastAPI)
+    participant StreamAPI as SSE Endpoint (/api/rfps/stream)
+    participant Broadcaster as SSEBroadcaster (Memoria)
+    participant UploadAPI as Upload Endpoint (/api/rfps/upload)
+
+    Cliente->>StreamAPI: GET /api/rfps/stream (Header Authorization: Bearer JWT)
+    StreamAPI->>Auth: Verifica token (get_current_user)
+    Auth-->>StreamAPI: Usuario autenticado (email, role)
+    StreamAPI->>Broadcaster: subscribe() -> asyncio.Queue
+    StreamAPI-->>Cliente: 200 OK (Content-Type: text/event-stream)
+    
+    loop Cada 15 segundos
+        StreamAPI-->>Cliente: : ping\n\n
+    end
+
+    Note over UploadAPI: Llega un nuevo PDF de RFP
+    UploadAPI->>UploadAPI: Persiste RFPTicket (status="analizando")
+    UploadAPI->>Broadcaster: publish("rfp_ticket_created", ticket_dict)
+    Broadcaster->>StreamAPI: Despacha payload a la cola del suscriptor
+    StreamAPI-->>Cliente: event: rfp_ticket_created\ndata: {...}\n\n
+    Cliente->>Cliente: Inserta en lista + Toast visual
 ```
 
-**Invariantes del Sistema:**
-1. Ninguna sección re-analiza el archivo PDF original.
-2. Cada departamento activo tiene un borrador independiente generado por su respectivo especialista.
-3. Si un departamento requiere 2 iteraciones y otro 1, no se bloquean mutuamente.
-4. El feedback devuelto al generador es específico, citando las reglas o aspectos que fallaron.
+---
+
+### 2.3 Respuestas Arquitectónicas a las Preguntas de Diseño (STRATEGY.md)
+
+1. **¿Si 2 personas del equipo comercial abren el dashboard al mismo tiempo vs 50 personas a la vez?**
+   - *Respuesta:* Cada conexión SSE cliente establece su propio canal HTTP y su propia cola asíncrona ligera (`asyncio.Queue`) gestionada por el `SSEBroadcaster`. No abren conexiones independientes a la base de datos ni ejecutan consultas periódicas. Para 50 usuarios, el costo de CPU y memoria en una instancia asíncrona de Uvicorn/FastAPI es prácticamente insignificante (~10-20 KB de memoria total).
+   - Si la aplicación creciera a cientos de comerciales distribuidos en un cluster de múltiples workers/contenedores Uvicorn, la capa intermedia en memoria se reemplazaría por un backend de pub/sub distribuido (Redis Pub/Sub o NATS), permitiendo que cualquier worker que reciba la subida publique el evento y todos los workers con clientes conectados lo propaguen a sus respectivos sockets.
+2. **¿Qué estrategia de recuperación se eligió para tickets registrados durante una desconexión y cómo se evitan duplicados?**
+   - *Respuesta:* Se eligió la estrategia **"Refetch al Reconectar + Deduplicación por Clave Primaria"**. Cuando el hook de React detecta que la conexión se restableció con éxito tras un corte, dispara inmediatamente `rfpService.listTickets()` para recuperar cualquier ticket creado durante el período de desconexión.
+   - En el frontend, el estado de tickets se consolida mediante una función de combinación indexada por `ticket_id` (usando un diccionario o `Map`), de forma que si un evento ya había llegado o llega durante la sincronización, jamás se duplica en la interfaz de usuario.
+3. **¿Por qué SSE es la herramienta correcta para este caso y no WebSockets? ¿En qué momento dejaría de serlo?**
+   - *Respuesta:* Las notificaciones de nuevas RFPs son un flujo estrictamente **unidireccional** (servidor hacia los dashboards de los comerciales). SSE es nativo de la capa HTTP, opera sobre HTTP/1.1 y HTTP/2 multiplexado, atraviesa sin problemas proxies corporativos y cortafuegos, y permite autenticación limpia enviando cabeceras `Authorization: Bearer <token>` mediante la API `fetch` del navegador. WebSockets añade complejidad innecesaria de handshake, protocolo de enmarcado dúplex y dificultad para pasar headers de autenticación estándar.
+   - *Cuándo dejaría de serlo:* SSE dejaría de ser la herramienta correcta si el flujo requiriese bidireccionalidad intensiva y de baja latencia en el mismo canal (por ejemplo, edición colaborativa concurrente del alcance de la propuesta entre Marcos y Javier, cursores compartidos, o un chat interactivo de feedback en tiempo real).
 
 ---
 
 ## 3. 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
 
 ### Componentes a Desarrollar:
-1. **Schemas (`data/pipelines/rfp_intake/schemas.py`):**
-   - Incorporar `EvaluationResult`, `ReadabilityEvaluation`, `RelevanceEvaluation`, `ComplianceEvaluation` y `SectionDraftPayload`.
-2. **Nodos de Generación y Evaluación (`data/pipelines/rfp_intake/nodes.py`):**
-   - `generate_department_section(metadata, task, feedback, iteration)`: Genera el borrador con políticas de Nexova (consultando RAG semántico si está disponible).
-   - `evaluate_readability(text)`: Evaluación de legibilidad usando `py-readability-metrics`.
-   - `evaluate_relevance(text, task_aspects)`: Evaluación de pertinencia respecto a los aspectos clave solicitados.
-   - `evaluate_compliance(text, metadata, dept_id)`: Evaluación rigurosa contra las 5 reglas de `company-BRIEFING.md §5`.
-   - `evaluate_section_parallel(...)`: Ejecuta los 3 evaluadores en paralelo y sintetiza `EvaluationResult`.
-3. **Ampliación del Grafo LangGraph (`data/pipelines/rfp_intake/graph.py`):**
-   - Integrar el ciclo condicional generador ⇄ evaluador con guardián de iteraciones (`max_iterations = 3`).
-   - Actualización de estados del ticket en PostgreSQL: `generando_borrador` → `en_evaluación` → `needs_human_review` (o `listo_para_aprobacion`).
-4. **Endpoints FastAPI (`services/api/routes/rfps.py`):**
-   - Exponer endpoints para disparar o consultar la generación de propuestas de un ticket ya clasificado.
-5. **Backoffice UI (`uis/backoffice/src/app/rfps/page.tsx`):**
-   - Visualización del borrador generado (`draft_content`), estado de evaluación (`overall_pass`), desglose de compliance y botón para disparar la generación si el ticket está en `analisis_completo`.
+
+1. **Gestor de Eventos SSE (`services/api/sse_manager.py`):**
+   - Clase `SSEBroadcaster` con soporte `subscribe()`, `unsubscribe()`, y `publish(event_name, data)`.
+   - Limpieza automática de colas saturadas o cerradas.
+2. **Endpoint SSE en FastAPI (`services/api/routes/rfps.py`):**
+   - `GET /api/rfps/stream`: Protegido con `Depends(get_current_user)`.
+   - Generador asíncrono con `request: Request`, comprobación periódica `await request.is_disconnected()` y `asyncio.wait_for(queue.get(), timeout=15.0)` para emitir latidos keep-alive (`: ping\n\n`) cada 15s y limpiar la cola en `finally`.
+   - Modificación de `POST /api/rfps/upload` para publicar el evento `rfp_ticket_created` en cuanto el ticket se guarda en la base de datos con estado `"analizando"`.
+3. **Hook de Notificaciones en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
+   - Implementación de lector de stream con `window.fetch` + `response.body.getReader()`.
+   - Búfer acumulativo de texto (`buffer += decoder.decode(chunk, { stream: true })`) procesando únicamente frames completos delimitados por `\n\n` (evita errores por fragmentación TCP).
+   - Inyección de cabecera `Authorization: Bearer ${token}` extraída de `localStorage`.
+   - Algoritmo de reconexión con backoff exponencial (`1000ms * 2^attempt`, máx. `30000ms`, más *jitter* aleatorio).
+   - Disparo de callback de recuperación al reconectar.
+4. **Integración en UI Dashboard (`uis/backoffice/src/app/rfps/page.tsx`):**
+   - Indicador de estado de conexión SSE en la cabecera del panel.
+   - Inserción reactiva de nuevos tickets y toast de notificación al recibir `rfp_ticket_created`.
+   - Deduplicación estricta de tickets por `ticket_id`.
+5. **Suite de Pruebas Automatizadas (`tests/api/test_rfp_sse.py`):**
+   - Test 1: Verificar rechazo `401 Unauthorized` si no hay JWT.
+   - Test 2: Verificar cabeceras `text/event-stream` y keep-alive `: ping\n\n`.
+   - Test 3: Verificar emisión y formato del evento `rfp_ticket_created` al subir un archivo o invocar el broadcaster.
 
 ---
 
-## 4. 🛡️ PACK 4: AUDITOR (Testing, Red Teaming y Protocolo Git)
+## 4. 🛡️ PACK 4: AUDITOR (Testing, Concurrencia y Protocolo Git)
 
-### 4.1 Suite de Pruebas Automatizadas (`tests/pipelines/test_rfp_generation.py`)
-- **Test 1: Generación exitosa y evaluación limpia:** Borrador completo que cumple con garantía de 90 días, moneda correcta, TTC ≥ 15 días y SLA de 24h (`overall_pass == True`).
-- **Test 2: Fallo de compliance por moneda incorrecta:** Sede en Madrid cotizada en USD → detecta violación `RULE-CURRENCY`.
-- **Test 3: Fallo de compliance por TTC menor a 15 días:** Búsqueda ejecutiva prometida en 10 días → detecta violación `RULE-TTC-MIN`.
-- **Test 4: Fallo de compliance por omisión de SLA 24h:** Sección de soporte que omite SLA → detecta violación `RULE-SUPPORT-SLA`.
-- **Test 5: Ciclo de reintentos con feedback:** El generador recibe el feedback de fallo y en la siguiente iteración autocorrige el texto.
-- **Test 6: Agotamiento de iteraciones y transición a `needs_human_review`:** Se fuerza fallo persistente; el ticket y la sección terminan en `needs_human_review` sin descartar el ticket.
+### 4.1 Verificaciones Automatizadas
+- Ejecución de tests unitarios y de integración con `pytest`:
+  `uv run pytest tests/api/test_rfp_sse.py -v`
+- Comprobación de no regresión en tests existentes:
+  `uv run pytest tests/pipelines/ -v`
+- Verificación de tipos y lint en el frontend:
+  `cd uis/backoffice && npm run build` (o `npx tsc --noEmit`)
+
+### 4.2 Protocolo de Control Git
+- ⚠️ **Regla Inviolable:** NUNCA realizar `git push` automático.
+- Al completar la verificación del plan y código, solicitar consentimiento explícito al usuario.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-### Fase 1: Schemas y Modelos de Datos
-- [ ] 1.1 Definir schemas Pydantic de evaluación en `data/pipelines/rfp_intake/schemas.py` (`ReadabilityEvaluation`, `RelevanceEvaluation`, `ComplianceEvaluation`, `EvaluationResult`).
-- [ ] 1.2 Verificar compatibilidad con los campos existentes de `RFPDepartmentSection` en `services/api/models.py`.
+### Fase 1: Arquitectura de Streaming en Backend (`services/`)
+- [ ] 1.1 Crear el gestor de eventos en memoria `services/api/sse_manager.py` (`SSEBroadcaster`).
+- [ ] 1.2 Implementar el endpoint `GET /api/rfps/stream` en `services/api/routes/rfps.py` con Auth Guard (`Depends(get_current_user)`).
+- [ ] 1.3 Incorporar generador de eventos con frames de keep-alive (`: ping\n\n`) cada 15 segundos y manejo de desconexión.
+- [ ] 1.4 Integrar la publicación de `rfp_ticket_created` en `POST /api/rfps/upload` al registrar el ticket.
 
-### Fase 2: Agentes Generadores y Evaluadores Paralelos
-- [ ] 2.1 Implementar agentes generadores por departamento en `data/pipelines/rfp_intake/nodes.py` con prompt institucional de Nexova.
-- [ ] 2.2 Implementar evaluador de legibilidad determinista (`py-readability-metrics`).
-- [ ] 2.3 Implementar evaluador de pertinencia (cobertura de `key_aspects`).
-- [ ] 2.4 Implementar evaluador de compliance anclado a las 5 reglas de `docs/nexova-rfp-BRIEFING.md §5`.
-- [ ] 2.5 Orquestar la evaluación paralela y consolidación en `EvaluationResult`.
+### Fase 2: Suite de Pruebas Automatizadas del Stream (`tests/`)
+- [ ] 2.1 Crear `tests/api/test_rfp_sse.py` usando `httpx.AsyncClient`.
+- [ ] 2.2 Probar rechazo sin autenticación (`401 Unauthorized`).
+- [ ] 2.3 Probar recepción del formato wire de SSE (`event: rfp_ticket_created` y payload estructurado con campos del briefing).
+- [ ] 2.4 Ejecutar suite con `uv run pytest tests/api/test_rfp_sse.py -v`.
 
-### Fase 3: Grafo LangGraph con Ciclo Generador-Evaluador y Límite de Iteraciones
-- [ ] 3.1 Añadir nodos y aristas condicionales en `data/pipelines/rfp_intake/graph.py`.
-- [ ] 3.2 Implementar lógica de bucle con inyección de feedback y límite de reintentos (máx 3).
-- [ ] 3.3 Gestionar transiciones de estado: `generando_borrador` → `en_evaluación` → `needs_human_review` (o aprobado).
-- [ ] 3.4 Persistir borradores y resultados de evaluación en PostgreSQL/SQLModel.
+### Fase 3: Cliente Frontend con Tolerancia a Fallos (`uis/backoffice/`)
+- [ ] 3.1 Implementar el hook `useRFPNotifications` en `uis/backoffice/src/hooks/useRFPNotifications.ts` con `fetch` y `ReadableStreamDefaultReader`.
+- [ ] 3.2 Implementar reconexión con backoff exponencial progresivo y cancelación por `AbortController`.
+- [ ] 3.3 Implementar estrategia de recuperación con refetch al reconectar y deduplicación por `ticket_id`.
+- [ ] 3.4 Conectar el hook en `uis/backoffice/src/app/rfps/page.tsx` con indicador visual de estado y actualización en tiempo real de la lista.
+- [ ] 3.5 Validar compilación TypeScript en frontend (`cd uis/backoffice && npx tsc --noEmit`).
 
-### Fase 4: Endpoints FastAPI y Soporte Backoffice
-- [ ] 4.1 Extender `services/api/routes/rfps.py` con endpoint para disparar generación sobre tickets en `analisis_completo`.
-- [ ] 4.2 Actualizar servicio frontend `uis/backoffice/src/services/rfps.ts` y componentes en `uis/backoffice/src/app/rfps/page.tsx` para visualizar borradores, badges de compliance y avisos de `needs_human_review`.
-- [ ] 4.3 Ejecutar verificación de tipos TypeScript (`cd uis/backoffice && npx tsc --noEmit`).
-
-### Fase 5: Suite de Tests Automatizados y Auditoría
-- [ ] 5.1 Crear `tests/pipelines/test_rfp_generation.py` con tests unitarios e integrados deterministas.
-- [ ] 5.2 Validar casos de éxito, fallo de legibilidad, fallo de pertinencia y fallos de compliance (`RULE-CURRENCY`, `RULE-TTC-MIN`, `RULE-SUPPORT-SLA`).
-- [ ] 5.3 Validar caso de límite agotado (`needs_human_review`).
-- [ ] 5.4 Ejecución completa de la suite con `uv run python -m pytest tests/pipelines/ -v`.
+### Fase 4: Auditoría de Seguridad y Verificación Pre-Push
+- [ ] 4.1 Auditar que no exista ninguna llamada a LLMs ni agentes en la solución de esta parte.
+- [ ] 4.2 Ejecutar pruebas de regresión globales del backend (`uv run pytest`).
+- [ ] 4.3 Solicitar confirmación explícita para control de versiones Git.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
-- **Tree of Thoughts (ToT):** Exploración y selección de la arquitectura desacoplada de evaluadores puros concurrentes frente a modelos monolíticos o procesos pesados.
-- **Análisis de 3 Expertos:** Perspectivas cruzadas de UX (claridad de `needs_human_review`), Arquitectura (aislamiento y consumo de handoff inmutable) y Seguridad/Compliance (matriz determinista de lineamientos de Nexova).
-- **Threat Modeling & FMEA:** Identificación y mitigación preventiva del riesgo de bucle infinito mediante contador de iteraciones estricto y salvaguarda de persistencia.
-- **Eval-Driven Development (EDD):** Diseño guiado por pruebas unitarias ancladas a las reglas del briefing antes de cerrar el código productivo.
+
+1. **Tree of Thoughts (ToT):** Evaluación comparativa formal entre Polling, WebSockets y SSE, ponderando seguridad de tokens, costo computacional y adecuación funcional.
+2. **Panel de 3 Expertos (UX, Dev, Sec):** Integración armónica de requerimientos de interfaz amigable (estados de conexión y toasts), arquitectura limpia (patrón pub/sub desacoplado con colas asíncronas) y cumplimiento estricto del Auth Guard Standard.
+3. **Threat Modeling & FMEA:** Identificación proactiva de riesgos críticos: fugas de memoria por clientes desconectados, cortes silenciosos por proxies y desincronización de eventos durante caídas de red.
+4. **Chain of Verification (CoVe):** Contrastación exhaustiva contra los modelos reales de `RFPTicket` y las funciones existentes en `rfps.py` y `rfps.ts`.
+5. **Test-Driven Refinement (TDD):** Planificación de pruebas específicas para validar el wire protocol de SSE antes de dar por cerrada la fase de backend.

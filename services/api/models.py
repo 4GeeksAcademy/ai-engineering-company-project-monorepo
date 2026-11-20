@@ -292,3 +292,22 @@ class RFPDepartmentSection(SQLModel, table=True):
     approval_status: Optional[str] = None
     approver: Optional[str] = None
     approved_at: Optional[str] = None
+
+
+class RFPFinalDocument(SQLModel, table=True):
+    __tablename__ = "rfp_final_documents"
+    __table_args__ = {"extend_existing": True}
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    ticket_id: str = Field(foreign_key="rfp_tickets.ticket_id", index=True, unique=True)
+    rfp_id: str
+    client_name: Optional[str] = None
+    client_hq: Optional[str] = None
+    currency: str = Field(default="EUR")
+    sections: str  # JSON list
+    markdown_content: str
+    arbitration_log: Optional[str] = None  # JSON list
+    trace_log: Optional[str] = None  # JSON list
+    generated_at: str = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )

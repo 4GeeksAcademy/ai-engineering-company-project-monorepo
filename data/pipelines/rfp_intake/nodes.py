@@ -10,24 +10,46 @@ Agentes separados del grafo `rfp_intake`:
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 import logging
 import os
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from langgraph.graph import END
+from langgraph.types import interrupt
 from data.pipelines.rfp_intake.ingest import compute_readability_metrics, convert_pdf_to_markdown
 from data.pipelines.rfp_intake.schemas import (
     NEXOVA_DEPARTMENTS,
+    ApprovalAction,
     ClassifierOutput,
+    ConflictTriggerResult,
     DepartmentId,
     DepartmentTask,
+    ExecutionTraceEntry,
+    FinalProposalDocument,
     OrchestratorOutput,
     RFPMetadata,
     WorkerOutput,
 )
-from data.pipelines.rfp_intake.state import RFPIntakeState
+from data.pipelines.rfp_intake.state import DepartmentApprovalBranchState, RFPIntakeState
 
 logger = logging.getLogger("nexova.rfp_nodes")
+
+
+def _make_trace_entry(
+    node: str,
+    agent: str,
+    input_summary: str,
+    output_summary: str,
+) -> Dict[str, Any]:
+    """Genera una entrada estructurada de trazabilidad con timestamp UTC."""
+    return ExecutionTraceEntry(
+        node=node,
+        agent=agent,
+        input_summary=input_summary[:240],
+        output_summary=output_summary[:240],
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    ).model_dump()
 
 
 def _extract_relevant_excerpts(markdown_text: str, keywords: tuple[str, ...]) -> List[str]:
@@ -45,10 +67,19 @@ def ingest_node(state: RFPIntakeState) -> Dict[str, Any]:
     trace = list(state.get("execution_trace", [])) + ["ingest"]
     markdown_text = state.get("markdown_text") or convert_pdf_to_markdown(state["raw_pdf_path"])
     metrics = compute_readability_metrics(markdown_text)
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="ingest",
+            agent="MarkItDownIngestor",
+            input_summary=f"pdf={state.get('raw_pdf_path', '')}",
+            output_summary=f"chars={len(markdown_text)}, flesch={metrics.get('flesch_reading_ease')}",
+        )
+    ]
     return {
         "markdown_text": markdown_text,
         "readability_metrics": metrics,
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -78,11 +109,12 @@ def classify_rfp_document(markdown_text: str) -> ClassifierOutput:
 
     lower = markdown_text.lower()
 
-    # Detección de pitches entrantes de proveedores (ej. nexova-request-3.pdf)
+        # Detección de pitches entrantes de proveedores (ej. nexova-request-3.pdf)
     vendor_pitch_markers = (
         "ofrecemos nuestro ats", "nuestra plataforma ats", "demo gratuita de nuestro software",
         "somos proveedores de", "nos gustaría presentarles nuestra herramienta", "vendor pitch",
         "agendar una demo de nuestro producto", "suscripción a nuestro software",
+        "our ats", "free demo of our software", "book a demo", "schedule a demo",
     )
     if any(m in lower for m in vendor_pitch_markers):
         return ClassifierOutput(
@@ -91,16 +123,24 @@ def classify_rfp_document(markdown_text: str) -> ClassifierOutput:
             reason="Documento identificado como pitch comercial de proveedor externo, no como RFP de cliente.",
         )
 
-    # Señales de solicitud de propuesta (formal o correo informal) para servicios de Nexova
+    # Señales de solicitud de propuesta (formal o correo informal en español o inglés)
     rfp_intent_markers = (
         "rfp", "request for proposal", "solicitud de propuesta", "propuesta económica",
         "cotización", "presupuesto", "necesitamos contratar", "buscamos un proveedor",
-        "equipo de soporte", "búsqueda ejecutiva", "mandos medios", "capacitación", "formación",
-        "headhunting", "outsourcing", "agentes de soporte",
+        "equipo de soporte", "búsqueda ejecutiva", "mandos medios", "posiciones",
+        "capacitación", "formación", "headhunting", "outsourcing", "agentes de soporte",
+        # Variantes en inglés / correo informal
+        "quote", "proposal", "pricing", "estimate", "we need", "looking for",
+        "looking to hire", "support team", "support agents", "customer support",
+        "agents", "positions", "24/7", "sla", "training", "leadership",
     )
     matches = sum(1 for m in rfp_intent_markers if m in lower)
     if matches >= 2:
-        fmt = "formal" if ("rfp" in lower or "request for proposal" in lower or "alcance" in lower) else "informal"
+        fmt = (
+            "formal"
+            if ("rfp" in lower or "request for proposal" in lower or "solicitud de propuesta" in lower or "alcance" in lower)
+            else "informal"
+        )
         return ClassifierOutput(
             is_valid_rfp=True,
             rfp_format=fmt,
@@ -117,12 +157,21 @@ def classify_rfp_document(markdown_text: str) -> ClassifierOutput:
 def classifier_node(state: RFPIntakeState) -> Dict[str, Any]:
     trace = list(state.get("execution_trace", [])) + ["classifier"]
     res = classify_rfp_document(state.get("markdown_text", ""))
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="classifier",
+            agent="TriageClassifierAgent",
+            input_summary=f"markdown_chars={len(state.get('markdown_text', ''))}",
+            output_summary=f"valid={res.is_valid_rfp}, format={res.rfp_format}",
+        )
+    ]
     return {
         "is_valid_rfp": res.is_valid_rfp,
         "rfp_format": res.rfp_format,
         "classification_reason": res.reason,
         "status": "analizando" if res.is_valid_rfp else "descartado",
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -162,7 +211,7 @@ def orchestrate_rfp_decomposition(markdown_text: str) -> OrchestratorOutput:
     currency = "USD" if hq == "Miami" else "EUR"
 
     client_name = "Cliente RFP"
-    client_match = re.search(r"(?:cliente|empresa|de|from)\s*[:\-]\s*([^\n]+)", markdown_text, re.IGNORECASE)
+    client_match = re.search(r"\b(?:cliente|empresa|de|from)\s*[:\-]\s*([^\n]+)", markdown_text, re.IGNORECASE)
     if client_match:
         client_name = client_match.group(1).strip()[:80]
     elif "vantex" in lower:
@@ -175,9 +224,20 @@ def orchestrate_rfp_decomposition(markdown_text: str) -> OrchestratorOutput:
     services: List[str] = []
 
     dept_keywords = {
-        "seleccion": ("selección", "seleccion", "headhunting", "búsqueda ejecutiva", "mandos", "roles", "vacantes", "contratación"),
-        "capacitacion": ("capacitación", "capacitacion", "formación", "formacion", "training", "liderazgo", "programa", "taller"),
-        "soporte": ("soporte", "support", "helpdesk", "agentes", "24/7", "turnos", "sla", "outsourcing de atención"),
+        "seleccion": (
+            "selección", "seleccion", "headhunting", "búsqueda ejecutiva", "mandos",
+            "posiciones", "positions", "roles", "vacantes", "contratación",
+            "hiring", "hire", "recruit", "recruitment", "executive search", "managers",
+        ),
+        "capacitacion": (
+            "capacitación", "capacitacion", "formación", "formacion", "training",
+            "liderazgo", "leadership", "programa", "taller", "workshop", "coaching",
+        ),
+        "soporte": (
+            "soporte", "support", "support agents", "customer support", "customer service",
+            "helpdesk", "agentes", "agents", "24/7", "24x7", "turnos", "sla",
+            "outsourcing de atención", "outsourced",
+        ),
     }
 
     for dept_id, kws in dept_keywords.items():
@@ -209,12 +269,21 @@ def orchestrate_rfp_decomposition(markdown_text: str) -> OrchestratorOutput:
 def orchestrator_node(state: RFPIntakeState) -> Dict[str, Any]:
     trace = list(state.get("execution_trace", [])) + ["orchestrator"]
     plan = orchestrate_rfp_decomposition(state.get("markdown_text", ""))
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="orchestrator",
+            agent="RFPOrchestratorAgent",
+            input_summary=f"format={state.get('rfp_format', '')}",
+            output_summary=f"depts={plan.departments_needed}, currency={plan.metadata.currency}",
+        )
+    ]
     return {
         "metadata": plan.metadata.model_dump(),
         "departments_needed": plan.departments_needed,
         "department_tasks": [t.model_dump() for t in plan.tasks],
         "unmapped_departments": plan.unmapped_departments,
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -256,21 +325,24 @@ def run_department_worker(metadata: Dict[str, Any], task: Dict[str, Any]) -> Wor
 
     key_aspects: List[str] = []
     open_questions: List[str] = []
-    numbers = re.findall(r"\b\d+\s+(?:mandos|roles|puestos|agentes|personas|horas|semanas|días|meses|participantes)\b", excerpts_text, re.IGNORECASE)
+    numbers = re.findall(
+        r"\b\d+\s+(?:[a-záéíóúñ]+\s+)?(?:posiciones|positions|mandos|roles|puestos|vacantes|plazas|agentes|agents|personas|people|participantes|participants|candidatos|candidates|horas|hours|semanas|weeks|d[ií]as|days|meses|months)\b",
+        excerpts_text,
+        re.IGNORECASE,
+    )
     if numbers:
         key_aspects.append(f"Volúmenes/plazos detectados en RFP: {', '.join(dict.fromkeys(numbers))}.")
     else:
         open_questions.append(f"Confirmar con el cliente el volumen exacto y plazos para {dept_info['department_name']}.")
-
     if dept_id == "seleccion":
         key_aspects.append("Revisar perfiles requeridos y validar ventana mínima de cierre (>= 15 días hábiles).")
     elif dept_id == "capacitacion":
         key_aspects.append("Definir programa formativo, modalidad (presencial/remota) y calendario de cohortes.")
-        if "modalidad" not in excerpts_text.lower() and "presencial" not in excerpts_text.lower() and "remoto" not in excerpts_text.lower():
+        if not any(m in excerpts_text.lower() for m in ("modalidad", "presencial", "remoto", "remota", "online", "híbrida", "in-person", "remote", "hybrid")):
             open_questions.append("Confirmar modalidad de impartición (presencial, online o híbrida).")
     elif dept_id == "soporte":
         key_aspects.append("Dimensionar turnos de atención y validar cumplimiento del SLA obligatorio de 24h.")
-        if "24/7" in excerpts_text.lower():
+        if "24/7" in excerpts_text.lower() or "24x7" in excerpts_text.lower():
             key_aspects.append("Cobertura solicitada: 24/7.")
 
     return WorkerOutput(
@@ -288,14 +360,29 @@ def workers_node(state: RFPIntakeState) -> Dict[str, Any]:
     tasks = state.get("department_tasks", [])
 
     if not tasks:
-        return {"worker_results": [], "execution_trace": trace}
+        return {
+            "worker_results": [],
+            "execution_trace": trace,
+            "trace_entries": list(state.get("trace_entries", []))
+            + [_make_trace_entry("workers", "DepartmentWorkers", "tasks=0", "results=0")],
+        }
 
     with ThreadPoolExecutor(max_workers=len(tasks)) as pool:
         results = list(pool.map(lambda t: run_department_worker(metadata, t).model_dump(), tasks))
 
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="workers",
+            agent="DepartmentWorkers",
+            input_summary=f"tasks={[t.get('department_id') for t in tasks]}",
+            output_summary=f"completed={[r.get('department_id') for r in results]}",
+        )
+    ]
+
     return {
         "worker_results": results,
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -342,11 +429,21 @@ def synthesizer_node(state: RFPIntakeState) -> Dict[str, Any]:
         "workstreams": worker_results,
     }
 
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="synthesizer",
+            agent="HandoffSynthesizer",
+            input_summary=f"workers={len(worker_results)}",
+            output_summary=f"status=analisis_completo, depts={state.get('departments_needed', [])}",
+        )
+    ]
+
     return {
         "synthesizer_summary": "\n".join(lines),
         "handoff_payload": handoff_payload,
         "status": "analisis_completo",
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 # ===========================================================================
@@ -636,12 +733,22 @@ def draft_generation_node(state: RFPIntakeState) -> Dict[str, Any]:
         current_drafts[dept_id] = draft.model_dump()
         dept_statuses[dept_id] = "borrador_generado"
 
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="draft_generation",
+            agent="DepartmentDraftGenerators",
+            input_summary=f"tasks={[t.get('department_id') for t in tasks_to_generate]}",
+            output_summary=f"generated={list(current_drafts.keys())}, iterations={iteration_counts}",
+        )
+    ]
+
     return {
         "department_drafts": current_drafts,
         "iteration_counts": iteration_counts,
         "department_statuses": dept_statuses,
         "status": "generando_borrador",
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -693,11 +800,21 @@ def evaluation_node(state: RFPIntakeState) -> Dict[str, Any]:
     else:
         global_status = "listo_para_aprobacion"
 
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="evaluation",
+            agent="ParallelEvaluators(Readability+Relevance+Compliance)",
+            input_summary=f"drafts={[d.department_id for d in eval_tasks]}",
+            output_summary=f"status={global_status}, dept_statuses={dept_statuses}",
+        )
+    ]
+
     return {
         "evaluation_results": evaluation_results,
         "department_statuses": dept_statuses,
         "status": global_status,
         "execution_trace": trace,
+        "trace_entries": trace_entries,
     }
 
 
@@ -711,3 +828,561 @@ def should_continue_generation_eval(state: RFPIntakeState) -> str:
     if any(status == "reintentando" for status in dept_statuses.values()):
         return "draft_generation"
     return END
+
+
+# ===========================================================================
+# Hito 9 · Parte 3: Aprobación Humana (HITL), Arbitraje Fijo y Cierre Final
+# ===========================================================================
+
+MAX_APPROVAL_ITERATIONS = 3
+
+
+def validate_human_approval_input(
+    raw_input: Any,
+    department_id: DepartmentId,
+) -> ApprovalAction:
+    """
+    Valida estrictamente la respuesta humana recibida al reanudar un `interrupt`
+    antes de permitir que entre de nuevo al grafo.
+    """
+    if not isinstance(raw_input, dict):
+        raise ValueError("La respuesta humana debe ser un diccionario con 'decision'.")
+
+    decision = raw_input.get("decision")
+    if decision not in ("approve", "reject", "request_changes"):
+        raise ValueError(
+            f"Decisión humana inválida '{decision}'. Debe ser 'approve', 'reject' o 'request_changes'."
+        )
+
+    default_owner = NEXOVA_DEPARTMENTS[department_id]["owner_name"]
+    approver_name = str(raw_input.get("approver_name") or default_owner).strip() or default_owner
+    comments_raw = raw_input.get("comments")
+    comments = str(comments_raw).strip() if comments_raw else None
+
+    return ApprovalAction(
+        department_id=department_id,
+        decision=decision,
+        approver_name=approver_name,
+        comments=comments,
+    )
+
+
+def prepare_department_approval_node(state: DepartmentApprovalBranchState) -> Dict[str, Any]:
+    """Prepara la vista ejecutiva mínima del departamento antes del punto de interrupción."""
+    dept_id = state["department_id"]
+    owner_name = NEXOVA_DEPARTMENTS[dept_id]["owner_name"]  # type: ignore[index]
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node=f"prepare_approval:{dept_id}",
+            agent="ApprovalBranchCoordinator",
+            input_summary=f"ticket={state.get('ticket_id')}, dept={dept_id}",
+            output_summary=f"status=esperando_aprobación, owner={owner_name}",
+        )
+    ]
+    return {
+        "owner_name": owner_name,
+        "approval_status": "esperando_aprobación",
+        "approval_iteration": state.get("approval_iteration", 0),
+        "trace_entries": trace_entries,
+    }
+
+
+def department_human_approval_node(state: DepartmentApprovalBranchState) -> Dict[str, Any]:
+    """
+    Punto de interrupción Human-in-the-Loop (HITL) acotado al departamento.
+    Pausa solo esta rama guardando estado en el checkpointer hasta recibir Command(resume=...).
+    """
+    dept_id: DepartmentId = state["department_id"]  # type: ignore[assignment]
+    owner_name = state.get("owner_name") or NEXOVA_DEPARTMENTS[dept_id]["owner_name"]
+    current_iter = int(state.get("approval_iteration", 0))
+
+    interrupt_payload = {
+        "ticket_id": state.get("ticket_id"),
+        "rfp_id": state.get("rfp_id"),
+        "department_id": dept_id,
+        "department_name": state.get("department_name") or NEXOVA_DEPARTMENTS[dept_id]["department_name"],
+        "approver_required": owner_name,
+        "key_aspects": state.get("key_aspects", []),
+        "draft_content": state.get("draft_content", ""),
+        "evaluation": state.get("evaluation", {}),
+        "approval_iteration": current_iter,
+    }
+
+    raw_response = interrupt(interrupt_payload)
+    validated = validate_human_approval_input(raw_response, dept_id)
+
+    trace_entries = list(state.get("trace_entries", []))
+    if validated.decision == "approve":
+        trace_entries.append(
+            _make_trace_entry(
+                node=f"human_approval:{dept_id}",
+                agent=f"HumanApprover({validated.approver_name})",
+                input_summary=f"iter={current_iter}, draft_len={len(state.get('draft_content', ''))}",
+                output_summary=f"decision=approve, status=approved",
+            )
+        )
+        return {
+            "approval_status": "approved",
+            "approver": validated.approver_name,
+            "approved_at": validated.timestamp,
+            "comments": validated.comments,
+            "trace_entries": trace_entries,
+        }
+
+    next_iter = current_iter + 1
+    if next_iter >= MAX_APPROVAL_ITERATIONS:
+        final_branch_status = "needs_human_review" if validated.decision == "request_changes" else "rejected"
+        trace_entries.append(
+            _make_trace_entry(
+                node=f"human_approval:{dept_id}",
+                agent=f"HumanApprover({validated.approver_name})",
+                input_summary=f"iter={next_iter}/{MAX_APPROVAL_ITERATIONS}",
+                output_summary=f"decision={validated.decision}, limit_reached -> {final_branch_status}",
+            )
+        )
+        return {
+            "approval_status": final_branch_status,
+            "approver": validated.approver_name,
+            "approved_at": validated.timestamp,
+            "comments": validated.comments,
+            "approval_iteration": next_iter,
+            "trace_entries": trace_entries,
+        }
+
+    next_status = "request_changes" if validated.decision == "request_changes" else "rejected"
+    trace_entries.append(
+        _make_trace_entry(
+            node=f"human_approval:{dept_id}",
+            agent=f"HumanApprover({validated.approver_name})",
+            input_summary=f"iter={next_iter}",
+            output_summary=f"decision={validated.decision}, status={next_status}",
+        )
+    )
+    return {
+        "approval_status": next_status,
+        "approver": validated.approver_name,
+        "approved_at": None,
+        "comments": validated.comments,
+        "approval_iteration": next_iter,
+        "trace_entries": trace_entries,
+    }
+
+
+def department_regenerate_on_rejection_node(state: DepartmentApprovalBranchState) -> Dict[str, Any]:
+    """
+    Cuando un responsable humano solicita cambios tras el interrupt, regenera
+    únicamente la sección de ese departamento aplicando el feedback recibido.
+    """
+    dept_id: DepartmentId = state["department_id"]  # type: ignore[assignment]
+    metadata = state.get("metadata", {})
+    key_aspects = state.get("key_aspects", [])
+    feedback = state.get("comments") or "Ajustar alcance y redacción según revisión humana."
+    next_iter = int(state.get("approval_iteration", 1)) + 1
+
+    task = {
+        "department_id": dept_id,
+        "key_aspects": key_aspects,
+    }
+    new_draft = generate_department_draft(metadata, task, feedback=feedback, iteration=next_iter)
+    new_eval = evaluate_section_parallel(new_draft, metadata, key_aspects)
+
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node=f"regenerate_on_rejection:{dept_id}",
+            agent=f"DepartmentGenerator({dept_id})",
+            input_summary=f"feedback={feedback[:120]}",
+            output_summary=f"regenerated_iter={next_iter}, eval_pass={new_eval.overall_pass}",
+        )
+    ]
+
+    return {
+        "draft_content": new_draft.draft_content,
+        "evaluation": new_eval.model_dump(),
+        "approval_status": "esperando_aprobación",
+        "trace_entries": trace_entries,
+    }
+
+
+def route_after_human_approval(state: DepartmentApprovalBranchState) -> str:
+    """Enruta la rama tras la respuesta humana validada."""
+    status = state.get("approval_status", "")
+    iteration = int(state.get("approval_iteration", 0))
+    if status == "request_changes" and iteration < MAX_APPROVAL_ITERATIONS:
+        return "regenerate_on_rejection"
+    return END
+
+
+# ---------------------------------------------------------------------------
+# Nodo de Arbitraje Determinista Conectado a Triggers de BRIEFING §7
+# ---------------------------------------------------------------------------
+
+def detect_conflict_triggers(
+    sections_by_dept: Dict[str, Dict[str, Any]],
+    metadata: Dict[str, Any],
+    arbitration_iterations: int = 0,
+) -> List[ConflictTriggerResult]:
+    """
+    Detecta los 3 triggers de conflicto de docs/nexova-rfp-BRIEFING.md §7 sobre
+    estado estructurado (sin votación libre entre LLMs).
+    """
+    results: List[ConflictTriggerResult] = []
+    client_hq = str(metadata.get("client_hq") or "España")
+    expected_currency = "USD" if any(k in client_hq.lower() for k in ("miami", "us", "ee. uu.", "usa")) else "EUR"
+
+    # 1. Trigger: ttc-vs-training-window
+    has_sel = "seleccion" in sections_by_dept
+    has_cap = "capacitacion" in sections_by_dept
+    ttc_days = metadata.get("ttc_days")
+    training_start_days = metadata.get("training_start_days")
+    explicit_overlap = bool(metadata.get("training_window_overlap", False))
+
+    sel_text = str(sections_by_dept.get("seleccion", {}).get("draft_content", "") or "")
+    cap_text = str(sections_by_dept.get("capacitacion", {}).get("draft_content", "") or "")
+
+    if ttc_days is None:
+        ttc_match = re.search(r"(\d+)\s*d[ií]as\s*h[aá]biles", sel_text, re.IGNORECASE)
+        if ttc_match:
+            ttc_days = int(ttc_match.group(1))
+    if training_start_days is None:
+        cap_match = re.search(r"inicio\s*(?:en|:)?\s*(\d+)\s*d[ií]as", cap_text, re.IGNORECASE)
+        if cap_match:
+            training_start_days = int(cap_match.group(1))
+
+    ttc_conflict = False
+    ttc_details = "Sin solapamiento entre cierre de selección y ventana de capacitación."
+    if has_sel and has_cap:
+        if explicit_overlap:
+            ttc_conflict = True
+            ttc_details = "Solapamiento explícito marcado en estado estructurado (training_window_overlap=True)."
+        elif ttc_days is not None and int(ttc_days) < 15:
+            ttc_conflict = True
+            ttc_details = f"Tiempo de cierre en selección ({ttc_days} días hábiles) menor al mínimo realista de 15 días."
+        elif (
+            ttc_days is not None
+            and training_start_days is not None
+            and int(training_start_days) < int(ttc_days)
+        ):
+            ttc_conflict = True
+            ttc_details = (
+                f"Capacitación inicia en {training_start_days} días antes del cierre de selección ({ttc_days} días)."
+            )
+
+    results.append(
+        ConflictTriggerResult(
+            trigger_id="ttc-vs-training-window",
+            detected=ttc_conflict,
+            arbitrator="Marcos Ibáñez (Director de Ventas)",
+            resolution_rule=(
+                "Secuenciar entregas; forzar request_changes para que la formación no empiece "
+                "antes de un cierre realista (>=15 días hábiles en búsqueda ejecutiva)."
+            ),
+            applied_action=(
+                "sequenced_and_requested_changes" if ttc_conflict else "none"
+            ),
+            details=ttc_details,
+        )
+    )
+
+    # 2. Trigger: support-sla-missing
+    has_sup = "soporte" in sections_by_dept
+    sup_sec = sections_by_dept.get("soporte", {})
+    sup_text = str(sup_sec.get("draft_content", "") or "")
+    staffing_conflict = bool(metadata.get("staffing_vs_sla_conflict", False))
+    sla_missing = False
+    sla_details = "SLA de respuesta 24h verificado en sección de soporte."
+
+    if has_sup:
+        has_24h = bool(re.search(r"\b24\s*(?:h|hs|horas|hours)\b", sup_text, re.IGNORECASE))
+        if not has_24h or staffing_conflict:
+            sla_missing = True
+            sla_details = (
+                "Contradicción estructurada staffing vs SLA 24h."
+                if staffing_conflict
+                else "La sección activa de soporte omite el SLA obligatorio de respuesta de 24 horas (§5)."
+            )
+
+    results.append(
+        ConflictTriggerResult(
+            trigger_id="support-sla-missing",
+            detected=sla_missing,
+            arbitrator=(
+                "Marcos Ibáñez (Director de Ventas)"
+                if staffing_conflict
+                else "Roberto Díaz (Customer Support)"
+            ),
+            resolution_rule=(
+                "Bloquear aprobación hasta que el SLA 24h sea explícito; revisar headcount si el SLA es inviable."
+            ),
+            applied_action=(
+                "blocked_for_headcount_review"
+                if staffing_conflict
+                else ("blocked_until_sla_24h_explicit" if sla_missing else "none")
+            ),
+            details=sla_details,
+        )
+    )
+
+    # 3. Trigger: currency-mismatch
+    section_currencies = set()
+    wrong_currency_depts: List[str] = []
+    other_currency = "EUR" if expected_currency == "USD" else "USD"
+
+    meta_curr = metadata.get("currency")
+    if meta_curr and meta_curr != expected_currency:
+        wrong_currency_depts.append("metadata")
+        section_currencies.add(str(meta_curr))
+
+    for dept_id, sec_data in sections_by_dept.items():
+        sec_curr = sec_data.get("currency")
+        if sec_curr:
+            section_currencies.add(str(sec_curr))
+            if sec_curr != expected_currency:
+                wrong_currency_depts.append(dept_id)
+        draft_txt = str(sec_data.get("draft_content", "") or "")
+        if other_currency in draft_txt and expected_currency not in draft_txt:
+            wrong_currency_depts.append(dept_id)
+            section_currencies.add(other_currency)
+        elif expected_currency in draft_txt:
+            section_currencies.add(expected_currency)
+
+    curr_conflict = len(section_currencies) > 1 or len(wrong_currency_depts) > 0
+    if curr_conflict:
+        curr_action = (
+            "rejected_after_iteration_limit"
+            if arbitration_iterations >= MAX_APPROVAL_ITERATIONS
+            else f"rewritten_to_{expected_currency}"
+        )
+        curr_details = (
+            f"Discrepancia detectada ({sorted(section_currencies)}) frente a sede '{client_hq}' -> {expected_currency}."
+        )
+    else:
+        curr_action = "none"
+        curr_details = f"Moneda consistente ({expected_currency}) según sede '{client_hq}'."
+
+    results.append(
+        ConflictTriggerResult(
+            trigger_id="currency-mismatch",
+            detected=curr_conflict,
+            arbitrator="Marcos Ibáñez (Director de Ventas)",
+            resolution_rule="Reescribir a la moneda de la sede; rechazar si no se resuelve tras el límite de iteraciones.",
+            applied_action=curr_action,
+            details=curr_details,
+        )
+    )
+
+    return results
+
+
+def arbitration_node(state: RFPIntakeState) -> Dict[str, Any]:
+    """
+    Nodo de arbitraje explícito (§7):
+    Evalúa los 3 triggers en estado estructurado y aplica resoluciones del árbitro fijo.
+    """
+    metadata = dict(state.get("metadata", {}))
+    drafts = dict(state.get("department_drafts", {}))
+    approvals = dict(state.get("department_approvals", {}))
+    arb_iter = int(state.get("arbitration_iterations", 0)) + 1
+
+    # Combina borradores con flags estructurados de sección
+    sections_by_dept: Dict[str, Dict[str, Any]] = {}
+    for dept_id, draft_dict in drafts.items():
+        merged = dict(draft_dict)
+        if dept_id in approvals:
+            merged.update(approvals[dept_id])
+        sections_by_dept[dept_id] = merged
+
+    triggers = detect_conflict_triggers(sections_by_dept, metadata, arbitration_iterations=arb_iter - 1)
+    client_hq = str(metadata.get("client_hq") or "España")
+    expected_currency = "USD" if any(k in client_hq.lower() for k in ("miami", "us", "ee. uu.", "usa")) else "EUR"
+
+    for trig in triggers:
+        if not trig.detected:
+            continue
+        if trig.trigger_id == "currency-mismatch":
+            if trig.applied_action == f"rewritten_to_{expected_currency}":
+                metadata["currency"] = expected_currency
+                other_currency = "EUR" if expected_currency == "USD" else "USD"
+                for d_id, d_obj in drafts.items():
+                    txt = str(d_obj.get("draft_content", ""))
+                    d_obj["draft_content"] = txt.replace(other_currency, expected_currency)
+                    d_obj["currency"] = expected_currency
+            elif trig.applied_action == "rejected_after_iteration_limit":
+                for d_id in approvals:
+                    approvals[d_id]["status"] = "needs_human_review"
+        elif trig.trigger_id == "ttc-vs-training-window":
+            ttc_val = max(15, int(metadata.get("ttc_days") or 18))
+            start_val = ttc_val + 5
+            metadata["ttc_days"] = ttc_val
+            metadata["training_start_days"] = start_val
+            metadata["training_window_overlap"] = False
+
+            if "seleccion" in drafts:
+                sel_txt = str(drafts["seleccion"].get("draft_content", ""))
+                sel_txt = re.sub(
+                    r"\b(\d+)\s*d[ií]as\s*h[aá]biles\b",
+                    lambda m: f"{max(15, int(m.group(1)))} días hábiles",
+                    sel_txt,
+                    flags=re.IGNORECASE,
+                )
+                if "días hábiles" not in sel_txt.lower() and "dias habiles" not in sel_txt.lower():
+                    sel_txt += f"\n- Tiempo de cierre arbitrado por Marcos Ibáñez: {ttc_val} días hábiles."
+                drafts["seleccion"]["draft_content"] = sel_txt
+
+            if "capacitacion" in drafts:
+                cap_txt = str(drafts["capacitacion"].get("draft_content", ""))
+                if re.search(r"inicio\s*(?:en|:)?\s*\d+\s*d[ií]as", cap_txt, re.IGNORECASE):
+                    cap_txt = re.sub(
+                        r"(inicio\s*(?:en|:)?\s*)\d+(\s*d[ií]as)",
+                        rf"\g<1>{start_val}\g<2>",
+                        cap_txt,
+                        flags=re.IGNORECASE,
+                    )
+                else:
+                    cap_txt += f"\n- Cronograma arbitrado por Marcos Ibáñez: inicio en {start_val} días (tras cierre de selección)."
+                drafts["capacitacion"]["draft_content"] = cap_txt
+
+            if "capacitacion" in approvals and approvals["capacitacion"].get("status") != "approved":
+                approvals["capacitacion"]["comments"] = (
+                    f"[Árbitro Marcos Ibáñez] Capacitación secuenciada para iniciar en {start_val} días tras cierre mínimo de selección ({ttc_val} días hábiles)."
+                )
+        elif trig.trigger_id == "support-sla-missing":
+            if "soporte" in approvals:
+                approvals["soporte"]["status"] = (
+                    "needs_human_review" if arb_iter >= MAX_APPROVAL_ITERATIONS else "request_changes"
+                )
+                approvals["soporte"]["comments"] = (
+                    "[Árbitro Roberto Díaz] Bloqueado hasta incluir SLA obligatorio de respuesta de 24 horas y validar dotación."
+                )
+
+    detected_ids = [t.trigger_id for t in triggers if t.detected]
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="arbitration",
+            agent="DeterministicArbitrator(Marcos Ibáñez / Roberto Díaz)",
+            input_summary=f"iter={arb_iter}, depts={list(sections_by_dept.keys())}",
+            output_summary=f"triggers_detected={detected_ids or 'none'}",
+        )
+    ]
+
+    return {
+        "metadata": metadata,
+        "department_drafts": drafts,
+        "department_approvals": approvals,
+        "conflict_triggers": [t.model_dump() for t in triggers],
+        "arbitration_iterations": arb_iter,
+        "trace_entries": trace_entries,
+        "execution_trace": list(state.get("execution_trace", [])) + ["arbitration"],
+    }
+
+
+def ultimate_document_synthesizer_node(state: RFPIntakeState) -> Dict[str, Any]:
+    """
+    Ultimate Document Synthesizer (Parte 3):
+    Solo se ejecuta cuando todos los departamentos activos han dado su aprobación.
+    Consolida portada, resumen ejecutivo, secciones aprobadas y términos finales.
+    """
+    metadata = state.get("metadata", {})
+    approvals = state.get("department_approvals", {})
+    drafts = state.get("department_drafts", {})
+    conflict_triggers = state.get("conflict_triggers", [])
+    departments_needed = state.get("departments_needed", list(drafts.keys()))
+
+    not_approved = [
+        d for d in departments_needed if approvals.get(d, {}).get("status") != "approved"
+    ]
+    if not_approved:
+        trace_entries = list(state.get("trace_entries", [])) + [
+            _make_trace_entry(
+                node="ultimate_document_synthesizer",
+                agent="UltimateDocumentSynthesizer",
+                input_summary=f"pending={not_approved}",
+                output_summary="status=esperando_aprobación (sign-off incompleto)",
+            )
+        ]
+        return {
+            "status": "esperando_aprobación",
+            "trace_entries": trace_entries,
+        }
+
+    client_name = metadata.get("client_name") or "Cliente Nexova"
+    client_hq = metadata.get("client_hq") or "España"
+    currency = metadata.get("currency") or ("USD" if "miami" in str(client_hq).lower() else "EUR")
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    sections_payload: List[Dict[str, Any]] = []
+    md_parts = [
+        f"# Propuesta Económica Oficial — Nexova Solutions",
+        f"**Ticket ID:** `{state.get('ticket_id')}` | **RFP ID:** `{state.get('rfp_id')}`",
+        f"**Cliente:** {client_name} ({client_hq}) | **Moneda Oficial:** {currency}",
+        f"**Fecha de Emisión:** {generated_at}",
+        "",
+        "---",
+        "## 1. Resumen Ejecutivo para Ventas",
+        state.get("synthesizer_summary") or f"Propuesta consolidada para {client_name}.",
+        "",
+        "---",
+        "## 2. Secciones Aprobadas por Departamento",
+    ]
+
+    for dept_id in departments_needed:
+        draft_obj = drafts.get(dept_id, {})
+        app_obj = approvals.get(dept_id, {})
+        dept_meta = NEXOVA_DEPARTMENTS.get(dept_id, {})
+        dept_name = draft_obj.get("department_name") or dept_meta.get("department_name", dept_id)
+        approver_name = app_obj.get("approver") or dept_meta.get("owner_name", "Responsable")
+        approved_at = app_obj.get("approved_at") or generated_at
+        content = draft_obj.get("draft_content", "")
+
+        sections_payload.append({
+            "department_id": dept_id,
+            "department_name": dept_name,
+            "approver": approver_name,
+            "approved_at": approved_at,
+            "content": content,
+        })
+
+        md_parts.extend([
+            f"### {dept_name} (`{dept_id}`)",
+            f"*Aprobado por:* **{approver_name}** el `{approved_at}`",
+            "",
+            content,
+            "",
+        ])
+
+    detected_triggers = [t for t in conflict_triggers if t.get("detected")]
+    md_parts.extend([
+        "---",
+        "## 3. Términos Generales, Garantía y Trazabilidad de Arbitraje",
+        f"- **Moneda de facturación:** {currency} (según sede {client_hq}).",
+        "- **Garantía Nexova:** Garantía de satisfacción estándar a 90 días incluida.",
+        f"- **Conflictos arbitrados:** {len(detected_triggers)} trigger(s) detectados y resueltos.",
+    ])
+
+    markdown_doc = "\n".join(md_parts)
+    final_doc = FinalProposalDocument(
+        ticket_id=str(state.get("ticket_id", "")),
+        rfp_id=str(state.get("rfp_id", "")),
+        client_name=str(client_name),
+        client_hq=str(client_hq),
+        currency=str(currency),
+        sections=sections_payload,
+        arbitration_results=[ConflictTriggerResult(**t) for t in conflict_triggers],
+        markdown_content=markdown_doc,
+        generated_at=generated_at,
+    )
+
+    trace_entries = list(state.get("trace_entries", [])) + [
+        _make_trace_entry(
+            node="ultimate_document_synthesizer",
+            agent="UltimateDocumentSynthesizer",
+            input_summary=f"approved_depts={departments_needed}",
+            output_summary=f"status=terminado, doc_chars={len(markdown_doc)}",
+        )
+    ]
+
+    return {
+        "final_document": final_doc.model_dump(),
+        "status": "terminado",
+        "trace_entries": trace_entries,
+        "execution_trace": list(state.get("execution_trace", [])) + ["ultimate_document_synthesizer"],
+    }

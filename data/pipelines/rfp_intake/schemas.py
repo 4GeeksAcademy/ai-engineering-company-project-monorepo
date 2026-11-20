@@ -4,7 +4,8 @@ Contratos Pydantic y catálogo oficial de departamentos de Nexova Solutions.
 """
 from __future__ import annotations
 
-from typing import Dict, List, Literal, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 DepartmentId = Literal["seleccion", "capacitacion", "soporte"]
@@ -121,3 +122,50 @@ class DepartmentDraft(BaseModel):
     iteration: int = 1
     evaluation: Optional[EvaluationResult] = None
     status: Literal["borrador_generado", "aprobado_evaluacion", "needs_human_review"] = "borrador_generado"
+
+
+# --- Modelos de Aprobación Humana, Arbitraje y Cierre (Hito 9 · Parte 3) ---
+
+ApprovalDecision = Literal["approve", "reject", "request_changes"]
+ConflictTriggerId = Literal["ttc-vs-training-window", "support-sla-missing", "currency-mismatch"]
+
+
+class ApprovalAction(BaseModel):
+    """Respuesta humana validada al reanudar un punto de interrupción (HITL)."""
+    department_id: DepartmentId
+    decision: ApprovalDecision
+    approver_name: str
+    comments: Optional[str] = None
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class ConflictTriggerResult(BaseModel):
+    """Resultado determinista de un trigger de conflicto evaluado por el árbitro fijo (§7)."""
+    trigger_id: ConflictTriggerId
+    detected: bool
+    arbitrator: str
+    resolution_rule: str
+    applied_action: str
+    details: str = ""
+
+
+class ExecutionTraceEntry(BaseModel):
+    """Registro estructurado de trazabilidad para cada nodo ejecutado."""
+    node: str
+    agent: str
+    input_summary: str
+    output_summary: str
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class FinalProposalDocument(BaseModel):
+    """Documento final consolidado tras la aprobación de todos los departamentos activos."""
+    ticket_id: str
+    rfp_id: str
+    client_name: str
+    client_hq: str
+    currency: str
+    sections: List[Dict[str, Any]] = Field(default_factory=list)
+    arbitration_results: List[ConflictTriggerResult] = Field(default_factory=list)
+    markdown_content: str
+    generated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

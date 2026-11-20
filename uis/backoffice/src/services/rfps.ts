@@ -16,6 +16,49 @@ export interface EvaluationResultData {
     iteration: number;
 }
 
+export interface ConflictTriggerData {
+    trigger_id: string;
+    detected: boolean;
+    arbitrator: string;
+    resolution_rule: string;
+    applied_action: string;
+    details?: string;
+}
+
+export interface ExecutionTraceEntryData {
+    node: string;
+    agent: string;
+    input_summary: string;
+    output_summary: string;
+    timestamp: string;
+}
+
+export interface FinalProposalDocumentData {
+    ticket_id: string;
+    rfp_id: string;
+    client_name?: string | null;
+    client_hq?: string | null;
+    currency: string;
+    sections: Array<{
+        department_id: string;
+        department_name: string;
+        approver: string;
+        approved_at: string;
+        content: string;
+    }>;
+    markdown_content: string;
+    arbitration_log: ConflictTriggerData[];
+    trace_log: ExecutionTraceEntryData[];
+    generated_at: string;
+}
+
+export interface DepartmentApprovalPayload {
+    department_id: string;
+    decision: "approve" | "reject" | "request_changes";
+    approver_name?: string;
+    comments?: string;
+}
+
 export interface RFPDepartmentSection {
     id?: number | null;
     department_id: string;
@@ -25,7 +68,19 @@ export interface RFPDepartmentSection {
     open_questions: string[];
     draft_content?: string | null;
     evaluation_results?: EvaluationResultData | null;
-    approval_status?: "borrador_generado" | "aprobado_evaluacion" | "needs_human_review" | "reintentando" | string | null;
+    approval_status?:
+        | "borrador_generado"
+        | "aprobado_evaluacion"
+        | "needs_human_review"
+        | "reintentando"
+        | "esperando_aprobación"
+        | "approved"
+        | "rejected"
+        | "request_changes"
+        | string
+        | null;
+    approver?: string | null;
+    approved_at?: string | null;
 }
 
 export interface RFPTicket {
@@ -40,6 +95,8 @@ export interface RFPTicket {
     | "en_evaluacion"
     | "needs_human_review"
     | "listo_para_aprobacion"
+    | "esperando_aprobación"
+    | "terminado"
     | "descartado"
     | "error"
     | string;
@@ -59,6 +116,9 @@ export interface RFPTicket {
     created_at: string;
     updated_at: string;
     sections: RFPDepartmentSection[];
+    final_document?: FinalProposalDocumentData | null;
+    conflict_triggers?: ConflictTriggerData[];
+    trace_log?: ExecutionTraceEntryData[];
 }
 
 export interface RFPUploadResponse {
@@ -137,6 +197,34 @@ class RFPService {
         });
 
         return this.handleResponse<RFPTicket>(res, "Error al consultar el detalle del ticket RFP");
+    }
+
+    async startApproval(ticketId: string): Promise<RFPTicket> {
+        const res = await fetch(`/api/rfps/${encodeURIComponent(ticketId)}/start-approval`, {
+            method: "POST",
+            headers: this.getAuthHeaders(true),
+        });
+
+        return this.handleResponse<RFPTicket>(res, "Error al iniciar la aprobación humana");
+    }
+
+    async approveDepartment(ticketId: string, payload: DepartmentApprovalPayload): Promise<RFPTicket> {
+        const res = await fetch(`/api/rfps/${encodeURIComponent(ticketId)}/approve`, {
+            method: "POST",
+            headers: this.getAuthHeaders(true),
+            body: JSON.stringify(payload),
+        });
+
+        return this.handleResponse<RFPTicket>(res, "Error al registrar la aprobación del departamento");
+    }
+
+    async getFinalDocument(ticketId: string): Promise<FinalProposalDocumentData> {
+        const res = await fetch(`/api/rfps/${encodeURIComponent(ticketId)}/final-document`, {
+            method: "GET",
+            headers: this.getAuthHeaders(true),
+        });
+
+        return this.handleResponse<FinalProposalDocumentData>(res, "Error al obtener el documento final");
     }
 }
 

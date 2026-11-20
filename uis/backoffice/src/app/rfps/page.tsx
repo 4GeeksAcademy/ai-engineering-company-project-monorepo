@@ -22,7 +22,15 @@ import {
     Upload,
     UserCheck,
     XCircle,
+    Bell,
+    Radio,
+    WifiOff,
 } from "lucide-react";
+
+import {
+    RFPTicketCreatedPayload,
+    useRFPNotifications,
+} from "@/hooks/useRFPNotifications";
 
 const STATUS_CONFIG: Record<
     string,
@@ -92,6 +100,7 @@ export default function RFPsPage() {
     const [generating, setGenerating] = useState(false);
     const [loadingList, setLoadingList] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sseToast, setSseToast] = useState<RFPTicketCreatedPayload | null>(null);
 
     const loadTickets = useCallback(async (activeTicketId?: string) => {
         try {
@@ -109,6 +118,47 @@ export default function RFPsPage() {
         }
     }, [selectedTicket?.ticket_id]);
 
+    const handleTicketCreated = useCallback((payload: RFPTicketCreatedPayload) => {
+        setTickets((prev) => {
+            if (prev.some((t) => t.ticket_id === payload.ticket_id)) {
+                return prev;
+            }
+            const incomingTicket: RFPTicket = {
+                ticket_id: payload.ticket_id,
+                rfp_id: payload.rfp_id,
+                filename: payload.filename,
+                raw_pdf_path: "",
+                status: payload.status,
+                client_name: payload.client_name ?? null,
+                services_requested: [],
+                departments_needed: [],
+                readability_metrics: {},
+                handoff_payload: {},
+                created_at: payload.created_at,
+                updated_at: payload.created_at,
+                sections: [],
+            };
+            return [incomingTicket, ...prev];
+        });
+
+        setSseToast(payload);
+    }, []);
+
+    const handleSSEReconnect = useCallback(async () => {
+        await loadTickets();
+    }, [loadTickets]);
+
+    const { connectionStatus, reconnectAttempt } = useRFPNotifications({
+        onTicketCreated: handleTicketCreated,
+        onReconnect: handleSSEReconnect,
+    });
+
+    useEffect(() => {
+        if (!sseToast) return;
+        const timer = setTimeout(() => setSseToast(null), 8000);
+        return () => clearTimeout(timer);
+    }, [sseToast]);
+
     useEffect(() => {
         loadTickets();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,7 +169,7 @@ export default function RFPsPage() {
         const isProcessing = (status?: string) =>
             status === "analizando" ||
             status === "generando_borrador" ||
-        status === "en_evaluacion" ||
+            status === "en_evaluacion" ||
             status === "en_evaluación";
 
         const hasPending =
@@ -306,6 +356,70 @@ export default function RFPsPage() {
                         </Link>
                     </div>
                 </header>
+
+                {sseToast && (
+                    <div
+                        role="status"
+                        style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "0.75rem",
+                            padding: "0.85rem 1.1rem",
+                            marginBottom: "1.25rem",
+                            borderRadius: "0.75rem",
+                            background: "rgba(16, 185, 129, 0.15)",
+                            border: "1px solid rgba(16, 185, 129, 0.55)",
+                            color: "#ecfdf5",
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                            <Bell size={18} color="#34d399" />
+                            <span style={{ fontSize: "0.9rem" }}>
+                                <strong>Nuevo ticket RFP en tiempo real:</strong>{" "}
+                                <code>{sseToast.rfp_id}</code> ({sseToast.filename}) · Estado:{" "}
+                                <strong>{sseToast.status}</strong> — requiere procesamiento
+                            </span>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleSelectTicket(sseToast.ticket_id);
+                                    setSseToast(null);
+                                }}
+                                style={{
+                                    padding: "0.35rem 0.75rem",
+                                    borderRadius: "0.4rem",
+                                    background: "#10b981",
+                                    color: "#06281e",
+                                    border: "none",
+                                    fontWeight: 700,
+                                    fontSize: "0.8rem",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Ver ticket
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSseToast(null)}
+                                style={{
+                                    padding: "0.35rem 0.7rem",
+                                    borderRadius: "0.4rem",
+                                    background: "transparent",
+                                    color: "#a7f3d0",
+                                    border: "1px solid rgba(167, 243, 208, 0.4)",
+                                    fontSize: "0.8rem",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Formulario de subida */}
                 <section
