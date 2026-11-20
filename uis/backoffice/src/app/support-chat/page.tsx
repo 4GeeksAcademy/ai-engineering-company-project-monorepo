@@ -31,12 +31,19 @@ export default function SupportChatPage() {
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = params.get("session_id")?.trim();
+        if (fromUrl) {
+            localStorage.setItem(SESSION_STORAGE_KEY, fromUrl);
+            setSessionId(fromUrl);
+            return;
+        }
+        const stored = localStorage.getItem(SESSION_STORAGE_KEY);
         if (stored) {
             setSessionId(stored);
         } else {
             const fresh = generateSessionId();
-            sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+            localStorage.setItem(SESSION_STORAGE_KEY, fresh);
             setSessionId(fresh);
         }
     }, []);
@@ -66,7 +73,7 @@ export default function SupportChatPage() {
 
     const handleNewSession = () => {
         const fresh = generateSessionId();
-        sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+        localStorage.setItem(SESSION_STORAGE_KEY, fresh);
         setSessionId(fresh);
     };
 

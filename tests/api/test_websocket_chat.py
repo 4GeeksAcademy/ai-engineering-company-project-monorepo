@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import create_engine
 from starlette.websockets import WebSocketDisconnect
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
@@ -24,8 +26,14 @@ from services.api.ws_chat_manager import chat_session_manager
 
 
 @pytest.fixture(autouse=True)
-def reset_chat_sessions():
-    """Limpia los canales en memoria entre pruebas."""
+def reset_chat_sessions(tmp_path: Path):
+    """Aísla la base de datos y limpia los canales en memoria entre pruebas."""
+    test_db = create_engine(
+        f"sqlite:///{tmp_path / 'test_ws_chat.db'}",
+        connect_args={"check_same_thread": False},
+    )
+    chat_session_manager.set_engine(test_db)
+    chat_session_manager._redis_unavailable = True
     chat_session_manager._channels.clear()
     yield
     chat_session_manager._channels.clear()
@@ -210,3 +218,36 @@ def test_websocket_pubsub_multiple_subscribers_single_agent_call(valid_jwt, mock
                     assert call_count == 1
                     assert "".join(user_tokens) == "Ticket INC-42 resuelto."
                     assert "".join(sup_tokens) == "Ticket INC-42 resuelto."
+
+
+def test_websocket_persists_history_across_server_restart(valid_jwt, mock_auth_user):
+    """Simula un reinicio completo del servidor limpiando memoria RAM y verifica rehidratación desde DB."""
+
+    async def fake_astream(initial_state, config=None, stream_mode=None):
+        yield ("updates", {"generate_answer": {"answer": "SLA P1: escalado en 60 minutos."}})
+
+    with patch("services.api.routes.agent.agent_app.astream", side_effect=fake_astream):
+        with TestClient(app) as client:
+            with client.websocket_connect(f"/agent/ws/chat_persist?token={valid_jwt}") as ws:
+                assert ws.receive_json()["event"] == "session_snapshot"
+                ws.send_json({
+                    "event": "user_message",
+                    "data": {"session_id": "chat_persist", "text": "¿Cuál es el SLA P1?"},
+                })
+                while True:
+                    if ws.receive_json()["event"] == "generation_completed":
+                        break
+
+            # Simula reinicio total del servidor (se pierde todo el diccionario en RAM)
+            chat_session_manager._channels.clear()
+
+            with client.websocket_connect(f"/agent/ws/chat_persist?token={valid_jwt}") as ws_after_restart:
+                snapshot = ws_after_restart.receive_json()
+                assert snapshot["event"] == "session_snapshot"
+                msgs = snapshot["data"]["messages"]
+                assert len(msgs) == 2
+                assert msgs[0]["role"] == "user"
+                assert msgs[0]["content"] == "¿Cuál es el SLA P1?"
+                assert msgs[1]["role"] == "assistant"
+                assert msgs[1]["status"] == "completed"
+                assert msgs[1]["content"] == "SLA P1: escalado en 60 minutos."
