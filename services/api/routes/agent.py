@@ -24,6 +24,7 @@ from services.api.routes.auth import get_current_user
 from services.api.ws_chat_manager import ChatMessage, chat_session_manager
 from services.agent.graph import agent_app
 from services.agent.state import AgentState
+from services.agent.guardrails import guardrail_tracker
 
 logger = logging.getLogger("nexova.agent_route")
 
@@ -53,6 +54,11 @@ class AgentQueryResponse(BaseModel):
     intent: Optional[str] = None
     tool_data: Optional[dict[str, Any]] = None
     error: Optional[str] = None
+    memory_proposal: Optional[dict[str, Any]] = None
+    memory_decision: Optional[str] = None
+    memory_audit: Optional[dict[str, Any]] = None
+    guardrail_triggered: bool = False
+    guardrail_failure_type: Optional[str] = None
 
 @router.post(
     "/query",
@@ -74,6 +80,7 @@ def query_agent(
     logger.info(f"Invocando agente para usuario '{current_user.get('email', 'anónimo')}' (thread: {active_thread})")
     initial_state: AgentState = {
         "question": payload.question,
+        "thread_id": active_thread,
         "context": [],
         "answer": "",
         "error": None,
@@ -97,6 +104,11 @@ def query_agent(
         intent=final_state.get("intent"),
         tool_data=final_state.get("tool_data"),
         error=final_state.get("error"),
+        memory_proposal=final_state.get("memory_proposal"),
+        memory_decision=final_state.get("memory_decision"),
+        memory_audit=final_state.get("memory_audit"),
+        guardrail_triggered=bool(final_state.get("guardrail_triggered", False)),
+        guardrail_failure_type=final_state.get("guardrail_failure_type"),
     )
 
 async def _stream_agent_turn(session_id: str, question: str, assistant_msg: ChatMessage) -> None:
@@ -106,6 +118,7 @@ async def _stream_agent_turn(session_id: str, question: str, assistant_msg: Chat
     """
     initial_state: AgentState = {
         "question": question,
+        "thread_id": session_id,
         "context": [],
         "answer": "",
         "error": None,
@@ -271,3 +284,16 @@ async def support_chat_websocket(
         with suppress(asyncio.CancelledError, Exception):
             await sender_task
         chat_session_manager.unsubscribe(session_id=session_id, queue=queue)
+
+
+@router.get(
+    "/guardrails/summary",
+    status_code=status.HTTP_200_OK,
+    summary="Resumen de observabilidad de guardrails",
+    description="Devuelve cuántas veces se activó cada guardrail y el desglose por tipo de fallo.",
+)
+def get_guardrails_summary(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Endpoint protegido que expone las métricas de activación del harness de guardrails."""
+    return guardrail_tracker.get_summary()

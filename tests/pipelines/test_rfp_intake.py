@@ -237,3 +237,87 @@ def test_rfp_endpoints_auth_and_async_upload(monkeypatch, temp_engine, tmp_path:
     res_detail = client.get(f"/api/rfps/{ticket_id}")
     assert res_detail.status_code == 200
     assert res_detail.json()["filename"] == "cliente.pdf"
+
+# ---------------------------------------------------------------------------
+# 5. Tests de Casos Reales del Briefing (Inglés Informal, '5 posiciones' y E2E PDF)
+# ---------------------------------------------------------------------------
+
+def test_classifier_accepts_english_informal_email_nubesoft():
+    doc = (
+        "From: ops@nubesoft.io\n"
+        "Subject: Quote for 24/7 support team\n\n"
+        "Hi Nexova team, we are based in Miami and looking for 12 support agents "
+        "to cover customer support 24/7 with a 24h SLA. Could you send us pricing?"
+    )
+    result = rfp_nodes.classify_rfp_document(doc)
+    assert result.is_valid_rfp is True
+    assert result.rfp_format == "informal"
+
+
+def test_seleccion_worker_captures_5_posiciones_without_open_question():
+    task = {
+        "department_id": "seleccion",
+        "relevant_excerpts": [
+            "Vantex Retail Group requiere búsqueda ejecutiva para cubrir 5 posiciones de mandos medios en Madrid."
+        ],
+    }
+    output = rfp_nodes.run_department_worker(
+        metadata={"client_name": "Vantex Retail Group", "currency": "EUR"},
+        task=task,
+    )
+    assert any("5 posiciones" in asp.lower() for asp in output.key_aspects)
+    assert not any("confirmar con el cliente el volumen exacto" in q.lower() for q in output.open_questions)
+
+
+def test_e2e_briefing_pdfs_with_markitdown(temp_engine, tmp_path: Path):
+    """Prueba E2E real generando PDFs en disco y extrayéndolos con MarkItDown."""
+    import matplotlib.pyplot as plt
+
+    def _write_pdf(filename: str, text: str) -> Path:
+        pdf_path = tmp_path / filename
+        fig, ax = plt.subplots(figsize=(8.5, 11))
+        ax.axis("off")
+        ax.text(0.05, 0.92, text, fontsize=11, family="monospace", va="top", ha="left")
+        fig.savefig(pdf_path, format="pdf", bbox_inches="tight")
+        plt.close(fig)
+        return pdf_path
+
+    pdf1 = _write_pdf(
+        "nexova-request-1.pdf",
+        "SOLICITUD DE PROPUESTA (RFP) - VANTEX RETAIL GROUP\n"
+        "Sede Central: Madrid, España | Moneda: EUR\n"
+        "Búsqueda ejecutiva de 5 posiciones de mandos medios.\n"
+        "Programa trimestral de capacitación en liderazgo.",
+    )
+    pdf2 = _write_pdf(
+        "nexova-request-2.pdf",
+        "From: ops@nubesoft.io\n"
+        "Hi team, we are in Miami and need a quote for 12 support agents 24/7 with SLA 24h.",
+    )
+    pdf3 = _write_pdf(
+        "nexova-request-3.pdf",
+        "PROPUESTA COMERCIAL - RECRUITAI\n"
+        "Ofrecemos nuestro ATS con demo gratuita de nuestro software.",
+    )
+
+    with Session(temp_engine) as session:
+        session.add(RFPTicket(ticket_id="e2e-1", rfp_id="RFP-E2E1", filename="nexova-request-1.pdf", raw_pdf_path=str(pdf1), status="analizando"))
+        session.add(RFPTicket(ticket_id="e2e-2", rfp_id="RFP-E2E2", filename="nexova-request-2.pdf", raw_pdf_path=str(pdf2), status="analizando"))
+        session.add(RFPTicket(ticket_id="e2e-3", rfp_id="RFP-E2E3", filename="nexova-request-3.pdf", raw_pdf_path=str(pdf3), status="analizando"))
+        session.commit()
+
+    r1 = rfp_graph.run_rfp_intake_pipeline("e2e-1", db_engine=temp_engine)
+    assert r1["status"] == "analisis_completo"
+    assert set(r1["departments_needed"]) == {"seleccion", "capacitacion"}
+    sel_res = next(w for w in r1["worker_results"] if w["department_id"] == "seleccion")
+    assert any("5 posiciones" in asp.lower() for asp in sel_res["key_aspects"])
+
+    r2 = rfp_graph.run_rfp_intake_pipeline("e2e-2", db_engine=temp_engine)
+    assert r2["status"] == "analisis_completo"
+    assert "soporte" in r2["departments_needed"]
+    assert r2["metadata"]["currency"] == "USD"
+    sup_res = next(w for w in r2["worker_results"] if w["department_id"] == "soporte")
+    assert any("12 support agents" in asp.lower() for asp in sup_res["key_aspects"])
+
+    r3 = rfp_graph.run_rfp_intake_pipeline("e2e-3", db_engine=temp_engine)
+    assert r3["status"] == "descartado"
