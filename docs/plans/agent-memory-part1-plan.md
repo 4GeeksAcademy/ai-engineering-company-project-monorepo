@@ -181,3 +181,31 @@ sequenceDiagram
 3. **Step-Back Prompting & Máquina de Estados (Nivel 4):** Se diseñó la transición de estados `Idle <-> PendingProposal -> Consolidated/Rejected` y los contratos Pydantic estrictos para el clasificador y la salida estructurada.
 4. **Self-Refinement Loop (3 Ciclos):** Refinado para mantener 1 solo grafo/llamada, resolver mensajes mixtos (decisión + nueva pregunta) y respetar operación bilingüe España–Miami.
 5. **Chain of Verification (CoVe), EDD & Adversarial Red Teaming:** Los contratos y rutas se verificaron contra `services/agent/state.py`, `services/agent/graph.py` y `services/api/routes/agent.py`, planificando replay multi-turno determinista y pruebas adversarias antes del PR.
+
+---
+
+## 🛠️ Post-Mortem y Remediación (Feedback de Revisión — `default-deny`)
+
+### 1. El error
+En la rama `feature/agent-memory`, la función `classify_pending_decision(message, pending_fact)` en `services/agent/memory_evaluator.py` devolvía `decision="approve"` cuando el usuario enviaba mensajes con una afirmación inicial seguida de una contradicción o duda tras un punto:
+- `"Sí. Pero no"` → devolvía `approve`
+- `"Sí. No estoy seguro"` → devolvía `approve`
+- `"Claro. Aunque mejor no"` → devolvía `approve`
+
+Como resultado, esos mensajes terminaban escribiendo la propuesta pendiente en la memoria persistente a pesar de la negativa o incertidumbre del usuario.
+
+### 2. Reflexión sobre el error (causa raíz)
+El problema ocurría porque el clasificador determinista cortaba el mensaje en el primer signo de puntuación (`re.split(r"[.!?\n]+", lower, maxsplit=1)[0]`) y tomaba la decisión mirando únicamente `first_clause`.
+- **Impacto en `default-deny`:** Evaluar solo la primera oración creaba un falso positivo peligroso: bastaba con empezar por `"Sí."` o `"Claro."` para que cualquier contradicción o duda posterior quedara ignorada.
+- **Matiz de diseño:** No bastaba con rechazar cualquier mensaje multi-oración, ya que los casos mixtos válidos como `"Sí, guárdalo. ¿Cómo escalo?"` deben seguir aprobando la memoria y respondiendo la pregunta de seguimiento.
+
+### 3. Cómo se resolvió
+1. **Evaluación del mensaje completo (`services/agent/memory_evaluator.py`):**
+   - Se segmenta el mensaje completo en `clauses` y `trailing_text`.
+   - Se añadieron las validaciones `contradiction_in_full` (marcadores como `pero no`, `mejor no`, `aunque`, `no estoy seguro/a`, `no sé`, `dudo`, `quizá no`, `tal vez no`, `not sure`, `but no`, `never mind`) y `negation_in_trailing` (`no`, `nop`, `nope`, `cancelar`, `rechazar`, `descartar`, `olvídalo` en oraciones posteriores). Ante cualquier coincidencia, devuelve `ambiguous_or_unrelated` (**default-deny**).
+   - Se normalizaron comas/puntuación en `first_subclause` y `tokens` para mantener `"Sí, guárdalo. ¿Cómo escalo?"` como `approve` con `remaining_question="¿Cómo escalo?"`.
+   - Se reforzó la misma regla en el prompt del clasificador LLM estructurado.
+2. **Pruebas añadidas (`tests/pipelines/test_agent_memory.py`):**
+   - `test_contradictory_or_hesitant_trailing_sentence_does_not_approve` (parametrizado con `"Sí. Pero no"`, `"Sí. No estoy seguro"` y `"Claro. Aunque mejor no"`).
+   - `test_mixed_affirmation_with_followup_question_still_approves` (`"Sí, guárdalo. ¿Cómo escalo?"`).
+3. **Verificación:** `uv run python -m pytest tests/pipelines/test_agent_memory.py -v` → **19 passed** en `4.06s`.

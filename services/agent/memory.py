@@ -23,10 +23,11 @@ logger = logging.getLogger("nexova.agent_memory")
 
 BusinessLine = Literal["outsourcing", "headhunting", "training", "general"]
 MemoryCategory = Literal["escalation", "client_preference", "incident_pattern"]
-ProposalDecision = Literal["approve", "reject", "edit", "ambiguous_or_unrelated"]
+ProposalDecision = Literal["approve", "reject", "edit", "ambiguous_or_unrelated", "expired"]
 
 MAX_MEMORIES_PER_LINE = 25
 DEFAULT_MEMORY_TTL_SECONDS = 30 * 24 * 3600  # 30 días
+DEFAULT_PENDING_TTL_SECONDS = 3600  # 1 hora
 DEFAULT_LOCAL_STORE_PATH = Path("data/agent_memory.json")
 
 # Reglas no negociables del briefing de Nexova (docs/nexova-memory-BRIEFING.md)
@@ -57,6 +58,7 @@ class MemoryProposal(BaseModel):
     topic_key: Optional[str] = None
     source_message: str
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    expires_at: Optional[str] = None
 
 
 class MemoryEntry(BaseModel):
@@ -124,10 +126,12 @@ class AgentMemoryStore:
         redis_url: Optional[str] = None,
         local_path: Path = DEFAULT_LOCAL_STORE_PATH,
         ttl_seconds: int = DEFAULT_MEMORY_TTL_SECONDS,
+        pending_ttl_seconds: int = DEFAULT_PENDING_TTL_SECONDS,
         max_per_line: int = MAX_MEMORIES_PER_LINE,
     ) -> None:
         self.local_path = Path(local_path)
         self.ttl_seconds = ttl_seconds
+        self.pending_ttl_seconds = pending_ttl_seconds
         self.max_per_line = max_per_line
         self._redis = self._connect_redis(redis_url or os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 
@@ -184,9 +188,70 @@ class AgentMemoryStore:
                     entries.append(entry)
         return entries
 
-    # --- Propuesta pendiente (máximo 1 por thread_id) ---
+    # --- Propuesta pendiente (máximo 1 por thread_id, con TTL y auditoría de abandono) ---
+
+    def _build_expired_audit(self, proposal: MemoryProposal) -> MemoryAuditEntry:
+        return MemoryAuditEntry(
+            thread_id=proposal.thread_id,
+            proposal_id=proposal.proposal_id,
+            proposed_fact=proposal.fact,
+            final_fact=None,
+            decision="expired",
+            source_message="[expired_without_response]",
+        )
+
+    def expire_abandoned_proposals(self, thread_id: Optional[str] = None) -> List[MemoryAuditEntry]:
+        """
+        Expira propuestas pendientes cuyo TTL venció (silencio/abandono) tanto en JSON local
+        como en Redis, registrando siempre el evento en AuditLog.
+        """
+        now_iso = datetime.now(timezone.utc).isoformat()
+        expired_audits: List[MemoryAuditEntry] = []
+
+        if self._redis is not None:
+            threads = [thread_id] if thread_id else list(self._redis.smembers("nexova:pending_proposal_threads"))
+            for tid in threads:
+                raw_active = self._redis.get(f"nexova:pending_proposal:{tid}")
+                raw_shadow = self._redis.get(f"nexova:pending_proposal_shadow:{tid}")
+                if raw_active:
+                    proposal = MemoryProposal.model_validate_json(raw_active)
+                    if not (proposal.expires_at and proposal.expires_at <= now_iso):
+                        continue
+                elif raw_shadow:
+                    proposal = MemoryProposal.model_validate_json(raw_shadow)
+                else:
+                    self._redis.srem("nexova:pending_proposal_threads", tid)
+                    continue
+
+                audit = self._build_expired_audit(proposal)
+                self._append_audit(audit)
+                self._clear_pending_proposal(tid)
+                expired_audits.append(audit)
+            return expired_audits
+
+        data = self._load_local()
+        pending = data.get("pending", {})
+        target_threads = [thread_id] if thread_id else list(pending.keys())
+        changed = False
+
+        for tid in target_threads:
+            raw = pending.get(tid)
+            if not raw:
+                continue
+            proposal = MemoryProposal.model_validate(raw)
+            if proposal.expires_at and proposal.expires_at <= now_iso:
+                audit = self._build_expired_audit(proposal)
+                data.setdefault("audit", []).append(audit.model_dump())
+                pending.pop(tid, None)
+                expired_audits.append(audit)
+                changed = True
+
+        if changed:
+            self._save_local(data)
+        return expired_audits
 
     def get_pending_proposal(self, thread_id: str) -> Optional[MemoryProposal]:
+        self.expire_abandoned_proposals(thread_id)
         if self._redis is not None:
             raw = self._redis.get(f"nexova:pending_proposal:{thread_id}")
             return MemoryProposal.model_validate_json(raw) if raw else None
@@ -204,12 +269,15 @@ class AgentMemoryStore:
         if not allowed:
             return False, reject_reason
 
+        if not proposal.expires_at:
+            expires_at = (datetime.now(timezone.utc) + timedelta(seconds=self.pending_ttl_seconds)).isoformat()
+            proposal = proposal.model_copy(update={"expires_at": expires_at})
+
         if self._redis is not None:
-            self._redis.setex(
-                f"nexova:pending_proposal:{proposal.thread_id}",
-                3600,
-                proposal.model_dump_json(),
-            )
+            payload = proposal.model_dump_json()
+            self._redis.setex(f"nexova:pending_proposal:{proposal.thread_id}", self.pending_ttl_seconds, payload)
+            self._redis.setex(f"nexova:pending_proposal_shadow:{proposal.thread_id}", self.ttl_seconds, payload)
+            self._redis.sadd("nexova:pending_proposal_threads", proposal.thread_id)
             return True, None
 
         data = self._load_local()
@@ -220,6 +288,8 @@ class AgentMemoryStore:
     def _clear_pending_proposal(self, thread_id: str) -> None:
         if self._redis is not None:
             self._redis.delete(f"nexova:pending_proposal:{thread_id}")
+            self._redis.delete(f"nexova:pending_proposal_shadow:{thread_id}")
+            self._redis.srem("nexova:pending_proposal_threads", thread_id)
             return
 
         data = self._load_local()
@@ -326,6 +396,7 @@ class AgentMemoryStore:
         self._save_local(data)
 
     def get_audit_log(self, thread_id: Optional[str] = None) -> List[MemoryAuditEntry]:
+        self.expire_abandoned_proposals(thread_id)
         if self._redis is not None:
             entries = [
                 MemoryAuditEntry.model_validate_json(raw)
