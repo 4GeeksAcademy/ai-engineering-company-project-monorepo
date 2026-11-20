@@ -875,7 +875,25 @@ def submit_department_approval(
                 ticket.status = "terminado"
                 ticket.updated_at = datetime.now(timezone.utc).isoformat()
                 session.add(ticket)
+        elif any(s.approval_status == "needs_human_review" for s in all_sections):
+            if ticket:
+                ticket.status = "needs_human_review"
+                ticket.updated_at = datetime.now(timezone.utc).isoformat()
+                session.add(ticket)
         else:
+            # Reabre únicamente las ramas afectadas por request_changes del árbitro
+            reopened_snapshots = []
+            for s in all_sections:
+                if s.approval_status == "request_changes":
+                    reopened_snapshots.append({
+                        "department_id": s.department_id,
+                        "department_name": s.department_name,
+                        "owner_name": s.owner_name,
+                        "key_aspects": json.loads(s.key_aspects or "[]"),
+                        "draft_content": s.draft_content or "",
+                        "evaluation": json.loads(s.evaluation_results) if s.evaluation_results else {},
+                        "comments": arb_approvals.get(s.department_id, {}).get("comments"),
+                    })
             if ticket:
                 ticket.status = "esperando_aprobación"
                 ticket.updated_at = datetime.now(timezone.utc).isoformat()
@@ -883,11 +901,47 @@ def submit_department_approval(
 
         session.commit()
 
+    if final_status != "terminado" and not any(
+        arb_approvals.get(d, {}).get("status") == "needs_human_review" for d in arb_approvals
+    ):
+        for snap in locals().get("reopened_snapshots", []):
+            d_id = snap["department_id"]
+            d_thread = get_department_thread_id(ticket_id, d_id)
+            active_cp.delete_thread(d_thread)
+            dept_app.invoke(
+                {
+                    "ticket_id": ticket_id,
+                    "rfp_id": rfp_id,
+                    "department_id": d_id,
+                    "department_name": snap["department_name"],
+                    "owner_name": snap["owner_name"],
+                    "metadata": metadata,
+                    "key_aspects": snap["key_aspects"],
+                    "draft_content": snap["draft_content"],
+                    "evaluation": snap["evaluation"],
+                    "comments": snap["comments"],
+                    "approval_status": "esperando_aprobación",
+                    "approval_iteration": 0,
+                    "trace_entries": [],
+                },
+                config={"configurable": {"thread_id": d_thread}},
+            )
+
+    resolved_ticket_status = (
+        "terminado"
+        if (final_status == "terminado" and final_doc_dict)
+        else (
+            "needs_human_review"
+            if any(v.get("status") == "needs_human_review" for v in arb_approvals.values())
+            else "esperando_aprobación"
+        )
+    )
+
     return {
         "ticket_id": ticket_id,
         "department_id": department_id,
         "department_status": branch_status,
-        "status": final_status if final_doc_dict else "esperando_aprobación",
+        "status": resolved_ticket_status,
         "thread_id": dept_thread_id,
         "conflict_triggers": triggers,
         "trace_entries": full_trace,

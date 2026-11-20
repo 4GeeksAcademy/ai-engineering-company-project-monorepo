@@ -190,3 +190,23 @@ stateDiagram-v2
 - **Análisis de 3 Expertos:** Evaluación integral de la experiencia de sign-off del comercial, arquitectura de concurrencia y matriz de compliance/arbitraje.
 - **Threat Modeling & FMEA:** Prevención de colisiones entre checkpoints concurrentes y aseguramiento de persistencia ante reinicios.
 - **Topology & Wiring Check:** Garantía de que el compilador final solo se invoque tras el 100% de vistos buenos aprobados.
+
+---
+
+## 🛠️ Post-Mortem y Remediación (Feedback de Revisión — Arbitraje y Cierre ante Conflictos)
+
+### 1. El error
+En `feature/rfp-approval-completion`, al procesar una RFP con conflictos estructurados (`seleccion` 10 días hábiles, `capacitacion` inicio en 5 días, `USD` para `España`):
+- `start_rfp_approval_pipeline` detectaba `ttc-vs-training-window` y `currency-mismatch`, pero no corregía los textos de `seleccion`/`capacitacion` ni propagaba la acción de arbitraje.
+- Al aprobar ambos departamentos, `completion_app` volvía a detectar `ttc-vs-training-window`, bloqueaba el paso a `ultimate_synthesizer` y dejaba el ticket atascado en `esperando_aprobación` sin documento final ni reapertura de rama.
+
+### 2. Reflexión sobre el error (causa raíz)
+Hubo un vacío conjunto entre planificación e implementación:
+- **En el plan:** Se definió que el árbitro emitiera `request_changes`, pero no se especificó cómo se reabría la rama afectada tras un bloqueo en `completion_app` ni se incluyó un test E2E que combinara conflictos activos + aprobaciones humanas + cierre.
+- **En el código:** `arbitration_node` actualizaba `metadata` sin corregir los borradores de `seleccion`/`capacitacion`, y `submit_department_approval` no reabría el checkpoint de la rama afectada ni transicionaba a `needs_human_review` al agotar iteraciones.
+
+### 3. Cómo se resolvió
+1. **Resolución determinista real (`data/pipelines/rfp_intake/nodes.py`):** Ante `ttc-vs-training-window`, `arbitration_node` reescribe `seleccion` a `>= 15 días hábiles` y secuencia `capacitacion` tras el cierre (`inicio en {start_val} días`). Al agotar `MAX_APPROVAL_ITERATIONS`, marca la sección afectada como `needs_human_review`.
+2. **Reapertura selectiva de rama y cierre limpio (`data/pipelines/rfp_intake/graph.py`):** Si `completion_app` sigue detectando `request_changes`, `submit_department_approval` reabre únicamente el checkpoint de la rama afectada con el feedback del árbitro (sin tocar ramas ya aprobadas), y si se alcanza `needs_human_review`, actualiza `ticket.status = "needs_human_review"`.
+3. **Test E2E con conflicto (`tests/pipelines/test_rfp_approval_completion.py`):** Se añadió `test_e2e_conflict_rfp_arbitrates_and_closes_to_terminado` cubriendo el escenario exacto (`10 días`, `5 días`, `USD` en `España`) hasta el cierre en `terminado` con documento final en `EUR`.
+4. **Verificación:** `uv run python -m pytest tests/pipelines/test_rfp_intake.py tests/pipelines/test_rfp_generation.py tests/pipelines/test_rfp_approval_completion.py -v` → **25 passed** en `4.62s`.

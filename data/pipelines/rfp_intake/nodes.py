@@ -1185,19 +1185,48 @@ def arbitration_node(state: RFPIntakeState) -> Dict[str, Any]:
                     d_obj["currency"] = expected_currency
             elif trig.applied_action == "rejected_after_iteration_limit":
                 for d_id in approvals:
-                    approvals[d_id]["status"] = "rejected"
+                    approvals[d_id]["status"] = "needs_human_review"
         elif trig.trigger_id == "ttc-vs-training-window":
-            metadata["ttc_days"] = max(15, int(metadata.get("ttc_days") or 18))
-            metadata["training_start_days"] = metadata["ttc_days"] + 5
+            ttc_val = max(15, int(metadata.get("ttc_days") or 18))
+            start_val = ttc_val + 5
+            metadata["ttc_days"] = ttc_val
+            metadata["training_start_days"] = start_val
             metadata["training_window_overlap"] = False
+
+            if "seleccion" in drafts:
+                sel_txt = str(drafts["seleccion"].get("draft_content", ""))
+                sel_txt = re.sub(
+                    r"\b(\d+)\s*d[ií]as\s*h[aá]biles\b",
+                    lambda m: f"{max(15, int(m.group(1)))} días hábiles",
+                    sel_txt,
+                    flags=re.IGNORECASE,
+                )
+                if "días hábiles" not in sel_txt.lower() and "dias habiles" not in sel_txt.lower():
+                    sel_txt += f"\n- Tiempo de cierre arbitrado por Marcos Ibáñez: {ttc_val} días hábiles."
+                drafts["seleccion"]["draft_content"] = sel_txt
+
+            if "capacitacion" in drafts:
+                cap_txt = str(drafts["capacitacion"].get("draft_content", ""))
+                if re.search(r"inicio\s*(?:en|:)?\s*\d+\s*d[ií]as", cap_txt, re.IGNORECASE):
+                    cap_txt = re.sub(
+                        r"(inicio\s*(?:en|:)?\s*)\d+(\s*d[ií]as)",
+                        rf"\g<1>{start_val}\g<2>",
+                        cap_txt,
+                        flags=re.IGNORECASE,
+                    )
+                else:
+                    cap_txt += f"\n- Cronograma arbitrado por Marcos Ibáñez: inicio en {start_val} días (tras cierre de selección)."
+                drafts["capacitacion"]["draft_content"] = cap_txt
+
             if "capacitacion" in approvals and approvals["capacitacion"].get("status") != "approved":
-                approvals["capacitacion"]["status"] = "request_changes"
                 approvals["capacitacion"]["comments"] = (
-                    f"[Árbitro Marcos Ibáñez] Secuenciar capacitación para iniciar tras cierre mínimo de selección ({metadata['ttc_days']} días hábiles)."
+                    f"[Árbitro Marcos Ibáñez] Capacitación secuenciada para iniciar en {start_val} días tras cierre mínimo de selección ({ttc_val} días hábiles)."
                 )
         elif trig.trigger_id == "support-sla-missing":
             if "soporte" in approvals:
-                approvals["soporte"]["status"] = "request_changes"
+                approvals["soporte"]["status"] = (
+                    "needs_human_review" if arb_iter >= MAX_APPROVAL_ITERATIONS else "request_changes"
+                )
                 approvals["soporte"]["comments"] = (
                     "[Árbitro Roberto Díaz] Bloqueado hasta incluir SLA obligatorio de respuesta de 24 horas y validar dotación."
                 )

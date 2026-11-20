@@ -361,3 +361,83 @@ def test_end_to_end_part1_to_part3_reproducible_http_flow(monkeypatch, temp_env,
     assert "90 días" in doc_data["markdown_content"]
     assert len(doc_data["sections"]) == 2
     assert len(doc_data["trace_log"]) >= 4
+
+
+def test_e2e_conflict_rfp_arbitrates_and_closes_to_terminado(temp_env):
+    """
+    Escenario de conflicto (selección 10 días, capacitación en 5, USD para España):
+    1. start detecta ttc-vs-training-window y currency-mismatch y aplica resolución determinista.
+    2. Tras aprobar ambos departamentos, cierra en `terminado` con documento final en EUR.
+    """
+    engine, checkpointer, _ = temp_env
+    ticket_id = "ticket-conflict-e2e"
+
+    ticket = RFPTicket(
+        ticket_id=ticket_id,
+        rfp_id="RFP-CONF01",
+        filename="conflict-rfp.pdf",
+        raw_pdf_path="data/raw/conflict.pdf",
+        status="listo_para_aprobacion",
+        client_name="Iberia Conflict Corp",
+        client_hq="España",
+        currency="USD",
+        departments_needed=json.dumps(["seleccion", "capacitacion"]),
+        synthesizer_summary="Propuesta con conflicto inicial de ventana y divisa.",
+    )
+    sec_sel = RFPDepartmentSection(
+        ticket_id=ticket_id,
+        department_id="seleccion",
+        department_name="Talent Selection Operations",
+        owner_name="Javier Almeida",
+        key_aspects=json.dumps(["5 mandos medios"]),
+        draft_content="Cierre en 10 días hábiles. Cotización en USD. Garantía de 90 días.",
+        evaluation_results=json.dumps({"overall_pass": True, "iteration": 1}),
+        approval_status="aprobado_evaluacion",
+    )
+    sec_cap = RFPDepartmentSection(
+        ticket_id=ticket_id,
+        department_id="capacitacion",
+        department_name="Corporate Training",
+        owner_name="Elena Vargas",
+        key_aspects=json.dumps(["Programa de liderazgo"]),
+        draft_content="Formación con inicio en 5 días. Cotización en USD. Garantía de 90 días.",
+        evaluation_results=json.dumps({"overall_pass": True, "iteration": 1}),
+        approval_status="aprobado_evaluacion",
+    )
+    with Session(engine) as session:
+        session.add(ticket)
+        session.add(sec_sel)
+        session.add(sec_cap)
+        session.commit()
+
+    start_res = rfp_graph.start_rfp_approval_pipeline(
+        ticket_id, db_engine=engine, checkpointer=checkpointer
+    )
+    detected = {t["trigger_id"] for t in start_res["conflict_triggers"] if t["detected"]}
+    assert "ttc-vs-training-window" in detected
+    assert "currency-mismatch" in detected
+
+    # Aprueba Capacitación (Elena Vargas) y luego Selección (Javier Almeida)
+    r_cap = rfp_graph.submit_department_approval(
+        ticket_id=ticket_id,
+        department_id="capacitacion",
+        decision="approve",
+        approver_name="Elena Vargas",
+        db_engine=engine,
+        checkpointer=checkpointer,
+    )
+    assert r_cap["status"] == "esperando_aprobación"
+
+    r_sel = rfp_graph.submit_department_approval(
+        ticket_id=ticket_id,
+        department_id="seleccion",
+        decision="approve",
+        approver_name="Javier Almeida",
+        db_engine=engine,
+        checkpointer=checkpointer,
+    )
+    assert r_sel["status"] == "terminado"
+    assert r_sel["final_document"] is not None
+    assert r_sel["final_document"]["currency"] == "EUR"
+    assert "USD" not in r_sel["final_document"]["markdown_content"]
+    assert "15 días hábiles" in r_sel["final_document"]["markdown_content"]
