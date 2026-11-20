@@ -151,20 +151,22 @@ def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassi
                 f"Propuesta pendiente: {pending_fact}\n"
                 f"Mensaje del usuario: {cleaned}\n\n"
                 "Reglas estrictas:\n"
-                "- 'approve': aprueba de forma inequívoca guardar la propuesta (sin dudas ni contradicciones).\n"
+                "- 'approve': aprueba de forma inequívoca guardar la propuesta (sin dudas ni contradicciones en ninguna oración).\n"
                 "- 'reject': rechaza explícitamente guardarla.\n"
                 "- 'edit': pide modificar el texto propuesto (devuelve el texto corregido en edited_fact).\n"
-                "- 'ambiguous_or_unrelated': cambia de tema, hace otra pregunta sin responder, duda o es ambiguo "
-                "(ej. 'Sí, pero no', 'Sí, pero no estoy seguro').\n"
-                "- Si además de responder incluye una nueva pregunta, extráela en remaining_question."
+                "- 'ambiguous_or_unrelated': cambia de tema, hace otra pregunta sin responder, duda o se contradice después "
+                "(ej. 'Sí, pero no', 'Sí. Pero no', 'Sí. No estoy seguro', 'Claro. Aunque mejor no').\n"
+                "- Si además de responder incluye una nueva pregunta válida, extráela en remaining_question."
             )
             return structured_llm.invoke(prompt)
         except Exception as exc:
             logger.debug(f"Fallback determinista en clasificador de memoria: {exc}")
 
-    # Clasificador determinista estricto: NO parte por coma para no truncar 'Sí, pero no'
+    # Clasificador determinista estricto sobre el mensaje completo (default-deny ante contradicción o duda)
     lower = cleaned.lower()
-    first_sentence = re.split(r"(?<=[.!?\n])\s*", lower, maxsplit=1)[0].strip()
+    clauses = [c.strip() for c in re.split(r"(?<=[.!?\n])\s*", lower) if c.strip()]
+    first_sentence = clauses[0] if clauses else lower
+    trailing_text = " ".join(clauses[1:]) if len(clauses) > 1 else ""
     remaining = _split_remaining_question(cleaned)
 
     edit_match = re.match(r"^(?:edita|editar|cambia|cambiar|mejor guarda|edit|change)\s*[:\-]?\s*(.+)$", cleaned, re.IGNORECASE)
@@ -175,7 +177,11 @@ def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassi
             remaining_question=remaining,
         )
 
-    if _is_unequivocal_approve(first_sentence):
+    # Si cualquier oración posterior introduce duda, contradicción o negación -> default-deny
+    if trailing_text and _HEDGE_OR_NEGATION_RE.search(trailing_text):
+        return ProposalClassification(decision="ambiguous_or_unrelated", remaining_question=None)
+
+    if _is_unequivocal_approve(first_sentence) and not _HEDGE_OR_NEGATION_RE.search(lower):
         return ProposalClassification(decision="approve", remaining_question=remaining)
 
     if _is_explicit_reject(first_sentence):
@@ -190,7 +196,6 @@ def classify_pending_decision(message: str, pending_fact: str) -> ProposalClassi
         cleaned if (has_followup_question or not looks_like_hedged_reply) else None
     )
     return ProposalClassification(decision="ambiguous_or_unrelated", remaining_question=next_question)
-
 
 def evaluate_turn_for_memory(
     user_message: str,

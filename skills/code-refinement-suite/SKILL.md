@@ -46,9 +46,9 @@ flowchart TD
 - **Ejemplos:** Agentes LangGraph con memoria persistente y consolidación, flujos *Human-in-the-Loop*, servidores MCP con OAuth + Scopes, pipelines RAG con evaluación de calidad.
 - **Protocolo Agéntico Avanzado:**
   1. `PACK_ARCHITECT`: ToT + 3 Expertos ampliado con **Threat Modeling IA (OWASP LLM Top 10)** y **FMEA** (*memory poisoning*, fuga de PII/secretos, *privilege escalation* en tools, ambigüedad del usuario).
-  2. `PACK_PLANNER`: Step-Back + 3 ciclos + **Máquina de Estados e Invariantes explícitos** (diagramas `stateDiagram-v2` / `sequenceDiagram`, contratos Pydantic para *Structured Outputs*, reglas *default-deny* y matriz de ejemplos positivos/negativos).
+  2. `PACK_PLANNER`: Step-Back + 3 ciclos + **Máquina de Estados e Invariantes explícitos** (diagramas `stateDiagram-v2` / `sequenceDiagram`, contratos Pydantic para *Structured Outputs*, reglas *default-deny*, **evaluación de mensaje completo sin truncar en la primera oración** y matriz de ejemplos positivos/negativos/contradictorios).
   3. `PACK_CODER`: CoVe + TDD + **Eval-Driven Development (EDD) y Replay Multi-Turno Determinista** (trayectorias completas, consolidación/TTL y registro auditable).
-  4. `PACK_AUDITOR`: **Adversarial Red Teaming de IA + Auditoría de Trazabilidad** (cambios de tema, intentos de inyección prohibida, doble propuesta simultánea, caída de Redis/Qdrant y verificación de logs).
+  4. `PACK_AUDITOR`: **Adversarial Red Teaming de IA + Auditoría de Trazabilidad** (cambios de tema, **afirmaciones seguidas de contradicción o duda tras punto** como `"Sí. Pero no"`, `"Sí. No estoy seguro"`, `"Claro. Aunque mejor no"`, intentos de inyección prohibida, doble propuesta simultánea, caída de Redis/Qdrant y verificación de logs).
 
 ### 🔹 Nivel 5: Ecosistema Crítico / Multi-Agente / Producción Autónoma (Complejidad Crítica)
 - **Ejemplos:** Orquestación multi-agente coordinada (*Swarms* / workflows paralelos), harnesses de evaluación continua en CI/CD, sistemas distribuidos con SLAs estrictos, gobernanza de memoria core en producción.
@@ -71,6 +71,7 @@ flowchart TD
 - **Acción:** Define componentes desacoplados y refina el documento `implementation-plan.md` hasta dejarlo impecable.
 - **Regla de Formato Obligatoria 1:** SIEMPRE debes incluir al final de cualquier plan de implementación que generes una sección titulada `## ⚙️ Métodos Aplicados (Code Refinement Suite)`. En esta sección, debes explicar brevemente cómo has aplicado o aplicarás conceptualmente los métodos específicos de esta suite (ToT, CoVe, Red Teaming, etc.) adaptados a la implementación actual.
 - **Regla de Formato Obligatoria 2:** SIEMPRE debes incluir una sección titulada `## 🗺️ Mapa de Trabajo por Fases (Roadmap)` que contenga las etapas de implementación en listas. Cada elemento de esta lista DEBE tener un checkbox (`- [ ]`) para poder ir marcándolos como completados a medida que avanza la ejecución.
+- **Regla de Diseño Obligatoria 3 (Mensajes Mixtos y Contradicciones Multi-Oración):** Todo plan que incluya clasificadores de intención, confirmaciones humanas (*HITL*) o guardrails *default-deny* DEBE exigir explícitamente la **evaluación del mensaje completo** (prohibido decidir solo por la primera oración/cláusula) e incluir en la matriz de pruebas casos adversarios con punto de contradicción o duda posterior (ej. `"Sí. Pero no"`, `"Sí. No estoy seguro"`, `"Claro. Aunque mejor no"` -> rechazo/ambiguo) junto con casos mixtos válidos (ej. `"Sí, guárdalo. ¿Cómo escalo?"` -> aprobación + respuesta).
 ### 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
 - **Herramientas:** `Chain of Verification (CoVe)` + `Test-Driven Refinement (TDD)`.
 - **Acción:** Contrasta los tipos e importaciones contra el código fuente real y ejecuta validaciones automatizadas (`npx tsc --noEmit`, `npm run lint`, `npm test`, `pytest`).

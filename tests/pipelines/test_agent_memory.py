@@ -170,7 +170,6 @@ def test_mixed_message_approves_and_answers_followup_question(mock_gen, mock_ret
     assert "Memoria actualizada" in r2["answer"]
     assert "soporte senior" in r2["answer"]
 
-
 # =====================================================================
 # 5. RESPUESTAS AMBIGUAS/CONTRADICTORIAS Y TTL/SILENCIO DE PROPUESTAS
 # =====================================================================
@@ -283,3 +282,39 @@ def test_get_audit_log_sweeps_abandoned_local_proposals(tmp_path):
     assert len(audit) == 1
     assert audit[0].decision == "expired"
     assert store.read_memory() == []
+
+
+@pytest.mark.parametrize(
+    "contradictory_msg",
+    [
+        "Sí. Pero no",
+        "Sí. No estoy seguro",
+        "Claro. Aunque mejor no",
+    ],
+)
+def test_contradictory_or_hesitant_trailing_sentence_does_not_approve(
+    contradictory_msg: str, isolated_memory
+):
+    p = MemoryProposal(
+        thread_id="t-contra",
+        fact="Los tickets urgentes de retail escalan en 24 horas.",
+        reason="SLA",
+        source_message="msg",
+    )
+    isolated_memory.save_pending_proposal(p)
+
+    cls = classify_pending_decision(contradictory_msg, p.fact)
+    assert cls.decision != "approve"
+    assert cls.decision in ("ambiguous_or_unrelated", "reject")
+
+    isolated_memory.resolve_proposal("t-contra", cls.decision, source_message=contradictory_msg)
+    assert isolated_memory.read_memory() == []
+
+
+def test_mixed_affirmation_with_followup_question_still_approves():
+    cls = classify_pending_decision(
+        "Sí, guárdalo. ¿Cómo escalo?",
+        "Regla de escalado prioritario.",
+    )
+    assert cls.decision == "approve"
+    assert cls.remaining_question == "¿Cómo escalo?"
