@@ -22,7 +22,15 @@ import {
     Upload,
     UserCheck,
     XCircle,
+    Bell,
+    Radio,
+    WifiOff,
 } from "lucide-react";
+
+import {
+    RFPTicketCreatedPayload,
+    useRFPNotifications,
+} from "@/hooks/useRFPNotifications";
 
 const STATUS_CONFIG: Record<
     string,
@@ -52,6 +60,12 @@ const STATUS_CONFIG: Record<
         color: "#f472b6",
         border: "1px solid rgba(236, 72, 153, 0.4)",
     },
+    "en_evaluación": {
+        label: "En evaluación",
+        bg: "rgba(236, 72, 153, 0.15)",
+        color: "#f472b6",
+        border: "1px solid rgba(236, 72, 153, 0.4)",
+    },
     needs_human_review: {
         label: "Needs Human Review",
         bg: "rgba(245, 158, 11, 0.2)",
@@ -60,39 +74,9 @@ const STATUS_CONFIG: Record<
     },
     listo_para_aprobacion: {
         label: "Evaluación Aprobada",
-        bg: "rgba(56, 189, 248, 0.15)",
-        color: "#38bdf8",
-        border: "1px solid rgba(56, 189, 248, 0.4)",
-    },
-    esperando_aprobación: {
-        label: "Esperando Aprobación (HITL)",
-        bg: "rgba(245, 158, 11, 0.18)",
-        color: "#fbbf24",
-        border: "1px solid rgba(245, 158, 11, 0.5)",
-    },
-    approved: {
-        label: "Aprobado",
-        bg: "rgba(16, 185, 129, 0.18)",
+        bg: "rgba(16, 185, 129, 0.15)",
         color: "#34d399",
-        border: "1px solid rgba(16, 185, 129, 0.5)",
-    },
-    request_changes: {
-        label: "Cambios Solicitados",
-        bg: "rgba(245, 158, 11, 0.18)",
-        color: "#fbbf24",
-        border: "1px solid rgba(245, 158, 11, 0.45)",
-    },
-    rejected: {
-        label: "Rechazado",
-        bg: "rgba(239, 68, 68, 0.18)",
-        color: "#f87171",
-        border: "1px solid rgba(239, 68, 68, 0.45)",
-    },
-    terminado: {
-        label: "Terminado · Documento Final",
-        bg: "rgba(16, 185, 129, 0.22)",
-        color: "#34d399",
-        border: "1px solid #10b981",
+        border: "1px solid rgba(16, 185, 129, 0.4)",
     },
     descartado: {
         label: "Descartado",
@@ -114,11 +98,9 @@ export default function RFPsPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [generating, setGenerating] = useState(false);
-    const [startingApproval, setStartingApproval] = useState(false);
-    const [submittingDept, setSubmittingDept] = useState<string | null>(null);
-    const [commentsByDept, setCommentsByDept] = useState<Record<string, string>>({});
     const [loadingList, setLoadingList] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sseToast, setSseToast] = useState<RFPTicketCreatedPayload | null>(null);
 
     const loadTickets = useCallback(async (activeTicketId?: string) => {
         try {
@@ -136,6 +118,47 @@ export default function RFPsPage() {
         }
     }, [selectedTicket?.ticket_id]);
 
+    const handleTicketCreated = useCallback((payload: RFPTicketCreatedPayload) => {
+        setTickets((prev) => {
+            if (prev.some((t) => t.ticket_id === payload.ticket_id)) {
+                return prev;
+            }
+            const incomingTicket: RFPTicket = {
+                ticket_id: payload.ticket_id,
+                rfp_id: payload.rfp_id,
+                filename: payload.filename,
+                raw_pdf_path: "",
+                status: payload.status,
+                client_name: payload.client_name ?? null,
+                services_requested: [],
+                departments_needed: [],
+                readability_metrics: {},
+                handoff_payload: {},
+                created_at: payload.created_at,
+                updated_at: payload.created_at,
+                sections: [],
+            };
+            return [incomingTicket, ...prev];
+        });
+
+        setSseToast(payload);
+    }, []);
+
+    const handleSSEReconnect = useCallback(async () => {
+        await loadTickets();
+    }, [loadTickets]);
+
+    const { connectionStatus, reconnectAttempt } = useRFPNotifications({
+        onTicketCreated: handleTicketCreated,
+        onReconnect: handleSSEReconnect,
+    });
+
+    useEffect(() => {
+        if (!sseToast) return;
+        const timer = setTimeout(() => setSseToast(null), 8000);
+        return () => clearTimeout(timer);
+    }, [sseToast]);
+
     useEffect(() => {
         loadTickets();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,7 +169,8 @@ export default function RFPsPage() {
         const isProcessing = (status?: string) =>
             status === "analizando" ||
             status === "generando_borrador" ||
-            status === "en_evaluacion";
+            status === "en_evaluacion" ||
+            status === "en_evaluación";
 
         const hasPending =
             tickets.some((t) => isProcessing(t.status)) ||
@@ -191,59 +215,6 @@ export default function RFPsPage() {
         }
     };
 
-    const handleStartApproval = async (ticketId: string) => {
-        setStartingApproval(true);
-        setError(null);
-        try {
-            const updated = await rfpService.startApproval(ticketId);
-            setSelectedTicket(updated);
-            await loadTickets(ticketId);
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Error al iniciar flujo de aprobación.");
-        } finally {
-            setStartingApproval(false);
-        }
-    };
-
-    const handleDepartmentDecision = async (
-        ticketId: string,
-        departmentId: string,
-        decision: "approve" | "reject" | "request_changes",
-        ownerName: string
-    ) => {
-        setSubmittingDept(departmentId);
-        setError(null);
-        try {
-            const updated = await rfpService.approveDepartment(ticketId, {
-                department_id: departmentId,
-                decision,
-                approver_name: ownerName,
-                comments: commentsByDept[departmentId]?.trim() || undefined,
-            });
-            setSelectedTicket(updated);
-            await loadTickets(ticketId);
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Error al registrar decisión humana.");
-        } finally {
-            setSubmittingDept(null);
-        }
-    };
-
-    const handleDownloadFinalDocument = () => {
-        if (!selectedTicket?.final_document?.markdown_content) return;
-        const blob = new Blob([selectedTicket.final_document.markdown_content], {
-            type: "text/markdown;charset=utf-8",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${selectedTicket.rfp_id || "propuesta"}-final.md`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
-
     const handleSelectTicket = async (ticketId: string) => {
         setError(null);
         try {
@@ -274,14 +245,9 @@ export default function RFPsPage() {
                 {statusValue === "analizando" && <Clock size={12} />}
                 {statusValue === "analisis_completo" && <FileCheck size={12} />}
                 {statusValue === "generando_borrador" && <RefreshCw size={12} className="animate-spin" />}
-                {statusValue === "en_evaluacion" && <Scale size={12} />}
+                {(statusValue === "en_evaluacion" || statusValue === "en_evaluación") && <Scale size={12} />}
                 {statusValue === "needs_human_review" && <AlertTriangle size={12} />}
                 {statusValue === "listo_para_aprobacion" && <CheckCircle2 size={12} />}
-                {statusValue === "esperando_aprobación" && <UserCheck size={12} />}
-                {statusValue === "approved" && <CheckCircle2 size={12} />}
-                {statusValue === "request_changes" && <ShieldAlert size={12} />}
-                {statusValue === "rejected" && <XCircle size={12} />}
-                {statusValue === "terminado" && <FileCheck size={12} />}
                 {statusValue === "descartado" && <XCircle size={12} />}
                 {statusValue === "error" && <AlertCircle size={12} />}
                 {cfg.label}
@@ -390,6 +356,70 @@ export default function RFPsPage() {
                         </Link>
                     </div>
                 </header>
+
+                {sseToast && (
+                    <div
+                        role="status"
+                        style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "0.75rem",
+                            padding: "0.85rem 1.1rem",
+                            marginBottom: "1.25rem",
+                            borderRadius: "0.75rem",
+                            background: "rgba(16, 185, 129, 0.15)",
+                            border: "1px solid rgba(16, 185, 129, 0.55)",
+                            color: "#ecfdf5",
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                            <Bell size={18} color="#34d399" />
+                            <span style={{ fontSize: "0.9rem" }}>
+                                <strong>Nuevo ticket RFP en tiempo real:</strong>{" "}
+                                <code>{sseToast.rfp_id}</code> ({sseToast.filename}) · Estado:{" "}
+                                <strong>{sseToast.status}</strong> — requiere procesamiento
+                            </span>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleSelectTicket(sseToast.ticket_id);
+                                    setSseToast(null);
+                                }}
+                                style={{
+                                    padding: "0.35rem 0.75rem",
+                                    borderRadius: "0.4rem",
+                                    background: "#10b981",
+                                    color: "#06281e",
+                                    border: "none",
+                                    fontWeight: 700,
+                                    fontSize: "0.8rem",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Ver ticket
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSseToast(null)}
+                                style={{
+                                    padding: "0.35rem 0.7rem",
+                                    borderRadius: "0.4rem",
+                                    background: "transparent",
+                                    color: "#a7f3d0",
+                                    border: "1px solid rgba(167, 243, 208, 0.4)",
+                                    fontSize: "0.8rem",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Formulario de subida */}
                 <section
@@ -607,32 +637,6 @@ export default function RFPsPage() {
                                                 {generating ? "Iniciando..." : "Generar Propuesta Económica"}
                                             </button>
                                         )}
-
-                                        {/* Botón Parte 3: Iniciar flujo HITL de aprobación por departamento */}
-                                        {(selectedTicket.status === "listo_para_aprobacion" ||
-                                            selectedTicket.status === "needs_human_review") && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleStartApproval(selectedTicket.ticket_id)}
-                                                    disabled={startingApproval}
-                                                    style={{
-                                                        display: "inline-flex",
-                                                        alignItems: "center",
-                                                        gap: "0.4rem",
-                                                        padding: "0.45rem 0.85rem",
-                                                        borderRadius: "0.5rem",
-                                                        background: "#10b981",
-                                                        color: "#0a0d12",
-                                                        border: "none",
-                                                        fontSize: "0.8rem",
-                                                        fontWeight: 700,
-                                                        cursor: startingApproval ? "not-allowed" : "pointer",
-                                                    }}
-                                                >
-                                                    <UserCheck size={14} />
-                                                    {startingApproval ? "Iniciando HITL..." : "Enviar a Aprobación (HITL)"}
-                                                </button>
-                                            )}
                                     </div>
                                 </div>
 
@@ -837,240 +841,10 @@ export default function RFPsPage() {
                                                             )}
                                                         </div>
                                                     )}
-
-                                                    {/* Controles Human-in-the-Loop (Parte 3) */}
-                                                    {sec.draft_content && (
-                                                        <div
-                                                            style={{
-                                                                marginTop: "0.85rem",
-                                                                paddingTop: "0.75rem",
-                                                                borderTop: "1px solid rgba(148, 163, 184, 0.15)",
-                                                                display: "flex",
-                                                                flexDirection: "column",
-                                                                gap: "0.55rem",
-                                                            }}
-                                                        >
-                                                            {sec.approval_status === "approved" ? (
-                                                                <div style={{ fontSize: "0.8rem", color: "#34d399", fontWeight: 600 }}>
-                                                                    ✓ Visto bueno registrado por {sec.approver || sec.owner_name}
-                                                                    {sec.approved_at ? ` (${new Date(sec.approved_at).toLocaleString()})` : ""}
-                                                                </div>
-                                                            ) : (
-                                                                <>
-                                                                    <div style={{ fontSize: "0.78rem", color: "#cbd5e1" }}>
-                                                                        <strong>Aprobación Human-in-the-Loop ({sec.owner_name}):</strong>
-                                                                    </div>
-                                                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="Comentarios o ajustes solicitados (opcional)..."
-                                                                            value={commentsByDept[sec.department_id] ?? ""}
-                                                                            onChange={(e) =>
-                                                                                setCommentsByDept((prev) => ({
-                                                                                    ...prev,
-                                                                                    [sec.department_id]: e.target.value,
-                                                                                }))
-                                                                            }
-                                                                            style={{
-                                                                                flex: 1,
-                                                                                minWidth: "200px",
-                                                                                padding: "0.42rem 0.65rem",
-                                                                                borderRadius: "0.4rem",
-                                                                                background: "#121721",
-                                                                                border: "1px solid rgba(148, 163, 184, 0.3)",
-                                                                                color: "#f1f5f9",
-                                                                                fontSize: "0.8rem",
-                                                                            }}
-                                                                        />
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={submittingDept === sec.department_id}
-                                                                            onClick={() =>
-                                                                                handleDepartmentDecision(
-                                                                                    selectedTicket.ticket_id,
-                                                                                    sec.department_id,
-                                                                                    "approve",
-                                                                                    sec.owner_name
-                                                                                )
-                                                                            }
-                                                                            style={{
-                                                                                padding: "0.42rem 0.85rem",
-                                                                                borderRadius: "0.4rem",
-                                                                                background: "#10b981",
-                                                                                color: "#0a0d12",
-                                                                                border: "none",
-                                                                                fontWeight: 700,
-                                                                                fontSize: "0.8rem",
-                                                                                cursor: "pointer",
-                                                                            }}
-                                                                        >
-                                                                            {submittingDept === sec.department_id ? "Guardando..." : "Aprobar Sección"}
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={submittingDept === sec.department_id}
-                                                                            onClick={() =>
-                                                                                handleDepartmentDecision(
-                                                                                    selectedTicket.ticket_id,
-                                                                                    sec.department_id,
-                                                                                    "request_changes",
-                                                                                    sec.owner_name
-                                                                                )
-                                                                            }
-                                                                            style={{
-                                                                                padding: "0.42rem 0.85rem",
-                                                                                borderRadius: "0.4rem",
-                                                                                background: "rgba(245, 158, 11, 0.2)",
-                                                                                color: "#fbbf24",
-                                                                                border: "1px solid rgba(245, 158, 11, 0.45)",
-                                                                                fontWeight: 600,
-                                                                                fontSize: "0.8rem",
-                                                                                cursor: "pointer",
-                                                                            }}
-                                                                        >
-                                                                            Solicitar Cambios
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={submittingDept === sec.department_id}
-                                                                            onClick={() =>
-                                                                                handleDepartmentDecision(
-                                                                                    selectedTicket.ticket_id,
-                                                                                    sec.department_id,
-                                                                                    "reject",
-                                                                                    sec.owner_name
-                                                                                )
-                                                                            }
-                                                                            style={{
-                                                                                padding: "0.42rem 0.75rem",
-                                                                                borderRadius: "0.4rem",
-                                                                                background: "rgba(239, 68, 68, 0.15)",
-                                                                                color: "#f87171",
-                                                                                border: "1px solid rgba(239, 68, 68, 0.4)",
-                                                                                fontWeight: 600,
-                                                                                fontSize: "0.8rem",
-                                                                                cursor: "pointer",
-                                                                            }}
-                                                                        >
-                                                                            Rechazar
-                                                                        </button>
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                )}
-
-                                {/* Registro de Arbitraje (§7) */}
-                                {selectedTicket.conflict_triggers && selectedTicket.conflict_triggers.some((t) => t.detected) && (
-                                    <div
-                                        style={{
-                                            background: "rgba(59, 130, 246, 0.12)",
-                                            border: "1px solid rgba(59, 130, 246, 0.35)",
-                                            borderRadius: "0.6rem",
-                                            padding: "0.95rem",
-                                            fontSize: "0.82rem",
-                                        }}
-                                    >
-                                        <strong style={{ color: "#93c5fd" }}>
-                                            Arbitraje Estructurado de Conflictos (§7):
-                                        </strong>
-                                        <ul style={{ margin: "0.4rem 0 0 1.2rem", color: "#e2e8f0" }}>
-                                            {selectedTicket.conflict_triggers
-                                                .filter((t) => t.detected)
-                                                .map((t, idx) => (
-                                                    <li key={idx}>
-                                                        <code>{t.trigger_id}</code> · Árbitro: <strong>{t.arbitrator}</strong> →{" "}
-                                                        {t.applied_action} ({t.details})
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {/* Documento Final Consolidado (Parte 3 · status: terminado) */}
-                                {selectedTicket.final_document && (
-                                    <div
-                                        style={{
-                                            background: "#0f172a",
-                                            border: "1px solid #10b981",
-                                            borderRadius: "0.7rem",
-                                            padding: "1.1rem",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                marginBottom: "0.75rem",
-                                                flexWrap: "wrap",
-                                                gap: "0.5rem",
-                                            }}
-                                        >
-                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#34d399", margin: 0 }}>
-                                                Propuesta Económica Final Consolidada
-                                            </h3>
-                                            <button
-                                                type="button"
-                                                onClick={handleDownloadFinalDocument}
-                                                style={{
-                                                    padding: "0.4rem 0.85rem",
-                                                    borderRadius: "0.45rem",
-                                                    background: "#10b981",
-                                                    color: "#0a0d12",
-                                                    border: "none",
-                                                    fontWeight: 700,
-                                                    fontSize: "0.8rem",
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                Descargar Markdown (.md)
-                                            </button>
-                                        </div>
-                                        <pre
-                                            style={{
-                                                fontSize: "0.8rem",
-                                                color: "#e2e8f0",
-                                                whiteSpace: "pre-wrap",
-                                                fontFamily: "inherit",
-                                                margin: 0,
-                                                maxHeight: "360px",
-                                                overflowY: "auto",
-                                            }}
-                                        >
-                                            {selectedTicket.final_document.markdown_content}
-                                        </pre>
-                                    </div>
-                                )}
-
-                                {/* Trazabilidad Completa de Nodos */}
-                                {selectedTicket.trace_log && selectedTicket.trace_log.length > 0 && (
-                                    <details
-                                        style={{
-                                            background: "#181f2c",
-                                            border: "1px solid rgba(148, 163, 184, 0.2)",
-                                            borderRadius: "0.6rem",
-                                            padding: "0.85rem",
-                                            fontSize: "0.8rem",
-                                        }}
-                                    >
-                                        <summary style={{ cursor: "pointer", fontWeight: 600, color: "#fde68a" }}>
-                                            Trazabilidad de Ejecución ({selectedTicket.trace_log.length} eventos)
-                                        </summary>
-                                        <ul style={{ margin: "0.6rem 0 0 1.2rem", color: "#cbd5e1" }}>
-                                            {selectedTicket.trace_log.map((entry, idx) => (
-                                                <li key={idx} style={{ marginBottom: "0.25rem" }}>
-                                                    <code>{entry.node}</code> ({entry.agent}) · {entry.output_summary}{" "}
-                                                    <span style={{ color: "#64748b" }}>[{entry.timestamp}]</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </details>
                                 )}
                             </div>
                         )}

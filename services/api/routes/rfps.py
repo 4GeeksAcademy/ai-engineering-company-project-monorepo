@@ -5,12 +5,14 @@ Protegido por defecto con Auth Guard Standard (Depends(get_current_user)).
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -24,6 +26,7 @@ from data.pipelines.rfp_intake.graph import (
 from services.api.database import engine
 from services.api.models import RFPDepartmentSection, RFPFinalDocument, RFPTicket
 from services.api.routes.auth import get_current_user
+from services.api.sse_manager import rfp_broadcaster
 
 router = APIRouter(prefix="/api/rfps", tags=["RFPs (Recepción, Enrutamiento, Generación y Aprobación)"])
 
@@ -155,6 +158,19 @@ async def upload_rfp_pdf(
         session.add(ticket)
         session.commit()
         session.refresh(ticket)
+    
+    await rfp_broadcaster.publish(
+        event="rfp_ticket_created",
+        event_id=ticket.ticket_id,
+        data={
+            "ticket_id": ticket.ticket_id,
+            "rfp_id": ticket.rfp_id,
+            "filename": ticket.filename,
+            "status": ticket.status,
+            "client_name": ticket.client_name,
+            "created_at": ticket.created_at,
+        },
+    )
 
     background_tasks.add_task(run_rfp_intake_pipeline, ticket.ticket_id)
 
@@ -250,6 +266,39 @@ def get_final_proposal_document(
             )
         return _serialize_final_doc(final_doc) or {}
 
+@router.get("/stream", status_code=status.HTTP_200_OK)
+async def stream_rfp_events(
+    request: Request,
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> StreamingResponse:
+    """
+    Stream SSE en tiempo real protegido por JWT.
+    Emite eventos nombrados (`rfp_ticket_created`) y latidos keep-alive cada 15s.
+    """
+    async def event_generator():
+        queue = rfp_broadcaster.subscribe()
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    message = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield message
+                except asyncio.TimeoutError:
+                    yield ": ping\n\n"
+        except (asyncio.CancelledError, GeneratorExit):
+            pass
+        finally:
+            rfp_broadcaster.unsubscribe(queue)
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 @router.get("", status_code=status.HTTP_200_OK)
 @router.get("/", status_code=status.HTTP_200_OK, include_in_schema=False)
