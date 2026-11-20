@@ -281,3 +281,19 @@ Para dar cumplimiento formal al estándar de excelencia metodológica exigido po
 4. **Principio de Mínimo Privilegio y Red Teaming:** Se definieron matrices de scopes granulares y 5 escenarios de prueba de penetración defensiva para verificar la inviolabilidad de la herramienta de inventario y la autenticación.
 5. **Chain of Verification (CoVe) & TDD:** Toda la implementación de código y schemas se contrastará paso a paso contra los contratos existentes en `services/api/routes/incidents.py` y `services/api/routes/inventory.py`, validándose con `uv run pytest`.
 
+---
+
+## 🩹 Registro de Problemas Encontrados y Resoluciones
+
+Durante la revisión y validación en entorno real (GitHub Codespaces + MCP Playground) surgieron los siguientes problemas técnicos, junto con su solución aplicada:
+
+| # | Problema Detectado | Causa Raíz | Resolución Aplicada |
+| :--- | :--- | :--- | :--- |
+| **1** | **Endpoint `/auth/token` expuesto en la URL pública** | Se creó una ruta de utilidad `/auth/token` exenta del middleware Bearer en `auth.py`. Al exponer el puerto `8001` como público para MCP Playground, cualquiera podía generar tokens JWT válidos desde internet. | Se eliminó `/auth/token` de `mcps/company_tools/server.py` y se retiró de la lista de rutas exentas en `mcps/company_tools/auth.py`. Los tokens de prueba ahora se generan únicamente de forma local mediante CLI (`uv run python -c "from mcps.company_tools.auth import create_access_token; ..."`). |
+| **2** | **Secreto `MCP_JWT_SECRET` hardcodeado en el código** | `mcps/company_tools/config.py` tenía un valor por defecto literal (`"nexova_mcp_super_secret_jwt_key_2026"`) y no cargaba `.env`. | Se movió `MCP_JWT_SECRET` a `.env` (usando un secreto criptográfico de 32 caracteres generado con `secrets.token_urlsafe(24)`), se documentó en `.env.example`, se añadió `load_dotenv()` en `config.py` y se agregó validación `RuntimeError` al arranque si la variable está vacía. |
+| **3** | **Falta de tests explícitos de `tools/list` y `tools/call` sin token OAuth** | `tests/test_mcp_server.py` solo comprobaba el rechazo `401` sobre `GET /sse`, sin verificar explícitamente las operaciones MCP JSON-RPC. | Se sustituyó el test del endpoint de desarrollo por `test_auth_token_endpoint_not_publicly_accessible` y se añadieron `test_cannot_list_tools_without_oauth_token` y `test_cannot_call_tools_without_oauth_token` enviando peticiones `tools/list` y `tools/call` sin token a `/mcp` y `/messages`. |
+| **4** | **Bloqueo CORS / `OPTIONS /mcp` (405) en MCP Playground** | `FastMCP.http_app()` devolvía `405 Method Not Allowed` sin cabeceras CORS en preflight `OPTIONS /mcp` y no exponía `Mcp-Session-Id` para clientes web externos. | Se envolvió la aplicación Starlette en `create_app()` (`mcps/company_tools/server.py`) con `CORSMiddleware` (permitiendo `OPTIONS`, `GET`, `POST`, `DELETE` y exponiendo `Mcp-Session-Id` y `WWW-Authenticate`) por fuera del middleware OAuth. |
+| **5** | **Conexión fallida en MCP Playground (`localhost` / puerto `Private` / `404` en `/`)** | El editor de escritorio reenvía `localhost:8001` localmente, pero el túnel `*.app.github.dev` permanecía en `Private` (y `GET /` no existe; el endpoint Streamable HTTP es `/mcp`). | Se cambió la visibilidad del puerto `8001` a **Public** desde el Codespace en navegador, se verificó `/health` en modo incógnito y se conectó MCP Playground a `https://potential-doodle-9r797j5rvrr27999-8001.app.github.dev/mcp` logrando estado `● LIVE` y ejecución real de `incidents_create`. |
+| **6** | **Desincronización de `main` tras merges previos** | Un merge/revert previo en `main` había eliminado `data/pipelines/rag.py`, `services/agent/`, `services/api/routes/agent.py` y sus tests. | Se creó `fix/reintegrar-proyectos` desde `main`, se integró `feature/langgraph-external-tools` verificando `19/19` tests en `pytest` (PR #31), y se sincronizó `feature/mcp-oauth-tools` con `main` antes de subir el fix del MCP. |
+
+
