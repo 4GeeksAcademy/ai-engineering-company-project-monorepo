@@ -1,6 +1,6 @@
 """
 services/api/routes/rfps.py
-Router FastAPI para recepción, enrutamiento, generación y consulta de tickets RFP (Hitos 9 · Partes 1 y 2).
+Router FastAPI para recepción, enrutamiento, generación, aprobación HITL y cierre de tickets RFP (Hito 9 · Partes 1, 2 y 3).
 Protegido por defecto con Auth Guard Standard (Depends(get_current_user)).
 """
 from __future__ import annotations
@@ -8,19 +8,33 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from data.pipelines.rfp_intake.graph import run_rfp_generation_pipeline, run_rfp_intake_pipeline
+from data.pipelines.rfp_intake.graph import (
+    get_ticket_trace_and_conflicts,
+    run_rfp_generation_pipeline,
+    run_rfp_intake_pipeline,
+    start_rfp_approval_pipeline,
+    submit_department_approval,
+)
 from services.api.database import engine
-from services.api.models import RFPDepartmentSection, RFPTicket
+from services.api.models import RFPDepartmentSection, RFPFinalDocument, RFPTicket
 from services.api.routes.auth import get_current_user
 
-router = APIRouter(prefix="/api/rfps", tags=["RFPs (Recepción, Enrutamiento y Generación)"])
+router = APIRouter(prefix="/api/rfps", tags=["RFPs (Recepción, Enrutamiento, Generación y Aprobación)"])
 
 RAW_RFP_DIR = Path("data/raw")
+
+
+class DepartmentApprovalRequest(BaseModel):
+    department_id: Literal["seleccion", "capacitacion", "soporte"]
+    decision: Literal["approve", "reject", "request_changes"]
+    approver_name: Optional[str] = None
+    comments: Optional[str] = None
 
 
 def _safe_json_load(raw: Optional[str], default: Any) -> Any:
@@ -32,7 +46,41 @@ def _safe_json_load(raw: Optional[str], default: Any) -> Any:
         return default
 
 
-def _serialize_ticket(ticket: RFPTicket, sections: List[RFPDepartmentSection] | None = None) -> Dict[str, Any]:
+def _serialize_final_doc(final_doc: Optional[RFPFinalDocument]) -> Optional[Dict[str, Any]]:
+    if not final_doc:
+        return None
+    return {
+        "ticket_id": final_doc.ticket_id,
+        "rfp_id": final_doc.rfp_id,
+        "client_name": final_doc.client_name,
+        "client_hq": final_doc.client_hq,
+        "currency": final_doc.currency,
+        "sections": _safe_json_load(final_doc.sections, []),
+        "markdown_content": final_doc.markdown_content,
+        "arbitration_log": _safe_json_load(final_doc.arbitration_log, []),
+        "trace_log": _safe_json_load(final_doc.trace_log, []),
+        "generated_at": final_doc.generated_at,
+    }
+
+
+def _serialize_ticket(
+    ticket: RFPTicket,
+    sections: List[RFPDepartmentSection] | None = None,
+    final_doc: Optional[RFPFinalDocument] = None,
+    trace_info: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    serialized_doc = _serialize_final_doc(final_doc)
+    trace_log = (
+        serialized_doc["trace_log"]
+        if serialized_doc and serialized_doc.get("trace_log")
+        else (trace_info or {}).get("trace_entries", [])
+    )
+    conflict_triggers = (
+        serialized_doc["arbitration_log"]
+        if serialized_doc and serialized_doc.get("arbitration_log")
+        else (trace_info or {}).get("conflict_triggers", [])
+    )
+
     return {
         "ticket_id": ticket.ticket_id,
         "rfp_id": ticket.rfp_id,
@@ -65,9 +113,14 @@ def _serialize_ticket(ticket: RFPTicket, sections: List[RFPDepartmentSection] | 
                 "draft_content": s.draft_content,
                 "evaluation_results": _safe_json_load(s.evaluation_results, None),
                 "approval_status": s.approval_status,
+                "approver": s.approver,
+                "approved_at": s.approved_at,
             }
             for s in (sections or [])
         ],
+        "final_document": serialized_doc,
+        "conflict_triggers": conflict_triggers,
+        "trace_log": trace_log,
     }
 
 
@@ -141,6 +194,63 @@ def trigger_generation_pipeline(
     }
 
 
+@router.post("/{ticket_id}/start-approval", status_code=status.HTTP_200_OK)
+def start_approval_workflow(
+    ticket_id: str,
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Parte 3: Inicia los checkpoints paralelos de aprobación humana (HITL) por departamento."""
+    try:
+        start_rfp_approval_pipeline(ticket_id, db_engine=engine)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    return get_rfp_ticket(ticket_id, current_user=current_user)
+
+
+@router.post("/{ticket_id}/approve", status_code=status.HTTP_200_OK)
+def submit_approval_decision(
+    ticket_id: str,
+    payload: DepartmentApprovalRequest,
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Parte 3: Reanuda únicamente la rama de un departamento desde su punto `interrupt`.
+    Valida `approve` / `reject` / `request_changes` y cierra el documento si aprobaron todos.
+    """
+    try:
+        submit_department_approval(
+            ticket_id=ticket_id,
+            department_id=payload.department_id,
+            decision=payload.decision,
+            approver_name=payload.approver_name or current_user.get("email"),
+            comments=payload.comments,
+            db_engine=engine,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return get_rfp_ticket(ticket_id, current_user=current_user)
+
+
+@router.get("/{ticket_id}/final-document", status_code=status.HTTP_200_OK)
+def get_final_proposal_document(
+    ticket_id: str,
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Devuelve el documento final consolidado cuando el ticket está en estado `terminado`."""
+    with Session(engine) as session:
+        final_doc = session.exec(
+            select(RFPFinalDocument).where(RFPFinalDocument.ticket_id == ticket_id)
+        ).first()
+        if not final_doc:
+            raise HTTPException(
+                status_code=404,
+                detail="El documento final aún no ha sido generado (faltan aprobaciones departamentales).",
+            )
+        return _serialize_final_doc(final_doc) or {}
+
+
 @router.get("", status_code=status.HTTP_200_OK)
 @router.get("/", status_code=status.HTTP_200_OK, include_in_schema=False)
 def list_rfp_tickets(
@@ -158,7 +268,7 @@ def get_rfp_ticket(
     ticket_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Devuelve el detalle del ticket con sus secciones, borradores y resultados de evaluación."""
+    """Devuelve el detalle del ticket con secciones, borradores, evaluaciones, trazabilidad y documento final."""
     with Session(engine) as session:
         ticket = session.get(RFPTicket, ticket_id)
         if not ticket:
@@ -166,4 +276,11 @@ def get_rfp_ticket(
         sections = session.exec(
             select(RFPDepartmentSection).where(RFPDepartmentSection.ticket_id == ticket_id)
         ).all()
-        return _serialize_ticket(ticket, sections)
+        final_doc = session.exec(
+            select(RFPFinalDocument).where(RFPFinalDocument.ticket_id == ticket_id)
+        ).first()
+        trace_info = get_ticket_trace_and_conflicts(
+            ticket_id,
+            [s.department_id for s in sections],
+        )
+        return _serialize_ticket(ticket, sections, final_doc=final_doc, trace_info=trace_info)
