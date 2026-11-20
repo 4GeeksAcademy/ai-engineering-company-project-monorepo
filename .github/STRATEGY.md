@@ -1,51 +1,53 @@
-# Hito — Flujo Agéntico de RFPs: Generación de Respuestas (Parte 2 de 3)
+# Hito — Flujo Agéntico de RFPs: Aprobación y Cierre (Parte 3 de 3)
 
-Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí están los lineamientos concretos contra los que deben validar tus agentes evaluadores.
+Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí están quién aprueba cada departamento (y cualquier aprobador extra que tu empresa exija), las reglas de arbitraje ante conflictos y el formato del documento final. No inventes una escalera jerárquica multi-nivel salvo que tu BRIEFING lo diga (p. ej. umbral de CEO); en la mayoría de empresas el sign-off es el responsable nombrado de cada departamento activo.
 
 ## 🎯 Tu reto
 📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-En la Parte 1 ya tienes un flujo que clasifica cada RFP y abre un ticket por cada una, dejándole claro a Ventas qué le toca a cada departamento. Ahora Ventas quiere ir un paso más allá: que ese análisis se convierta directamente en un primer borrador de la propuesta económica, revisado automáticamente antes de que un humano lo vea.
+En la Parte 2 cada departamento ya genera y autoevalúa su sección de la propuesta económica dentro del mismo ticket abierto en la Parte 1. Falta lo más delicado: que un humano de cada departamento dé el visto bueno antes de que el documento final salga hacia el cliente.
 
-### Ticket — Generación y evaluación de respuestas a RFP
-**Contexto:** La Parte 1 nos dice qué hay que responder en cada RFP, pero armar el borrador de la propuesta económica sigue siendo manual y lento. Necesito que el sistema genere un primer borrador por departamento y que ese borrador se autoevalúe antes de llegar a un humano.
+### Ticket — Aprobación humana y cierre del documento
+**Contexto:** Ya generamos y autoevaluamos cada sección de la propuesta, pero nadie va a firmar una propuesta económica sin que un humano de cada departamento le dé el visto bueno. Esta es la última pieza del flujo que empezamos en la Parte 1 — y tiene que sentirse como una sola experiencia, no como tres proyectos pegados con cinta.
 
 **Qué necesito que construyas:**
-1. Un agente generador por departamento que reciba los metadatos y el resumen producidos en la Parte 1, y redacte la sección correspondiente de la propuesta económica.
-2. Varios agentes evaluadores corriendo en paralelo sobre cada sección generada: legibilidad (de nuevo, `py-readability-metrics` te sirve para esto), pertinencia respecto a lo que pide la RFP, y cumplimiento de nuestros lineamientos de empresa.
-3. Si una sección falla la evaluación, que vuelva al generador correspondiente con feedback concreto sobre qué corregir — no que se quede atascada ni que se descarte el ticket completo.
-4. Un límite de iteraciones para ese ciclo generador-evaluador, para que no se repita indefinidamente si un generador no logra pasar la evaluación. Si una sección agota ese límite sin pasar, conserva el último borrador y su resultado de evaluación, márcala `needs_human_review`, e inclúyela igual en el handoff a la Parte 3 — nunca descartes el ticket completo.
-5. **Opcional:** si ya tienes montada la base de conocimiento semántica de la empresa, dale acceso al generador — que redacte con nuestras políticas y tono reales en lugar de improvisarlos ayuda mucho a que pase la evaluación de cumplimiento a la primera. No es indispensable para esta parte, pero si la tienes disponible, úsala.
+1. Antes de dar por aprobada la sección de un departamento, el flujo debe pasar por un punto de aprobación humana real — un human-in-the-loop, no solo un evaluador automático más.
+2. El flujo debe detenerse justo antes de esa acción irreversible, guardar el estado con un checkpointer, y poder reanudarse exactamente donde quedó cuando llegue la aprobación — no reiniciar desde cero.
+3. Esa pausa debe afectar solo la rama del departamento que está esperando aprobación; los demás departamentos que ya tengan su sección lista deben poder seguir avanzando en paralelo, no bloquearse entre sí.
+4. Define un límite de iteraciones y un nodo de arbitraje explícito para los desacuerdos entre departamentos. Conéctalo a los triggers de conflicto y al árbitro fijo de tu BRIEFING (reglas o un humano nombrado — no un LLM “votando” entre agentes).
+5. Cuando todos los departamentos den su sign-off, el documento final debe generarse solo, consolidando las secciones aprobadas.
+6. Quiero poder ver, para cualquier ejecución, qué agente hizo qué y en qué orden, porque cuando algo salga mal en producción no vamos a tener tiempo de adivinar.
 
-**Acceptance criteria:** El handoff hacia la Parte 3 debe incluir, por cada departamento, tanto el contenido generado como un resultado de evaluación estructurado (ver schema abajo). Las secciones que agotaron el límite de iteraciones van con `needs_human_review` — no se eliminan.
+Cuando termines, corre el flujo completo de principio a fin — desde que se sube la RFP en la Parte 1 hasta que se genera el documento final aquí — y revisa que se sienta como un solo proceso: sin saltos de estado raros, sin mensajes que no coincidan entre partes, sin pasos que se rompan en la transición de una parte a otra.
+
+**Acceptance criteria:** Una RFP puede recorrer las tres partes de punta a punta, pausarse para aprobación humana por departamento sin bloquear a los demás, y terminar en un documento final generado automáticamente, con trazabilidad completa de cada paso.
 — *Tu tech lead*
 
 ---
 
-## 📚 Conocimiento complementario: cumplimiento de lineamientos
-Cuando el ticket pide que un evaluador revise "cumplimiento de lineamientos de la empresa", no se refiere a un juicio de estilo libre: tu `company-BRIEFING.md` incluye una lista concreta de reglas (tono, datos que no pueden faltar, cifras que deben aparecer) contra la cual el evaluador debe verificar el contenido generado — no una opinión subjetiva del agente. Si tu empresa ya tiene una base de conocimiento semántica, es un buen lugar para que el generador busque políticas, precios de referencia o lenguaje de marca reales antes de redactar — reduce las veces que el evaluador rebota la sección por inventar algo que no coincide con lo que la empresa realmente dice. Esto es una mejora sugerida, no un requisito de esta parte.
+## 📚 Conocimiento complementario: cuándo interrumpir y cuándo poner un guardrail
+No todo control debe pausar el flujo para un humano. Los guardrails (validaciones automáticas de esquema, tipo o negocio) deben resolver solos los casos claros; reserva las interrupciones (interrupt) para decisiones que de verdad requieren juicio humano, como aprobar una propuesta económica antes de enviarla a un cliente. Y cuando interrumpas, hazlo de forma acotada: la interrupción debe pausar únicamente la rama del grafo que depende de esa aprobación (la sección de ese departamento y lo que dependa de ella), no el flujo completo — un departamento esperando el visto bueno de su gerente no debería frenar a los demás que ya están listos para avanzar.
 
-### Estados del ticket para esta parte (misma fila que la Parte 1 — nombres del BRIEFING):
+### Estados del ticket para esta parte (misma fila — nombres del BRIEFING):
 El ciclo completo está en el BRIEFING; aquí solo necesitas:
 
 | Estado | Rol | Cuándo |
 | :--- | :--- | :--- |
-| `analisis_completo` | Entrada Parte 1 | Arranca aquí vía handoff de enrutamiento — no reescribas este estado |
-| `generando_borrador` | Parte 2 escribe | Generadores escribiendo secciones |
-| `en_evaluación` | Parte 2 escribe | Evaluadores en paralelo / ciclo generador-evaluador |
-| `needs_human_review` | Parte 2 escribe | Límite de iteraciones agotado; último borrador + EvaluationResult pasan a Parte 3 |
+| `en_evaluación` / `needs_human_review` | Entrada Parte 2 | El ticket llega con borradores + EvaluationResult (incl. secciones al tope) |
+| `esperando_aprobación` | Parte 3 escribe | Pausa humana mientras alguna aprobación de departamento esté pendiente |
+| `terminado` | Parte 3 escribe | Documento final guardado y accesible |
 
-*No inventes estados de Parte 3 (`esperando_aprobación`, `terminado`) en esta parte.*
+*No inventes estados huérfanos; conserva valores previos de Parte 1/2 en la misma fila cuando no estés en transición.*
 
 ---
 
-## 🗺️ Referencia visual: mapeo departamental y finalización del entregable
-Este tramo del flujo toma la estructura de workstreams definida en la Parte 1, mapea tareas a departamentos vía un assignment orchestrator, ejecuta generación por departamento en paralelo, y un synthesizer consolida las salidas en tickets de asignación por departamento listos para evaluación / aprobación:
+## 🗺️ Referencia visual: tickets de aprobación y síntesis del documento final
+Cuando los tickets de asignación por departamento de la Parte 2 están totalmente aprobados, un ultimate document synthesizer compila el documento final acordado y lo entrega a Ventas — las ramas por departamento aprueban de forma independiente y luego convergen:
 
 ```mermaid
 flowchart LR
-    %% Entradas
-    subgraph Input ["Entrada Estructurada"]
+    %% Entrada Estructurada
+    subgraph Input ["Entrada"]
         WS["DEFINED WORKSTREAM<br/>STRUCTURE & META-INFO"]
     end
 
@@ -53,31 +55,33 @@ flowchart LR
     AO["ASSIGNMENT ORCHESTRATOR<br/><i>(Orchestrator)</i>"]
     WS --> AO
 
-    %% Departamentos en Paralelo
-    subgraph Departments ["Departamentos"]
+    %% Departamentos y Tareas Asignadas
+    subgraph Departments ["Departamentos y Tareas"]
         direction TB
-        
+
         subgraph DeptSales ["DEPARTMENT: SALES"]
             direction TB
-            S1["- Value Proposition Definition"]
-            S2["- Pricing & Commercial Terms"]
-            S3["- Client Relationship Strategy"]
-            S4["- Comms & Sales"]
+            S1["☑ Value Proposition Definition"]
+            S2["☑ Pricing & Commercial Terms"]
+            S3["☑ Client Relationship Strategy"]
+            S4["☑ Comms & Sales"]
         end
 
         subgraph DeptLegal ["DEPARTMENT: LEGAL & COMPLIANCE"]
             direction TB
-            L1["- Terms & Conditions Review"]
-            L2["- Regulatory Alignment"]
-            L3["- Contract Generation"]
+            L1["☑ Terms & Conditions Review"]
+            L2["☑ Regulatory Alignment"]
+            L3["☐ Contract Generation"]
+            L4["☐ ..."]
         end
 
         subgraph DeptOps ["DEPARTMENT: OPERATIONS & DELIVERY"]
             direction TB
-            O1["- Resource Allocation"]
-            O2["- Timeline & SLA Definition"]
-            O3["- Solution Design Validation"]
-            O4["- Contract Operations"]
+            O1["☑ Resource Allocation"]
+            O2["☑ Timeline & SLA Definition"]
+            O3["☐ Timeline Allocation"]
+            O4["☐ Contract Operations"]
+            O5["☐ Solution Design Validation"]
         end
     end
 
@@ -85,131 +89,135 @@ flowchart LR
     AO --> DeptLegal
     AO --> DeptOps
 
-    %% Sintetizador Final
-    FDS["FINAL DELIVERABLE<br/>SYNTHESIS<br/><i>(Synthesizer)</i>"]
-
-    DeptSales --> FDS
-    DeptLegal --> FDS
-    DeptOps --> FDS
-
-    %% Tickets de Asignación y Aprobación
-    subgraph Deliverables ["Department-specific assignment and approval tickets"]
+    %% Tickets de Asignación y Aprobación Humana
+    subgraph ApprovalTickets ["Department-specific assignment and approval tickets"]
         direction TB
-        
+
         subgraph TicketSales ["SALES ASSIGNMENT TICKET: For Approval"]
             direction TB
             TS_Dept["Department: Sales"]
-            TS_Content["Assigned Content: Brief summary of tasks"]
-            TS_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+            TS_Content["Assigned Content: [Brief summary of tasks]"]
+            TS_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
         end
 
         subgraph TicketLegal ["LEGAL & COMPLIANCE ASSIGNMENT TICKET: For Approval"]
             direction TB
             TL_Dept["Department: Legal"]
-            TL_Content["Assigned Content: Brief summary of tasks"]
-            TL_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+            TL_Content["Assigned Content: [Brief tasks]"]
+            TL_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
         end
 
         subgraph TicketOps ["OPERATIONS & DELIVERY ASSIGNMENT TICKET: For Approval"]
             direction TB
             TO_Dept["Department: Operations & Delivery"]
-            TO_Content["Assigned Content: Brief summary of tasks"]
-            TO_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+            TO_Content["Assigned Content: [Brief summary of tasks]"]
+            TO_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
         end
     end
 
-    FDS --> TicketSales
-    FDS --> TicketLegal
-    FDS --> TicketOps
+    DeptSales --> TicketSales
+    DeptLegal --> TicketLegal
+    DeptOps --> TicketOps
+
+    %% Sintetizador Final
+    UDS["ULTIMATE DOCUMENT SYNTHESIZER<br/><i>(Final Synthesizer)</i><br/><small>Once all department assignment tickets<br/>are fully approved [X], the Ultimate<br/>Document Synthesizer compiles<br/>the final agreed-upon document</small>"]
+
+    TicketSales --> UDS
+    TicketLegal --> UDS
+    TicketOps --> UDS
+
+    %% Documento Final Acordado
+    DOC["FINAL AGREED-UPON<br/>DOCUMENT<br/><i>(Propuesta Económica Final)</i>"]
+    UDS --> DOC
+
+    %% Destinatario Final
+    RECIPIENT["SALES TEAM<br/><i>(Recipient)</i>"]
+    DOC --> RECIPIENT
 ```
 
 ---
 
-## 🔀 Flujo Git y Próximos Pasos
-- **PR aprobado → haz merge a main.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
+> 🔀 **PR aprobado → haz merge a `main`.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
+
+---
 
 ## 🌱 Cómo Empezar el Proyecto
-1. **Rama de trabajo:** Continúa sobre la misma rama de trabajo del Hito en tu fork del monorepo (o crea `feature/rfp-response-generation` a partir de la rama donde entregaste la Parte 1). Si aún no tienes tu fork, créalo desde el [monorepo base](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo).
-2. **Reutilización:** Parte del flujo de clasificación y enrutamiento que construiste en la Parte 1 — no lo reescribas desde cero.
-3. **Consumo de handoff:** Consume el handoff de enrutamiento de la Parte 1 — la Parte 2 debe arrancar desde tickets que la Parte 1 marcó listos (estado `analisis_completo` más el flag de cola / campo DB / contrato de handoff que definiste). Entrada = `ticket_id` + payload del synthesizer (`key_aspects` / estructura de workstreams). No vuelvas a parsear el PDF ni inventes un resumen paralelo que ignore ese contrato.
-4. **Dependencias:** Instala cualquier dependencia nueva con `uv add`.
-5. **Lineamientos de negocio:** Revisa nuevamente tu `company-BRIEFING.md`: allí están los lineamientos concretos contra los que deben validar tus agentes evaluadores.
+
+Continúa sobre tu rama del Hito en el fork del monorepo de tu empresa, a partir de donde entregaste la Parte 2. Si todavía no tienes tu fork, créalo desde el monorepo base.
+
+1. Crea la rama `feature/rfp-approval-completion` a partir de tu rama de la Parte 2.
+2. Configura el checkpointer que corresponda a tu entorno (SQLite o Postgres — evita el checkpointer en memoria salvo en desarrollo local).
+3. Instala cualquier dependencia nueva con `uv add`.
+4. Revisa tu `company-BRIEFING.md` para conocer los aprobadores por departamento, los triggers de conflicto / árbitro fijo, y el formato del documento final.
 
 ---
 
 ## 💻 Lo Que Debes Hacer
 
-### Consumir el enrutamiento de la Parte 1
-- [ ] La entrada de la Parte 2 lee el handoff de enrutamiento de la Parte 1 (`ticket_id` + payload del synthesizer / `key_aspects`, vía el flag de cola, campo DB o contrato documentado de la Parte 1) — los generadores no deben re-ingerir el PDF crudo como input principal.
+### Aprobación humana por departamento
+- [ ] Implementa un punto de interrupción (`interrupt`) antes de dar por aprobada la sección de cada departamento.
+- [ ] La interrupción debe pausar únicamente la rama del grafo correspondiente a ese departamento, sin bloquear el avance de los departamentos que ya están listos.
+- [ ] Persiste el estado del flujo con un checkpointer antes de cada interrupción, para que la ejecución sea reanudable.
+- [ ] Implementa el `resume` como un punto de entrada explícito del grafo — no como un reinicio del flujo completo.
+- [ ] Valida la respuesta humana al reanudar (aprobar, rechazar o solicitar cambios) antes de dejarla entrar de nuevo al grafo.
+- [ ] Extiende la interfaz de ticket construida en la Parte 1 (`uis/backoffice`) para que cada departamento pueda registrar su aprobación o rechazo.
 
-### Generación por departamento
-- [ ] Implementa un agente generador por departamento que reciba el resumen relevante producido en la Parte 1 (desde ese handoff).
-- [ ] El agente generador debe producir contenido específico para la sección de propuesta económica de su departamento.
+### Guardrails y control de flujo
+- [ ] Define un límite máximo de iteraciones en cualquier ciclo restante entre departamentos.
+- [ ] Implementa un nodo de arbitraje explícito que dispare ante los triggers de conflicto de tu BRIEFING y resuelva con el árbitro fijo allí (humano nombrado o regla determinista — no freestyle de LLM entre agentes).
+- [ ] Registra en el estado, para cada ejecución de nodo, el agente, el input, el output y el timestamp (trazabilidad).
 
-> **💡 Opcional:** Si tu empresa ya tiene una base de conocimiento semántica, puedes darle acceso al generador para que redacte con políticas y lenguaje de marca reales. No es un requisito de esta parte ni se evalúa como tal — es una mejora que puede reducir cuántas veces una sección rebota en la evaluación.
+### Identidad del checkpointer
+- [ ] Haz namespacing del `thread_id` de cada ejecución del grafo por `ticket_id` (y por departamento si checkpointeas ramas por separado), p. ej. `rfp-{ticket_id}` o `rfp-{ticket_id}:{department}` — tickets concurrentes no deben compartir checkpoint.
 
-### Evaluación en paralelo
-- [ ] Implementa múltiples agentes evaluadores que corran en paralelo sobre cada sección generada.
-- [ ] Al menos un evaluador debe revisar legibilidad (se sugiere `py-readability-metrics`).
-- [ ] Al menos un evaluador debe revisar pertinencia (que el contenido responda lo que pide la RFP).
-- [ ] Al menos un evaluador debe revisar cumplimiento de los lineamientos definidos en tu `company-BRIEFING.md`.
-- [ ] Persiste la evaluación de cada sección como un `EvaluationResult` estructurado (los nombres de campo pueden variar un poco; la forma debe ser equivalente):
+### Cierre del documento
+- [ ] Cuando todos los departamentos dan su aprobación, genera el documento final consolidando las secciones aprobadas.
+- [ ] Mientras alguna aprobación de departamento esté pendiente, pon el ticket en `esperando_aprobación`; cuando el documento final esté guardado, ponlo en `terminado` y déjalo accesible.
 
-```yaml
-EvaluationResult:
-  section_id / department_id
-  readability: { pass, score, details }
-  relevance: { pass, missing_aspects[] }
-  compliance: { pass, rule_ids[], violations[] }
-  overall_pass: bool
-  feedback_for_generator: string # concreto y accionable
-```
+### Revisión de extremo a extremo
+- [ ] Corre al menos una RFP de prueba a través de las tres partes completas (recepción → generación → aprobación y cierre) y confirma que los estados del ticket, los mensajes y los datos se mantengan consistentes de principio a fin.
+- [ ] Entrega una ruta E2E reproducible: fixture + script o test de integración que ejecute la Parte 3 con aprobaciones simuladas (`resume` programático / equivalente) — la revisión no debe depender solo de clicks irreproducibles en la UI.
+- [ ] Corrige cualquier salto, mensaje inconsistente o dato que se pierda en la transición entre partes.
 
-### Ciclo generador-evaluador
-- [ ] Si una sección falla la evaluación, el flujo debe devolverla al agente generador correspondiente junto con el `feedback_for_generator` del `EvaluationResult`.
-- [ ] Define y aplica un límite de iteraciones para evitar que el ciclo generador-evaluador se repita indefinidamente.
-- [ ] Cuando se agota el límite sin pasar: conserva el último borrador + su `EvaluationResult`, marca la sección (y el ticket si aplica) como `needs_human_review`, e inclúyela igual en el handoff a la Parte 3 — no descartes el ticket.
-
-### Estado del ticket
-- [ ] Actualiza el ticket creado en la Parte 1 (desde `analisis_completo`) para reflejar el progreso de la generación y evaluación (`generando_borrador`, `en_evaluación`, `needs_human_review`). Persiste borradores y `evaluation_results` en PostgreSQL. Sigue sin crear un API nuevo: extiende el backend existente y el pipeline bajo `data/pipelines/`.
-
-> ⚠️ **IMPORTANTE:** Los lineamientos de la empresa contra los que evalúas el contenido generado, y el formato esperado de cada sección, deben coincidir con lo especificado en tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
+> ⚠️ **IMPORTANTE:** Los aprobadores por departamento, los triggers/árbitro de arbitraje y el formato del documento final deben coincidir con tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
 
 ### Pruebas
-- [ ] Incluye pruebas unitarias en `tests/pipelines/` para al menos un agente generador y un agente evaluador, incluyendo un caso donde la evaluación falla.
-- [ ] Añade un caso de fallo de compliance anclado a una regla de tu `company-BRIEFING.md` (p. ej. un borrador que promete algo que los lineamientos prohíben → `compliance.pass == false`). Mantenlo pequeño: un fixture, una aserción de fallo — no hace falta el ciclo completo para este caso.
+- [ ] Incluye pruebas unitarias en `tests/pipelines/` que cubran: interrupción y reanudación exitosa, límite de iteraciones alcanzado, y arbitraje ante desacuerdo.
+- [ ] Incluye un test (o aserción sobre el trace) que apruebe el departamento B mientras el departamento A sigue interrumpido — demuestra ramas paralelas, no paralelismo fingido en serie.
+- [ ] Incluye un test de integración / E2E o script con fixtures y resumes humanos simulados en el camino de la Parte 3 (idealmente Partes 1→3 con estado sembrado).
 
 ---
 
 ## 🧭 Preguntas de Diseño
-- **¿Qué información del estado necesita realmente cada agente evaluador?** ¿Le estás pasando solo la sección que debe revisar o el documento completo?
-- **¿Cómo evitas que dos evaluadores en paralelo entren en conflicto al escribir su resultado en el estado compartido?**
-- **Cuando una sección llega a `needs_human_review` tras agotar iteraciones, ¿cómo se lo muestras a Ventas para que sepa qué borrador es provisional?**
-- **¿El feedback que recibe el generador tras un fallo es lo suficientemente específico como para corregir el problema real, o es genérico?**
+- **¿Qué pasa si un departamento rechaza su sección después de la interrupción?** ¿El flujo vuelve al generador de la Parte 2 o requiere una nueva ejecución?
+- **¿Qué información mínima necesita ver un humano en el punto de aprobación para decidir con confianza, sin tener que releer todo el documento?**
+- **¿Cómo detectas los triggers de conflicto del BRIEFING en estado estructurado (no solo texto libre), para que el nodo de arbitraje sea real y no decorativo?**
 
 ---
 
 ## ✅ Lo Que Evaluaremos
-- [ ] Cada departamento tiene su propio agente generador, claramente separado de los demás.
-- [ ] La Parte 2 consume el handoff de enrutamiento de la Parte 1 (`ticket_id` + payload synthesizer / `key_aspects`) — no re-parsea el PDF como input principal del generador.
-- [ ] Los evaluadores corren en paralelo y no bloquean la ejecución de otros departamentos entre sí.
-- [ ] El sistema aplica correctamente el ciclo generador-evaluador, incluyendo el límite de iteraciones y el handoff `needs_human_review` al agotarlo.
-- [ ] El ticket refleja con precisión el progreso de generación y evaluación en tiempo real.
-- [ ] La salida de evaluación sigue la forma `EvaluationResult` (legibilidad / pertinencia / compliance estructurados — no texto libre sin estructura).
-- [ ] Los borradores y `evaluation_results` se persisten en PostgreSQL; sigue habiendo un solo API backend bajo `services/` (sin un segundo servicio HTTP).
-- [ ] Existen pruebas unitarias que cubren éxito, un fallo genérico de evaluación, y un fallo de compliance anclado al BRIEFING.
-- [ ] La implementación usa los lineamientos y formatos definidos en el `company-BRIEFING.md` de tu empresa.
+- [ ] El flujo se pausa correctamente antes de la aprobación de cada departamento y persiste su estado.
+- [ ] La pausa afecta solo la rama del departamento correspondiente — los demás pueden seguir sin bloquearse (probado con test/trace: aprobar B mientras A sigue interrumpido).
+- [ ] La ejecución se reanuda exactamente desde el punto de interrupción, sin reiniciar el flujo completo.
+- [ ] El `thread_id` está namespaced por ticket (y departamento si aplica); ejecuciones concurrentes no comparten checkpoint.
+- [ ] Existe un límite de iteraciones aplicado y verificable en el código, no solo mencionado.
+- [ ] El nodo de arbitraje dispara ante los triggers de conflicto del BRIEFING y resuelve con el árbitro fijo del BRIEFING (no freestyle de LLM).
+- [ ] Cada ejecución de nodo queda registrada con agente, input, output y timestamp.
+- [ ] El documento final se genera automáticamente solo cuando todos los departamentos han dado su aprobación.
+- [ ] El ticket usa `esperando_aprobación` mientras el HITL esté pendiente y `terminado` cuando el documento final sea accesible.
+- [ ] Existe una ruta E2E/fixture reproducible (script o test de integración con aprobaciones simuladas), no solo una demo manual en UI.
+- [ ] Una RFP de prueba puede recorrerse de principio a fin (Parte 1 a Parte 3) sin saltos de estado ni inconsistencias visibles entre partes.
+- [ ] Existen pruebas unitarias para la interrupción/reanudación, el límite de iteraciones, el arbitraje y la aprobación en paralelo bajo interrupt.
 
 ---
 
 ## 📦 Cómo Entregar
-Esta es la Parte 2 de 3 del Hito. Entrégala con su propio Pull Request — no esperes a tener la Parte 3 lista.
+Esta es la Parte 3 de 3 del Hito. Entrégala con su propio Pull Request.
 
-1. Haz commit y push de tu rama `feature/rfp-response-generation`.
+1. Haz commit y push de tu rama `feature/rfp-approval-completion`.
 2. Abre un Pull Request describiendo qué implementaste y cómo probarlo.
-3. Incluye en la descripción del PR un ejemplo de sección generada: uno que pase evaluación y uno que falle.
+3. Incluye en la descripción del PR un ejemplo completo: RFP de entrada, aprobación simulada por cada departamento, y el documento final generado — y enlaza el script/test de integración reproducible que ejecuta esas aprobaciones simuladas.
 4. Solicita revisión a tu tech lead.
-
 
 
 
