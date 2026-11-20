@@ -212,7 +212,7 @@ def test_e2e_ambiguous_or_negative_reply_does_not_write_memory(isolated_memory, 
     )
     isolated_memory.save_pending_proposal(p)
 
-    res = agent_nodes.validate_input_node({"question": reply, "thread_id": "hilo-duda"})
+    res = agent_nodes.resolve_memory_node({"question": reply, "thread_id": "hilo-duda"})
     assert res["memory_decision"] != "approve"
     assert isolated_memory.read_memory() == []
     audit = isolated_memory.get_audit_log("hilo-duda")
