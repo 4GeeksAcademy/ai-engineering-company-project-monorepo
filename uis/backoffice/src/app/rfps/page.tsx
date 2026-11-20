@@ -52,6 +52,12 @@ const STATUS_CONFIG: Record<
         color: "#f472b6",
         border: "1px solid rgba(236, 72, 153, 0.4)",
     },
+    "en_evaluación": {
+        label: "En evaluación",
+        bg: "rgba(236, 72, 153, 0.15)",
+        color: "#f472b6",
+        border: "1px solid rgba(236, 72, 153, 0.4)",
+    },
     needs_human_review: {
         label: "Needs Human Review",
         bg: "rgba(245, 158, 11, 0.2)",
@@ -113,7 +119,8 @@ export default function RFPsPage() {
         const isProcessing = (status?: string) =>
             status === "analizando" ||
             status === "generando_borrador" ||
-            status === "en_evaluacion";
+        status === "en_evaluacion" ||
+            status === "en_evaluación";
 
         const hasPending =
             tickets.some((t) => isProcessing(t.status)) ||
@@ -188,7 +195,7 @@ export default function RFPsPage() {
                 {statusValue === "analizando" && <Clock size={12} />}
                 {statusValue === "analisis_completo" && <FileCheck size={12} />}
                 {statusValue === "generando_borrador" && <RefreshCw size={12} className="animate-spin" />}
-                {statusValue === "en_evaluacion" && <Scale size={12} />}
+                {(statusValue === "en_evaluacion" || statusValue === "en_evaluación") && <Scale size={12} />}
                 {statusValue === "needs_human_review" && <AlertTriangle size={12} />}
                 {statusValue === "listo_para_aprobacion" && <CheckCircle2 size={12} />}
                 {statusValue === "descartado" && <XCircle size={12} />}

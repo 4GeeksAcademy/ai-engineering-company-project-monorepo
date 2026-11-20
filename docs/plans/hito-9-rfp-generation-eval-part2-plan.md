@@ -183,3 +183,23 @@ stateDiagram-v2
 - **Análisis de 3 Expertos:** Perspectivas cruzadas de UX (claridad de `needs_human_review`), Arquitectura (aislamiento y consumo de handoff inmutable) y Seguridad/Compliance (matriz determinista de lineamientos de Nexova).
 - **Threat Modeling & FMEA:** Identificación y mitigación preventiva del riesgo de bucle infinito mediante contador de iteraciones estricto y salvaguarda de persistencia.
 - **Eval-Driven Development (EDD):** Diseño guiado por pruebas unitarias ancladas a las reglas del briefing antes de cerrar el código productivo.
+
+---
+
+## 🛠️ Post-Mortem y Remediación (Feedback de Revisión — Progreso en Tiempo Real)
+
+### 1. El error
+En `feature/rfp-response-generation`, al ejecutar la Parte 2 con un generador lento, el ticket saltaba directamente de `generando_borrador` a `listo_para_aprobacion` (o `needs_human_review`): el estado intermedio `en_evaluación` y el progreso por sección (`draft_content`, `approval_status="borrador_generado"`) nunca se persistían en la base de datos durante la ejecución, impidiendo que la UI mostrara el avance real por polling.
+
+### 2. Reflexión sobre el error (causa raíz)
+El problema nació de un vacío conjunto entre planificación e implementación:
+- **En el plan:** Aunque se definieron los estados `generando_borrador` → `en_evaluación` → `needs_human_review`, no se especificó el mecanismo de persistencia incremental por transición de nodo ni un test que consultara la BD a mitad de la ejecución.
+- **En el código:** `run_rfp_generation_pipeline` llamaba a `rfp_generation_app.invoke(initial_state)` (ejecución bloqueante *batch*), escribiendo en PostgreSQL/SQLite únicamente antes y al finalizar todo el grafo. Además, `nodes.py` y el frontend usaban `en_evaluacion` sin tilde frente al `en_evaluación` oficial del BRIEFING.
+
+### 3. Cómo se resolvió
+1. **Persistencia por transición (`data/pipelines/rfp_intake/graph.py`):** Se reemplazó `.invoke(...)` por `rfp_generation_app.stream(initial_state, stream_mode="updates")`:
+   - Al completar `draft_generation`, se persisten inmediatamente `draft_content` y `approval_status="borrador_generado"` por sección y se actualiza el ticket a `"en_evaluación"`.
+   - Al completar `evaluation`, se persisten `evaluation_results` y `approval_status` por sección, y el ticket pasa a `"generando_borrador"` (si reintenta) o al estado final (`"listo_para_aprobacion"` / `"needs_human_review"`).
+2. **Alineación en UI (`uis/backoffice/src/app/rfps/page.tsx`):** Se añadió soporte para `"en_evaluación"` en `STATUS_CONFIG`, `isProcessing` y `renderBadge`.
+3. **Test en mitad de ejecución (`tests/pipelines/test_rfp_generation.py`):** Se añadió `test_pipeline_persists_real_time_progress_during_execution`, que consulta la BD durante la ejecución de un generador y evaluador instrumentados y verifica la secuencia exacta `["generando_borrador", "en_evaluación", "listo_para_aprobacion"]`.
+4. **Verificación:** `uv run python -m pytest tests/pipelines/test_rfp_generation.py -v` → **11 passed** en `3.75s` y `cd uis/backoffice && npx tsc --noEmit` → **0 errores**.
