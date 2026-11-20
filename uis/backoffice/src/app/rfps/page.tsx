@@ -611,28 +611,28 @@ export default function RFPsPage() {
                                         {/* Botón Parte 3: Iniciar flujo HITL de aprobación por departamento */}
                                         {(selectedTicket.status === "listo_para_aprobacion" ||
                                             selectedTicket.status === "needs_human_review") && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleStartApproval(selectedTicket.ticket_id)}
-                                                disabled={startingApproval}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: "0.4rem",
-                                                    padding: "0.45rem 0.85rem",
-                                                    borderRadius: "0.5rem",
-                                                    background: "#10b981",
-                                                    color: "#0a0d12",
-                                                    border: "none",
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 700,
-                                                    cursor: startingApproval ? "not-allowed" : "pointer",
-                                                }}
-                                            >
-                                                <UserCheck size={14} />
-                                                {startingApproval ? "Iniciando HITL..." : "Enviar a Aprobación (HITL)"}
-                                            </button>
-                                        )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleStartApproval(selectedTicket.ticket_id)}
+                                                    disabled={startingApproval}
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "0.4rem",
+                                                        padding: "0.45rem 0.85rem",
+                                                        borderRadius: "0.5rem",
+                                                        background: "#10b981",
+                                                        color: "#0a0d12",
+                                                        border: "none",
+                                                        fontSize: "0.8rem",
+                                                        fontWeight: 700,
+                                                        cursor: startingApproval ? "not-allowed" : "pointer",
+                                                    }}
+                                                >
+                                                    <UserCheck size={14} />
+                                                    {startingApproval ? "Iniciando HITL..." : "Enviar a Aprobación (HITL)"}
+                                                </button>
+                                            )}
                                     </div>
                                 </div>
 
