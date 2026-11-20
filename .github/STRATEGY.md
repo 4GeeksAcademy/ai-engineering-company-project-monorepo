@@ -1,120 +1,223 @@
-# Hito — Memoria y Auto-mejora de Agentes (Parte 1 de 2)
+# Hito — Flujo Agéntico de RFPs: Aprobación y Cierre (Parte 3 de 3)
 
-Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/08-agent-engineering/memory) — define qué información nunca debe entrar en la memoria de tu agente y qué tipo de hechos sí vale la pena que recuerde en tu empresa.
-
----
+Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí están quién aprueba cada departamento (y cualquier aprobador extra que tu empresa exija), las reglas de arbitraje ante conflictos y el formato del documento final. No inventes una escalera jerárquica multi-nivel salvo que tu BRIEFING lo diga (p. ej. umbral de CEO); en la mayoría de empresas el sign-off es el responsable nombrado de cada departamento activo.
 
 ## 🎯 Tu reto
-
 📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-Tu empresa ya tiene una base de conocimiento RAG de un hito anterior — un almacén de documentos que el modelo puede consultar. Eso no es el mismo producto que este agente. El agente que extiendes aquí tiene su propia identidad (ver tu BRIEFING: soporte a managers, CX, compliance, soporte de primera línea, …). Puede llamar al RAG como herramienta; no se convierte en la UI de Q&A comercial. El problema es que cada conversación sigue empezando de cero: no recuerda que ayer se resolvió una escalación parecida, ni que un usuario ya corrigió un dato la semana pasada. Tu tech lead abrió un ticket después de que dos clientes distintos tuvieron que repetir la misma corrección tres veces en la misma semana.
+En la Parte 2 cada departamento ya genera y autoevalúa su sección de la propuesta económica dentro del mismo ticket abierto en la Parte 1. Falta lo más delicado: que un humano de cada departamento dé el visto bueno antes de que el documento final salga hacia el cliente.
+
+### Ticket — Aprobación humana y cierre del documento
+**Contexto:** Ya generamos y autoevaluamos cada sección de la propuesta, pero nadie va a firmar una propuesta económica sin que un humano de cada departamento le dé el visto bueno. Esta es la última pieza del flujo que empezamos en la Parte 1 — y tiene que sentirse como una sola experiencia, no como tres proyectos pegados con cinta.
+
+**Qué necesito que construyas:**
+1. Antes de dar por aprobada la sección de un departamento, el flujo debe pasar por un punto de aprobación humana real — un human-in-the-loop, no solo un evaluador automático más.
+2. El flujo debe detenerse justo antes de esa acción irreversible, guardar el estado con un checkpointer, y poder reanudarse exactamente donde quedó cuando llegue la aprobación — no reiniciar desde cero.
+3. Esa pausa debe afectar solo la rama del departamento que está esperando aprobación; los demás departamentos que ya tengan su sección lista deben poder seguir avanzando en paralelo, no bloquearse entre sí.
+4. Define un límite de iteraciones y un nodo de arbitraje explícito para los desacuerdos entre departamentos. Conéctalo a los triggers de conflicto y al árbitro fijo de tu BRIEFING (reglas o un humano nombrado — no un LLM “votando” entre agentes).
+5. Cuando todos los departamentos den su sign-off, el documento final debe generarse solo, consolidando las secciones aprobadas.
+6. Quiero poder ver, para cualquier ejecución, qué agente hizo qué y en qué orden, porque cuando algo salga mal en producción no vamos a tener tiempo de adivinar.
+
+Cuando termines, corre el flujo completo de principio a fin — desde que se sube la RFP en la Parte 1 hasta que se genera el documento final aquí — y revisa que se sienta como un solo proceso: sin saltos de estado raros, sin mensajes que no coincidan entre partes, sin pasos que se rompan en la transición de una parte a otra.
+
+**Acceptance criteria:** Una RFP puede recorrer las tres partes de punta a punta, pausarse para aprobación humana por departamento sin bloquear a los demás, y terminar en un documento final generado automáticamente, con trazabilidad completa de cada paso.
+— *Tu tech lead*
 
 ---
 
-## 🧠 Conocimiento Complementario: Arquitecturas de Memoria
+## 📚 Conocimiento complementario: cuándo interrumpir y cuándo poner un guardrail
+No todo control debe pausar el flujo para un humano. Los guardrails (validaciones automáticas de esquema, tipo o negocio) deben resolver solos los casos claros; reserva las interrupciones (interrupt) para decisiones que de verdad requieren juicio humano, como aprobar una propuesta económica antes de enviarla a un cliente. Y cuando interrumpas, hazlo de forma acotada: la interrupción debe pausar únicamente la rama del grafo que depende de esa aprobación (la sección de ese departamento y lo que dependa de ella), no el flujo completo — un departamento esperando el visto bueno de su gerente no debería frenar a los demás que ya están listos para avanzar.
 
-La memoria de un agente no es un solo componente — se organiza por alcance temporal. La ventana de contexto alcanza cuando la tarea cabe en una sola sesión. La memoria episódica (Redis, clave-valor, prompt caching) permite recordar interacciones pasadas y personalizar. Una VectorDB sirve para recuperar información semánticamente similar en corpora grandes. Los knowledge graphs importan cuando las relaciones explícitas (dependencia, jerarquía) son el requisito real de recuperación — algo que la similitud coseno no puede capturar. El fine-tuning (memoria paramétrica) es el último recurso: costoso, lento de actualizar, y no permite "olvidar" selectivamente. Ninguna arquitectura de memoria auto-mejorable funciona sin un ciclo de limpieza y consolidación — sin curación, la acumulación cruda degrada la calidad de recuperación con el tiempo.
+### Estados del ticket para esta parte (misma fila — nombres del BRIEFING):
+El ciclo completo está en el BRIEFING; aquí solo necesitas:
+
+| Estado | Rol | Cuándo |
+| :--- | :--- | :--- |
+| `en_evaluación` / `needs_human_review` | Entrada Parte 2 | El ticket llega con borradores + EvaluationResult (incl. secciones al tope) |
+| `esperando_aprobación` | Parte 3 escribe | Pausa humana mientras alguna aprobación de departamento esté pendiente |
+| `terminado` | Parte 3 escribe | Documento final guardado y accesible |
+
+*No inventes estados huérfanos; conserva valores previos de Parte 1/2 en la misma fila cuando no estés en transición.*
 
 ---
 
-## De: Tech Lead — Ticket #MEM-092
+## 🗺️ Referencia visual: tickets de aprobación y síntesis del documento final
+Cuando los tickets de asignación por departamento de la Parte 2 están totalmente aprobados, un ultimate document synthesizer compila el documento final acordado y lo entrega a Ventas — las ramas por departamento aprueban de forma independiente y luego convergen:
 
-El agente ya usa el conocimiento de la empresa (RAG como herramienta, no como identidad de este agente) y las herramientas del MCP Server. Pero cada conversación empieza de cero: no recuerda que ayer resolvimos una escalación parecida, ni que alguien ya corrigió un dato la semana pasada. Necesito que el agente aprenda de la interacción, sin que eso signifique que empiece a inventar cosas o a acumular basura en su memoria para siempre.
+```mermaid
+flowchart LR
+    %% Entrada Estructurada
+    subgraph Input ["Entrada"]
+        WS["DEFINED WORKSTREAM<br/>STRUCTURE & META-INFO"]
+    end
 
-No hace falta un grafo nuevo ni una arquitectura multi-agente para esto — es el mismo agente de siempre, con un paso extra de auto-evaluación:
+    %% Orquestador de Asignación
+    AO["ASSIGNMENT ORCHESTRATOR<br/><i>(Orchestrator)</i>"]
+    WS --> AO
 
-- Cuando el agente detecta, dentro de su propia respuesta, algo que valdría la pena recordar, se lo propone al usuario en la misma conversación (`"¿quieres que recuerde esto para la próxima vez?"`) en lugar de escribirlo directo.
-- Esa decisión — sí, no, o una edición — no puede quedar como una interpretación difusa del siguiente mensaje. Tiene que clasificarse explícitamente contra la propuesta pendiente y quedar registrada: qué se propuso, qué decidió el usuario, y cuándo. Si no se puede determinar la decisión con confianza razonable, la propuesta se descarta por defecto — nunca se asume aprobación por silencio o ambigüedad.
-- Solo lo aprobado y registrado se consolida en el almacén persistente; lo rechazado se descarta, pero el registro de que se propuso y se rechazó queda igual.
-- No acepto una memoria que crezca sin límite, que se autoedite sin que el usuario lo sepa, ni una escritura a memoria de la que no quede rastro de quién la autorizó.
+    %% Departamentos y Tareas Asignadas
+    subgraph Departments ["Departamentos y Tareas"]
+        direction TB
 
-> [!WARNING]
-> **Aviso — Memoria core en producción:** En una empresa real, la memoria core no la edita libremente cualquier agente o desarrollador. Los cambios pasan por tickets de solicitud de modificación y los revisa/aplica un equipo dedicado que posee esa cadena de control. Para este proyecto, esa gobernanza se omite a propósito para que el hito sea viable y alcanzable — implementas propuesta → confirmación del usuario → escritura/consolidación directamente en el flujo del agente.
+        subgraph DeptSales ["DEPARTMENT: SALES"]
+            direction TB
+            S1["☑ Value Proposition Definition"]
+            S2["☑ Pricing & Commercial Terms"]
+            S3["☑ Client Relationship Strategy"]
+            S4["☑ Comms & Sales"]
+        end
 
-> [!IMPORTANT]
+        subgraph DeptLegal ["DEPARTMENT: LEGAL & COMPLIANCE"]
+            direction TB
+            L1["☑ Terms & Conditions Review"]
+            L2["☑ Regulatory Alignment"]
+            L3["☐ Contract Generation"]
+            L4["☐ ..."]
+        end
+
+        subgraph DeptOps ["DEPARTMENT: OPERATIONS & DELIVERY"]
+            direction TB
+            O1["☑ Resource Allocation"]
+            O2["☑ Timeline & SLA Definition"]
+            O3["☐ Timeline Allocation"]
+            O4["☐ Contract Operations"]
+            O5["☐ Solution Design Validation"]
+        end
+    end
+
+    AO --> DeptSales
+    AO --> DeptLegal
+    AO --> DeptOps
+
+    %% Tickets de Asignación y Aprobación Humana
+    subgraph ApprovalTickets ["Department-specific assignment and approval tickets"]
+        direction TB
+
+        subgraph TicketSales ["SALES ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TS_Dept["Department: Sales"]
+            TS_Content["Assigned Content: [Brief summary of tasks]"]
+            TS_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+
+        subgraph TicketLegal ["LEGAL & COMPLIANCE ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TL_Dept["Department: Legal"]
+            TL_Content["Assigned Content: [Brief tasks]"]
+            TL_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+
+        subgraph TicketOps ["OPERATIONS & DELIVERY ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TO_Dept["Department: Operations & Delivery"]
+            TO_Content["Assigned Content: [Brief summary of tasks]"]
+            TO_Status["APPROVAL STATUS:<br/><b>[X] Approved</b>  [ ] Rejected"]
+        end
+    end
+
+    DeptSales --> TicketSales
+    DeptLegal --> TicketLegal
+    DeptOps --> TicketOps
+
+    %% Sintetizador Final
+    UDS["ULTIMATE DOCUMENT SYNTHESIZER<br/><i>(Final Synthesizer)</i><br/><small>Once all department assignment tickets<br/>are fully approved [X], the Ultimate<br/>Document Synthesizer compiles<br/>the final agreed-upon document</small>"]
+
+    TicketSales --> UDS
+    TicketLegal --> UDS
+    TicketOps --> UDS
+
+    %% Documento Final Acordado
+    DOC["FINAL AGREED-UPON<br/>DOCUMENT<br/><i>(Propuesta Económica Final)</i>"]
+    UDS --> DOC
+
+    %% Destinatario Final
+    RECIPIENT["SALES TEAM<br/><i>(Recipient)</i>"]
+    DOC --> RECIPIENT
+```
+
+---
+
 > 🔀 **PR aprobado → haz merge a `main`.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
 
 ---
 
 ## 🌱 Cómo Empezar el Proyecto
 
-- Si ya tienes tu fork del monorepo de la compañía, crea una nueva rama a partir de tu último avance (trabajo del agente LangGraph / MCP).
-- Si por alguna razón no tienes fork aún (por ejemplo, te uniste tarde o lo perdiste), haz fork del [monorepo de referencia](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) antes de continuar.
+Continúa sobre tu rama del Hito en el fork del monorepo de tu empresa, a partir de donde entregaste la Parte 2. Si todavía no tienes tu fork, créalo desde el monorepo base.
 
-```bash
-git switch -c feature/agent-memory
-```
-
-- Sigue trabajando sobre el mismo agente LangGraph que ya consume el MCP Server — este proyecto no reemplaza esa base, la extiende.
-- Instala cualquier dependencia nueva con `uv add` (nunca `pip install` ni `pipenv`).
+1. Crea la rama `feature/rfp-approval-completion` a partir de tu rama de la Parte 2.
+2. Configura el checkpointer que corresponda a tu entorno (SQLite o Postgres — evita el checkpointer en memoria salvo en desarrollo local).
+3. Instala cualquier dependencia nueva con `uv add`.
+4. Revisa tu `company-BRIEFING.md` para conocer los aprobadores por departamento, los triggers de conflicto / árbitro fijo, y el formato del documento final.
 
 ---
 
-## 💻 Qué Debes Hacer
+## 💻 Lo Que Debes Hacer
 
-### Selección de Arquitectura de Memoria
-- [ ] Elige un backend de memoria persistente (por ejemplo Redis, una base clave-valor, una VectorDB, o una combinación) y documenta por escrito por qué encaja con lo que tu agente necesita recordar en tu empresa.
-- [ ] **No escribas memoria en las colecciones RAG de la empresa (`*_knowledge` / almacén Qdrant de conocimiento de la empresa).** El RAG sigue siendo herramienta de **solo lectura**. La memoria usa un store aparte o una colección claramente no-knowledge (p. ej. Redis, KV, o `*_agent_memory`). Mezclar hechos episódicos/aprobados con docs curados rompe evals de retrieval y controles de poison.
-- [ ] Implementa una interfaz explícita de lectura/escritura de memoria — el agente no debe acumular estado simplemente agregando todo al system prompt.
+### Aprobación humana por departamento
+- [ ] Implementa un punto de interrupción (`interrupt`) antes de dar por aprobada la sección de cada departamento.
+- [ ] La interrupción debe pausar únicamente la rama del grafo correspondiente a ese departamento, sin bloquear el avance de los departamentos que ya están listos.
+- [ ] Persiste el estado del flujo con un checkpointer antes de cada interrupción, para que la ejecución sea reanudable.
+- [ ] Implementa el `resume` como un punto de entrada explícito del grafo — no como un reinicio del flujo completo.
+- [ ] Valida la respuesta humana al reanudar (aprobar, rechazar o solicitar cambios) antes de dejarla entrar de nuevo al grafo.
+- [ ] Extiende la interfaz de ticket construida en la Parte 1 (`uis/backoffice`) para que cada departamento pueda registrar su aprobación o rechazo.
 
-> ⚠️ **IMPORTANTE:** Qué tipo de hechos son memorizables y cuáles están terminantemente prohibidos de guardar debe corresponder exactamente a lo especificado en tu `company-BRIEFING.md`. Una implementación genérica que ignore esas restricciones no será aceptada.
+### Guardrails y control de flujo
+- [ ] Define un límite máximo de iteraciones en cualquier ciclo restante entre departamentos.
+- [ ] Implementa un nodo de arbitraje explícito que dispare ante los triggers de conflicto de tu BRIEFING y resuelva con el árbitro fijo allí (humano nombrado o regla determinista — no freestyle de LLM entre agentes).
+- [ ] Registra en el estado, para cada ejecución de nodo, el agente, el input, el output y el timestamp (trazabilidad).
 
-### Auto-evaluación y Propuesta de Memoria
-- [ ] Después de cada interacción relevante, el agente debe auto-evaluar si hay algo nuevo o corregido que valga la pena recordar, con un criterio explícito (no simplemente "siempre").
-- [ ] La forma más simple de resolver esto es pedirle al modelo una **salida estructurada en una sola llamada**: la respuesta que ve el usuario, más un campo `propuesta_memoria` (si aplica, qué se agregaría/cambiaría y por qué). No se necesita una segunda llamada al modelo, ni un agente separado, ni una arquitectura multi-agente — es el mismo agente con un campo adicional en su salida.
-- [ ] El agente debe poder descartar la mayoría de las interacciones como "nada que recordar" — documenta al menos 3 ejemplos de interacciones que NO deberían generar una propuesta.
-- [ ] Cuando sí hay algo memorable, el agente **se lo propone al usuario dentro de su misma respuesta** (por ejemplo, como una pregunta al final) — nunca escribe directamente a memoria en este paso.
+### Identidad del checkpointer
+- [ ] Haz namespacing del `thread_id` de cada ejecución del grafo por `ticket_id` (y por departamento si checkpointeas ramas por separado), p. ej. `rfp-{ticket_id}` o `rfp-{ticket_id}:{department}` — tickets concurrentes no deben compartir checkpoint.
 
-### Confirmación del Usuario y Registro Auditable
-- [ ] Cuando hay una propuesta de memoria pendiente, el siguiente mensaje del usuario debe evaluarse primero contra esa propuesta: ¿la aprueba, la rechaza, o la edita? Usa una clasificación de intención explícita (etiqueta estructurada / clasificador), no un simple `"sí" in mensaje`.
-- [ ] Solo puede haber **una propuesta pendiente a la vez**: si ya hay una sin resolver, el agente no debe lanzar una segunda hasta cerrar la primera.
-- [ ] Si el usuario cambia de tema sin responder claramente sí o no, la propuesta se descarta por defecto — nunca se asume aprobación por silencio o ambigüedad.
-- [ ] Cada decisión (propuesta, resultado, mensaje que la originó, marca de tiempo) queda registrada de forma auditable, sin importar si la propuesta fue aprobada o rechazada.
-- [ ] Después de resolver la propuesta pendiente (en el mismo turno o en uno posterior), la conversación continúa con normalidad — incluyendo si el usuario respondió la propuesta y siguió con otra pregunta en el mismo mensaje.
+### Cierre del documento
+- [ ] Cuando todos los departamentos dan su aprobación, genera el documento final consolidando las secciones aprobadas.
+- [ ] Mientras alguna aprobación de departamento esté pendiente, pon el ticket en `esperando_aprobación`; cuando el documento final esté guardado, ponlo en `terminado` y déjalo accesible.
 
-### Consolidación y Limpieza
-- [ ] Implementa un mecanismo de consolidación que evite que la memoria crezca sin control (por ejemplo: resumir, deduplicar, o descartar entradas de baja relevancia).
-- [ ] Documenta la política de expiración o limpieza que aplicaste y por qué la elegiste.
+### Revisión de extremo a extremo
+- [ ] Corre al menos una RFP de prueba a través de las tres partes completas (recepción → generación → aprobación y cierre) y confirma que los estados del ticket, los mensajes y los datos se mantengan consistentes de principio a fin.
+- [ ] Entrega una ruta E2E reproducible: fixture + script o test de integración que ejecute la Parte 3 con aprobaciones simuladas (`resume` programático / equivalente) — la revisión no debe depender solo de clicks irreproducibles en la UI.
+- [ ] Corrige cualquier salto, mensaje inconsistente o dato que se pierda en la transición entre partes.
 
-### Evidencia
-- [ ] Documenta al menos dos ciclos completos del flujo: uno donde la actualización de memoria es aprobada y se refleja en una interacción futura, y otro donde es rechazada y la memoria permanece sin cambios.
+> ⚠️ **IMPORTANTE:** Los aprobadores por departamento, los triggers/árbitro de arbitraje y el formato del documento final deben coincidir con tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
 
----
-
-## 🎨 Decisiones de Diseño
-
-Como parte del reto, tu implementación debe resolver — sin que se te diga explícitamente en un checklist — las siguientes decisiones:
-
-- ¿Qué tipo(s) de memoria (episódica, semántica/vectorial, knowledge graph) necesita realmente tu empresa, y por qué descartaste las otras opciones?
-- ¿Qué información nunca debería entrar en la memoria del agente, sin importar quién lo pida? Revisa tu BRIEFING — algunas empresas tienen restricciones no negociables en este punto.
-- ¿Cómo decide el agente qué olvidar, y qué pasa con una propuesta pendiente si el usuario nunca responde?
-- ¿Cómo evitas que un usuario malicioso "envenene" la memoria del agente con información falsa presentada como una corrección legítima?
-- ¿Por qué no hace falta una arquitectura multi-agente para resolver la auto-evaluación y la propuesta de memoria? Justifica tu respuesta con lo que implementaste.
+### Pruebas
+- [ ] Incluye pruebas unitarias en `tests/pipelines/` que cubran: interrupción y reanudación exitosa, límite de iteraciones alcanzado, y arbitraje ante desacuerdo.
+- [ ] Incluye un test (o aserción sobre el trace) que apruebe el departamento B mientras el departamento A sigue interrumpido — demuestra ramas paralelas, no paralelismo fingido en serie.
+- [ ] Incluye un test de integración / E2E o script con fixtures y resumes humanos simulados en el camino de la Parte 3 (idealmente Partes 1→3 con estado sembrado).
 
 ---
 
-## ✅ Qué Evaluaremos
+## 🧭 Preguntas de Diseño
+- **¿Qué pasa si un departamento rechaza su sección después de la interrupción?** ¿El flujo vuelve al generador de la Parte 2 o requiere una nueva ejecución?
+- **¿Qué información mínima necesita ver un humano en el punto de aprobación para decidir con confianza, sin tener que releer todo el documento?**
+- **¿Cómo detectas los triggers de conflicto del BRIEFING en estado estructurado (no solo texto libre), para que el nodo de arbitraje sea real y no decorativo?**
 
-- [ ] La arquitectura de memoria elegida está justificada por escrito y corresponde a lo que el agente realmente necesita recordar.
-- [ ] Las escrituras de memoria nunca apuntan a colecciones `*_knowledge` / RAG de la empresa (solo store aparte o colección no-knowledge).
-- [ ] Existe una interfaz explícita de lectura/escritura de memoria (no memoria implícita vía system prompt).
-- [ ] El agente distingue correctamente interacciones memorables de las que no lo son, con al menos 3 ejemplos documentados de cada tipo.
-- [ ] La propuesta de memoria se comunica dentro de la misma conversación, no en un canal o proceso separado.
-- [ ] Ninguna actualización de memoria se escribe sin una decisión explícita del usuario, clasificada correctamente (no un match de texto ingenuo).
-- [ ] Solo existe una propuesta pendiente a la vez, y el silencio o la ambigüedad se resuelven como rechazo por defecto, no como aprobación.
-- [ ] Cada propuesta y su resultado quedan registrados de forma auditable, sin importar si fue aprobada o rechazada.
-- [ ] Existe un mecanismo de consolidación/limpieza documentado y funcional.
-- [ ] Se entregan al menos dos ciclos completos de evidencia (uno aprobado, uno rechazado).
-- [ ] Las decisiones de diseño responden explícitamente a las restricciones de tu `company-BRIEFING.md`, en especial qué no debe recordarse jamás.
+---
+
+## ✅ Lo Que Evaluaremos
+- [ ] El flujo se pausa correctamente antes de la aprobación de cada departamento y persiste su estado.
+- [ ] La pausa afecta solo la rama del departamento correspondiente — los demás pueden seguir sin bloquearse (probado con test/trace: aprobar B mientras A sigue interrumpido).
+- [ ] La ejecución se reanuda exactamente desde el punto de interrupción, sin reiniciar el flujo completo.
+- [ ] El `thread_id` está namespaced por ticket (y departamento si aplica); ejecuciones concurrentes no comparten checkpoint.
+- [ ] Existe un límite de iteraciones aplicado y verificable en el código, no solo mencionado.
+- [ ] El nodo de arbitraje dispara ante los triggers de conflicto del BRIEFING y resuelve con el árbitro fijo del BRIEFING (no freestyle de LLM).
+- [ ] Cada ejecución de nodo queda registrada con agente, input, output y timestamp.
+- [ ] El documento final se genera automáticamente solo cuando todos los departamentos han dado su aprobación.
+- [ ] El ticket usa `esperando_aprobación` mientras el HITL esté pendiente y `terminado` cuando el documento final sea accesible.
+- [ ] Existe una ruta E2E/fixture reproducible (script o test de integración con aprobaciones simuladas), no solo una demo manual en UI.
+- [ ] Una RFP de prueba puede recorrerse de principio a fin (Parte 1 a Parte 3) sin saltos de estado ni inconsistencias visibles entre partes.
+- [ ] Existen pruebas unitarias para la interrupción/reanudación, el límite de iteraciones, el arbitraje y la aprobación en paralelo bajo interrupt.
 
 ---
 
 ## 📦 Cómo Entregar
+Esta es la Parte 3 de 3 del Hito. Entrégala con su propio Pull Request.
 
-Sigue el flujo estándar de Pull Request contra tu propio fork del monorepo:
+1. Haz commit y push de tu rama `feature/rfp-approval-completion`.
+2. Abre un Pull Request describiendo qué implementaste y cómo probarlo.
+3. Incluye en la descripción del PR un ejemplo completo: RFP de entrada, aprobación simulada por cada departamento, y el documento final generado — y enlaza el script/test de integración reproducible que ejecuta esas aprobaciones simuladas.
+4. Solicita revisión a tu tech lead.
 
-- [ ] Abre un PR desde `feature/agent-memory` hacia tu rama principal.
-- [ ] Incluye en la descripción del PR la justificación de tu arquitectura de memoria y las respuestas a las decisiones de diseño.
-- [ ] Adjunta o describe la evidencia de los dos ciclos completos (aprobado y rechazado).
+
 

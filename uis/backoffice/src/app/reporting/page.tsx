@@ -22,6 +22,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import styles from "./reporting.module.css";
 
@@ -177,6 +178,9 @@ export default function ReportingDashboardPage() {
           </div>
 
           <div className={styles.headerActions}>
+            <Link href="/rfps" className={styles.navLink}>
+              <FileText size={16} /> Portal RFPs
+            </Link>
             <Link href="/knowledge" className={styles.navLink}>
               <Sparkles size={16} /> Base de Conocimiento
             </Link>

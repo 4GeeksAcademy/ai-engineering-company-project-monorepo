@@ -1,183 +1,221 @@
-# Implementation Plan: Memoria Persistente y Auto-mejora del Agente (Hito 8 · Parte 1 de 2)
+# Implementation Plan: Sistemas en Tiempo Real — Notificaciones SSE (Parte 1 de 2)
 
-**Documento:** `.github/implementation-plan.md`  
-**Copia de Respaldo:** `docs/plans/agent-memory-part1-plan.md`  
-**Rama de Trabajo:** `feature/agent-memory`  
-**Nivel de Complejidad (Code Refinement Suite):** 🔹 **Nivel 4 — Sistema Cognitivo / Agéntico y Estado Persistente (Muy Alta Complejidad)**  
-**Referencias:** `.github/STRATEGY.md`, `docs/nexova-memory-BRIEFING.md` (Ticket `#MEM-092`)
+**Nivel de Complejidad:** Nivel 3 (Arquitectura / Módulo Crítico — Streaming en tiempo real con Auth Guard y resiliencia)  
+**Rama de Trabajo:** `feature/sse-notifications`  
+**Documentos de Referencia:** `.github/STRATEGY.md`, `docs/nexova-rfp-BRIEFING.md`, `AGENTS.md`  
 
 ---
 
-## 📐 PACK 1: ARCHITECT (Ideación, ToT, Threat Modeling IA & FMEA)
+## 1. 📐 PACK 1: ARCHITECT (Ideación y Decisión Técnica)
 
-### 1.1 Tree of Thoughts (ToT) — Selección de Arquitectura de Memoria
+### 1.1 Árbol de Pensamiento (Tree of Thoughts - ToT)
+Se evaluaron tres ramas arquitecturales para resolver la notificación en tiempo real de nuevos tickets de RFP:
 
-| Alternativa | Ventajas | Riesgos / Costes | Decisión |
+- **Rama A (Polling corto frecuente desde el frontend con `setInterval` cada 2-3s):**
+  - *Ventajas:* Implementación rápida en el frontend sin cambios profundos en el backend.
+  - *Riesgos:* Sobrecarga masiva de la base de datos y de FastAPI con peticiones HTTP repetitivas (99% de ellas sin cambios). Viola explícitamente el requerimiento de `STRATEGY.md` ("reemplazar el refresco manual con un flujo que empuje la notificación al frontend"). **Descartada.**
+- **Rama B (WebSockets bidireccionales con protocolo `ws://` / `wss://`):**
+  - *Ventajas:* Comunicación dúplex de bajísima latencia.
+  - *Riesgos:* Sobreingeniería para un requerimiento donde el tráfico es exclusivamente unidireccional (servidor a cliente). Los navegadores no soportan el envío nativo de cabeceras HTTP personalizadas (como `Authorization: Bearer <token>`) en el handshake estándar de `WebSocket` sin hacks en query params (vulnerable a fuga de tokens en logs). Complica proxies y balanceadores. **Descartada.**
+- **Rama C (Server-Sent Events con `fetch` + `ReadableStream` y Broadcaster en memoria - Elegida):**
+  - *Ventajas:*
+    1. Basado en HTTP/1.1 y HTTP/2 estándar (`text/event-stream`), compatible con proxies y cortafuegos.
+    2. Al consumirse en el frontend con `fetch` y `ReadableStreamDefaultReader` (en lugar de `EventSource` vanilla), permite adjuntar limpiamente la cabecera `Authorization: Bearer <JWT>`, cumpliendo el Auth Guard Standard.
+    3. Conexiones ligeras y no bloqueantes en FastAPI mediante generadores asíncronos (`asyncio.Queue`).
+    4. Soporte de reconexión con backoff progresivo y frames de keep-alive (`: ping\n\n`) para evitar cierres prematuros por inactividad.
+
+---
+
+### 1.2 Análisis del Panel de 3 Expertos
+
+#### 1. UX / Product Specialist
+- **Feedback inmediato y no invasivo:** Cuando entra una nueva RFP, la pantalla del dashboard no debe parpadear ni forzar un refresco total. El nuevo ticket debe insertarse en la parte superior de la tabla de tickets con un badge visual temporal ("Nuevo" / "Recién llegado") y un toast informativo con el nombre del cliente y el estado inicial (`analizando`).
+- **Transparencia en el estado de red:** Se incorporará en el encabezado del panel un indicador discreto de conexión en tiempo real:
+  - 🟢 *En vivo* (conectado y escuchando stream).
+  - 🟡 *Reconectando (intento N)...* (en período de backoff tras corte de red).
+  - 🔴 *Desconectado* (si se agotan los reintentos o el usuario no está autenticado).
+
+#### 2. Dev Lead / Software Architect
+- **Desacoplamiento mediante Broadcaster (`services/api/sse_manager.py`):**
+  - El router de subida de tickets (`services/api/routes/rfps.py`) no debe saber nada sobre sockets HTTP o clientes web conectados. Simplemente invoca `await rfp_broadcaster.publish("rfp_ticket_created", payload)`.
+  - El broadcaster mantiene un set de colas `asyncio.Queue(maxsize=100)`. Si un suscriptor es lento y satura la cola, se descarta el mensaje más antiguo o se purga la conexión para evitar fugas de memoria (*leak*).
+- **Consumo con Stream Reader en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
+  - Encapsular la conexión en un hook limpio que devuelva `{ isConnected, reconnectingAttempt, lastEvent }`.
+  - Uso riguroso de `AbortController` para cancelar y cerrar el stream en el evento `cleanup` de `useEffect` (evitando conexiones fantasma al cambiar de ruta).
+
+#### 3. Security & Compliance Specialist (Auth Guard Standard)
+- **Protección obligatoria del endpoint:** `GET /api/rfps/stream` debe exigir `current_user: dict = Depends(get_current_user)`. Clientes no autenticados reciben inmediatamente `401 Unauthorized`.
+- **Cero exposición en URLs:** Prohibido aceptar tokens en la query string (`?token=...`). El JWT viaja exclusivamente en el header `Authorization: Bearer <token>`.
+- **Invariante de IA:** Esta entrega no ejecuta ni invoca ningún agente o modelo generativo. Es una capa pura de transporte reactivo.
+
+---
+
+### 1.3 Threat Modeling (OWASP API Security) & FMEA
+
+| Amenaza / Modo de Fallo | Riesgo / Impacto | Severidad | Mitigación Técnica |
 | :--- | :--- | :--- | :--- |
-| **Opción A: Redis KV con Namespaces por `business_line` + Fallback JSON/SQLite local** | Lectura/escritura sub-milisegundo; separación total de `*_knowledge` (Qdrant); soporte nativo de TTL/expiración; `redis` ya existe en `docker-compose.yml`; determinista en `pytest` con fallback local. | No realiza búsqueda semántica por coseno sobre miles de documentos (no necesaria aquí, pues los hechos operativos de soporte son concisos y estructurados). | ✅ **ELEGIDA** |
-| **Opción B: Qdrant colección aparte (`nexova_agent_memory`)** | Búsqueda semántica por embeddings. | Mayor latencia y coste por embedding en cada turno; sobreingeniería para reglas cortas de SLA/escalación y preferencias B2B; riesgo de solapamiento conceptual con RAG si no se cuida el filtrado. | ❌ Descartada como store primario |
-| **Opción C: Fine-tuning / Inyección total en System Prompt** | Sin dependencias externas. | Fine-tuning es lento, costoso y no permite olvidar selectivamente; volcar todo en el system prompt rompe el límite de contexto y degrada la atención del LLM. | ❌ Descartada (prohibido por `.github/STRATEGY.md`) |
-
-**Justificación por líneas de negocio de Nexova:**  
-Se separa la memoria por `business_line` (`outsourcing`, `headhunting`, `training`, `general`) porque las reglas operativas de Roberto Díaz (Customer Support Lead y sus 30 agentes) pertenecen a *outsourcing* de soporte y no deben contaminar *headhunting* ni *formación*.
-
----
-
-### 1.2 Análisis de los 3 Expertos
-
-- **UX / CX Lead (Roberto Díaz & Soporte):**
-  - El agente debe proponer el recuerdo de forma natural al final de su respuesta, en el idioma de la conversación (español o inglés, operación España–Miami).
-  - Si el usuario responde a la propuesta *y además* hace una pregunta nueva en el mismo mensaje, el agente no debe obligar a repetir la pregunta: resuelve la propuesta y responde la nueva consulta en el mismo turno.
-- **Dev Lead (`services/agent/`):**
-  - Extender el grafo existente en `services/agent/graph.py` sin crear un segundo agente ni arquitectura multi-agente.
-  - Utilizar **salida estructurada en una sola llamada** (`answer` + `propuesta_memoria`) para mantener baja latencia y un clasificador estructurado para evaluar respuestas sobre propuestas pendientes.
-- **Security Specialist (Privacidad y Anti-Poisoning):**
-  - Enforced *Allowlist/Blocklist* alineada con `docs/nexova-memory-BRIEFING.md`: **cero** datos personales de candidatos (ATS/CVs/notas de entrevista), **cero** salarios/negociaciones de headhunting, **cero** correcciones puntuales de un solo ticket.
-  - Prohibido escribir en `*_knowledge` (Qdrant RAG permanece estrictamente de solo lectura).
+| **Acceso no autorizado al stream** | Un atacante escucha en vivo las RFPs confidenciales de clientes. | Crítica | Auth Guard estricto con `Depends(get_current_user)` validando firma y expiración del JWT en el handshake del stream. |
+| **Cierre prematuro de conexión por proxies** | Proxies intermedios o Next.js cortan la conexión tras 30s de silencio. | Alta | Tarea periódica de keep-alive en FastAPI emitiendo comentarios SSE (`: ping\n\n`) cada 15 segundos. |
+| **Pérdida de eventos durante caída de red** | Una RFP llega mientras el cliente comercial sufre un microcorte de red. | Alta | Política de recuperación: al reconectar exitosamente, el cliente ejecuta un refetch ligero de la lista de tickets y deduplica por `ticket_id`. |
+| **Duplicación de tickets en la UI tras reconexión** | El mismo ticket aparece repetido dos veces en la tabla. | Media | Invariante en React: fusión de estado usando `Map<string, RFPTicket>` indexado por `ticket_id`. |
+| **Fuga de memoria por clientes desconectados bruscamente** | Clientes que cierran la pestaña dejan colas huérfanas en el backend. | Alta | Captura de `asyncio.CancelledError` y bloque `finally` en el endpoint SSE para desuscribir y limpiar la cola del cliente. |
 
 ---
 
-### 1.3 Threat Modeling IA (OWASP LLM Top 10) & FMEA
+## 2. 📝 PACK 2: PLANNER (Estructuración del Plan de Implementación)
 
-| Amenaza / Modo de Falla | Vector / Causa | Impacto | Mitigación Obligatoria (Invariante) |
-| :--- | :--- | :--- | :--- |
-| **LLM01 / Memory Poisoning** | Usuario malicioso presenta un dato falso o regla peligrosa como "corrección legítima". | Corrupción persistente de respuestas futuras para los 30 agentes. | Filtro de validación previo + confirmación humana explícita (`pending_proposal`) + registro auditable de quién originó y aprobó la entrada. |
-| **Fuga de PII / Datos Prohibidos (ATS)** | El modelo intenta memorizar datos de un candidato, calificaciones o salario de headhunting. | Violación crítica de privacidad y del `company-BRIEFING.md`. | Guardrail determinista (`validate_memory_candidate`) que bloquea patrones de candidatos/salarios/tickets puntuales antes de proponer y antes de consolidar. |
-| **Ambigüedad / Silencio interpretado como "Sí"** | El usuario ignora la pregunta de memoria y cambia de tema. | Escritura no autorizada en memoria persistente. | Política **default-deny**: cualquier intención `ambiguous` o `topic_change` descarta la propuesta y la registra como `rejected_by_default`. |
-| **Doble Propuesta Pendiente** | El agente lanza una segunda propuesta antes de cerrar la primera. | Estado inconsistente y pérdida de trazabilidad. | Invariante de estado: **máximo 1 propuesta pendiente por `thread_id`**. Mientras exista una pendiente, no se emite otra. |
-| **Caída de Redis en local/CI** | Redis no está levantado al correr `pytest` o desarrollo local. | Falla el flujo del agente. | Fallback automático a almacén local persistente (`data/agent_memory.json` o memoria temporal en tests) con la misma interfaz explícita. |
+### 2.1 Contratos de Datos y Schemas
 
----
+#### Formato Wire del Protocolo SSE
+El stream responderá con `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive` y `X-Accel-Buffering: no`.
 
-## 📝 PACK 2: PLANNER (Step-Back, Máquina de Estados e Invariantes)
+**Frame de Keep-Alive:**
+```http
+: ping
 
-### 2.1 Arquitectura y Máquina de Estados (`stateDiagram-v2` & `sequenceDiagram`)
-
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Sin propuesta pendiente
-    Idle --> PendingProposal: Respuesta genera propuesta_memoria válida
-    PendingProposal --> Consolidated: Decisión = approve / edit
-    PendingProposal --> Rejected: Decisión = reject / ambiguous / topic_change
-    Consolidated --> Idle: Registro en AuditLog + Consolidación
-    Rejected --> Idle: Registro en AuditLog (memoria intacta)
 ```
+
+**Frame de Evento (Creación de Ticket de RFP):**
+```http
+event: rfp_ticket_created
+data: {"ticket_id": "7f8b9c2a-...", "rfp_id": "RFP-...", "filename": "nexova-request-1.pdf", "status": "analizando", "client_name": null, "created_at": "2026-11-20T15:00:00Z"}
+
+```
+
+#### Payload del Evento en Python (`services/api/schemas.py`)
+```python
+class RFPTicketCreatedEvent(BaseModel):
+    ticket_id: str
+    rfp_id: str
+    filename: str
+    status: str = "analizando"
+    client_name: Optional[str] = None
+    created_at: str
+```
+
+---
+
+### 2.2 Diagrama de Secuencia y Máquina de Estados
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Usuario (Agente Soporte)
-    participant API as FastAPI (/agent/query)
-    participant G as LangGraph (services/agent)
-    participant M as MemoryStore (Redis / Local)
-    participant A as AuditLog (Auditable)
+    actor Cliente as Backoffice (Next.js)
+    participant Auth as Auth Middleware (FastAPI)
+    participant StreamAPI as SSE Endpoint (/api/rfps/stream)
+    participant Broadcaster as SSEBroadcaster (Memoria)
+    participant UploadAPI as Upload Endpoint (/api/rfps/upload)
 
-    U->>API: Mensaje (con thread_id)
-    API->>G: Invoca grafo con AgentState
-    alt Existe pending_proposal en MemoryStore
-        G->>G: Clasifica intención (approve | reject | edit | ambiguous)
-        G->>A: Registra propuesta, decisión, mensaje origen y timestamp
-        alt approve o edit
-            G->>M: write_memory() + consolidate_memory()
-        else reject o ambiguous
-            G->>M: Descarta propuesta pendiente (sin escribir)
-        end
+    Cliente->>StreamAPI: GET /api/rfps/stream (Header Authorization: Bearer JWT)
+    StreamAPI->>Auth: Verifica token (get_current_user)
+    Auth-->>StreamAPI: Usuario autenticado (email, role)
+    StreamAPI->>Broadcaster: subscribe() -> asyncio.Queue
+    StreamAPI-->>Cliente: 200 OK (Content-Type: text/event-stream)
+    
+    loop Cada 15 segundos
+        StreamAPI-->>Cliente: : ping\n\n
     end
-    opt Queda pregunta pendiente en el mensaje
-        G->>M: read_memory(business_line)
-        G->>G: Ejecuta flujo normal (RAG read-only / MCP tools)
-        G->>G: Salida estructurada (1 llamada): answer + propuesta_memoria?
-        opt propuesta_memoria != None y sin pending previa
-            G->>M: Guarda 1 pending_proposal
-        end
-    end
-    G-->>API: answer + memory_status + audit_ref
-    API-->>U: Respuesta en el idioma de la sesión
+
+    Note over UploadAPI: Llega un nuevo PDF de RFP
+    UploadAPI->>UploadAPI: Persiste RFPTicket (status="analizando")
+    UploadAPI->>Broadcaster: publish("rfp_ticket_created", ticket_dict)
+    Broadcaster->>StreamAPI: Despacha payload a la cola del suscriptor
+    StreamAPI-->>Cliente: event: rfp_ticket_created\ndata: {...}\n\n
+    Cliente->>Cliente: Inserta en lista + Toast visual
 ```
 
 ---
 
-### 2.2 Contratos Pydantic Estrictos e Invariantes
+### 2.3 Respuestas Arquitectónicas a las Preguntas de Diseño (STRATEGY.md)
 
-1. **`MemoryProposal`:** `proposal_id`, `business_line` (`outsourcing | headhunting | training | general`), `fact`, `reason`, `category` (`escalation | client_preference | incident_pattern`), `created_at`, `source_message`.
-2. **`StructuredAgentResponse` (1 sola llamada LLM):**
-   - `answer: str`
-   - `should_propose_memory: bool`
-   - `proposed_fact: Optional[str]`
-   - `proposed_business_line: Optional[str]`
-   - `proposed_category: Optional[str]`
-   - `proposal_reason: Optional[str]`
-3. **`ProposalClassification`:**
-   - `decision: Literal["approve", "reject", "edit", "ambiguous_or_unrelated"]`
-   - `edited_fact: Optional[str]`
-   - `remaining_question: Optional[str]` (captura si el usuario respondió y además preguntó otra cosa en el mismo turno).
-4. **`MemoryAuditEntry`:** `audit_id`, `thread_id`, `proposal_id`, `proposed_fact`, `final_fact`, `decision`, `source_message`, `timestamp`.
+1. **¿Si 2 personas del equipo comercial abren el dashboard al mismo tiempo vs 50 personas a la vez?**
+   - *Respuesta:* Cada conexión SSE cliente establece su propio canal HTTP y su propia cola asíncrona ligera (`asyncio.Queue`) gestionada por el `SSEBroadcaster`. No abren conexiones independientes a la base de datos ni ejecutan consultas periódicas. Para 50 usuarios, el costo de CPU y memoria en una instancia asíncrona de Uvicorn/FastAPI es prácticamente insignificante (~10-20 KB de memoria total).
+   - Si la aplicación creciera a cientos de comerciales distribuidos en un cluster de múltiples workers/contenedores Uvicorn, la capa intermedia en memoria se reemplazaría por un backend de pub/sub distribuido (Redis Pub/Sub o NATS), permitiendo que cualquier worker que reciba la subida publique el evento y todos los workers con clientes conectados lo propaguen a sus respectivos sockets.
+2. **¿Qué estrategia de recuperación se eligió para tickets registrados durante una desconexión y cómo se evitan duplicados?**
+   - *Respuesta:* Se eligió la estrategia **"Refetch al Reconectar + Deduplicación por Clave Primaria"**. Cuando el hook de React detecta que la conexión se restableció con éxito tras un corte, dispara inmediatamente `rfpService.listTickets()` para recuperar cualquier ticket creado durante el período de desconexión.
+   - En el frontend, el estado de tickets se consolida mediante una función de combinación indexada por `ticket_id` (usando un diccionario o `Map`), de forma que si un evento ya había llegado o llega durante la sincronización, jamás se duplica en la interfaz de usuario.
+3. **¿Por qué SSE es la herramienta correcta para este caso y no WebSockets? ¿En qué momento dejaría de serlo?**
+   - *Respuesta:* Las notificaciones de nuevas RFPs son un flujo estrictamente **unidireccional** (servidor hacia los dashboards de los comerciales). SSE es nativo de la capa HTTP, opera sobre HTTP/1.1 y HTTP/2 multiplexado, atraviesa sin problemas proxies corporativos y cortafuegos, y permite autenticación limpia enviando cabeceras `Authorization: Bearer <token>` mediante la API `fetch` del navegador. WebSockets añade complejidad innecesaria de handshake, protocolo de enmarcado dúplex y dificultad para pasar headers de autenticación estándar.
+   - *Cuándo dejaría de serlo:* SSE dejaría de ser la herramienta correcta si el flujo requiriese bidireccionalidad intensiva y de baja latencia en el mismo canal (por ejemplo, edición colaborativa concurrente del alcance de la propuesta entre Marcos y Javier, cursores compartidos, o un chat interactivo de feedback en tiempo real).
 
 ---
 
-### 2.3 Matriz de Criterios de Auto-Evaluación (Nexova)
+## 3. 💻 PACK 3: CODER (Desarrollo y Verificación Fáctica)
 
-| Tipo | Ejemplo Real del Briefing de Nexova | Resultado Esperado |
-| :--- | :--- | :--- |
-| **Memorable (SLA)** | *"Los tickets de nómina para clientes de retail ahora se resuelven en 24h, no en 48h."* | Genera propuesta en `outsourcing` (`escalation`). |
-| **Memorable (Preferencia B2B)** | *"Ese cliente de finanzas siempre pide confirmación por email antes de cerrar un ticket."* | Genera propuesta en `outsourcing` (`client_preference`). |
-| **Memorable (Patrón Helpdesk)** | *"Los tickets urgentes de contrato premium deben ir directo a un agente senior."* | Genera propuesta en `outsourcing` (`incident_pattern`). |
-| **NO Memorable (Consulta puntual)** | *"¿Cuántos tickets abiertos hay ahora mismo?"* | `propuesta_memoria = None`. |
-| **NO Memorable (Cierre)** | *"Perfecto, gracias por la explicación."* | `propuesta_memoria = None`. |
-| **NO Memorable (Tarea one-shot)** | *"Resume este ticket en dos líneas para el reporte de Laura."* | `propuesta_memoria = None`. |
-| **Prohibido (Bloqueado)** | Datos personales/CV/entrevista de candidatos o salarios de headhunting, o corrección única de 1 ticket. | Rechazado por guardrail; nunca se propone ni consolida. |
+### Componentes a Desarrollar:
+
+1. **Gestor de Eventos SSE (`services/api/sse_manager.py`):**
+   - Clase `SSEBroadcaster` con soporte `subscribe()`, `unsubscribe()`, y `publish(event_name, data)`.
+   - Limpieza automática de colas saturadas o cerradas.
+2. **Endpoint SSE en FastAPI (`services/api/routes/rfps.py`):**
+   - `GET /api/rfps/stream`: Protegido con `Depends(get_current_user)`.
+   - Generador asíncrono con `request: Request`, comprobación periódica `await request.is_disconnected()` y `asyncio.wait_for(queue.get(), timeout=15.0)` para emitir latidos keep-alive (`: ping\n\n`) cada 15s y limpiar la cola en `finally`.
+   - Modificación de `POST /api/rfps/upload` para publicar el evento `rfp_ticket_created` en cuanto el ticket se guarda en la base de datos con estado `"analizando"`.
+3. **Hook de Notificaciones en Frontend (`uis/backoffice/src/hooks/useRFPNotifications.ts`):**
+   - Implementación de lector de stream con `window.fetch` + `response.body.getReader()`.
+   - Búfer acumulativo de texto (`buffer += decoder.decode(chunk, { stream: true })`) procesando únicamente frames completos delimitados por `\n\n` (evita errores por fragmentación TCP).
+   - Inyección de cabecera `Authorization: Bearer ${token}` extraída de `localStorage`.
+   - Algoritmo de reconexión con backoff exponencial (`1000ms * 2^attempt`, máx. `30000ms`, más *jitter* aleatorio).
+   - Disparo de callback de recuperación al reconectar.
+4. **Integración en UI Dashboard (`uis/backoffice/src/app/rfps/page.tsx`):**
+   - Indicador de estado de conexión SSE en la cabecera del panel.
+   - Inserción reactiva de nuevos tickets y toast de notificación al recibir `rfp_ticket_created`.
+   - Deduplicación estricta de tickets por `ticket_id`.
+5. **Suite de Pruebas Automatizadas (`tests/api/test_rfp_sse.py`):**
+   - Test 1: Verificar rechazo `401 Unauthorized` si no hay JWT.
+   - Test 2: Verificar cabeceras `text/event-stream` y keep-alive `: ping\n\n`.
+   - Test 3: Verificar emisión y formato del evento `rfp_ticket_created` al subir un archivo o invocar el broadcaster.
 
 ---
 
-### 2.4 Política de Consolidación y Limpieza
+## 4. 🛡️ PACK 4: AUDITOR (Testing, Concurrencia y Protocolo Git)
 
-- **Separación por `business_line`:** evita contaminación cruzada entre *outsourcing*, *headhunting* y *training*.
-- **Deduplicación / Reemplazo por tema:** al consolidar un hecho nuevo que actualiza uno existente (ej. cambio de SLA de 48h → 24h), reemplaza el hecho anterior en lugar de acumular contradicciones.
-- **Límite y TTL:** tope máximo configurable por línea de negocio (ej. `MAX_MEMORIES_PER_LINE = 25`) + TTL (`MEMORY_TTL_SECONDS`, ej. 30 días en Redis) purgando las entradas más antiguas/menos usadas.
+### 4.1 Verificaciones Automatizadas
+- Ejecución de tests unitarios y de integración con `pytest`:
+  `uv run pytest tests/api/test_rfp_sse.py -v`
+- Comprobación de no regresión en tests existentes:
+  `uv run pytest tests/pipelines/ -v`
+- Verificación de tipos y lint en el frontend:
+  `cd uis/backoffice && npm run build` (o `npx tsc --noEmit`)
 
----
-
-### 2.5 Ciclos de Auto-Refinamiento (Self-Refinement Loop — 3 Ciclos)
-
-- **Ciclo 1 (Un solo grafo, 1 sola llamada):** Confirmamos que `generate_answer_node` y `format_tool_answer_node` reutilizan el mismo flujo en `services/agent/nodes.py` devolviendo respuesta + propuesta sin añadir un segundo agente.
-- **Ciclo 2 (Mensaje mixto: decisión + nueva pregunta):** Si el usuario dice *"Sí, recuérdalo. Por cierto, ¿cuál es el estado del ticket INC-101?"*, el clasificador extrae `decision="approve"` y `remaining_question="¿cuál es el estado del ticket INC-101?"` para resolver la memoria y continuar el grafo en el mismo turno.
-- **Ciclo 3 (Bilingüe ES/EN):** La pregunta de confirmación y los mensajes de estado respetan el idioma detectado en el turno (español / inglés) para soportar la operación España–Miami.
+### 4.2 Protocolo de Control Git
+- ⚠️ **Regla Inviolable:** NUNCA realizar `git push` automático.
+- Al completar la verificación del plan y código, solicitar consentimiento explícito al usuario.
 
 ---
 
 ## 🗺️ Mapa de Trabajo por Fases (Roadmap)
 
-- [ ] **Fase 1 — Almacén de Memoria, Guardrails y Auditoría (`services/agent/memory.py`):**
-  - [ ] Implementar interfaz explícita (`read_memory`, `save_pending_proposal`, `get_pending_proposal`, `resolve_proposal`, `consolidate_memory`, `get_audit_log`) con Redis + fallback JSON local.
-  - [ ] Implementar filtro de privacidad de Nexova (bloqueo de PII de candidatos, salarios de headhunting y correcciones no repetibles).
-  - [ ] Implementar política de consolidación (deduplicación/reemplazo, límite máximo por `business_line` y expiración TTL).
-- [ ] **Fase 2 — Extensión del Estado y Nodos LangGraph (`services/agent/state.py`, `services/agent/nodes.py`, `services/agent/graph.py`):**
-  - [ ] Añadir a `AgentState` los campos de `thread_id`, `pending_proposal`, `memory_proposal`, `memory_decision`, `memory_context` y `remaining_question`.
-  - [ ] Añadir nodo `resolve_pending_memory_node` al inicio del grafo (clasificación explícita, *default-deny*, registro en `AuditLog` y soporte de pregunta encadenada).
-  - [ ] Integrar lectura explícita de memoria (`read_memory`) antes de responder y salida estructurada en 1 sola llamada (`answer` + `propuesta_memoria`) sin escribir nunca en `*_knowledge`.
-- [ ] **Fase 3 — Integración API (`services/api/routes/agent.py`):**
-  - [ ] Propagar `thread_id` al grafo y exponer metadatos opcionales de memoria/auditoría en `AgentQueryResponse` manteniendo `Depends(get_current_user)`.
-- [ ] **Fase 4 — Eval-Driven Development (EDD) & Red Teaming (`tests/pipelines/test_agent_memory.py`):**
-  - [ ] Testear los 3 ejemplos positivos y 3 negativos del briefing de Nexova.
-  - [ ] Testear bloqueo de datos prohibidos (PII candidatos, salarios) y prohibición de escritura en Qdrant `*_knowledge`.
-  - [ ] Testear invariantes: máximo 1 propuesta pendiente, ambigüedad/cambio de tema = rechazo por defecto, mensaje mixto (confirmación + nueva pregunta), consolidación/deduplicación.
-  - [ ] Ejecutar y documentar 2 ciclos completos de evidencia (1 aprobado reflejado en interacción futura, 1 rechazado con memoria intacta).
-- [ ] **Fase 5 — Documentación de Decisiones de Diseño & PR (`docs/` y PR `feature/agent-memory`):**
-  - [ ] Completar checklist de `.github/STRATEGY.md` y documentar respuestas a las 5 Decisiones de Diseño en la descripción del PR.
+### Fase 1: Arquitectura de Streaming en Backend (`services/`)
+- [ ] 1.1 Crear el gestor de eventos en memoria `services/api/sse_manager.py` (`SSEBroadcaster`).
+- [ ] 1.2 Implementar el endpoint `GET /api/rfps/stream` en `services/api/routes/rfps.py` con Auth Guard (`Depends(get_current_user)`).
+- [ ] 1.3 Incorporar generador de eventos con frames de keep-alive (`: ping\n\n`) cada 15 segundos y manejo de desconexión.
+- [ ] 1.4 Integrar la publicación de `rfp_ticket_created` en `POST /api/rfps/upload` al registrar el ticket.
 
----
+### Fase 2: Suite de Pruebas Automatizadas del Stream (`tests/`)
+- [ ] 2.1 Crear `tests/api/test_rfp_sse.py` usando `httpx.AsyncClient`.
+- [ ] 2.2 Probar rechazo sin autenticación (`401 Unauthorized`).
+- [ ] 2.3 Probar recepción del formato wire de SSE (`event: rfp_ticket_created` y payload estructurado con campos del briefing).
+- [ ] 2.4 Ejecutar suite con `uv run pytest tests/api/test_rfp_sse.py -v`.
 
-## 🛡️ PACK 4: AUDITOR & Protocolo Git
+### Fase 3: Cliente Frontend con Tolerancia a Fallos (`uis/backoffice/`)
+- [ ] 3.1 Implementar el hook `useRFPNotifications` en `uis/backoffice/src/hooks/useRFPNotifications.ts` con `fetch` y `ReadableStreamDefaultReader`.
+- [ ] 3.2 Implementar reconexión con backoff exponencial progresivo y cancelación por `AbortController`.
+- [ ] 3.3 Implementar estrategia de recuperación con refetch al reconectar y deduplicación por `ticket_id`.
+- [ ] 3.4 Conectar el hook en `uis/backoffice/src/app/rfps/page.tsx` con indicador visual de estado y actualización en tiempo real de la lista.
+- [ ] 3.5 Validar compilación TypeScript en frontend (`cd uis/backoffice && npx tsc --noEmit`).
 
-- **Verificación pre-push:** `uv run pytest tests/pipelines/test_agent_memory.py tests/pipelines/test_agent_evals.py -v` sin regresiones.
-- **Regla Inviolable de Git:** Nunca ejecutar `git push` de forma automática sin consentimiento explícito del usuario.
+### Fase 4: Auditoría de Seguridad y Verificación Pre-Push
+- [ ] 4.1 Auditar que no exista ninguna llamada a LLMs ni agentes en la solución de esta parte.
+- [ ] 4.2 Ejecutar pruebas de regresión globales del backend (`uv run pytest`).
+- [ ] 4.3 Solicitar confirmación explícita para control de versiones Git.
 
 ---
 
 ## ⚙️ Métodos Aplicados (Code Refinement Suite)
 
-1. **Tree of Thoughts (ToT) + 3 Expertos:** Se evaluaron Redis KV con namespaces, Qdrant secundario y system prompt plano frente a los requisitos de UX (Roberto Díaz), desarrollo (LangGraph en 1 llamada) y seguridad (privacidad ATS/headhunting).
-2. **Threat Modeling IA (OWASP LLM Top 10) & FMEA (Nivel 4):** Se definieron invariantes formales contra *memory poisoning*, fuga de PII de candidatos, ambigüedad del usuario (*default-deny*), doble propuesta simultánea y caída de Redis.
-3. **Step-Back Prompting & Máquina de Estados (Nivel 4):** Se diseñó la transición de estados `Idle <-> PendingProposal -> Consolidated/Rejected` y los contratos Pydantic estrictos para el clasificador y la salida estructurada.
-4. **Self-Refinement Loop (3 Ciclos):** Refinado para mantener 1 solo grafo/llamada, resolver mensajes mixtos (decisión + nueva pregunta) y respetar operación bilingüe España–Miami.
-5. **Chain of Verification (CoVe), EDD & Adversarial Red Teaming:** Los contratos y rutas se verificaron contra `services/agent/state.py`, `services/agent/graph.py` y `services/api/routes/agent.py`, planificando replay multi-turno determinista y pruebas adversarias antes del PR.
+1. **Tree of Thoughts (ToT):** Evaluación comparativa formal entre Polling, WebSockets y SSE, ponderando seguridad de tokens, costo computacional y adecuación funcional.
+2. **Panel de 3 Expertos (UX, Dev, Sec):** Integración armónica de requerimientos de interfaz amigable (estados de conexión y toasts), arquitectura limpia (patrón pub/sub desacoplado con colas asíncronas) y cumplimiento estricto del Auth Guard Standard.
+3. **Threat Modeling & FMEA:** Identificación proactiva de riesgos críticos: fugas de memoria por clientes desconectados, cortes silenciosos por proxies y desincronización de eventos durante caídas de red.
+4. **Chain of Verification (CoVe):** Contrastación exhaustiva contra los modelos reales de `RFPTicket` y las funciones existentes en `rfps.py` y `rfps.ts`.
+5. **Test-Driven Refinement (TDD):** Planificación de pruebas específicas para validar el wire protocol de SSE antes de dar por cerrada la fase de backend.
