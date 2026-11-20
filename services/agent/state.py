@@ -42,3 +42,7 @@ class AgentState(TypedDict, total=False):
     memory_decision: Optional[str]
     memory_audit: Optional[Dict[str, Any]]
     memory_only_response: Optional[str]
+
+    tenant_id: Optional[str]
+    guardrail_triggered: bool
+    guardrail_failure_type: Optional[str]

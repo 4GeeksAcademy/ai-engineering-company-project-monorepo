@@ -109,11 +109,12 @@ def classify_rfp_document(markdown_text: str) -> ClassifierOutput:
 
     lower = markdown_text.lower()
 
-    # Detección de pitches entrantes de proveedores (ej. nexova-request-3.pdf)
+        # Detección de pitches entrantes de proveedores (ej. nexova-request-3.pdf)
     vendor_pitch_markers = (
         "ofrecemos nuestro ats", "nuestra plataforma ats", "demo gratuita de nuestro software",
         "somos proveedores de", "nos gustaría presentarles nuestra herramienta", "vendor pitch",
         "agendar una demo de nuestro producto", "suscripción a nuestro software",
+        "our ats", "free demo of our software", "book a demo", "schedule a demo",
     )
     if any(m in lower for m in vendor_pitch_markers):
         return ClassifierOutput(
@@ -122,16 +123,24 @@ def classify_rfp_document(markdown_text: str) -> ClassifierOutput:
             reason="Documento identificado como pitch comercial de proveedor externo, no como RFP de cliente.",
         )
 
-    # Señales de solicitud de propuesta (formal o correo informal) para servicios de Nexova
+    # Señales de solicitud de propuesta (formal o correo informal en español o inglés)
     rfp_intent_markers = (
         "rfp", "request for proposal", "solicitud de propuesta", "propuesta económica",
         "cotización", "presupuesto", "necesitamos contratar", "buscamos un proveedor",
-        "equipo de soporte", "búsqueda ejecutiva", "mandos medios", "capacitación", "formación",
-        "headhunting", "outsourcing", "agentes de soporte",
+        "equipo de soporte", "búsqueda ejecutiva", "mandos medios", "posiciones",
+        "capacitación", "formación", "headhunting", "outsourcing", "agentes de soporte",
+        # Variantes en inglés / correo informal
+        "quote", "proposal", "pricing", "estimate", "we need", "looking for",
+        "looking to hire", "support team", "support agents", "customer support",
+        "agents", "positions", "24/7", "sla", "training", "leadership",
     )
     matches = sum(1 for m in rfp_intent_markers if m in lower)
     if matches >= 2:
-        fmt = "formal" if ("rfp" in lower or "request for proposal" in lower or "alcance" in lower) else "informal"
+        fmt = (
+            "formal"
+            if ("rfp" in lower or "request for proposal" in lower or "solicitud de propuesta" in lower or "alcance" in lower)
+            else "informal"
+        )
         return ClassifierOutput(
             is_valid_rfp=True,
             rfp_format=fmt,
@@ -215,9 +224,20 @@ def orchestrate_rfp_decomposition(markdown_text: str) -> OrchestratorOutput:
     services: List[str] = []
 
     dept_keywords = {
-        "seleccion": ("selección", "seleccion", "headhunting", "búsqueda ejecutiva", "mandos", "roles", "vacantes", "contratación"),
-        "capacitacion": ("capacitación", "capacitacion", "formación", "formacion", "training", "liderazgo", "programa", "taller"),
-        "soporte": ("soporte", "support", "helpdesk", "agentes", "24/7", "turnos", "sla", "outsourcing de atención"),
+        "seleccion": (
+            "selección", "seleccion", "headhunting", "búsqueda ejecutiva", "mandos",
+            "posiciones", "positions", "roles", "vacantes", "contratación",
+            "hiring", "hire", "recruit", "recruitment", "executive search", "managers",
+        ),
+        "capacitacion": (
+            "capacitación", "capacitacion", "formación", "formacion", "training",
+            "liderazgo", "leadership", "programa", "taller", "workshop", "coaching",
+        ),
+        "soporte": (
+            "soporte", "support", "support agents", "customer support", "customer service",
+            "helpdesk", "agentes", "agents", "24/7", "24x7", "turnos", "sla",
+            "outsourcing de atención", "outsourced",
+        ),
     }
 
     for dept_id, kws in dept_keywords.items():
@@ -305,21 +325,24 @@ def run_department_worker(metadata: Dict[str, Any], task: Dict[str, Any]) -> Wor
 
     key_aspects: List[str] = []
     open_questions: List[str] = []
-    numbers = re.findall(r"\b\d+\s+(?:mandos|roles|puestos|agentes|personas|horas|semanas|días|meses|participantes)\b", excerpts_text, re.IGNORECASE)
+    numbers = re.findall(
+        r"\b\d+\s+(?:[a-záéíóúñ]+\s+)?(?:posiciones|positions|mandos|roles|puestos|vacantes|plazas|agentes|agents|personas|people|participantes|participants|candidatos|candidates|horas|hours|semanas|weeks|d[ií]as|days|meses|months)\b",
+        excerpts_text,
+        re.IGNORECASE,
+    )
     if numbers:
         key_aspects.append(f"Volúmenes/plazos detectados en RFP: {', '.join(dict.fromkeys(numbers))}.")
     else:
         open_questions.append(f"Confirmar con el cliente el volumen exacto y plazos para {dept_info['department_name']}.")
-
     if dept_id == "seleccion":
         key_aspects.append("Revisar perfiles requeridos y validar ventana mínima de cierre (>= 15 días hábiles).")
     elif dept_id == "capacitacion":
         key_aspects.append("Definir programa formativo, modalidad (presencial/remota) y calendario de cohortes.")
-        if "modalidad" not in excerpts_text.lower() and "presencial" not in excerpts_text.lower() and "remoto" not in excerpts_text.lower():
+        if not any(m in excerpts_text.lower() for m in ("modalidad", "presencial", "remoto", "remota", "online", "híbrida", "in-person", "remote", "hybrid")):
             open_questions.append("Confirmar modalidad de impartición (presencial, online o híbrida).")
     elif dept_id == "soporte":
         key_aspects.append("Dimensionar turnos de atención y validar cumplimiento del SLA obligatorio de 24h.")
-        if "24/7" in excerpts_text.lower():
+        if "24/7" in excerpts_text.lower() or "24x7" in excerpts_text.lower():
             key_aspects.append("Cobertura solicitada: 24/7.")
 
     return WorkerOutput(

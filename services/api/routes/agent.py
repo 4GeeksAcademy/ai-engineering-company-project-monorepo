@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from services.api.routes.auth import get_current_user
 from services.agent.graph import agent_app
 from services.agent.state import AgentState
+from services.agent.guardrails import guardrail_tracker
 
 logger = logging.getLogger("nexova.agent_route")
 
@@ -45,6 +46,8 @@ class AgentQueryResponse(BaseModel):
     memory_proposal: Optional[dict[str, Any]] = None
     memory_decision: Optional[str] = None
     memory_audit: Optional[dict[str, Any]] = None
+    guardrail_triggered: bool = False
+    guardrail_failure_type: Optional[str] = None
 
 @router.post(
     "/query",
@@ -93,4 +96,19 @@ def query_agent(
         memory_proposal=final_state.get("memory_proposal"),
         memory_decision=final_state.get("memory_decision"),
         memory_audit=final_state.get("memory_audit"),
+        guardrail_triggered=bool(final_state.get("guardrail_triggered", False)),
+        guardrail_failure_type=final_state.get("guardrail_failure_type"),
     )
+
+
+@router.get(
+    "/guardrails/summary",
+    status_code=status.HTTP_200_OK,
+    summary="Resumen de observabilidad de guardrails",
+    description="Devuelve cuántas veces se activó cada guardrail y el desglose por tipo de fallo.",
+)
+def get_guardrails_summary(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Endpoint protegido que expone las métricas de activación del harness de guardrails."""
+    return guardrail_tracker.get_summary()
