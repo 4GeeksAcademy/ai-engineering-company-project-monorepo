@@ -1,160 +1,215 @@
-# Hito — Flujo Agéntico de RFPs: Recepción y Enrutamiento (Parte 1 de 3)
+# Hito — Flujo Agéntico de RFPs: Generación de Respuestas (Parte 2 de 3)
 
-Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí se definen los departamentos, el formato de las RFPs, las reglas de persistencia y los lineamientos específicos de tu empresa para esta parte del hito.
-
----
+Antes de empezar: Lee tu [company-BRIEFING.md](https://github.com/4GeeksAcademy/ai-engineering-syllabus/tree/main/content/contexts/09-agentic-workflows) antes de escribir cualquier línea de código — allí están los lineamientos concretos contra los que deben validar tus agentes evaluadores.
 
 ## 🎯 Tu reto
-
 📌 Estás construyendo sobre tu copia del [monorepo](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo) de la empresa seleccionada al inicio del curso — no en un repositorio nuevo.
 
-Ya construiste un agente capaz de usar herramientas, recordar contexto entre interacciones y orquestarse de forma segura a través de un servidor MCP. Ahora tu empresa necesita que varios agentes trabajen juntos para resolver un problema real de negocio.
+En la Parte 1 ya tienes un flujo que clasifica cada RFP y abre un ticket por cada una, dejándole claro a Ventas qué le toca a cada departamento. Ahora Ventas quiere ir un paso más allá: que ese análisis se convierta directamente en un primer borrador de la propuesta económica, revisado automáticamente antes de que un humano lo vea.
 
-El equipo de Ventas recibe cada semana decenas de RFPs (Request for Proposal) en PDF de clientes que piden una propuesta económica, y le está costando cumplir los plazos porque cada solicitud requiere involucrar a varios departamentos distintos — y nadie tiene claro, al leer el documento, a quién hay que pedirle qué. Tu tech lead te asigna el siguiente ticket: construir el primer tramo de un flujo agéntico que reciba estas RFPs, determine si realmente lo son, y reparta el trabajo entre los agentes correctos.
-
----
-
-## Ticket — Flujo agéntico de recepción y enrutamiento de RFPs
-
-**Contexto:** Ventas está perdiendo plazos porque nadie sabe, al recibir una RFP, qué departamentos debe involucrar ni qué necesita cada uno. Necesitamos automatizar ese primer análisis antes de tocar la generación de la propuesta en sí (eso viene en la siguiente parte).
+### Ticket — Generación y evaluación de respuestas a RFP
+**Contexto:** La Parte 1 nos dice qué hay que responder en cada RFP, pero armar el borrador de la propuesta económica sigue siendo manual y lento. Necesito que el sistema genere un primer borrador por departamento y que ese borrador se autoevalúe antes de llegar a un humano.
 
 **Qué necesito que construyas:**
-- Una interfaz en modo ticket donde el equipo suba la RFP (siempre PDF) y vea el estado en tiempo real. La subida pasa por el backend existente de la empresa — sin un API nuevo. Guarda el PDF bajo `data/raw/` como parte del proceso de recepción.
-- Persiste el ticket, los metadatos de la RFP y los aspectos clave por departamento en PostgreSQL (Supabase) — el mismo stack de DB que ya usas para inventario — no TinyDB ni archivos JSON como fuente de verdad.
-- El pipeline LangGraph (o equivalente) vive en `data/pipelines/` (p. ej. `data/pipelines/rfp_intake/`). Los routers en `services/` solo disparan y consultan; no poseen el grafo. Helpers CLI sueltos van en `scripts/`.
-- Las RFPs en PDF pesan mucho en tokens. Conviértelas a Markdown apenas entran — MarkItDown (o un paso PDF→Markdown equivalente documentado) — antes de que cualquier agente las lea.
-- Un agente clasificador que decida si el documento es una RFP legítima; si no lo es, detén el flujo y deja el ticket en `descartado`.
-- Para cada RFP válida, extrae metadatos y métricas de legibilidad (`py-readability-metrics` sirve) para anticipar el costo de procesamiento.
-- Reparte el análisis por departamento con `orchestrator-worker-synthesizer` — no un solo agente. Usa un grafo dedicado `rfp_intake`; no enganches nodos RFP al grafo CX / knowledge-agent.
+1. Un agente generador por departamento que reciba los metadatos y el resumen producidos en la Parte 1, y redacte la sección correspondiente de la propuesta económica.
+2. Varios agentes evaluadores corriendo en paralelo sobre cada sección generada: legibilidad (de nuevo, `py-readability-metrics` te sirve para esto), pertinencia respecto a lo que pide la RFP, y cumplimiento de nuestros lineamientos de empresa.
+3. Si una sección falla la evaluación, que vuelva al generador correspondiente con feedback concreto sobre qué corregir — no que se quede atascada ni que se descarte el ticket completo.
+4. Un límite de iteraciones para ese ciclo generador-evaluador, para que no se repita indefinidamente si un generador no logra pasar la evaluación. Si una sección agota ese límite sin pasar, conserva el último borrador y su resultado de evaluación, márcala `needs_human_review`, e inclúyela igual en el handoff a la Parte 3 — nunca descartes el ticket completo.
+5. **Opcional:** si ya tienes montada la base de conocimiento semántica de la empresa, dale acceso al generador — que redacte con nuestras políticas y tono reales en lugar de improvisarlos ayuda mucho a que pase la evaluación de cumplimiento a la primera. No es indispensable para esta parte, pero si la tienes disponible, úsala.
 
-**Acceptance criteria:** Ventas debe poder mirar el resultado de una RFP procesada y saber, sin leer el documento original, qué le toca a cada departamento y a quién pedírselo.
-
-*— Tu tech lead*
+**Acceptance criteria:** El handoff hacia la Parte 3 debe incluir, por cada departamento, tanto el contenido generado como un resultado de evaluación estructurado (ver schema abajo). Las secciones que agotaron el límite de iteraciones van con `needs_human_review` — no se eliminan.
+— *Tu tech lead*
 
 ---
 
-## 📚 Conocimiento complementario: PDFs, legibilidad, tickets e ingesta async
+## 📚 Conocimiento complementario: cumplimiento de lineamientos
+Cuando el ticket pide que un evaluador revise "cumplimiento de lineamientos de la empresa", no se refiere a un juicio de estilo libre: tu `company-BRIEFING.md` incluye una lista concreta de reglas (tono, datos que no pueden faltar, cifras que deben aparecer) contra la cual el evaluador debe verificar el contenido generado — no una opinión subjetiva del agente. Si tu empresa ya tiene una base de conocimiento semántica, es un buen lugar para que el generador busque políticas, precios de referencia o lenguaje de marca reales antes de redactar — reduce las veces que el evaluador rebota la sección por inventar algo que no coincide con lo que la empresa realmente dice. Esto es una mejora sugerida, no un requisito de esta parte.
 
-Las RFPs reales llegan como PDF. Convertirlas a Markdown antes del LLM reduce costo de tokens y ruido. Usa `py-readability-metrics` sobre el Markdown para estimar costo de procesamiento (Flesch-Kincaid, Gunning Fog, etc.), no como nota literaria.
+### Estados del ticket para esta parte (misma fila que la Parte 1 — nombres del BRIEFING):
+El ciclo completo está en el BRIEFING; aquí solo necesitas:
 
-Modo ticket significa que cada subida es una fila con ciclo de vida que la UI puede consultar. El mismo ticket continúa en partes posteriores — el vocabulario completo vive en el BRIEFING. Esta parte solo usa:
+| Estado | Rol | Cuándo |
+| :--- | :--- | :--- |
+| `analisis_completo` | Entrada Parte 1 | Arranca aquí vía handoff de enrutamiento — no reescribas este estado |
+| `generando_borrador` | Parte 2 escribe | Generadores escribiendo secciones |
+| `en_evaluación` | Parte 2 escribe | Evaluadores en paralelo / ciclo generador-evaluador |
+| `needs_human_review` | Parte 2 escribe | Límite de iteraciones agotado; último borrador + EvaluationResult pasan a Parte 3 |
 
-| Estado | Cuándo |
-| :--- | :--- |
-| `analizando` | Subida aceptada; conversión + agentes en curso |
-| `descartado` | El clasificador rechazó el documento |
-| `analisis_completo` | El synthesizer terminó; Ventas puede leer los aspectos clave por departamento |
-
-PDF→Markdown + clasificador + workers en paralelo pueden tardar minutos. El `POST` de subida no debe ejecutar el pipeline completo en sync: crea el ticket (`analizando`), guarda el PDF en `data/raw/`, responde rápido (p. ej. `202` + `ticket_id`), corre el pipeline en background, y deja que la UI haga poll del `GET` de estado.
+*No inventes estados de Parte 3 (`esperando_aprobación`, `terminado`) en esta parte.*
 
 ---
 
-## 🗺️ Referencia visual: análisis inicial y aislamiento de workstreams
-
-Esta parte del flujo empieza con un triage rápido (¿es una RFP / lo bastante compleja?), luego un orquestador descompone el documento principal en workstreams paralelos (secciones / departamentos), los workers los procesan de forma independiente, y un synthesizer consolida todo en una estructura de workstreams definida con meta-información.
+## 🗺️ Referencia visual: mapeo departamental y finalización del entregable
+Este tramo del flujo toma la estructura de workstreams definida en la Parte 1, mapea tareas a departamentos vía un assignment orchestrator, ejecuta generación por departamento en paralelo, y un synthesizer consolida las salidas en tickets de asignación por departamento listos para evaluación / aprobación:
 
 ```mermaid
 flowchart LR
-    Triage["Rapid Assessment & Triage (Router)"] --> Filter{"RFP / Complex? (Project Type Filter)"}
-    Filter -->|No| Discard["descartado"]
-    Filter -->|Sí| Orch["Orchestrator (Document Decomposition)"]
-    Orch --> S1["Section 1 (Worker)"]
-    Orch --> S2["Section 2 (Worker)"]
-    Orch --> SN["Section N (Worker)"]
-    S1 --> Synth["Synthesizer (Synthesize Sections)"]
-    S2 --> Synth
-    SN --> Synth
-    Synth --> Out["DEFINED WORKSTREAM STRUCTURE & META-INFO"]
-```
+    %% Entradas
+    subgraph Input ["Entrada Estructurada"]
+        WS["DEFINED WORKSTREAM<br/>STRUCTURE & META-INFO"]
+    end
 
-> [!IMPORTANT]
-> 🔀 **PR aprobado → haz merge a `main`.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
+    %% Orquestador de Asignación
+    AO["ASSIGNMENT ORCHESTRATOR<br/><i>(Orchestrator)</i>"]
+    WS --> AO
+
+    %% Departamentos en Paralelo
+    subgraph Departments ["Departamentos"]
+        direction TB
+        
+        subgraph DeptSales ["DEPARTMENT: SALES"]
+            direction TB
+            S1["- Value Proposition Definition"]
+            S2["- Pricing & Commercial Terms"]
+            S3["- Client Relationship Strategy"]
+            S4["- Comms & Sales"]
+        end
+
+        subgraph DeptLegal ["DEPARTMENT: LEGAL & COMPLIANCE"]
+            direction TB
+            L1["- Terms & Conditions Review"]
+            L2["- Regulatory Alignment"]
+            L3["- Contract Generation"]
+        end
+
+        subgraph DeptOps ["DEPARTMENT: OPERATIONS & DELIVERY"]
+            direction TB
+            O1["- Resource Allocation"]
+            O2["- Timeline & SLA Definition"]
+            O3["- Solution Design Validation"]
+            O4["- Contract Operations"]
+        end
+    end
+
+    AO --> DeptSales
+    AO --> DeptLegal
+    AO --> DeptOps
+
+    %% Sintetizador Final
+    FDS["FINAL DELIVERABLE<br/>SYNTHESIS<br/><i>(Synthesizer)</i>"]
+
+    DeptSales --> FDS
+    DeptLegal --> FDS
+    DeptOps --> FDS
+
+    %% Tickets de Asignación y Aprobación
+    subgraph Deliverables ["Department-specific assignment and approval tickets"]
+        direction TB
+        
+        subgraph TicketSales ["SALES ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TS_Dept["Department: Sales"]
+            TS_Content["Assigned Content: Brief summary of tasks"]
+            TS_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+        end
+
+        subgraph TicketLegal ["LEGAL & COMPLIANCE ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TL_Dept["Department: Legal"]
+            TL_Content["Assigned Content: Brief summary of tasks"]
+            TL_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+        end
+
+        subgraph TicketOps ["OPERATIONS & DELIVERY ASSIGNMENT TICKET: For Approval"]
+            direction TB
+            TO_Dept["Department: Operations & Delivery"]
+            TO_Content["Assigned Content: Brief summary of tasks"]
+            TO_Status["APPROVAL STATUS: [ ] Approved [ ] Rejected"]
+        end
+    end
+
+    FDS --> TicketSales
+    FDS --> TicketLegal
+    FDS --> TicketOps
+```
 
 ---
 
-## 🌱 Cómo Empezar el Proyecto
+## 🔀 Flujo Git y Próximos Pasos
+- **PR aprobado → haz merge a main.** Si no, la funcionalidad no se despliega y tu siguiente rama parte de código desactualizado, lo que acaba en conflictos de merge.
 
-- Sigue trabajando sobre la copia (fork) del monorepo de tu empresa que vienes usando desde el Hito. Si por algún motivo todavía no tienes tu fork, créalo ahora desde el [monorepo base](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo).
-- Crea una rama nueva a partir de tu rama principal: `feature/rfp-intake`.
-- Instala las dependencias nuevas que necesites con `uv add` (por ejemplo, `uv add markitdown` y `uv add py-readability-metrics`) — nunca con `pip install` ni `pipenv`.
-- Extiende `uis/backoffice` para la UI de subida — no crees una app frontend nueva.
-- Añade rutas HTTP en el backend existente bajo `services/` (mismo proceso / mismo API). Implementa el pipeline de agentes en `data/pipelines/` (p. ej. `data/pipelines/rfp_intake/`). Pon runners CLI sueltos en `scripts/` si hace falta.
-- Lee tu `company-BRIEFING.md` antes de definir departamentos, esquema o RFPs de prueba. Usa los PDF de muestra en `rfp-requests/<empresa>/` de la carpeta BRIEFING — súbelos por la UI para verificar el flujo.
+## 🌱 Cómo Empezar el Proyecto
+1. **Rama de trabajo:** Continúa sobre la misma rama de trabajo del Hito en tu fork del monorepo (o crea `feature/rfp-response-generation` a partir de la rama donde entregaste la Parte 1). Si aún no tienes tu fork, créalo desde el [monorepo base](https://github.com/4GeeksAcademy/ai-engineering-company-project-monorepo).
+2. **Reutilización:** Parte del flujo de clasificación y enrutamiento que construiste en la Parte 1 — no lo reescribas desde cero.
+3. **Consumo de handoff:** Consume el handoff de enrutamiento de la Parte 1 — la Parte 2 debe arrancar desde tickets que la Parte 1 marcó listos (estado `analisis_completo` más el flag de cola / campo DB / contrato de handoff que definiste). Entrada = `ticket_id` + payload del synthesizer (`key_aspects` / estructura de workstreams). No vuelvas a parsear el PDF ni inventes un resumen paralelo que ignore ese contrato.
+4. **Dependencias:** Instala cualquier dependencia nueva con `uv add`.
+5. **Lineamientos de negocio:** Revisa nuevamente tu `company-BRIEFING.md`: allí están los lineamientos concretos contra los que deben validar tus agentes evaluadores.
 
 ---
 
 ## 💻 Lo Que Debes Hacer
 
-### Layout del monorepo (no negociable)
-- [ ] **Sin API nuevo** — extiende el backend existente en `services/`; los routers llaman a `data/pipelines/`
-- [ ] Implementa el grafo/pipeline de recepción RFP bajo `data/pipelines/` (`rfp_intake` dedicado, no mezclado con el grafo CX)
-- [ ] Scripts standalone (reproceso manual, smoke runs) viven en `scripts/`, no como segundo HTTP API
-- [ ] Persiste **Ticket**, **metadatos RFP** y **DepartmentSection.key_aspects** en **PostgreSQL (Supabase)** vía SQLModel (o tu capa DB existente) — TinyDB no es aceptable para estos datos
+### Consumir el enrutamiento de la Parte 1
+- [ ] La entrada de la Parte 2 lee el handoff de enrutamiento de la Parte 1 (`ticket_id` + payload del synthesizer / `key_aspects`, vía el flag de cola, campo DB o contrato documentado de la Parte 1) — los generadores no deben re-ingerir el PDF crudo como input principal.
 
-### Interfaz de recepción (modo ticket)
-- [ ] Implementa en `uis/backoffice` una interfaz donde se puedan subir RFPs en PDF y se cree un ticket por cada una
-- [ ] Al subir, guarda el PDF bajo `data/raw/` (artefacto runtime del proceso) y deja el ticket en `analizando`
-- [ ] El endpoint de subida responde rápido; el pipeline corre en async; la UI consulta/refresca estado (`analizando` → `analisis_completo` o `descartado`)
+### Generación por departamento
+- [ ] Implementa un agente generador por departamento que reciba el resumen relevante producido en la Parte 1 (desde ese handoff).
+- [ ] El agente generador debe producir contenido específico para la sección de propuesta económica de su departamento.
 
-### Ingesta y conversión del documento
-- [ ] Convierte cada RFP de PDF a Markdown **antes** de que cualquier agente la lea (obligatorio: MarkItDown o equivalente documentado)
-- [ ] Extrae metadatos del documento convertido (campos que pide tu BRIEFING)
-- [ ] Calcula métricas de legibilidad que anticipen el costo de procesamiento (se sugiere `py-readability-metrics`)
-- [ ] Guarda metadatos y métricas en PostgreSQL junto al ticket
+> **💡 Opcional:** Si tu empresa ya tiene una base de conocimiento semántica, puedes darle acceso al generador para que redacte con políticas y lenguaje de marca reales. No es un requisito de esta parte ni se evalúa como tal — es una mejora que puede reducir cuántas veces una sección rebota en la evaluación.
 
-### Agente clasificador
-- [ ] Implementa un primer agente que lea el Markdown convertido y determine si es una RFP válida
-- [ ] Si no lo es, detén el flujo y deja el ticket en `descartado` (no falles en silencio)
+### Evaluación en paralelo
+- [ ] Implementa múltiples agentes evaluadores que corran en paralelo sobre cada sección generada.
+- [ ] Al menos un evaluador debe revisar legibilidad (se sugiere `py-readability-metrics`).
+- [ ] Al menos un evaluador debe revisar pertinencia (que el contenido responda lo que pide la RFP).
+- [ ] Al menos un evaluador debe revisar cumplimiento de los lineamientos definidos en tu `company-BRIEFING.md`.
+- [ ] Persiste la evaluación de cada sección como un `EvaluationResult` estructurado (los nombres de campo pueden variar un poco; la forma debe ser equivalente):
 
-### Orquestación por departamento
-- [ ] Implementa `orchestrator-worker-synthesizer`: el orquestador descompone en subtareas por departamento
-- [ ] Cada worker recibe **metadatos + extractos relevantes a su departamento** (sin inventar volúmenes/cifras que no estén en la RFP); guarda `key_aspects` por departamento en PostgreSQL
-- [ ] El synthesizer consolida un resumen para Ventas (qué pedir a quién)
-- [ ] En éxito, deja el ticket en `analisis_completo` con handoff claro hacia la Parte 2
+```yaml
+EvaluationResult:
+  section_id / department_id
+  readability: { pass, score, details }
+  relevance: { pass, missing_aspects[] }
+  compliance: { pass, rule_ids[], violations[] }
+  overall_pass: bool
+  feedback_for_generator: string # concreto y accionable
+```
 
-### Enrutamiento
-- [ ] Implementa el enrutamiento del documento clasificado hacia el resto del flujo agéntico (flag en cola, campo en DB o contrato de handoff documentado — sin segundo API). El handoff **debe** llevar `ticket_id` + payload del synthesizer (`key_aspects` / estructura de workstreams) para que la Parte 2 arranque sin re-parsear el PDF.
+### Ciclo generador-evaluador
+- [ ] Si una sección falla la evaluación, el flujo debe devolverla al agente generador correspondiente junto con el `feedback_for_generator` del `EvaluationResult`.
+- [ ] Define y aplica un límite de iteraciones para evitar que el ciclo generador-evaluador se repita indefinidamente.
+- [ ] Cuando se agota el límite sin pasar: conserva el último borrador + su `EvaluationResult`, marca la sección (y el ticket si aplica) como `needs_human_review`, e inclúyela igual en el handoff a la Parte 3 — no descartes el ticket.
 
-> ⚠️ **IMPORTANTE:** Los nombres de los departamentos, el formato de las RFPs y los criterios de clasificación deben coincidir con lo que se especifica en tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
+### Estado del ticket
+- [ ] Actualiza el ticket creado en la Parte 1 (desde `analisis_completo`) para reflejar el progreso de la generación y evaluación (`generando_borrador`, `en_evaluación`, `needs_human_review`). Persiste borradores y `evaluation_results` en PostgreSQL. Sigue sin crear un API nuevo: extiende el backend existente y el pipeline bajo `data/pipelines/`.
+
+> ⚠️ **IMPORTANTE:** Los lineamientos de la empresa contra los que evalúas el contenido generado, y el formato esperado de cada sección, deben coincidir con lo especificado en tu `company-BRIEFING.md`. Una implementación genérica que ignore el contexto no será aceptada.
 
 ### Pruebas
-- [ ] Incluye pruebas unitarias en `tests/pipelines/` para el agente clasificador y para al menos un agente worker
-- [ ] Verifica contra los PDF de muestra del BRIEFING (formal aceptar, informal aceptar, inválido rechazar) subiéndolos por la UI
+- [ ] Incluye pruebas unitarias en `tests/pipelines/` para al menos un agente generador y un agente evaluador, incluyendo un caso donde la evaluación falla.
+- [ ] Añade un caso de fallo de compliance anclado a una regla de tu `company-BRIEFING.md` (p. ej. un borrador que promete algo que los lineamientos prohíben → `compliance.pass == false`). Mantenlo pequeño: un fixture, una aserción de fallo — no hace falta el ciclo completo para este caso.
 
 ---
 
 ## 🧭 Preguntas de Diseño
-
-- ¿Qué pasa si una RFP menciona un departamento que no existe en tu `company-BRIEFING.md`? ¿Cómo lo maneja tu clasificador/orquestador?
-- ¿Qué necesita realmente cada worker del estado compartido? ¿Le pasas el documento completo o solo lo relevante — y qué haces si falta una cifra requerida?
-- ¿Cómo decides que un documento "no es una RFP"? ¿Qué pasa con un falso negativo?
-- ¿Qué pasa si dos workers devuelven información contradictoria sobre la misma sección?
-- ¿Dónde corre el trabajo async (background task, worker process, Prefect) — y cómo el ticket sigue siendo verdad si el job falla a mitad de pipeline?
+- **¿Qué información del estado necesita realmente cada agente evaluador?** ¿Le estás pasando solo la sección que debe revisar o el documento completo?
+- **¿Cómo evitas que dos evaluadores en paralelo entren en conflicto al escribir su resultado en el estado compartido?**
+- **Cuando una sección llega a `needs_human_review` tras agotar iteraciones, ¿cómo se lo muestras a Ventas para que sepa qué borrador es provisional?**
+- **¿El feedback que recibe el generador tras un fallo es lo suficientemente específico como para corregir el problema real, o es genérico?**
 
 ---
 
 ## ✅ Lo Que Evaluaremos
-
-- [ ] Solo el mismo backend API; código de pipeline bajo `data/pipelines/`; sin segundo servicio HTTP
-- [ ] Ticket, metadatos RFP y aspectos clave persistidos en PostgreSQL (Supabase)
-- [ ] Los PDF subidos caen en `data/raw/` como parte de la recepción; la UI dispara la subida
-- [ ] El estado del ticket refleja la realidad: `analizando` → `analisis_completo` o `descartado` (Parte 1); no `esperando_aprobación`
-- [ ] La subida es async (respuesta rápida + pipeline en background + estado consultable)
-- [ ] El clasificador rechaza no-RFPs sin detener otros tickets
-- [ ] Metadatos y métricas de legibilidad almacenados por documento procesado
-- [ ] Orchestrator-worker-synthesizer como agentes separados en un grafo `rfp_intake` dedicado
-- [ ] El handoff de enrutamiento lleva `ticket_id` + payload synthesizer / `key_aspects` para la Parte 2 (flag de cola, campo DB o contrato documentado)
-- [ ] El resultado final lista aspectos clave + contactos por departamento — verificable contra los PDF de muestra del BRIEFING
-- [ ] Pruebas unitarias del clasificador y al menos un worker
-- [ ] La implementación usa los departamentos y el formato de RFP del `company-BRIEFING.md` de tu empresa
+- [ ] Cada departamento tiene su propio agente generador, claramente separado de los demás.
+- [ ] La Parte 2 consume el handoff de enrutamiento de la Parte 1 (`ticket_id` + payload synthesizer / `key_aspects`) — no re-parsea el PDF como input principal del generador.
+- [ ] Los evaluadores corren en paralelo y no bloquean la ejecución de otros departamentos entre sí.
+- [ ] El sistema aplica correctamente el ciclo generador-evaluador, incluyendo el límite de iteraciones y el handoff `needs_human_review` al agotarlo.
+- [ ] El ticket refleja con precisión el progreso de generación y evaluación en tiempo real.
+- [ ] La salida de evaluación sigue la forma `EvaluationResult` (legibilidad / pertinencia / compliance estructurados — no texto libre sin estructura).
+- [ ] Los borradores y `evaluation_results` se persisten en PostgreSQL; sigue habiendo un solo API backend bajo `services/` (sin un segundo servicio HTTP).
+- [ ] Existen pruebas unitarias que cubren éxito, un fallo genérico de evaluación, y un fallo de compliance anclado al BRIEFING.
+- [ ] La implementación usa los lineamientos y formatos definidos en el `company-BRIEFING.md` de tu empresa.
 
 ---
 
 ## 📦 Cómo Entregar
+Esta es la Parte 2 de 3 del Hito. Entrégala con su propio Pull Request — no esperes a tener la Parte 3 lista.
 
-Esta es la **Parte 1 de 3** del Hito. Entrégala con su propio Pull Request contra tu rama principal — no esperes a tener las partes 2 y 3 listas.
+1. Haz commit y push de tu rama `feature/rfp-response-generation`.
+2. Abre un Pull Request describiendo qué implementaste y cómo probarlo.
+3. Incluye en la descripción del PR un ejemplo de sección generada: uno que pase evaluación y uno que falle.
+4. Solicita revisión a tu tech lead.
 
-1. Haz commit y push de tu rama `feature/rfp-intake`
-2. Abre un Pull Request describiendo qué implementaste y cómo probarlo
-3. Incluye en la descripción del PR un ejemplo de RFP de prueba (de `rfp-requests/` del BRIEFING) y el resultado que produce tu flujo
-4. Solicita revisión a tu tech lead
+
+
+
