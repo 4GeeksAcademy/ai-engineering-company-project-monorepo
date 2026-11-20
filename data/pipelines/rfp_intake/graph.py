@@ -401,35 +401,55 @@ def run_rfp_generation_pipeline(ticket_id: str, db_engine=None) -> Dict[str, Any
         session.commit()
 
     try:
-        result = rfp_generation_app.invoke(initial_state)
+        result: Dict[str, Any] = dict(initial_state)
 
-        with Session(active_engine) as session:
-            ticket = session.get(RFPTicket, ticket_id)
-            sections = session.exec(
-                select(RFPDepartmentSection).where(RFPDepartmentSection.ticket_id == ticket_id)
-            ).all()
+        for chunk in rfp_generation_app.stream(initial_state, stream_mode="updates"):
+            for node_name, node_update in chunk.items():
+                if not isinstance(node_update, dict):
+                    continue
+                result.update(node_update)
 
-            drafts = result.get("department_drafts", {})
-            evals = result.get("evaluation_results", {})
-            dept_statuses = result.get("department_statuses", {})
+                with Session(active_engine) as session:
+                    ticket = session.get(RFPTicket, ticket_id)
+                    sections = session.exec(
+                        select(RFPDepartmentSection).where(
+                            RFPDepartmentSection.ticket_id == ticket_id
+                        )
+                    ).all()
 
-            for sec in sections:
-                dept_draft = drafts.get(sec.department_id)
-                dept_eval = evals.get(sec.department_id)
-                if dept_draft:
-                    sec.draft_content = dept_draft.get("draft_content")
-                if dept_eval:
-                    sec.evaluation_results = json.dumps(dept_eval, ensure_ascii=False)
-                sec.approval_status = dept_statuses.get(sec.department_id, "borrador_generado")
-                session.add(sec)
+                    drafts = result.get("department_drafts", {})
+                    evals = result.get("evaluation_results", {})
+                    dept_statuses = result.get("department_statuses", {})
 
-            ticket.status = result.get("status", "needs_human_review")
-            ticket.updated_at = datetime.now(timezone.utc).isoformat()
-            session.add(ticket)
-            session.commit()
+                    for sec in sections:
+                        dept_draft = drafts.get(sec.department_id)
+                        dept_eval = evals.get(sec.department_id)
+                        if dept_draft:
+                            sec.draft_content = dept_draft.get("draft_content")
+                        if dept_eval:
+                            sec.evaluation_results = json.dumps(dept_eval, ensure_ascii=False)
+                        if sec.department_id in dept_statuses:
+                            sec.approval_status = dept_statuses[sec.department_id]
+                        session.add(sec)
+
+                    if ticket:
+                        if node_name == "draft_generation":
+                            # Al completar la redacción, el grafo entra en evaluación paralela
+                            ticket.status = "en_evaluación"
+                        elif node_name == "evaluation":
+                            raw_status = node_update.get("status", "needs_human_review")
+                            # Si alguna sección va a reintentar, vuelve a generar borrador
+                            ticket.status = (
+                                "generando_borrador"
+                                if raw_status == "en_evaluacion"
+                                else raw_status
+                            )
+                        ticket.updated_at = datetime.now(timezone.utc).isoformat()
+                        session.add(ticket)
+
+                    session.commit()
 
         return result
-
     except Exception as exc:
         logger.exception("Error en pipeline de generación para ticket %s", ticket_id)
         with Session(active_engine) as session:

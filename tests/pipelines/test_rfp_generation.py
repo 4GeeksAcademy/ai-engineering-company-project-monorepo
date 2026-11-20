@@ -273,3 +273,62 @@ def test_trigger_generation_endpoint(monkeypatch, temp_engine):
     assert res.status_code == 202
     assert res.json()["status"] == "generando_borrador"
     assert triggered == ["ticket-endpoint-001"]
+
+
+# ---------------------------------------------------------------------------
+# 5.Consulta la BD durante la ejecución para verificar generando_borrador -> en_evaluación -> listo_para_aprobacion.
+# ---------------------------------------------------------------------------
+def test_pipeline_persists_real_time_progress_during_execution(monkeypatch, temp_engine):
+    ticket = RFPTicket(
+        ticket_id="ticket-stream-001",
+        rfp_id="RFP-STR001",
+        filename="rfp_stream.pdf",
+        raw_pdf_path="data/raw/rfp.pdf",
+        status="analisis_completo",
+        client_name="Vantex",
+        client_hq="España",
+        currency="EUR",
+        departments_needed=json.dumps(["seleccion"]),
+    )
+    sec = RFPDepartmentSection(
+        ticket_id="ticket-stream-001",
+        department_id="seleccion",
+        department_name="Talent Selection Operations",
+        owner_name="Javier Almeida",
+        key_aspects=json.dumps(["Contratar 5 posiciones"]),
+    )
+    with Session(temp_engine) as session:
+        session.add(ticket)
+        session.add(sec)
+        session.commit()
+
+    observed_statuses: list[str] = []
+    orig_gen = rfp_nodes.generate_department_draft
+    orig_eval = rfp_nodes.evaluate_section_parallel
+
+    def _slow_gen(*args, **kwargs):
+        with Session(temp_engine) as s:
+            observed_statuses.append(s.get(RFPTicket, "ticket-stream-001").status)
+        return orig_gen(*args, **kwargs)
+
+    def _slow_eval(*args, **kwargs):
+        with Session(temp_engine) as s:
+            t_mid = s.get(RFPTicket, "ticket-stream-001")
+            sec_mid = s.exec(
+                select(RFPDepartmentSection).where(RFPDepartmentSection.ticket_id == "ticket-stream-001")
+            ).first()
+            observed_statuses.append(t_mid.status)
+            assert sec_mid.draft_content is not None
+            assert sec_mid.approval_status == "borrador_generado"
+        return orig_eval(*args, **kwargs)
+
+    monkeypatch.setattr(rfp_nodes, "generate_department_draft", _slow_gen)
+    monkeypatch.setattr(rfp_nodes, "evaluate_section_parallel", _slow_eval)
+
+    result = rfp_graph.run_rfp_generation_pipeline("ticket-stream-001", db_engine=temp_engine)
+    assert result["status"] == "listo_para_aprobacion"
+
+    with Session(temp_engine) as s:
+        observed_statuses.append(s.get(RFPTicket, "ticket-stream-001").status)
+
+    assert observed_statuses == ["generando_borrador", "en_evaluación", "listo_para_aprobacion"]
