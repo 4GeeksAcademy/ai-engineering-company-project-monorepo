@@ -57,6 +57,7 @@ flowchart TD
   2. `PACK_PLANNER`: **Execution DAG + Thresholds Cuantitativos** (subtareas paralelas/secuenciales, umbrales numéricos de aceptación en evals y plan de contingencia).
   3. `PACK_CODER`: **Contract Testing Cross-Service + Fault Injection (Chaos ligero)** simulando caídas de servicios externos, timeouts, concurrencia y regresión global del monorepo.
   4. `PACK_AUDITOR`: **Continuous Eval Gate + Release Readiness Audit** con evidencia reproducible (métricas comparativas antes/después, trazas completas y verificación de ramas/PRs sin conflictos).
+  5. `PACK_SECURITY_GATE`: **Auditoría de Seguridad Nivel 5 ([`security-audit-suite`](../security-audit-suite/SKILL.md) — Modo 5)**: aislamiento *cross-agent*, compuerta de la Tríada Letal, presupuesto global del DAG, *fault injection fail-secure* y endurecimiento pre-despliegue.
 
 ---
 
