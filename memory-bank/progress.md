@@ -51,11 +51,11 @@
 
 ## Known Decisions Log
 
-| Date       | Decision                                                                   | Rationale                                                                                                                    |
-| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-23 | Created `feature/agent-memory-bank` branch for Milestone 4                 | Milestone 4 builds governance artifacts; no app scaffolding needed                                                           |
-| 2026-11-23 | Memory bank reflects HealthCore Digital (HealthCore outpatient healthcare) | Assigned company from CONTEXT.md                                                                                             |
-| 2026-11-23 | `.agents/rules/` uses `healthcore-conventions.md` as the first rule        | Covers naming, import paths, status/stage label requirement — concrete and actionable                                        |
-| 2026-11-23 | Skill: `memory-bank-update` created                                        | Common recurring task; criteria are fully verifiable without subjective judgment                                             |
-| 2026-11-23 | Created `BRIEFING.md` at repo root from HealthCore general context         | Canonical company briefing from syllabus `00-general-contexts/` — identity, departments, problems, and why choose HealthCore |
-| 2026-11-23 | Repurposed `CONTEXT.md` for Milestone 4 (agent governance focus)          | Moved Milestone 1 website specs to `CONTEXT-healthcore-milestone1.md`; CONTEXT.md now scoped to agent infrastructure, stack, and folder map |
+| Date       | Decision                                                                   | Rationale                                                                                                                                   |
+| ---------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-23 | Created `feature/agent-memory-bank` branch for Milestone 4                 | Milestone 4 builds governance artifacts; no app scaffolding needed                                                                          |
+| 2026-11-23 | Memory bank reflects HealthCore Digital (HealthCore outpatient healthcare) | Assigned company from CONTEXT.md                                                                                                            |
+| 2026-11-23 | `.agents/rules/` uses `healthcore-conventions.md` as the first rule        | Covers naming, import paths, status/stage label requirement — concrete and actionable                                                       |
+| 2026-11-23 | Skill: `memory-bank-update` created                                        | Common recurring task; criteria are fully verifiable without subjective judgment                                                            |
+| 2026-11-23 | Created `BRIEFING.md` at repo root from HealthCore general context         | Canonical company briefing from syllabus `00-general-contexts/` — identity, departments, problems, and why choose HealthCore                |
+| 2026-11-23 | Repurposed `CONTEXT.md` for Milestone 4 (agent governance focus)           | Moved Milestone 1 website specs to `CONTEXT-healthcore-milestone1.md`; CONTEXT.md now scoped to agent infrastructure, stack, and folder map |

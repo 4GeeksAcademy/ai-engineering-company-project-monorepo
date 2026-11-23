@@ -26,12 +26,12 @@ Build the **agent governance infrastructure** for the HealthCore monorepo so tha
 
 ## Repository Conventions (Milestone 4)
 
-| Convention | Rule |
-|---|---|
-| Branch name | `feature/agent-memory-bank` |
-| PR target | `main` on the student fork |
-| Protected areas | `.gitignore`, `.vscode/tasks.json`, app `package.json` and `next.config.js`, `packages/shared-types/index.ts`, `BRIEFING.md`, `CONTEXT.md`, `node_modules` and lockfiles |
-| Pre-commit order | (1) formatter, (2) type-check/lint, (3) update `progress.md`, (4) self-review diff scope |
+| Convention       | Rule                                                                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Branch name      | `feature/agent-memory-bank`                                                                                                                                              |
+| PR target        | `main` on the student fork                                                                                                                                               |
+| Protected areas  | `.gitignore`, `.vscode/tasks.json`, app `package.json` and `next.config.js`, `packages/shared-types/index.ts`, `BRIEFING.md`, `CONTEXT.md`, `node_modules` and lockfiles |
+| Pre-commit order | (1) formatter, (2) type-check/lint, (3) update `progress.md`, (4) self-review diff scope                                                                                 |
 
 ---
 
@@ -39,15 +39,15 @@ Build the **agent governance infrastructure** for the HealthCore monorepo so tha
 
 ### Organisation
 
-| Department | Lead | Key Concern |
-|---|---|---|
-| Clinical Operations | Dr. Marcus Reid | 2 disconnected EHR systems; 35 min/day documentation burden |
-| Patient Experience | Priya Nair | 22% no-show rate (~$1.8M/yr); no online booking |
-| Revenue Cycle | Tom Callahan | 14% claims denial rate (2x industry avg) |
-| Compliance | Claire Whitfield | HIPAA (US) + UK GDPR; no unified audit trail |
-| People | Diane Foster | 47 days avg to fill clinical roles; manual CME tracking |
-| Technology | James Osei (CTO) | 6-person team; patchwork legacy systems; no telemetry |
-| Executive | Dr. Sandra Okonkwo (CEO) | No real-time unified dashboard across departments |
+| Department          | Lead                     | Key Concern                                                 |
+| ------------------- | ------------------------ | ----------------------------------------------------------- |
+| Clinical Operations | Dr. Marcus Reid          | 2 disconnected EHR systems; 35 min/day documentation burden |
+| Patient Experience  | Priya Nair               | 22% no-show rate (~$1.8M/yr); no online booking             |
+| Revenue Cycle       | Tom Callahan             | 14% claims denial rate (2x industry avg)                    |
+| Compliance          | Claire Whitfield         | HIPAA (US) + UK GDPR; no unified audit trail                |
+| People              | Diane Foster             | 47 days avg to fill clinical roles; manual CME tracking     |
+| Technology          | James Osei (CTO)         | 6-person team; patchwork legacy systems; no telemetry       |
+| Executive           | Dr. Sandra Okonkwo (CEO) | No real-time unified dashboard across departments           |
 
 ### Regulatory Constraints
 
@@ -59,29 +59,29 @@ Build the **agent governance infrastructure** for the HealthCore monorepo so tha
 
 ## Stack (for agent reference)
 
-| Layer | Technology | Location |
-|---|---|---|
-| Frontend | Next.js (App Router) | `uis/talent-pipeline-tracker/` |
-| Styling | CSS Modules | App-level `globals.css` |
-| Backend | Mock REST API | External (shared across course) |
-| Language | TypeScript (strict) | `tsconfig.json` per app |
-| Shared types | `packages/shared-types/` | `index.ts` |
+| Layer        | Technology               | Location                        |
+| ------------ | ------------------------ | ------------------------------- |
+| Frontend     | Next.js (App Router)     | `uis/talent-pipeline-tracker/`  |
+| Styling      | CSS Modules              | App-level `globals.css`         |
+| Backend      | Mock REST API            | External (shared across course) |
+| Language     | TypeScript (strict)      | `tsconfig.json` per app         |
+| Shared types | `packages/shared-types/` | `index.ts`                      |
 
 ---
 
 ## Folder Map
 
-| Path | Purpose |
-|---|---|
-| `/uis/website` | Public corporate website (home `/`, brand from BRIEFING) |
-| `/uis/backoffice` | Internal app with own layout (entry view on `/`) |
-| `/uis/<app-name>/` | Other frontend apps |
-| `/services` | Backend APIs and services |
-| `/packages/shared-types/` | Shared TypeScript/JSON types |
-| `/pipelines/data/` | ETL / data pipeline scripts |
-| `/.agents/rules/` | Scoped agent conventions |
-| `/.agents/skills/` | Reusable agent skills |
-| `/memory-bank/` | Persistent project memory (business + technical context) |
+| Path                      | Purpose                                                  |
+| ------------------------- | -------------------------------------------------------- |
+| `/uis/website`            | Public corporate website (home `/`, brand from BRIEFING) |
+| `/uis/backoffice`         | Internal app with own layout (entry view on `/`)         |
+| `/uis/<app-name>/`        | Other frontend apps                                      |
+| `/services`               | Backend APIs and services                                |
+| `/packages/shared-types/` | Shared TypeScript/JSON types                             |
+| `/pipelines/data/`        | ETL / data pipeline scripts                              |
+| `/.agents/rules/`         | Scoped agent conventions                                 |
+| `/.agents/skills/`        | Reusable agent skills                                    |
+| `/memory-bank/`           | Persistent project memory (business + technical context) |
 
 ---
 
