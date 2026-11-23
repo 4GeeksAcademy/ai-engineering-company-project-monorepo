@@ -31,11 +31,11 @@ Diane Foster, VP of People, has tasked the team with building a **Candidate Mana
 
 ### KPI Alignment
 
-| KPI | Measurement | Link to Module |
-| --- | ----------- | -------------- |
-| Candidate data accuracy | Zero status-corruption incidents per recruitment cycle | Candidate list and detail views (status/stage updates) |
-| Time-to-status | < 1 hour from note entry to stage advancement action | Note form + status update in candidate detail |
-| Recruitment cycle visibility | All active searches displayable in ≤ 3 clicks | FilterBar + list + detail drill-down |
+| KPI                          | Measurement                                            | Link to Module                                         |
+| ---------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| Candidate data accuracy      | Zero status-corruption incidents per recruitment cycle | Candidate list and detail views (status/stage updates) |
+| Time-to-status               | < 1 hour from note entry to stage advancement action   | Note form + status update in candidate detail          |
+| Recruitment cycle visibility | All active searches displayable in ≤ 3 clicks          | FilterBar + list + detail drill-down                   |
 
 ### Status Values
 
