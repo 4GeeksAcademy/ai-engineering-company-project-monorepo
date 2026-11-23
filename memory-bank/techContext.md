@@ -2,13 +2,13 @@
 
 ## Stack
 
-| Layer   | Technology            | Notes                                         |
-| ------- | --------------------- | --------------------------------------------- |
-| Frontend | Next.js (App Router)  | `/uis/talent-pipeline-tracker/`                |
-| Styling | CSS Modules / globals | `/uis/talent-pipeline-tracker/app/globals.css`  |
-| Backend | Mock REST API         | Centrally deployed; shared across all company contexts in the course |
-| Language | TypeScript           | Strict mode (via `tsconfig.json`)              |
-| Types   | `packages/shared-types/` | Shared TypeScript interfaces used across apps |
+| Layer    | Technology               | Notes                                                                |
+| -------- | ------------------------ | -------------------------------------------------------------------- |
+| Frontend | Next.js (App Router)     | `/uis/talent-pipeline-tracker/`                                      |
+| Styling  | CSS Modules / globals    | `/uis/talent-pipeline-tracker/app/globals.css`                       |
+| Backend  | Mock REST API            | Centrally deployed; shared across all company contexts in the course |
+| Language | TypeScript               | Strict mode (via `tsconfig.json`)                                    |
+| Types    | `packages/shared-types/` | Shared TypeScript interfaces used across apps                        |
 
 ## Architectural Decisions
 
@@ -21,7 +21,8 @@
 
 ```
 ai-engineering-company-project-monorepo/
-├── CONTEXT.md               # Company context (HealthCore Digital)
+├── BRIEFING.md              # Full company briefing (HealthCore)
+├── CONTEXT.md               # Milestone-specific context (HealthCore Digital)
 ├── AGENTS.md                # Agent protocol (this milestone)
 ├── .agents/
 │   ├── rules/               # Scoped agent rules
@@ -54,10 +55,10 @@ ai-engineering-company-project-monorepo/
 
 ## Folder Conventions
 
-| Path               | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `/uis/website`     | Public corporate website (home `/`, brand/copy from BRIEFING) |
-| `/uis/backoffice`  | Internal app with own layout (entry view on `/`) |
-| `/services`        | Backend APIs and services                    |
+| Path              | Purpose                                                       |
+| ----------------- | ------------------------------------------------------------- |
+| `/uis/website`    | Public corporate website (home `/`, brand/copy from BRIEFING) |
+| `/uis/backoffice` | Internal app with own layout (entry view on `/`)              |
+| `/services`       | Backend APIs and services                                     |
 
 > These folders are not yet created. When they are, they must follow the conventions above.

@@ -8,13 +8,14 @@ This file defines how AI agents should operate in the HealthCore Digital monorep
 
 Before making any edits, the agent **must** read the following files in order:
 
-| #  | File | Purpose |
-| -- | ---- | ------- |
-| 1  | `AGENTS.md` | This file — agent protocol, workflow, and protected areas |
-| 2  | `CONTEXT.md` | Company briefing — HealthCore domain, constraints, acceptance criteria |
-| 3  | `memory-bank/projectbrief.md` | Business goals, KPIs, data model (status/stage values) |
-| 4  | `memory-bank/techContext.md` | Stack, architecture decisions, folder conventions, constraints |
-| 5  | `memory-bank/progress.md` | Current project status — what is done, in flight, planned next |
+| #   | File                          | Purpose                                                               |
+| --- | ----------------------------- | --------------------------------------------------------------------- |
+| 1   | `AGENTS.md`                   | This file — agent protocol, workflow, and protected areas             |
+| 2   | `BRIEFING.md`                 | Full company briefing — HealthCore identity, departments, constraints |
+| 3   | `CONTEXT.md`                  | Milestone-specific context — HealthCore domain, field names, AC       |
+| 4   | `memory-bank/projectbrief.md` | Business goals, KPIs, data model (status/stage values)                |
+| 5   | `memory-bank/techContext.md`  | Stack, architecture decisions, folder conventions, constraints        |
+| 6   | `memory-bank/progress.md`     | Current project status — what is done, in flight, planned next        |
 
 If any file is missing or empty, the agent must flag it to the human before proceeding.
 
@@ -39,15 +40,16 @@ Before staging and committing any change, the agent **must** execute the followi
 
 The following paths **must not** be modified without **explicit human confirmation**:
 
-| Path | Reason |
-| ---- | ------ |
-| `.gitignore` | Generated lockfile patterns; changing could commit unwanted files |
-| `.vscode/tasks.json` | Task runner config — only the human or a scaffold script should update it |
-| `uis/talent-pipeline-tracker/package.json` | Dependencies — installing, updating, or removing packages |
-| `uis/talent-pipeline-tracker/next.config.js` | Build configuration — changing could break the build |
-| `packages/shared-types/index.ts` | Shared types — changes cascade to all apps and services |
-| `CONTEXT.md` | Company briefing — only the human should update domain context |
-| Any `node_modules/` or lockfiles | Never committed to the repository |
+| Path                                         | Reason                                                                    |
+| -------------------------------------------- | ------------------------------------------------------------------------- |
+| `.gitignore`                                 | Generated lockfile patterns; changing could commit unwanted files         |
+| `.vscode/tasks.json`                         | Task runner config — only the human or a scaffold script should update it |
+| `uis/talent-pipeline-tracker/package.json`   | Dependencies — installing, updating, or removing packages                 |
+| `uis/talent-pipeline-tracker/next.config.js` | Build configuration — changing could break the build                      |
+| `packages/shared-types/index.ts`             | Shared types — changes cascade to all apps and services                   |
+| `BRIEFING.md`                                | Full company briefing — only the human should update company context      |
+| `CONTEXT.md`                                 | Milestone context — only the human should update domain context           |
+| Any `node_modules/` or lockfiles             | Never committed to the repository                                         |
 
 > **Exception**: If a task explicitly instructs the agent to modify one of these paths, the agent may proceed after re-confirming with the human.
 
@@ -57,8 +59,8 @@ The following paths **must not** be modified without **explicit human confirmati
 
 The following agent skills are available in this repository:
 
-| Skill | Location | When to use |
-| ----- | -------- | ----------- |
+| Skill                | Location                                     | When to use                                                                                       |
+| -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `memory-bank-update` | `.agents/skills/memory-bank-update/SKILL.md` | After completing a milestone feature, update the living progress log in `memory-bank/progress.md` |
 
 Additional skills may be added under `.agents/skills/<skill-name>/SKILL.md`.

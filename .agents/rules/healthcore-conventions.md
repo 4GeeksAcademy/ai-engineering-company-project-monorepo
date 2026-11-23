@@ -39,16 +39,17 @@ const STAGE_LABELS: Record<string, string> = {
 
 ## 3. New Code Placement
 
-| Type | Location |
-| ---- | -------- |
-| New frontend app | `uis/<app-name>/` |
-| New backend service | `services/<service-name>/` |
-| Shared TypeScript type | `packages/shared-types/index.ts` |
-| Data pipeline / ETL script | `pipelines/data/` |
+| Type                       | Location                         |
+| -------------------------- | -------------------------------- |
+| New frontend app           | `uis/<app-name>/`                |
+| New backend service        | `services/<service-name>/`       |
+| Shared TypeScript type     | `packages/shared-types/index.ts` |
+| Data pipeline / ETL script | `pipelines/data/`                |
 
 ## 4. Validation
 
 Before opening a PR, run:
+
 - `tsc --noEmit` in the app directory to verify types.
 - `npm run lint` or `next lint` if a linter config exists in the app.
 
