@@ -1,7 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
-import { SupplierForm } from "@/components/SupplierForm";
 import { SupplierRow } from "@/components/SupplierRow";
 import { getUserMessage } from "@/lib/errors";
 import {
@@ -15,6 +15,12 @@ import {
   type Country,
   type Supplier,
 } from "@/lib/suppliersApi";
+
+// The creation form is only needed after "+ Nuevo proveedor" is pressed; most visits only read the list.
+const SupplierForm = dynamic(() => import("@/components/SupplierForm").then((module) => module.SupplierForm), {
+  ssr: false,
+  loading: () => <p className="state muted" role="status"><span className="spinner" aria-hidden="true" />Cargando formulario…</p>,
+});
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

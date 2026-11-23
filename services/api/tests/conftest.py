@@ -23,6 +23,7 @@ import security  # noqa: E402
 security.bcrypt = security.bcrypt.using(rounds=4)
 
 import database  # noqa: E402
+import inventory_service  # noqa: E402
 import main  # noqa: E402
 from database import DB_PATH_ENV, INCIDENTS_DB_PATH_ENV, USERS_DB_PATH_ENV  # noqa: E402
 
@@ -33,8 +34,10 @@ PASSWORD = "correct-horse-1"
 def fresh_sql_engine():
     """Each test gets its own empty in-memory inventory database."""
     database.get_engine.cache_clear()
+    inventory_service.invalidate_caches()  # module-level cache: never leak one test's assets into the next
     yield
     database.get_engine.cache_clear()
+    inventory_service.invalidate_caches()
 
 
 @pytest.fixture()

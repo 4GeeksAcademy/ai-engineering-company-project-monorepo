@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo } from "react";
 import {
   BRANCH_LABELS,
   INCIDENT_CATEGORY_LABELS,
@@ -22,6 +25,9 @@ const DESCRIPTION_PREVIEW = 140;
 export function IncidentRow({ incident, pending, onChangeStatus }: Props) {
   const preview =
     incident.description.length > DESCRIPTION_PREVIEW ? `${incident.description.slice(0, DESCRIPTION_PREVIEW)}…` : incident.description;
+  // Intl.DateTimeFormat is built on every call (~0.06 ms; 3 ms for a 50-row page) and every status
+  // change re-renders all rows. Only created_at can change the result, so unchanged rows skip it.
+  const created = useMemo(() => formatIncidentDate(incident.created_at), [incident.created_at]);
   return (
     <tr className={pending ? "pending" : undefined} aria-busy={pending}>
       <td>
@@ -36,7 +42,7 @@ export function IncidentRow({ incident, pending, onChangeStatus }: Props) {
           {INCIDENT_STATUS_LABELS[incident.status]}
         </span>
       </td>
-      <td className="small">{formatIncidentDate(incident.created_at)}</td>
+      <td className="small">{created}</td>
       <td>
         {pending ? (
           <span className="small muted"><span className="spinner" aria-hidden="true" />Guardando…</span>

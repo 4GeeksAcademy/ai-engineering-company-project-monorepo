@@ -8,6 +8,7 @@ and order lists JOIN the asset instead of loading it row by row.
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
+from cache import TTLCache
 from inventory_models import Asset, AssetEntry, AssetExit
 from inventory_schemas import (
     AssetCreate,
@@ -19,6 +20,18 @@ from inventory_schemas import (
     Office,
     OrderResponse,
 )
+
+
+# GET /inventory/products runs two grouped aggregates over every entry and exit and is what each
+# order form loads. Assets and stock are shared by all users, so the key is only the office filter.
+# Every write below invalidates it; the TTL only covers writers outside this process (seed scripts,
+# other workers). Stock *checks* never read this cache: create_exit re-reads under the row lock.
+PRODUCTS_TTL_SECONDS = 30
+_products_cache: TTLCache[list[AssetResponse]] = TTLCache("inventory_products", PRODUCTS_TTL_SECONDS)
+
+
+def invalidate_caches() -> None:
+    _products_cache.invalidate()
 
 
 class AssetNotFound(Exception):
@@ -58,6 +71,10 @@ def _response(asset: Asset, stock: int) -> AssetResponse:
 
 
 def list_assets(session: Session, office: Office | None = None) -> list[AssetResponse]:
+    return _products_cache.get_or_load(office, lambda: _list_assets_uncached(session, office))
+
+
+def _list_assets_uncached(session: Session, office: Office | None) -> list[AssetResponse]:
     query = _assets_with_stock().order_by(Asset.id)
     if office is not None:
         query = query.where(Asset.office == office.value)
@@ -81,6 +98,7 @@ def create_asset(session: Session, data: AssetCreate) -> AssetResponse:
     except IntegrityError as error:  # two requests with the same sku raced past the check
         session.rollback()
         raise SkuAlreadyExists(data.sku) from error
+    invalidate_caches()
     session.refresh(asset)
     return _response(asset, 0)
 
@@ -104,6 +122,7 @@ def create_entry(session: Session, data: AssetEntryCreate, user_uuid: str) -> As
     entry = AssetEntry(**data.model_dump(mode="json"), user_uuid=user_uuid)
     session.add(entry)
     session.commit()
+    invalidate_caches()
     session.refresh(entry)
     return _entry_response(entry, asset)
 
@@ -118,6 +137,7 @@ def create_exit(session: Session, data: AssetExitCreate, user_uuid: str) -> Asse
     exit_ = AssetExit(**data.model_dump(mode="json"), user_uuid=user_uuid)
     session.add(exit_)
     session.commit()
+    invalidate_caches()
     session.refresh(exit_)
     return _exit_response(exit_, asset)
 

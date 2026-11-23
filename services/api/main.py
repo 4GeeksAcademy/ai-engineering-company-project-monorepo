@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -35,6 +36,8 @@ logging.basicConfig(
     level=LOG_LEVEL if LOG_LEVEL in logging.getLevelNamesMapping() else logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
+
+timing_logger = logging.getLogger("api.timing")
 
 ALLOWED_ORIGINS = [
     origin.strip()
@@ -79,6 +82,17 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
 )
+
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    """One log line per request ("GET /x -> 200 | 12.3ms"): the evidence behind CACHING_REPORT.md."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000
+    # Path only, never the query string: filters can carry names or emails.
+    timing_logger.info("%s %s -> %s | %.1fms", request.method, request.url.path, response.status_code, duration_ms)
+    return response
 
 
 class Health(BaseModel):

@@ -1,10 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { FileDrop } from "@/components/FileDrop";
-import { IncidentSummary } from "@/components/IncidentSummary";
 import { getUserMessage, SUPPORT_EMAIL } from "@/lib/errors";
 import { analyzeIncidents, downloadResultsCsv, type AnalysisResult } from "@/lib/incidentsApi";
+
+// Rendered only after a CSV has been analysed, so it stays out of the initial bundle of /incidents.
+// ssr:false: the summary never exists on first paint (there is no result yet), so the server has nothing to render.
+const IncidentSummary = dynamic(() => import("@/components/IncidentSummary").then((module) => module.IncidentSummary), {
+  ssr: false,
+  loading: () => <p className="state muted"><span className="spinner" aria-hidden="true" />Preparando el resumen…</p>,
+});
 
 export default function IncidentsPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);

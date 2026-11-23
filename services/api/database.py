@@ -28,6 +28,7 @@ from tinydb.table import Document
 
 import config
 
+from cache import TTLCache
 from incident_models import Incident, IncidentRecord, IncidentSummary
 from models import Category, Country, Supplier, SupplierCreate, SupplierStatus
 from nexova_shared.incidents import Branch, IncidentCategory, IncidentOrigin, IncidentStatus, can_transition
@@ -40,6 +41,12 @@ DEFAULT_USERS_DB_PATH = API_ROOT / "data" / "users.json"
 USERS_DB_PATH_ENV = "USERS_DB_PATH"
 DEFAULT_INCIDENTS_DB_PATH = API_ROOT / "data" / "incidents.json"
 INCIDENTS_DB_PATH_ENV = "INCIDENTS_DB_PATH"
+
+# Incident reads are O(n) (every document is validated into a model, or counted). Writes
+# in this process invalidate at once, so the TTL only bounds staleness caused by writers
+# this cache cannot see (another worker, scripts/seed_*.py). See CACHING_REPORT.md.
+INCIDENT_LIST_TTL_SECONDS = 30
+INCIDENT_SUMMARY_TTL_SECONDS = 60
 
 
 def db_path_from_env() -> Path:
@@ -176,6 +183,9 @@ class IncidentRepository:
         self._db = open_db(path)
         self._table = self._db.table("incidents")
         self._lock = threading.Lock()
+        # Incidents are shared by every authenticated user (no per-user filtering), so keys are only the filters.
+        self._list_cache: TTLCache[list[Incident]] = TTLCache("incident_list", INCIDENT_LIST_TTL_SECONDS)
+        self._summary_cache: TTLCache[IncidentSummary] = TTLCache("incident_summary", INCIDENT_SUMMARY_TTL_SECONDS)
 
     def close(self) -> None:
         self._db.close()
@@ -191,7 +201,17 @@ class IncidentRepository:
         branch: Branch | None = None,
         category: IncidentCategory | None = None,
     ) -> list[Incident]:
-        """Incidents matching every given filter, newest first."""
+        """Incidents matching every given filter, newest first (cached per filter combination)."""
+        key = (status, origin, branch, category)
+        return self._list_cache.get_or_load(key, lambda: self._list_uncached(status, origin, branch, category))
+
+    def _list_uncached(
+        self,
+        status: IncidentStatus | None,
+        origin: IncidentOrigin | None,
+        branch: Branch | None,
+        category: IncidentCategory | None,
+    ) -> list[Incident]:
         filters = {"status": status, "origin": origin, "branch": branch, "category": category}
         wanted = {field: value.value for field, value in filters.items() if value is not None}
         with self._lock:
@@ -215,7 +235,20 @@ class IncidentRepository:
                 raise SourceIdAlreadyExists(record.source_id)
             doc_id = self._table.insert(record.model_dump(mode="json"))
             doc = self._table.get(doc_id=doc_id)
+            self._invalidate_caches()
         return self._to_model(doc)
+
+    def create_many(self, records: list[IncidentRecord]) -> int:
+        """Insert many validated records in one write (TinyDB rewrites its file per insert). For seeding."""
+        with self._lock:
+            self._table.insert_multiple(record.model_dump(mode="json") for record in records)
+            self._invalidate_caches()
+        return len(records)
+
+    def _invalidate_caches(self) -> None:
+        # Called under self._lock, after the write: a reader that loaded before it cannot store its result.
+        self._list_cache.invalidate()
+        self._summary_cache.invalidate()
 
     def update_status(self, incident_id: int, status: IncidentStatus) -> Incident | None:
         """Move the incident to `status` and touch updated_at. None if it does not exist.
@@ -231,9 +264,14 @@ class IncidentRepository:
                 raise InvalidStatusTransition(current, status)
             self._table.update({"status": status.value, "updated_at": _now()}, doc_ids=[incident_id])
             doc = self._table.get(doc_id=incident_id)
+            self._invalidate_caches()
         return self._to_model(doc)
 
     def summary(self) -> IncidentSummary:
+        """Totals by status, category, origin and branch (cached)."""
+        return self._summary_cache.get_or_load("all", self._summary_uncached)
+
+    def _summary_uncached(self) -> IncidentSummary:
         with self._lock:
             docs = self._table.all()
 
