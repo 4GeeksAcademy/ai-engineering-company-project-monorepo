@@ -1,0 +1,3885 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Nexova — Event schemas (telemetry)",
+  "x-version": "1.0.0",
+  "x-generatedFor": "docs/telemetry/telemetry-plan.md",
+  "x-note": "Cada entrada de `events` es un JSON Schema draft-07 completo e independiente (envelope + properties). Los campos `x-*` son metadatos documentados en el plan; los validadores los ignoran.",
+  "x-counts": {
+    "total": 30,
+    "obligatorio": 5,
+    "oportunidad_identificada": 25
+  },
+  "events": {
+    "outbound_order_created": {
+      "x-classification": "obligatorio",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos outbound_order_created porque necesitamos saber qué programas consumen más material y a qué ritmo, lo que nos permite tomar la decisión de anticipar necesidades de reposición antes de una ola grande de matrículas (Elena).",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Es análisis de demanda por programa y oficina para el dashboard de L&D y el reporte semanal; ninguna decisión cambia si llega unos minutos tarde. Las urgencias derivadas (stock bajo) las cubre `stock_threshold_triggered`."
+      },
+      "x-throttle": "Ninguno: un evento por orden (volumen bajo, estimado < 500/día).",
+      "x-pii": "No se emite el nombre del destinatario (`assigned_to`, cliente, candidato, consultor, agente). Solo `has_assignee` y, si el sistema lo registra, `recipient_type`.",
+      "x-propertyAllowlist": [
+        "order_id",
+        "product_id",
+        "product_category",
+        "programme_id",
+        "office",
+        "quantity",
+        "currency",
+        "product_sku",
+        "exit_type",
+        "stock_after",
+        "has_assignee",
+        "recipient_type"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/outbound_order_created/1.0.0",
+        "title": "outbound_order_created",
+        "description": "Se entrega un kit o certificado a un cliente, candidato, consultor o agente (orden de salida registrada con éxito).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "outbound_order_created",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order_id",
+              "product_id",
+              "product_category",
+              "programme_id",
+              "office",
+              "quantity",
+              "currency",
+              "product_sku",
+              "exit_type",
+              "stock_after",
+              "has_assignee"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "integer",
+                "description": "id de la orden de salida (asset_exit.id)",
+                "minimum": 1
+              },
+              "product_id": {
+                "type": "integer",
+                "description": "id del producto",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría del producto"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa de formación o certificación (p. ej. ventas-b2b)"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina de la orden (no depende del idioma de la interfaz)"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "unidades entregadas",
+                "minimum": 0
+              },
+              "currency": {
+                "enum": [
+                  "EUR",
+                  "USD"
+                ],
+                "description": "moneda de la oficina: EUR para valencia, USD para miami (sin conversión)"
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU del producto",
+                "maxLength": 200
+              },
+              "exit_type": {
+                "enum": [
+                  "allocation",
+                  "consumption"
+                ],
+                "description": "allocation o consumption"
+              },
+              "stock_after": {
+                "type": "integer",
+                "description": "stock calculado tras la orden",
+                "minimum": 0
+              },
+              "has_assignee": {
+                "type": "boolean",
+                "description": "true si la salida es una asignación a una persona"
+              },
+              "recipient_type": {
+                "enum": [
+                  "client",
+                  "candidate",
+                  "consultant",
+                  "support_agent"
+                ],
+                "type": "string",
+                "description": "tipo de destinatario; solo si el sistema lo registra (hoy no existe, ver 0.1)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "direct_stock_edit_rejected": {
+      "x-classification": "obligatorio",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos direct_stock_edit_rejected porque necesitamos saber si el personal intenta saltarse el control de trazabilidad del material, lo que nos permite tomar la decisión de reforzar capacitación o permisos en la oficina donde esto ocurre con más frecuencia (Patricia).",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 10 s",
+        "justification": "Señal de control interno: una ráfaga de intentos debe verse mientras ocurre y, a la vez, alimenta la comparación semanal por oficina."
+      },
+      "x-throttle": "Máx. 1 evento por (userId, attempt_kind) cada 10 s; el resto incrementa `suppressed_count` del siguiente evento emitido.",
+      "x-pii": "Sin PII. No se emite el valor intentado en bruto: `quantity` es el número intentado solo si es entero (o `null`).",
+      "x-propertyAllowlist": [
+        "product_id",
+        "product_category",
+        "programme_id",
+        "office",
+        "quantity",
+        "currency",
+        "attempt_kind",
+        "http_method",
+        "route_template",
+        "http_status",
+        "offending_field",
+        "suppressed_count"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/direct_stock_edit_rejected/1.0.0",
+        "title": "direct_stock_edit_rejected",
+        "description": "Un usuario intenta modificar el stock directamente (enviar `current_stock`/`stock` en el alta de un producto, o PUT/PATCH/DELETE sobre `/inventory/products/{asset_id}`) y el sistema lo rechaza. El stock solo cambia por `InboundOrder`/`OutboundOrder`.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "direct_stock_edit_rejected",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "product_id",
+              "product_category",
+              "programme_id",
+              "office",
+              "quantity",
+              "currency",
+              "attempt_kind",
+              "http_method",
+              "route_template",
+              "http_status",
+              "suppressed_count"
+            ],
+            "properties": {
+              "product_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "id del producto de la ruta; null en un alta (no existe aún)",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment",
+                  null
+                ],
+                "description": "categoría si viene en el cuerpo; si no, null"
+              },
+              "programme_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa del producto si se conoce; si no, null"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina del usuario/producto (la del producto si existe; si no, la del cuerpo)"
+              },
+              "quantity": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "cantidad numérica que se intentó fijar; null si no era un entero",
+                "minimum": 0
+              },
+              "currency": {
+                "enum": [
+                  "EUR",
+                  "USD"
+                ],
+                "description": "moneda de la oficina"
+              },
+              "attempt_kind": {
+                "enum": [
+                  "extra_field_on_create",
+                  "method_not_allowed_on_product"
+                ],
+                "type": "string",
+                "description": "forma del intento detectada"
+              },
+              "http_method": {
+                "type": "string",
+                "description": "método HTTP",
+                "enum": [
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "route_template": {
+                "type": "string",
+                "description": "ruta con plantilla, p. ej. /inventory/products/{asset_id}",
+                "maxLength": 100
+              },
+              "http_status": {
+                "enum": [
+                  405,
+                  422
+                ],
+                "description": "estado devuelto"
+              },
+              "offending_field": {
+                "type": "string",
+                "description": "campo prohibido enviado",
+                "enum": [
+                  "current_stock",
+                  "stock",
+                  "quantity"
+                ]
+              },
+              "suppressed_count": {
+                "type": "integer",
+                "description": "intentos iguales descartados por throttle desde el último evento",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "stock_threshold_triggered": {
+      "x-classification": "obligatorio",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos stock_threshold_triggered porque necesitamos saber con qué frecuencia un programa se queda sin material disponible, lo que nos permite tomar la decisión de ajustar el umbral mínimo o acelerar la reimpresión/reproducción de ese material.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 30 s",
+        "justification": "Evita que un programa se quede sin material en plena ola de matrículas; la reimpresión es una decisión operativa inmediata."
+      },
+      "x-throttle": "Solo al CRUZAR el mínimo (`stock_before >= min_stock` y `stock_after < min_stock`), no en cada salida con stock bajo. Si el stock llega a 0 desde un nivel ya bajo se emite una vez más con `level='out'`.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "triggering_order_id",
+        "product_id",
+        "product_category",
+        "programme_id",
+        "office",
+        "quantity",
+        "currency",
+        "product_sku",
+        "level",
+        "stock_before",
+        "stock_after",
+        "min_stock"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/stock_threshold_triggered/1.0.0",
+        "title": "stock_threshold_triggered",
+        "description": "Tras una orden de salida, el stock de un producto cae por debajo del mínimo configurado (`stock_after < min_stock`).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "stock_threshold_triggered",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "triggering_order_id",
+              "product_id",
+              "product_category",
+              "programme_id",
+              "office",
+              "quantity",
+              "currency",
+              "product_sku",
+              "level",
+              "stock_before",
+              "stock_after",
+              "min_stock"
+            ],
+            "properties": {
+              "triggering_order_id": {
+                "type": "integer",
+                "description": "orden de salida que cruzó el mínimo",
+                "minimum": 1
+              },
+              "product_id": {
+                "type": "integer",
+                "description": "id del producto",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría del producto"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa de formación o certificación (p. ej. ventas-b2b)"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina de la orden (no depende del idioma de la interfaz)"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "unidades de la orden de salida que provocó el cruce",
+                "minimum": 0
+              },
+              "currency": {
+                "enum": [
+                  "EUR",
+                  "USD"
+                ],
+                "description": "moneda de la oficina: EUR para valencia, USD para miami (sin conversión)"
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU del producto",
+                "maxLength": 200
+              },
+              "level": {
+                "enum": [
+                  "low",
+                  "out"
+                ],
+                "description": "low (0 < stock < min_stock) u out (stock = 0)"
+              },
+              "stock_before": {
+                "type": "integer",
+                "description": "stock antes de la orden",
+                "minimum": 0
+              },
+              "stock_after": {
+                "type": "integer",
+                "description": "stock tras la orden",
+                "minimum": 0
+              },
+              "min_stock": {
+                "type": "integer",
+                "description": "mínimo configurado vigente para el producto",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "kit_cost_variance_detected": {
+      "x-classification": "obligatorio",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos kit_cost_variance_detected porque necesitamos saber cuándo un proveedor de material sube precios de forma anómala, lo que nos permite tomar la decisión de alertar a Elena y a Laura para renegociar o buscar proveedor alterno.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 60 s",
+        "justification": "Cada lote comprado a precio anómalo es dinero ya comprometido; Elena y Laura necesitan la alerta para renegociar antes del siguiente pedido, no en el informe semanal."
+      },
+      "x-throttle": "Una vez por orden de entrada; a lo sumo 1 por (product_id, supplier_normalized) cada 24 h (las siguientes órdenes anómalas se agrupan en `suppressed_count`).",
+      "x-pii": "Sin PII. Importes en la moneda de la oficina; **no se convierte moneda**: el histórico solo se compara dentro de la misma moneda.",
+      "x-propertyAllowlist": [
+        "order_id",
+        "product_id",
+        "product_category",
+        "programme_id",
+        "office",
+        "quantity",
+        "currency",
+        "product_sku",
+        "supplier_normalized",
+        "unit_cost",
+        "baseline_unit_cost",
+        "variance_pct",
+        "threshold_pct",
+        "direction",
+        "baseline_sample_size",
+        "suppressed_count"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/kit_cost_variance_detected/1.0.0",
+        "title": "kit_cost_variance_detected",
+        "description": "El costo unitario de una orden de entrada varía más de un umbral (10 %) respecto al histórico del mismo producto y proveedor.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "kit_cost_variance_detected",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order_id",
+              "product_id",
+              "product_category",
+              "programme_id",
+              "office",
+              "quantity",
+              "currency",
+              "product_sku",
+              "supplier_normalized",
+              "unit_cost",
+              "baseline_unit_cost",
+              "variance_pct",
+              "threshold_pct",
+              "direction",
+              "baseline_sample_size",
+              "suppressed_count"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "integer",
+                "description": "orden de entrada que disparó la alerta",
+                "minimum": 1
+              },
+              "product_id": {
+                "type": "integer",
+                "description": "id del producto",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría del producto"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa de formación o certificación (p. ej. ventas-b2b)"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina de la orden (no depende del idioma de la interfaz)"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "unidades recibidas en la orden",
+                "minimum": 0
+              },
+              "currency": {
+                "enum": [
+                  "EUR",
+                  "USD"
+                ],
+                "description": "moneda de la oficina: EUR para valencia, USD para miami (sin conversión)"
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU del producto",
+                "maxLength": 200
+              },
+              "supplier_normalized": {
+                "type": "string",
+                "description": "proveedor normalizado",
+                "maxLength": 80
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "costo unitario de la orden",
+                "minimum": 0
+              },
+              "baseline_unit_cost": {
+                "type": "number",
+                "description": "media del costo unitario histórico del mismo producto y proveedor",
+                "minimum": 0
+              },
+              "variance_pct": {
+                "type": "number",
+                "description": "(unit_cost − baseline) / baseline × 100; con signo"
+              },
+              "threshold_pct": {
+                "type": "number",
+                "description": "umbral vigente (hoy 10)",
+                "minimum": 0
+              },
+              "direction": {
+                "enum": [
+                  "increase",
+                  "decrease"
+                ],
+                "type": "string",
+                "description": "sube o baja respecto al histórico"
+              },
+              "baseline_sample_size": {
+                "type": "integer",
+                "description": "órdenes previas usadas (mínimo 3)",
+                "minimum": 3
+              },
+              "suppressed_count": {
+                "type": "integer",
+                "description": "alertas iguales agrupadas desde la última emitida",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "inbound_order_created": {
+      "x-classification": "obligatorio",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos inbound_order_created porque necesitamos saber cuánto material se produce/compra, para qué programa y con qué costo, lo que nos permite tomar la decisión de planificar la producción de material según demanda esperada de matrículas (Elena).",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Se usa para planificación de producción y compras (semanal); no pierde valor por tardar minutos. La anomalía de precio, que sí es urgente, va en `kit_cost_variance_detected`."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "`supplier` es el nombre de una empresa en texto libre: se normaliza (trim, minúsculas, máx. 80) y la ingesta descarta valores con forma de email o teléfono. Los importes van en la moneda de la oficina, sin conversión.",
+      "x-propertyAllowlist": [
+        "order_id",
+        "product_id",
+        "product_category",
+        "programme_id",
+        "office",
+        "quantity",
+        "currency",
+        "product_sku",
+        "supplier_normalized",
+        "unit_cost",
+        "total_cost",
+        "stock_after"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/inbound_order_created/1.0.0",
+        "title": "inbound_order_created",
+        "description": "Llega un nuevo lote de material de formación o de incorporación desde un proveedor (orden de entrada registrada con éxito).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "inbound_order_created",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order_id",
+              "product_id",
+              "product_category",
+              "programme_id",
+              "office",
+              "quantity",
+              "currency",
+              "product_sku",
+              "supplier_normalized",
+              "unit_cost",
+              "total_cost",
+              "stock_after"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "integer",
+                "description": "id de la orden de entrada",
+                "minimum": 1
+              },
+              "product_id": {
+                "type": "integer",
+                "description": "id del producto",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría del producto"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa de formación o certificación (p. ej. ventas-b2b)"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina de la orden (no depende del idioma de la interfaz)"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "unidades recibidas",
+                "minimum": 0
+              },
+              "currency": {
+                "enum": [
+                  "EUR",
+                  "USD"
+                ],
+                "description": "moneda de la oficina: EUR para valencia, USD para miami (sin conversión)"
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU del producto",
+                "maxLength": 200
+              },
+              "supplier_normalized": {
+                "type": "string",
+                "description": "proveedor normalizado",
+                "maxLength": 80
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "costo unitario en la moneda de la oficina",
+                "minimum": 0
+              },
+              "total_cost": {
+                "type": "number",
+                "description": "unit_cost × quantity, en la misma moneda",
+                "minimum": 0
+              },
+              "stock_after": {
+                "type": "integer",
+                "description": "stock tras la entrada",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "order_validation_failed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos order_validation_failed porque necesitamos saber qué productos y qué programas acumulan más errores de validación y en qué campos (pregunta del tech lead), lo que nos permite tomar la decisión de corregir el formulario o los datos maestros del producto problemático, o ajustar el umbral de reposición.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "El análisis es de tendencia por producto (ranking semanal). Un error aislado no exige actuar en segundos."
+      },
+      "x-throttle": "Ninguno en servidor. En cliente el formulario ya impide reenvíos concurrentes (`saving`).",
+      "x-pii": "Sin PII. Nunca se emite el texto del error ni el valor de `assigned_to`; solo nombres de campo del allowlist.",
+      "x-propertyAllowlist": [
+        "order_type",
+        "product_id",
+        "product_sku",
+        "http_status",
+        "error_kind",
+        "failed_fields",
+        "requested_quantity",
+        "available_stock",
+        "product_category",
+        "programme_id",
+        "office"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/order_validation_failed/1.0.0",
+        "title": "order_validation_failed",
+        "description": "Una orden de entrada o salida fue rechazada por validación o regla de negocio (stock insuficiente, activo inexistente, campo inválido). No se escribió nada.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "order_validation_failed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order_type",
+              "http_status",
+              "error_kind"
+            ],
+            "properties": {
+              "order_type": {
+                "enum": [
+                  "inbound",
+                  "outbound"
+                ],
+                "description": "tipo de orden"
+              },
+              "product_id": {
+                "type": "integer",
+                "description": "id del activo si venía en el cuerpo y es un entero",
+                "minimum": 1
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU si el activo existe",
+                "maxLength": 200
+              },
+              "http_status": {
+                "enum": [
+                  400,
+                  404,
+                  422
+                ],
+                "description": "estado HTTP devuelto"
+              },
+              "error_kind": {
+                "enum": [
+                  "insufficient_stock",
+                  "asset_not_found",
+                  "invalid_field",
+                  "unknown_field"
+                ],
+                "description": "causa clasificada en servidor"
+              },
+              "failed_fields": {
+                "type": "array",
+                "description": "nombres de campo con error (allowlist: asset_id, quantity, supplier, exit_type, assigned_to, office)",
+                "items": {
+                  "enum": [
+                    "asset_id",
+                    "quantity",
+                    "supplier",
+                    "exit_type",
+                    "assigned_to",
+                    "office"
+                  ]
+                },
+                "uniqueItems": true,
+                "maxItems": 6
+              },
+              "requested_quantity": {
+                "type": "integer",
+                "description": "cantidad solicitada",
+                "minimum": 1
+              },
+              "available_stock": {
+                "type": "integer",
+                "description": "stock disponible al rechazar (solo insufficient_stock)",
+                "minimum": 0
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría, si el producto existe"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa, si el producto existe"
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina, si el cuerpo la traía válida"
+              }
+            }
+          }
+        }
+      }
+    },
+    "login_failed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos login_failed porque necesitamos saber cuántos intentos fallidos hay por día y si se concentran sobre una misma cuenta, lo que nos permite tomar la decisión de activar bloqueo o rate-limit por cuenta, avisar al usuario afectado y detectar ataques de fuerza bruta.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 10 s",
+        "justification": "Un ataque de credenciales se corta mientras ocurre; el recuento diario sale del mismo flujo."
+      },
+      "x-throttle": "Ninguno (cada fallo cuenta). El pipeline agrega por `email_hash` en ventanas de 5 min para alertar.",
+      "x-pii": "El email NO se emite. `email_hash` = primeros 16 hex de HMAC-SHA256(email en minúsculas, `TELEMETRY_PEPPER`); el pepper vive en variables de entorno, nunca en el repo. `userId` = `anonymous`.",
+      "x-propertyAllowlist": [
+        "email_hash",
+        "reason"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/login_failed/1.0.0",
+        "title": "login_failed",
+        "description": "Credenciales rechazadas en `POST /auth/login` (401).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "login_failed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email_hash",
+              "reason"
+            ],
+            "properties": {
+              "email_hash": {
+                "type": "string",
+                "description": "HMAC truncado del email enviado",
+                "pattern": "^[0-9a-f]{16}$"
+              },
+              "reason": {
+                "enum": [
+                  "bad_credentials"
+                ],
+                "type": "string",
+                "description": "motivo del rechazo (hoy solo 401; el mensaje de la API no distingue email inexistente de contraseña errónea y la telemetría tampoco debe hacerlo)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "page_viewed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "navegación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos page_viewed porque necesitamos saber qué secciones visitan más los operadores y en qué orden, lo que nos permite tomar la decisión de priorizar mejoras en las secciones más usadas, reordenar el menú (`NavMenu`) y retirar las que nadie usa.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Son patrones de uso agregados; se revisan semanalmente."
+      },
+      "x-throttle": "Deduplicar la misma ruta en < 1 s (doble efecto de React Strict Mode); no emitir al volver el foco a la pestaña.",
+      "x-pii": "Solo `route_template` sin query string ni hash (`?productId=` se descarta).",
+      "x-propertyAllowlist": [
+        "route_template",
+        "previous_route",
+        "entry_type",
+        "ui_language"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/page_viewed/1.0.0",
+        "title": "page_viewed",
+        "description": "Un usuario autenticado visualiza una sección del backoffice (cambio de ruta del App Router).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "page_viewed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "route_template",
+              "entry_type"
+            ],
+            "properties": {
+              "route_template": {
+                "type": "string",
+                "description": "ruta del grupo de rutas, p. ej. /inventory/orders/outbound",
+                "maxLength": 100,
+                "pattern": "^/"
+              },
+              "previous_route": {
+                "type": "string",
+                "description": "ruta anterior de esta sesión",
+                "maxLength": 100,
+                "pattern": "^/"
+              },
+              "entry_type": {
+                "type": "string",
+                "description": "cómo se llegó",
+                "enum": [
+                  "initial_load",
+                  "client_navigation",
+                  "back_forward"
+                ]
+              },
+              "ui_language": {
+                "type": "string",
+                "description": "idioma de la interfaz; dimensión independiente de `office`",
+                "enum": [
+                  "es",
+                  "en"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "flow_abandoned": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "navegación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos flow_abandoned porque necesitamos saber qué flujos se abandonan a la mitad y en qué campo, lo que nos permite tomar la decisión de simplificar o dividir el formulario con más abandono, o reubicar el campo donde se abandona.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Se interpreta con la tasa semanal frente a `form_started`."
+      },
+      "x-throttle": "Una vez por (form_id, sessionId) y montaje de formulario; se emite en `pagehide` con `navigator.sendBeacon`.",
+      "x-pii": "Nunca se emite el contenido de los campos, solo cuántos y cuál fue el último con foco (nombre de campo del allowlist).",
+      "x-propertyAllowlist": [
+        "form_id",
+        "last_field_focused",
+        "fields_filled",
+        "seconds_since_start",
+        "exit_reason"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/flow_abandoned/1.0.0",
+        "title": "flow_abandoned",
+        "description": "El usuario inicia un formulario (`form_started`) y sale de la página, cierra la pestaña o caduca la sesión sin enviarlo con éxito.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "flow_abandoned",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "form_id",
+              "fields_filled",
+              "seconds_since_start",
+              "exit_reason"
+            ],
+            "properties": {
+              "form_id": {
+                "enum": [
+                  "inbound_order",
+                  "outbound_order",
+                  "incident",
+                  "supplier",
+                  "register",
+                  "forgot_password",
+                  "reset_password",
+                  "change_password",
+                  "profile",
+                  "csv_analysis"
+                ],
+                "description": "formulario abandonado"
+              },
+              "last_field_focused": {
+                "type": "string",
+                "description": "nombre técnico del último campo con foco",
+                "maxLength": 40,
+                "pattern": "^[a-z_]+$"
+              },
+              "fields_filled": {
+                "type": "integer",
+                "description": "campos con algún valor",
+                "minimum": 0
+              },
+              "seconds_since_start": {
+                "type": "integer",
+                "description": "segundos desde `form_started`",
+                "minimum": 0
+              },
+              "exit_reason": {
+                "type": "string",
+                "description": "motivo detectado",
+                "enum": [
+                  "navigated_away",
+                  "tab_closed",
+                  "session_expired"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "product_created": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos product_created porque necesitamos saber a qué ritmo crece el catálogo y en qué categorías/oficinas, lo que nos permite tomar la decisión de revisar si hace falta una política de alta de activos o consolidar SKUs.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Evento poco frecuente sin urgencia."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "product_id",
+        "product_sku",
+        "office",
+        "programme_id",
+        "min_stock",
+        "product_category"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/product_created/1.0.0",
+        "title": "product_created",
+        "description": "Se dio de alta un producto (material formativo o de incorporación) en el catálogo.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "product_created",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "product_id",
+              "product_sku",
+              "office",
+              "programme_id",
+              "min_stock",
+              "product_category"
+            ],
+            "properties": {
+              "product_id": {
+                "type": "integer",
+                "description": "id del activo",
+                "minimum": 1
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU",
+                "maxLength": 200
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina"
+              },
+              "programme_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 60,
+                "description": "programa del producto"
+              },
+              "min_stock": {
+                "type": "integer",
+                "description": "mínimo configurado inicial",
+                "minimum": 1
+              },
+              "product_category": {
+                "enum": [
+                  "training_kit",
+                  "certification",
+                  "onboarding_equipment"
+                ],
+                "description": "categoría"
+              }
+            }
+          }
+        }
+      }
+    },
+    "product_creation_rejected": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/inventario",
+      "x-source": "backend",
+      "x-capture": "Capturamos product_creation_rejected porque necesitamos saber si los operadores no encuentran un activo existente y lo vuelven a dar de alta, lo que nos permite tomar la decisión de mejorar la búsqueda de activos o mostrar el SKU existente en el error.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Calidad de datos maestros; análisis semanal."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "El SKU duplicado no es PII; no se emite el nombre libre.",
+      "x-propertyAllowlist": [
+        "http_status",
+        "error_kind",
+        "product_sku",
+        "failed_fields"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/product_creation_rejected/1.0.0",
+        "title": "product_creation_rejected",
+        "description": "El alta de un producto fue rechazada (SKU duplicado 409 o campos inválidos 422).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "product_creation_rejected",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "http_status",
+              "error_kind"
+            ],
+            "properties": {
+              "http_status": {
+                "enum": [
+                  409,
+                  422
+                ],
+                "description": "estado HTTP"
+              },
+              "error_kind": {
+                "enum": [
+                  "duplicate_sku",
+                  "invalid_field"
+                ],
+                "type": "string",
+                "description": "causa"
+              },
+              "product_sku": {
+                "type": "string",
+                "description": "SKU intentado",
+                "maxLength": 200
+              },
+              "failed_fields": {
+                "type": "array",
+                "description": "campos con error",
+                "items": {
+                  "enum": [
+                    "name",
+                    "sku",
+                    "category",
+                    "office"
+                  ]
+                },
+                "uniqueItems": true,
+                "maxItems": 4
+              }
+            }
+          }
+        }
+      }
+    },
+    "stock_warning_shown": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/inventario",
+      "x-source": "frontend",
+      "x-capture": "Capturamos stock_warning_shown porque necesitamos saber cuántas veces el aviso en cliente evita (o no) el rechazo del servidor y si el stock mostrado está desactualizado, lo que nos permite tomar la decisión de decidir si el aviso debe bloquear el envío y si hay que refrescar el stock más a menudo.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Evaluación de UX semanal."
+      },
+      "x-throttle": "Debounce de 1 s tras la última pulsación; una vez por (product_id, cantidad) y montaje del formulario.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "product_id",
+        "requested_quantity",
+        "displayed_stock",
+        "stock_age_seconds",
+        "office"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/stock_warning_shown/1.0.0",
+        "title": "stock_warning_shown",
+        "description": "El formulario de salida mostró «Supera el stock disponible» antes de enviar.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "stock_warning_shown",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "product_id",
+              "requested_quantity",
+              "displayed_stock",
+              "stock_age_seconds",
+              "office"
+            ],
+            "properties": {
+              "product_id": {
+                "type": "integer",
+                "description": "id del activo",
+                "minimum": 1
+              },
+              "requested_quantity": {
+                "type": "integer",
+                "description": "cantidad escrita",
+                "minimum": 1
+              },
+              "displayed_stock": {
+                "type": "integer",
+                "description": "stock mostrado al usuario",
+                "minimum": 0
+              },
+              "stock_age_seconds": {
+                "type": "integer",
+                "description": "segundos desde que se cargó ese stock",
+                "minimum": 0
+              },
+              "office": {
+                "enum": [
+                  "valencia",
+                  "miami"
+                ],
+                "description": "oficina del producto"
+              }
+            }
+          }
+        }
+      }
+    },
+    "incident_created": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/incidencias",
+      "x-source": "backend",
+      "x-capture": "Capturamos incident_created porque necesitamos saber cuántas incidencias entran por categoría, origen y sede, lo que nos permite tomar la decisión de reasignar personal de soporte a la sede o categoría que más crece.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Carga de trabajo diaria/semanal."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "No se emiten `title` ni `description` (texto libre, pueden contener datos de clientes).",
+      "x-propertyAllowlist": [
+        "incident_id",
+        "incident_category",
+        "origin",
+        "branch"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/incident_created/1.0.0",
+        "title": "incident_created",
+        "description": "Se registró una incidencia en el gestor de incidencias.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "incident_created",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "incident_id",
+              "incident_category",
+              "origin",
+              "branch"
+            ],
+            "properties": {
+              "incident_id": {
+                "type": "integer",
+                "description": "id",
+                "minimum": 1
+              },
+              "incident_category": {
+                "enum": [
+                  "technical_failure",
+                  "process_error",
+                  "client_complaint",
+                  "candidate_issue",
+                  "staff_issue",
+                  "sla_breach",
+                  "data_quality",
+                  "other"
+                ],
+                "description": "categoría"
+              },
+              "origin": {
+                "enum": [
+                  "customer",
+                  "branch",
+                  "internal"
+                ],
+                "description": "origen"
+              },
+              "branch": {
+                "enum": [
+                  "central",
+                  "valencia_operations",
+                  "miami_office",
+                  "remote"
+                ],
+                "description": "sede"
+              }
+            }
+          }
+        }
+      }
+    },
+    "incident_status_changed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "negocio/incidencias",
+      "x-source": "backend",
+      "x-capture": "Capturamos incident_status_changed porque necesitamos saber cuánto tarda cada fase del ciclo de vida y cuántas se descartan, lo que nos permite tomar la decisión de atacar el cuello de botella con más espera y revisar el SLA de 24 h.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Métrica de SLA que se revisa diariamente, no minuto a minuto."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "incident_id",
+        "from_status",
+        "to_status",
+        "seconds_in_previous_status"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/incident_status_changed/1.0.0",
+        "title": "incident_status_changed",
+        "description": "Cambio de estado de una incidencia (open→in_progress→resolved/discarded).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "incident_status_changed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "incident_id",
+              "from_status",
+              "to_status",
+              "seconds_in_previous_status"
+            ],
+            "properties": {
+              "incident_id": {
+                "type": "integer",
+                "description": "id",
+                "minimum": 1
+              },
+              "from_status": {
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "resolved",
+                  "discarded"
+                ],
+                "description": "estado anterior"
+              },
+              "to_status": {
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "resolved",
+                  "discarded"
+                ],
+                "description": "estado nuevo"
+              },
+              "seconds_in_previous_status": {
+                "type": "integer",
+                "description": "segundos en el estado anterior",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "user_registered": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos user_registered porque necesitamos saber a qué ritmo se crean cuentas y si coincide con altas de personal, lo que nos permite tomar la decisión de detectar altas inesperadas y dimensionar el soporte de onboarding.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Volumen bajo, revisión diaria."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin email ni nombre. `userId` del usuario creado.",
+      "x-propertyAllowlist": [
+        "role"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/user_registered/1.0.0",
+        "title": "user_registered",
+        "description": "Se creó una cuenta de usuario nueva (`POST /users`).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "user_registered",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "description": "rol asignado",
+                "maxLength": 30
+              }
+            }
+          }
+        }
+      }
+    },
+    "login_succeeded": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos login_succeeded porque necesitamos saber cuántos operadores activos hay por día/hora y cuántos `login_failed` de la misma sesión preceden a un éxito (el pipeline lo calcula por `sessionId`), lo que nos permite tomar la decisión de definir horarios de soporte y calibrar el umbral de bloqueo de `login_failed`.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Actividad agregada."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin email. `userId` = id interno (seudónimo).",
+      "x-propertyAllowlist": [
+        "method"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/login_succeeded/1.0.0",
+        "title": "login_succeeded",
+        "description": "Login correcto; marca el inicio de sesión de uso.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "login_succeeded",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "method"
+            ],
+            "properties": {
+              "method": {
+                "enum": [
+                  "password"
+                ],
+                "type": "string",
+                "description": "método de autenticación (hoy solo contraseña)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "session_expired": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos session_expired porque necesitamos saber si los operadores pierden la sesión en mitad de una tarea y cuánto dura una sesión útil, lo que nos permite tomar la decisión de ajustar la caducidad del JWT o añadir renovación silenciosa.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Ajuste de configuración, análisis semanal."
+      },
+      "x-throttle": "Una vez por sessionId y token (el redirect borra el token).",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "route_template",
+        "session_age_seconds",
+        "had_unsaved_form"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/session_expired/1.0.0",
+        "title": "session_expired",
+        "description": "Una llamada protegida devolvió 401 y el cliente borró el token y redirigió a /login.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "session_expired",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "route_template",
+              "had_unsaved_form"
+            ],
+            "properties": {
+              "route_template": {
+                "type": "string",
+                "description": "ruta donde ocurrió",
+                "maxLength": 100,
+                "pattern": "^/"
+              },
+              "session_age_seconds": {
+                "type": "integer",
+                "description": "segundos desde el login",
+                "minimum": 0
+              },
+              "had_unsaved_form": {
+                "type": "boolean",
+                "description": "true si había un formulario iniciado y sin enviar"
+              }
+            }
+          }
+        }
+      }
+    },
+    "logout_completed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos logout_completed porque necesitamos saber cuántas sesiones terminan en logout frente a caducidad, lo que nos permite tomar la decisión de decidir si recordar o alargar la sesión.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Análisis de ciclo de sesión semanal."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "session_age_seconds"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/logout_completed/1.0.0",
+        "title": "logout_completed",
+        "description": "El usuario cierra sesión voluntariamente.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "logout_completed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "session_age_seconds": {
+                "type": "integer",
+                "description": "duración de la sesión",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "password_reset_requested": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos password_reset_requested porque necesitamos saber cuántos usuarios olvidan la contraseña y si hay solicitudes masivas sobre un email, lo que nos permite tomar la decisión de activar rate-limit en el endpoint y evaluar SSO.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Tendencia diaria; los fallos de entrega van aparte (`email_delivery_failed`)."
+      },
+      "x-throttle": "Máx. 1 por (email_hash, 60 s).",
+      "x-pii": "El email NO se emite: solo `email_hash` (misma técnica que `login_failed`). No se revela si la cuenta existe.",
+      "x-propertyAllowlist": [
+        "email_hash"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/password_reset_requested/1.0.0",
+        "title": "password_reset_requested",
+        "description": "Se solicitó un enlace de recuperación (`POST /auth/forgot-password`, que siempre responde igual).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "password_reset_requested",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email_hash"
+            ],
+            "properties": {
+              "email_hash": {
+                "type": "string",
+                "description": "HMAC truncado",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "password_reset_completed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos password_reset_completed porque necesitamos saber qué porcentaje de enlaces se convierte en contraseña cambiada y cuántos caducan, lo que nos permite tomar la decisión de alargar la validez del enlace o simplificar el correo.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Embudo semanal."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "El token NO se emite.",
+      "x-propertyAllowlist": [
+        "outcome"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/password_reset_completed/1.0.0",
+        "title": "password_reset_completed",
+        "description": "Una recuperación terminó (éxito) o fue rechazada (enlace inválido, caducado o usado).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "password_reset_completed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "success",
+                  "invalid_or_expired_token"
+                ],
+                "type": "string",
+                "description": "resultado"
+              }
+            }
+          }
+        }
+      }
+    },
+    "password_change_failed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "autenticación",
+      "x-source": "backend",
+      "x-capture": "Capturamos password_change_failed porque necesitamos saber si una sesión robada intenta adivinar la contraseña actual, lo que nos permite tomar la decisión de cerrar la sesión y forzar un restablecimiento si hay varios fallos seguidos.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 30 s",
+        "justification": "Sesión posiblemente comprometida: la señal de seguridad debe reaccionar de inmediato."
+      },
+      "x-throttle": "Máx. 1 por (userId, 10 s).",
+      "x-pii": "Sin contraseñas ni longitudes.",
+      "x-propertyAllowlist": [
+        "suppressed_count"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/password_change_failed/1.0.0",
+        "title": "password_change_failed",
+        "description": "Un usuario autenticado falló la contraseña actual en `POST /auth/change-password` (400).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "password_change_failed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "suppressed_count"
+            ],
+            "properties": {
+              "suppressed_count": {
+                "type": "integer",
+                "description": "fallos iguales descartados por throttle desde el último evento",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "api_latency_recorded": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "rendimiento",
+      "x-source": "backend",
+      "x-capture": "Capturamos api_latency_recorded porque necesitamos saber qué endpoints son lentos y si los cachés TTL reducen la latencia en producción (hoy solo hay medidas de laboratorio), lo que nos permite tomar la decisión de decidir qué endpoint optimizar o cachear y detectar regresiones tras un despliegue.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "horario",
+        "justification": "Percentiles por ventana horaria; las alertas de salud usan los logs/APM, no este evento."
+      },
+      "x-throttle": "Muestreo: 100 % si status ≥ 400 o duración > 1000 ms; 10 % del resto, con `sample_rate` para reponderar.",
+      "x-pii": "Solo `route_template` (nunca path con ids ni query string, como ya hace el middleware).",
+      "x-propertyAllowlist": [
+        "http_method",
+        "route_template",
+        "http_status",
+        "duration_ms",
+        "sample_rate"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/api_latency_recorded/1.0.0",
+        "title": "api_latency_recorded",
+        "description": "Duración de una petición HTTP medida por el middleware `timing_middleware` de la API.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "api_latency_recorded",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "http_method",
+              "route_template",
+              "http_status",
+              "duration_ms",
+              "sample_rate"
+            ],
+            "properties": {
+              "http_method": {
+                "type": "string",
+                "description": "método",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "route_template": {
+                "type": "string",
+                "description": "plantilla, p. ej. /inventory/products/{asset_id}",
+                "maxLength": 100
+              },
+              "http_status": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599,
+                "description": "estado"
+              },
+              "duration_ms": {
+                "type": "number",
+                "description": "duración en ms",
+                "minimum": 0
+              },
+              "sample_rate": {
+                "type": "number",
+                "description": "fracción muestreada (1 o 0.1)",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "page_load_measured": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "rendimiento",
+      "x-source": "frontend",
+      "x-capture": "Capturamos page_load_measured porque necesitamos saber qué pantallas tienen tiempos de carga reales peores que los de Lighthouse y en qué dispositivos, lo que nos permite tomar la decisión de priorizar la optimización (carga diferida, paginación) de las pantallas con p75 fuera de umbral.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "horario",
+        "justification": "Percentiles p75 por ruta; análisis semanal."
+      },
+      "x-throttle": "Una vez por (métrica, vista) con el valor final; LCP/INP/CLS al ocultar la página.",
+      "x-pii": "Sin PII. `device_class` es una categoría, no el user-agent.",
+      "x-propertyAllowlist": [
+        "route_template",
+        "metric",
+        "value",
+        "rating",
+        "device_class"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/page_load_measured/1.0.0",
+        "title": "page_load_measured",
+        "description": "Core Web Vitals reales (LCP, INP, CLS, TTFB) de una vista del backoffice.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "page_load_measured",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "route_template",
+              "metric",
+              "value",
+              "rating",
+              "device_class"
+            ],
+            "properties": {
+              "route_template": {
+                "type": "string",
+                "description": "ruta",
+                "maxLength": 100,
+                "pattern": "^/"
+              },
+              "metric": {
+                "type": "string",
+                "description": "métrica",
+                "enum": [
+                  "LCP",
+                  "INP",
+                  "CLS",
+                  "TTFB"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "description": "valor (ms; CLS adimensional)",
+                "minimum": 0
+              },
+              "rating": {
+                "type": "string",
+                "description": "good/needs-improvement/poor según web-vitals",
+                "enum": [
+                  "good",
+                  "needs-improvement",
+                  "poor"
+                ]
+              },
+              "device_class": {
+                "type": "string",
+                "description": "clase de dispositivo",
+                "enum": [
+                  "desktop",
+                  "mobile"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "cache_lookup_recorded": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "rendimiento",
+      "x-source": "backend",
+      "x-capture": "Capturamos cache_lookup_recorded porque necesitamos saber la tasa real de aciertos y si el TTL de 30 s es adecuado para incidencias e inventario, lo que nos permite tomar la decisión de subir, bajar o eliminar el TTL de un caché.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "horario",
+        "justification": "Ajuste de configuración basado en tasas."
+      },
+      "x-throttle": "Muestreo del 10 % con `sample_rate`; el contador acumulado también se puede volcar cada 60 s.",
+      "x-pii": "Sin PII; la clave de caché nunca se emite (puede contener filtros).",
+      "x-propertyAllowlist": [
+        "cache_name",
+        "result",
+        "sample_rate"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/cache_lookup_recorded/1.0.0",
+        "title": "cache_lookup_recorded",
+        "description": "Resultado de una lectura de los cachés TTL (`TTLCache.get_or_load`): hit o miss.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "cache_lookup_recorded",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "cache_name",
+              "result",
+              "sample_rate"
+            ],
+            "properties": {
+              "cache_name": {
+                "type": "string",
+                "description": "nombre del caché",
+                "enum": [
+                  "inventory_products",
+                  "incident_list",
+                  "incident_summary"
+                ]
+              },
+              "result": {
+                "type": "string",
+                "description": "resultado",
+                "enum": [
+                  "hit",
+                  "miss"
+                ]
+              },
+              "sample_rate": {
+                "type": "number",
+                "description": "fracción muestreada",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "frontend_error_captured": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "errores",
+      "x-source": "frontend",
+      "x-capture": "Capturamos frontend_error_captured porque necesitamos saber qué pantallas fallan en producción sin que nadie lo reporte y si un despliegue introdujo una regresión, lo que nos permite tomar la decisión de revertir o corregir el despliegue; priorizar el componente con más fallos.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 60 s",
+        "justification": "Tras un despliegue, un pico de errores exige reacción inmediata (rollback)."
+      },
+      "x-throttle": "Dedupe por `fingerprint`: 1 por minuto y sesión; máx. 20 por sesión.",
+      "x-pii": "Nunca el `message` ni el stack (pueden contener URLs con tokens o datos): solo `error_name`, `fingerprint` (SHA-1 del mensaje normalizado, sin números ni ids) y el `digest` de Next.js.",
+      "x-propertyAllowlist": [
+        "source",
+        "route_template",
+        "error_name",
+        "fingerprint",
+        "digest",
+        "app_version"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/frontend_error_captured/1.0.0",
+        "title": "frontend_error_captured",
+        "description": "Error de render o excepción no capturada (error boundaries `error.tsx`/`global-error.tsx`, `window.onerror`, `unhandledrejection`).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "frontend_error_captured",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "route_template",
+              "error_name",
+              "fingerprint",
+              "app_version"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "description": "origen",
+                "enum": [
+                  "error_boundary",
+                  "global_error",
+                  "window_error",
+                  "unhandled_rejection"
+                ]
+              },
+              "route_template": {
+                "type": "string",
+                "description": "ruta",
+                "maxLength": 100,
+                "pattern": "^/"
+              },
+              "error_name": {
+                "type": "string",
+                "description": "nombre de la clase de error",
+                "maxLength": 60
+              },
+              "fingerprint": {
+                "type": "string",
+                "description": "hash del mensaje normalizado",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "digest": {
+                "type": "string",
+                "description": "digest de Next.js, si existe",
+                "maxLength": 40
+              },
+              "app_version": {
+                "type": "string",
+                "description": "versión/commit desplegado",
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    },
+    "api_request_failed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "errores",
+      "x-source": "frontend",
+      "x-capture": "Capturamos api_request_failed porque necesitamos saber qué endpoints fallan desde el navegador del usuario aunque el servidor no lo registre (CORS, proxy, red), lo que nos permite tomar la decisión de ajustar timeouts, reintentos o el proxy de Next.js.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "horario",
+        "justification": "Los 5xx del servidor ya alertan con `api_error_unhandled`; este evento ve lo que solo ve el cliente."
+      },
+      "x-throttle": "Máx. 1 por (route_template, kind) cada 30 s y sesión.",
+      "x-pii": "Solo la ruta plantilla, nunca la URL completa.",
+      "x-propertyAllowlist": [
+        "http_method",
+        "route_template",
+        "kind",
+        "http_status",
+        "duration_ms"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/api_request_failed/1.0.0",
+        "title": "api_request_failed",
+        "description": "Una llamada del cliente a la API falló por red, timeout (15 s), JSON no parseable o 5xx (`ApiError` kinds network/timeout/parse/http).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "api_request_failed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "http_method",
+              "route_template",
+              "kind",
+              "duration_ms"
+            ],
+            "properties": {
+              "http_method": {
+                "type": "string",
+                "description": "método",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "route_template": {
+                "type": "string",
+                "description": "ruta de API con plantilla",
+                "maxLength": 100
+              },
+              "kind": {
+                "type": "string",
+                "description": "tipo de fallo",
+                "enum": [
+                  "network",
+                  "timeout",
+                  "parse",
+                  "http"
+                ]
+              },
+              "http_status": {
+                "type": "integer",
+                "description": "estado, 0 si no hubo respuesta",
+                "minimum": 0,
+                "maximum": 599
+              },
+              "duration_ms": {
+                "type": "number",
+                "description": "ms hasta el fallo",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "api_error_unhandled": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "errores",
+      "x-source": "backend",
+      "x-capture": "Capturamos api_error_unhandled porque necesitamos saber qué rutas lanzan errores inesperados y si coinciden con un despliegue o con la base de datos de Supabase, lo que nos permite tomar la decisión de avisar a la persona de guardia y corregir o revertir.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 30 s",
+        "justification": "Un 500 es un fallo del sistema; el equipo debe enterarse mientras sucede."
+      },
+      "x-throttle": "Máx. 1 por (route_template, exception_class) cada 10 s; el resto suma a `suppressed_count`.",
+      "x-pii": "No se emite el traceback ni el mensaje de la excepción (quedan en el log del servidor con el mismo `requestId`).",
+      "x-propertyAllowlist": [
+        "http_method",
+        "route_template",
+        "exception_class",
+        "suppressed_count"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/api_error_unhandled/1.0.0",
+        "title": "api_error_unhandled",
+        "description": "Excepción no controlada que terminó en el 500 genérico del handler global (`errors.py`).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "api_error_unhandled",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "http_method",
+              "route_template",
+              "exception_class",
+              "suppressed_count"
+            ],
+            "properties": {
+              "http_method": {
+                "type": "string",
+                "description": "método",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "route_template": {
+                "type": "string",
+                "description": "ruta",
+                "maxLength": 100
+              },
+              "exception_class": {
+                "type": "string",
+                "description": "clase de la excepción",
+                "maxLength": 80
+              },
+              "suppressed_count": {
+                "type": "integer",
+                "description": "ocurrencias descartadas",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "email_delivery_failed": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "errores",
+      "x-source": "backend",
+      "x-capture": "Capturamos email_delivery_failed porque necesitamos saber si los usuarios que piden recuperar la contraseña nunca reciben el enlace, lo que nos permite tomar la decisión de corregir la configuración del proveedor o activar un canal alternativo.",
+      "x-delivery": {
+        "mode": "stream",
+        "latencyTarget": "< 60 s",
+        "justification": "Cada fallo deja a un usuario sin acceso a su cuenta."
+      },
+      "x-throttle": "Ninguno (volumen bajo).",
+      "x-pii": "Ni destinatario ni asunto: solo plantilla y causa.",
+      "x-propertyAllowlist": [
+        "template",
+        "reason"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/email_delivery_failed/1.0.0",
+        "title": "email_delivery_failed",
+        "description": "No se pudo enviar un correo (sin `RESEND_API_KEY`, error de Resend o parámetros rechazados) desde `email_service`.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "email_delivery_failed",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "backend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "template",
+              "reason"
+            ],
+            "properties": {
+              "template": {
+                "type": "string",
+                "description": "plantilla",
+                "enum": [
+                  "password_reset"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "description": "causa",
+                "enum": [
+                  "missing_api_key",
+                  "provider_error",
+                  "invalid_parameters"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "form_started": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "navegación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos form_started porque necesitamos saber cuántos formularios se inician (denominador de `flow_abandoned`) y cuántos terminan con éxito, lo que nos permite tomar la decisión de calcular la tasa de conversión por formulario y priorizar el rediseño del peor.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario (carga horaria)",
+        "justification": "Embudo semanal."
+      },
+      "x-throttle": "Una vez por montaje de formulario (primer `change`).",
+      "x-pii": "Sin contenido de campos.",
+      "x-propertyAllowlist": [
+        "form_id"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/form_started/1.0.0",
+        "title": "form_started",
+        "description": "El usuario modifica el primer campo de un formulario.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "form_started",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "form_id"
+            ],
+            "properties": {
+              "form_id": {
+                "enum": [
+                  "inbound_order",
+                  "outbound_order",
+                  "incident",
+                  "supplier",
+                  "register",
+                  "forgot_password",
+                  "reset_password",
+                  "change_password",
+                  "profile",
+                  "csv_analysis"
+                ],
+                "description": "formulario"
+              }
+            }
+          }
+        }
+      }
+    },
+    "list_load_more_clicked": {
+      "x-classification": "oportunidad_identificada",
+      "x-category": "navegación",
+      "x-source": "frontend",
+      "x-capture": "Capturamos list_load_more_clicked porque necesitamos saber cuántas páginas recorren realmente los usuarios y si 50 es un buen tamaño de página, lo que nos permite tomar la decisión de cambiar el tamaño de página o añadir filtros por defecto.",
+      "x-delivery": {
+        "mode": "batch",
+        "latencyTarget": "diario",
+        "justification": "Ajuste de UX semanal."
+      },
+      "x-throttle": "Ninguno.",
+      "x-pii": "Sin PII.",
+      "x-propertyAllowlist": [
+        "list_id",
+        "pages_shown",
+        "total_items"
+      ],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://nexova.example/telemetry/list_load_more_clicked/1.0.0",
+        "title": "list_load_more_clicked",
+        "description": "Clic en «Mostrar más» del listado de incidencias (paginación de 50 en 50).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "timestamp",
+          "sessionId",
+          "userId",
+          "event_type",
+          "schemaVersion",
+          "requestId",
+          "source",
+          "properties"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 generado en origen; clave de idempotencia (el pipeline descarta duplicados)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+            "description": "Instante del hecho en ISO 8601 UTC con milisegundos (`2026-11-24T10:15:30.123Z`). Lo pone el origen; el pipeline añade `receivedAt` aparte."
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^([0-9a-f-]{36}|none)$",
+            "description": "UUID v4 por pestaña del navegador (`sessionStorage`), rotado tras logout. En eventos de backend se toma del header `X-Session-Id`; si falta, `none`. La API no tiene sesiones (JWT sin estado), por eso lo genera el cliente."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "`sub` del JWT (id interno del usuario en TinyDB). `anonymous` si no hay sesión (login, registro, recuperar contraseña)."
+          },
+          "event_type": {
+            "const": "list_load_more_clicked",
+            "description": "Taxonomía `entidad_acción` en snake_case, verbo en participio pasado (`created`, `rejected`, `failed`, `viewed`…)."
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "SemVer del esquema de ese `event_type` (hoy `1.0.0`)."
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "UUID v4 creado por el frontend por petición y enviado en `X-Request-Id`; la API lo reutiliza (o lo crea) y lo escribe en cada línea de log. Eventos de UI sin petición: UUID propio."
+          },
+          "source": {
+            "const": "frontend",
+            "description": "`frontend` o `backend`. Campo adicional al mínimo pedido, necesario para saber quién emitió cada evento."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "list_id",
+              "pages_shown",
+              "total_items"
+            ],
+            "properties": {
+              "list_id": {
+                "type": "string",
+                "description": "listado",
+                "enum": [
+                  "incidents"
+                ]
+              },
+              "pages_shown": {
+                "type": "integer",
+                "description": "páginas visibles tras el clic",
+                "minimum": 2
+              },
+              "total_items": {
+                "type": "integer",
+                "description": "elementos totales cargados",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
