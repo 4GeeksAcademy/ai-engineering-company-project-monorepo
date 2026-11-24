@@ -1,5 +1,10 @@
 import { clearToken, getToken, redirectToLogin } from "@/lib/auth";
 import { ApiError, statusMessage, type ApiErrorKind } from "@/lib/errors";
+import { currentRoute } from "@/lib/errorTelemetry";
+import { abandonOpenForms, hasUnsavedForm } from "@/lib/formTelemetry";
+import { publishRequestId } from "@/lib/requestContext";
+import { track } from "@/lib/telemetry";
+import { uuid } from "@/lib/uuid";
 
 export { ApiError } from "@/lib/errors";
 
@@ -120,6 +125,12 @@ export type ApiOptions = Omit<RequestInit, "body"> & {
 
 const DEFAULT_FALLBACK = "No se pudo completar la operación";
 
+/** API path as a template for telemetry: no query string, numeric ids as {id}, and never a host. */
+export function routeTemplate(path: string): string {
+  const clean = path.split(/[?#]/)[0].replace(/^https?:\/\/[^/]+/, "");
+  return clean.replace(/\/\d+(?=\/|$)/g, "/{id}");
+}
+
 /**
  * fetch wrapper for the Nexova API. Protected calls (the default) carry
  * `Authorization: Bearer <token>`; a 401 on them clears the token and goes to /login.
@@ -128,6 +139,11 @@ const DEFAULT_FALLBACK = "No se pudo completar la operación";
 export async function apiFetch(path: string, options: ApiOptions = {}): Promise<Response> {
   const { json, auth = true, fallback = DEFAULT_FALLBACK, labels = {}, baseUrl, exposeDetailFor = [], ...init } = options;
   const headers = new Headers(init.headers);
+  // One correlation id per call: the API logs it, and the telemetry events about this call carry it.
+  const requestId = uuid();
+  headers.set("X-Request-Id", requestId);
+  const method = (init.method ?? "GET").toUpperCase();
+  const startedAt = performance.now();
   if (json !== undefined) headers.set("Content-Type", "application/json");
   if (auth) {
     const token = getToken();
@@ -144,15 +160,39 @@ export async function apiFetch(path: string, options: ApiOptions = {}): Promise<
     });
   } catch (reason) {
     const timedOut = reason instanceof DOMException && reason.name === "TimeoutError";
-    throw failure(fallback, 0, timedOut ? "timeout" : "network");
+    const kind = timedOut ? "timeout" : "network";
+    publishRequestId(requestId);
+    track("api_request_failed", {
+      http_method: method,
+      route_template: routeTemplate(path),
+      kind,
+      http_status: 0,
+      duration_ms: Math.round(performance.now() - startedAt),
+    });
+    throw failure(fallback, 0, kind);
   }
+  publishRequestId(requestId);
 
   if (auth && response.status === 401) {
+    // Before the token goes: the events are stamped with this user and session.
+    track("session_expired", { route_template: currentRoute(), had_unsaved_form: hasUnsavedForm() });
+    abandonOpenForms("session_expired");
     clearToken();
     redirectToLogin();
     throw new ApiError(401, [statusMessage(401)]);
   }
-  if (!response.ok) throw await toApiError(response, fallback, labels, exposeDetailFor);
+  if (!response.ok) {
+    if (response.status >= 500) {
+      track("api_request_failed", {
+        http_method: method,
+        route_template: routeTemplate(path),
+        kind: "http",
+        http_status: response.status,
+        duration_ms: Math.round(performance.now() - startedAt),
+      });
+    }
+    throw await toApiError(response, fallback, labels, exposeDetailFor);
+  }
   return response;
 }
 
@@ -163,6 +203,13 @@ export async function apiJson<T>(path: string, options: ApiOptions = {}): Promis
   try {
     return (await response.json()) as T;
   } catch {
+    track("api_request_failed", {
+      http_method: (options.method ?? "GET").toUpperCase(),
+      route_template: routeTemplate(path),
+      kind: "parse",
+      http_status: response.status,
+      duration_ms: 0,
+    });
     throw failure(options.fallback ?? DEFAULT_FALLBACK, response.status, "parse");
   }
 }

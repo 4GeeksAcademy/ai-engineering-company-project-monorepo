@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SessionCheck } from "@/components/SessionCheck";
 import { clearToken, getToken, LOGIN_PATH } from "@/lib/auth";
+import { abandonOpenForms, hasUnsavedForm } from "@/lib/formTelemetry";
+import { currentRoute } from "@/lib/errorTelemetry";
+import { track } from "@/lib/telemetry";
 import { useSession } from "@/lib/useSession";
 
 /**
@@ -16,7 +19,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status !== "anonymous") return;
-    if (getToken()) clearToken(); // expired or malformed
+    if (getToken()) {
+      // A token was there but is no longer valid: the session expired on this page.
+      track("session_expired", { route_template: currentRoute(), had_unsaved_form: hasUnsavedForm() });
+      abandonOpenForms("session_expired");
+      clearToken(); // expired or malformed
+    }
     router.replace(LOGIN_PATH);
   }, [status, router]);
 

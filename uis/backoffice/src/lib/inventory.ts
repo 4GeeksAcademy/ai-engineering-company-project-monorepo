@@ -1,6 +1,7 @@
-import { apiJson, type ApiOptions } from "@/lib/apiClient";
+import { ApiError, apiJson, type ApiOptions } from "@/lib/apiClient";
+import { trackDirectStockEditRejected } from "@/lib/inventoryTelemetry";
 
-export { ApiError } from "@/lib/apiClient";
+export { ApiError };
 
 // Direct URL of the inventory API (needs the backoffice origin in the API's CORS_ORIGINS).
 // Unset: calls go through the same-origin /api/inventory proxy (see next.config.ts).
@@ -83,13 +84,21 @@ const FIELD_LABELS: Record<string, string> = {
 // 400 (insufficient stock) and 404 carry a readable string `detail` from the API.
 const SHOW_DETAIL = [400, 404];
 
-function request<T>(path: string, options: ApiOptions): Promise<T> {
-  return apiJson<T>(`/inventory${path}`, {
-    ...options,
-    baseUrl: INVENTORY_API_URL || undefined,
-    labels: FIELD_LABELS,
-    exposeDetailFor: SHOW_DETAIL,
-  });
+async function request<T>(path: string, options: ApiOptions): Promise<T> {
+  try {
+    return await apiJson<T>(`/inventory${path}`, {
+      ...options,
+      baseUrl: INVENTORY_API_URL || undefined,
+      labels: FIELD_LABELS,
+      exposeDetailFor: SHOW_DETAIL,
+    });
+  } catch (reason) {
+    // Telemetry: a refused attempt to edit stock directly (405 / 422 extra_forbidden). Rethrown untouched.
+    if (reason instanceof ApiError && (reason.status === 405 || reason.status === 422)) {
+      trackDirectStockEditRejected(options.method ?? "GET", path, reason.status, reason.fieldErrors);
+    }
+    throw reason;
+  }
 }
 
 export function getProducts(): Promise<Asset[]> {
@@ -120,6 +129,9 @@ export type StockLevel = "out" | "low" | "healthy";
  * one allocation round for a team before IT would need to reorder.
  */
 export const LOW_STOCK_MAX = 5;
+
+/** Telemetry's "minimum stock": `stock_after < MIN_STOCK` is below it. 6 reproduces "5 or fewer is low" (telemetry plan, 0.1). */
+export const MIN_STOCK = LOW_STOCK_MAX + 1;
 
 export const STOCK_LEVEL_LABELS: Record<StockLevel, { icon: string; text: string }> = {
   out: { icon: "✖", text: "Agotado" },

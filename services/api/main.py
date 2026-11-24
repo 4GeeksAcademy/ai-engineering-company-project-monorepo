@@ -16,6 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from config import TELEMETRY_ENDPOINT
 from database import (
     IncidentRepository,
     SupplierRepository,
@@ -26,7 +27,7 @@ from database import (
     users_db_path_from_env,
 )
 from errors import register_error_handlers
-from routes import auth, incident_manager, incidents, inventory, profiles, suppliers, users
+from routes import auth, incident_manager, incidents, inventory, profiles, suppliers, telemetry, users
 from seed import seed
 
 # Application loggers (errors, incident_errors, email_service...) propagate to the root
@@ -38,6 +39,7 @@ logging.basicConfig(
 )
 
 timing_logger = logging.getLogger("api.timing")
+logger = logging.getLogger(__name__)
 
 ALLOWED_ORIGINS = [
     origin.strip()
@@ -48,6 +50,7 @@ ALLOWED_ORIGINS = [
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger.info("Telemetry endpoint (not used for routing yet): %s", TELEMETRY_ENDPOINT)
     # Open TinyDB once per process; seed it so the directory never starts empty.
     repository = SupplierRepository(db_path_from_env())
     if repository.count() == 0:
@@ -75,6 +78,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(profiles.router)
 app.include_router(inventory.router)
+app.include_router(telemetry.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,

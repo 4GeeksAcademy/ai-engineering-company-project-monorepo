@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { TelemetryRoot } from "@/components/TelemetryRoot";
 
 export const metadata: Metadata = { title: "Nexova Backoffice", description: "Backoffice interno de Nexova" };
 
@@ -7,7 +8,10 @@ export const metadata: Metadata = { title: "Nexova Backoffice", description: "Ba
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <TelemetryRoot />
+        {children}
+      </body>
     </html>
   );
 }

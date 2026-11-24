@@ -18,6 +18,7 @@ import {
   type IncidentOrigin,
   type IncidentStatus,
 } from "@/lib/incidentsApi";
+import { track } from "@/lib/telemetry";
 
 // Rows rendered at once. The API returns every incident; rendering them all blocks the main thread on phones.
 const PAGE_SIZE = 50;
@@ -195,7 +196,14 @@ export default function IncidentListPage() {
             </table>
             {incidents.length > visibleCount && (
               <div className="state">
-                <button type="button" className="secondary" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
+                <button type="button" className="secondary" onClick={() => {
+                  track("list_load_more_clicked", {
+                    list_id: "incidents",
+                    pages_shown: Math.ceil((visibleCount + PAGE_SIZE) / PAGE_SIZE),
+                    total_items: incidents.length,
+                  });
+                  setVisibleCount((count) => count + PAGE_SIZE);
+                }}>
                   Mostrar más ({incidents.length - visibleCount} restantes)
                 </button>
               </div>

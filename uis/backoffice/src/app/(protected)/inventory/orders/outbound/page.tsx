@@ -1,11 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { AssetSelect } from "@/components/AssetSelect";
 import { LoadError } from "@/components/LoadError";
 import { ApiError, getUserMessage } from "@/lib/errors";
 import { createOutboundOrder, EXIT_TYPES, EXIT_TYPE_LABELS, getProduct, type ExitType } from "@/lib/inventory";
+import { useFormTelemetry } from "@/lib/formTelemetry";
+import { telemetryOffice, trackOutboundOrder } from "@/lib/inventoryTelemetry";
+import { track } from "@/lib/telemetry";
 import { useAssets } from "@/lib/useAssets";
 
 type FieldErrors = Partial<Record<"asset" | "quantity" | "assigned_to", string>>;
@@ -28,6 +31,9 @@ function OutboundForm() {
   const [stockVersion, setStockVersion] = useState(0);
 
   const asset = assets.find((item) => String(item.id) === assetId);
+  const telemetry = useFormTelemetry("outbound_order");
+  const stockLoadedAt = useRef(0);
+  const warned = useRef(new Set<string>());
 
   useEffect(() => {
     // Refetch whenever the selection changes (or after a successful order); ignore stale answers.
@@ -42,7 +48,11 @@ function OutboundForm() {
     setStockError("");
     setStockLoading(true);
     getProduct(Number(assetId))
-      .then((result) => current && setStock(result.current_stock))
+      .then((result) => {
+        if (!current) return;
+        stockLoadedAt.current = Date.now();
+        setStock(result.current_stock);
+      })
       .catch((reason) => current && setStockError(getUserMessage(reason)))
       .finally(() => current && setStockLoading(false));
     return () => {
@@ -52,6 +62,24 @@ function OutboundForm() {
 
   const requested = /^\d+$/.test(quantity.trim()) ? Number(quantity) : 0;
   const exceeds = stock !== null && requested > stock;
+
+  // Telemetry: "Supera el stock" stayed on screen for 1 s (debounced), once per product and quantity.
+  useEffect(() => {
+    if (!exceeds || !asset || stock === null) return;
+    const key = `${asset.id}:${requested}`;
+    if (warned.current.has(key)) return;
+    const timer = setTimeout(() => {
+      warned.current.add(key);
+      track("stock_warning_shown", {
+        product_id: asset.id,
+        requested_quantity: requested,
+        displayed_stock: stock,
+        stock_age_seconds: Math.round((Date.now() - stockLoadedAt.current) / 1000),
+        office: telemetryOffice(asset.office),
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [exceeds, asset, stock, requested]);
 
   // Quick client-side check; the API remains the source of truth (400/404/422).
   function validate(): FieldErrors {
@@ -78,6 +106,8 @@ function OutboundForm() {
         assigned_to: exitType === "allocation" ? assignedTo.trim() : null,
         office: asset.office,
       });
+      trackOutboundOrder(order, asset, stock);
+      telemetry.completed();
       setNotice(`Salida registrada (${EXIT_TYPE_LABELS[order.exit_type]}): ${order.quantity} × ${order.asset_name} (${order.asset_sku}).`);
       setQuantity("");
       setAssignedTo("");
@@ -98,7 +128,7 @@ function OutboundForm() {
   }
 
   return (
-    <form className="card" onSubmit={submit} noValidate>
+    <form className="card" onSubmit={submit} noValidate {...telemetry.formProps}>
       {loadError && <LoadError message={loadError} onRetry={reload} busy={loading} />}
       {loading && <p className="muted small"><span className="spinner" aria-hidden="true" />Cargando activos…</p>}
       <div className="form-grid">
@@ -122,7 +152,7 @@ function OutboundForm() {
         </div>
         <label>
           Tipo de salida *
-          <select value={exitType} onChange={(event) => { setExitType(event.target.value as ExitType); setErrors((current) => ({ ...current, assigned_to: undefined })); }}>
+          <select name="exit_type" value={exitType} onChange={(event) => { setExitType(event.target.value as ExitType); setErrors((current) => ({ ...current, assigned_to: undefined })); }}>
             {EXIT_TYPES.map((value) => <option key={value} value={value}>{EXIT_TYPE_LABELS[value]}</option>)}
           </select>
         </label>
@@ -130,7 +160,7 @@ function OutboundForm() {
           <label>
             Asignado a *
             <input
-              value={assignedTo} required onChange={(event) => setAssignedTo(event.target.value)}
+              name="assigned_to" value={assignedTo} required onChange={(event) => setAssignedTo(event.target.value)}
               aria-invalid={errors.assigned_to ? true : undefined}
               aria-describedby={errors.assigned_to ? "assigned-error" : undefined}
             />
@@ -140,7 +170,7 @@ function OutboundForm() {
         <label>
           Cantidad *
           <input
-            type="number" min="1" step="1" inputMode="numeric" required value={quantity}
+            name="quantity" type="number" min="1" step="1" inputMode="numeric" required value={quantity}
             onChange={(event) => { setQuantity(event.target.value); setErrors((current) => ({ ...current, quantity: undefined })); }}
             aria-invalid={errors.quantity ? true : undefined}
             aria-describedby={[exceeds ? "quantity-warning" : "", errors.quantity ? "quantity-error" : ""].filter(Boolean).join(" ") || undefined}

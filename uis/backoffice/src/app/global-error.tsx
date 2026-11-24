@@ -1,10 +1,13 @@
 "use client"; // Error boundaries must be Client Components
 
 import "./globals.css";
+import { useEffect } from "react";
 import { ErrorFallback } from "@/components/ErrorFallback";
+import { reportError } from "@/lib/errorTelemetry";
 
 // Last resort for errors in the root layout itself: it replaces the layout, so it renders its own document.
-export default function GlobalError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  useEffect(() => reportError("global_error", error), [error]);
   return (
     <html lang="es">
       <body>

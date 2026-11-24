@@ -45,6 +45,11 @@ RESET_TOKEN_EXPIRE_MINUTES = _positive_int(
     "RESET_TOKEN_EXPIRE_MINUTES", os.environ.get("RESET_TOKEN_EXPIRE_MINUTES", "").strip() or "30"
 )
 
+# Where telemetry events are sent. Read here (and exported) to fix the pattern now: the frontend
+# gets the same URL as NEXT_PUBLIC_TELEMETRY_ENDPOINT. Today it points at this API's own stub
+# (routes/telemetry.py); Phase 3 points it at the real intake and nothing else changes.
+TELEMETRY_ENDPOINT = os.environ.get("TELEMETRY_ENDPOINT", "").strip() or "http://localhost:8000/telemetry/events"
+
 
 def database_url() -> str:
     """Postgres (Supabase) connection string for the inventory ORM, read when the engine is first built.

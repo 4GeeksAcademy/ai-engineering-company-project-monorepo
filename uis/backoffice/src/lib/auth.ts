@@ -56,16 +56,27 @@ export function subscribeToToken(onChange: () => void): () => void {
   };
 }
 
-function tokenExpiry(token: string): number | null {
+function tokenClaims(token: string): { exp?: unknown; sub?: unknown } | null {
   const payload = token.split(".")[1];
   if (!payload) return null;
   try {
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payload.length / 4) * 4, "=");
-    const { exp } = JSON.parse(atob(base64));
-    return typeof exp === "number" ? exp : null;
+    return JSON.parse(atob(base64));
   } catch {
     return null;
   }
+}
+
+function tokenExpiry(token: string): number | null {
+  const exp = tokenClaims(token)?.exp;
+  return typeof exp === "number" ? exp : null;
+}
+
+/** `sub` of the stored token: the internal user id (never an email or a name). Null without a readable token. */
+export function getUserId(): string | null {
+  const token = getToken();
+  const sub = token ? tokenClaims(token)?.sub : null;
+  return typeof sub === "string" && sub ? sub : null;
 }
 
 /**

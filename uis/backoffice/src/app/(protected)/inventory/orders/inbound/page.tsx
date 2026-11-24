@@ -6,6 +6,8 @@ import { AssetSelect } from "@/components/AssetSelect";
 import { LoadError } from "@/components/LoadError";
 import { ApiError, getUserMessage } from "@/lib/errors";
 import { createInboundOrder } from "@/lib/inventory";
+import { useFormTelemetry } from "@/lib/formTelemetry";
+import { trackInboundOrder } from "@/lib/inventoryTelemetry";
 import { useAssets } from "@/lib/useAssets";
 
 type FieldErrors = Partial<Record<"asset" | "quantity" | "supplier", string>>;
@@ -21,6 +23,7 @@ function InboundForm() {
   const [saving, setSaving] = useState(false);
 
   const asset = assets.find((item) => String(item.id) === assetId);
+  const telemetry = useFormTelemetry("inbound_order");
 
   // Quick client-side check; the API remains the source of truth (400/404/422).
   function validate(): FieldErrors {
@@ -41,6 +44,8 @@ function InboundForm() {
     setSaving(true);
     try {
       const order = await createInboundOrder({ asset_id: asset.id, quantity: Number(quantity), supplier: supplier.trim(), office: asset.office });
+      trackInboundOrder(order, asset);
+      telemetry.completed();
       setNotice(`Entrada registrada: ${order.quantity} × ${order.asset_name} (${order.asset_sku}) de ${order.supplier}.`);
       setAssetId("");
       setQuantity("");
@@ -56,7 +61,7 @@ function InboundForm() {
   }
 
   return (
-    <form className="card" onSubmit={submit} noValidate>
+    <form className="card" onSubmit={submit} noValidate {...telemetry.formProps}>
       {loadError && <LoadError message={loadError} onRetry={reload} busy={loading} />}
       {loading && <p className="muted small"><span className="spinner" aria-hidden="true" />Cargando activos…</p>}
       <div className="form-grid">
@@ -69,7 +74,7 @@ function InboundForm() {
         <label>
           Cantidad recibida *
           <input
-            type="number" min="1" step="1" inputMode="numeric" required value={quantity}
+            name="quantity" type="number" min="1" step="1" inputMode="numeric" required value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
             aria-invalid={errors.quantity ? true : undefined}
             aria-describedby={errors.quantity ? "quantity-error" : undefined}
@@ -79,7 +84,7 @@ function InboundForm() {
         <label>
           Proveedor *
           <input
-            value={supplier} required onChange={(event) => setSupplier(event.target.value)}
+            name="supplier" value={supplier} required onChange={(event) => setSupplier(event.target.value)}
             aria-invalid={errors.supplier ? true : undefined}
             aria-describedby={errors.supplier ? "supplier-error" : undefined}
           />

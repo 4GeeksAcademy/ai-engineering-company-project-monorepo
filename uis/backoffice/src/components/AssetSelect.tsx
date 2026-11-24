@@ -8,6 +8,7 @@ export function AssetSelect({ assets, value, onChange, error, disabled }: Props)
     <label>
       Activo *
       <select
+        name="asset"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}

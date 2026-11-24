@@ -1,5 +1,6 @@
 import { ApiError, apiJson } from "@/lib/apiClient";
 import { statusMessage } from "@/lib/errors";
+import { track } from "@/lib/telemetry";
 
 export type ProfileFields = { name: string | null; phone: string | null; address: string | null };
 
@@ -35,6 +36,9 @@ export async function login(email: string, password: string): Promise<string> {
     return access_token;
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) {
+      // The reason only, never the email or the password. `email_hash` needs the server's secret pepper,
+      // so it is added by the backend intake (Phase 3), not here. Network failures are api_request_failed.
+      track("login_failed", { reason: "bad_credentials" });
       throw new ApiError(401, ["Email o contraseña incorrectos."]);
     }
     throw reason;
