@@ -1,7 +1,7 @@
 # CONTEXT.md — HealthCore (Milestone 4: AI-driven Engineering)
 
 > This context is specific to **Milestone 4 — AI-driven Engineering (agent infrastructure)**.
-> For the full company briefing, see [`BRIEFING.md`](./BRIEFING.md).
+> For the full company briefing, see [`healthcore-BRIEFING.en.md`](./healthcore-BRIEFING.en.md).
 > For Milestone 1 website specs, see the `CONTEXT-healthcore-milestone1.md` file.
 
 HealthCore is an outpatient healthcare services company founded in 2011 in Austin, Texas. It operates 12 outpatient clinics: nine in the United States (Texas, Florida, and Georgia) and three in the United Kingdom (London and Manchester). It offers primary care, specialist consultations, chronic disease management, and preventive health programmes; employs approximately 200 people; and generates around $28 million in annual revenue. Its competitive strengths are same-day appointments, extended hours, and bilingual staff at US locations.
@@ -16,7 +16,7 @@ Build the **agent governance infrastructure** for the HealthCore monorepo so tha
 
 ## Key Deliverables
 
-1. **`BRIEFING.md`** — Full company briefing at repo root, sourced from the canonical syllabus context.
+1. **`healthcore-BRIEFING.en.md`** — Full HealthCore company briefing at repo root, sourced from the canonical syllabus context.
 2. **`memory-bank/`** — Three files (`projectbrief.md`, `techContext.md`, `progress.md`) providing persistent project memory.
 3. **`AGENTS.md`** — Agent protocol defining mandatory reads, pre-commit workflow, and protected areas.
 4. **`.agents/rules/`** — Scoped, actionable rule files (at least one) with clear scope and concrete conventions.
@@ -26,16 +26,16 @@ Build the **agent governance infrastructure** for the HealthCore monorepo so tha
 
 ## Repository Conventions (Milestone 4)
 
-| Convention       | Rule                                                                                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Branch name      | `feature/agent-memory-bank`                                                                                                                                              |
-| PR target        | `main` on the student fork                                                                                                                                               |
-| Protected areas  | `.gitignore`, `.vscode/tasks.json`, app `package.json` and `next.config.js`, `packages/shared-types/index.ts`, `BRIEFING.md`, `CONTEXT.md`, `node_modules` and lockfiles |
-| Pre-commit order | (1) formatter, (2) type-check/lint, (3) update `progress.md`, (4) self-review diff scope                                                                                 |
+| Convention       | Rule                                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch name      | `feature/agent-memory-bank`                                                                                                                                                            |
+| PR target        | `main` on the student fork                                                                                                                                                             |
+| Protected areas  | `.gitignore`, `.vscode/tasks.json`, app `package.json` and `next.config.js`, `packages/shared-types/index.ts`, `healthcore-BRIEFING.en.md`, `CONTEXT.md`, `node_modules` and lockfiles |
+| Pre-commit order | (1) formatter, (2) type-check/lint, (3) update `progress.md`, (4) self-review diff scope                                                                                               |
 
 ---
 
-## Company Context (from BRIEFING.md)
+## Company Context (from healthcore-BRIEFING.en.md)
 
 ### Organisation
 

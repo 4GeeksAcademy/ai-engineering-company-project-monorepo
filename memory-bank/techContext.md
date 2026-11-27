@@ -21,7 +21,7 @@
 
 ```
 ai-engineering-company-project-monorepo/
-├── BRIEFING.md              # Full company briefing (HealthCore)
+├── healthcore-BRIEFING.en.md # Canonical company briefing — HealthCore
 ├── CONTEXT.md               # Milestone 4 context (agent governance, stack, folder map)
 ├── AGENTS.md                # Agent protocol (this milestone)
 ├── .agents/
